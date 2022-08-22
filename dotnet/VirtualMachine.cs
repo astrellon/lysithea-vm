@@ -7,21 +7,27 @@ namespace SimpleStackVM
 {
     public class VirtualMachine
     {
-        public enum TextEvent
+        private struct ScopeFrame
         {
-            StartLine, StartChoice, EndLine, EndChoice
+            public readonly int LineCounter;
+            public readonly Scope Scope;
+
+            public ScopeFrame(int lineCounter, Scope scope)
+            {
+                this.LineCounter = lineCounter;
+                this.Scope = scope;
+            }
         }
 
         #region Fields
         public delegate IValue GetVariableHandler(string name, VirtualMachine vm);
         public delegate void RunCommandHandler(string command, VirtualMachine vm);
-        public delegate void TextEventHandler(TextEvent textEvent, VirtualMachine vm);
 
-        private readonly IReadOnlyList<CodeLine> code;
         private readonly Stack<IValue> stack;
-        private readonly Stack<int> callStack;
+        private readonly Stack<ScopeFrame> callStack;
 
-        private readonly IReadOnlyDictionary<string, int> labels;
+        private readonly Dictionary<string, Scope> scopes;
+        private Scope currentScope;
 
         private int programCounter;
         private bool running;
@@ -29,22 +35,18 @@ namespace SimpleStackVM
 
         public event GetVariableHandler? OnGetVariable;
         public event RunCommandHandler? OnRunCommand;
-        public event TextEventHandler? OnTextEvent;
 
         public bool IsRunning => this.running;
         public int ProgramCounter => this.programCounter;
-        public IReadOnlyList<CodeLine> Code => this.code;
-        public IReadOnlyDictionary<string, int> Labels => this.labels;
         #endregion
 
         #region Constructor
-        public VirtualMachine(IReadOnlyList<CodeLine> code, IReadOnlyDictionary<string, int>? labels = null, int stackSize = 64)
+        public VirtualMachine(int stackSize = 64)
         {
+            this.scopes = new Dictionary<string, Scope>();
             this.programCounter = 0;
-            this.code = code;
-            this.labels = labels ?? new Dictionary<string, int>();
             this.stack = new Stack<IValue>(stackSize);
-            this.callStack = new Stack<int>(stackSize);
+            this.callStack = new Stack<ScopeFrame>(stackSize);
         }
         #endregion
 
@@ -71,13 +73,13 @@ namespace SimpleStackVM
 
         public void Step()
         {
-            if (this.programCounter >= this.code.Count)
+            if (this.programCounter >= this.currentScope.Code.Count)
             {
                 this.Stop();
                 return;
             }
 
-            var codeLine = this.code[this.programCounter++];
+            var codeLine = this.currentScope.Code[this.programCounter++];
 
             switch (codeLine.Operator)
             {
@@ -258,7 +260,7 @@ namespace SimpleStackVM
 
         public void CallToLabel(string label)
         {
-            this.callStack.Push(this.programCounter + 1);
+            this.callStack.Push(new ScopeFrame(this.programCounter + 1, this.currentScope));
             this.JumpToLabel(label);
         }
 
@@ -269,12 +271,14 @@ namespace SimpleStackVM
                 throw new Exception("Unable to return, call stack empty");
             }
 
-            this.programCounter = this.callStack.Pop();
+            var scopeFrame = this.callStack.Pop();
+            this.currentScope = scopeFrame.Scope;
+            this.programCounter = scopeFrame.LineCounter;
         }
 
         public void JumpToLabel(string label)
         {
-            if (this.labels.TryGetValue(label, out var line))
+            if (this.currentScope.Labels.TryGetValue(label, out var line))
             {
                 this.programCounter = line;
             }
