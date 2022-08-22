@@ -26,7 +26,8 @@ namespace SimpleStackVM
             code.Add(new CodeLine(Operator.Run, "add"));
             code.Add(new CodeLine(Operator.Push, "The result: "));
             code.Add(new CodeLine(Operator.Run, "append"));
-            code.Add(new CodeLine(Operator.Log, "{TOP}"));
+            code.Add(new CodeLine(Operator.Run, "text"));
+            code.Add(new CodeLine(Operator.Call, "[Questions]"));
 
             code.Add(new CodeLine(Operator.Push, "SELF: Hello there, how are you "));
             code.Add(new CodeLine(Operator.Run, "text"));
@@ -38,7 +39,7 @@ namespace SimpleStackVM
             // code.Add(new CodeLine(Operator.Text, "{PLAYER.name}"));
             // code.Add(new CodeLine(Operator.Text, "?"));
             code.Add(new CodeLine(Operator.Push, Player));
-            code.Add(new CodeLine(Operator.Log, "{TOP}"));
+            code.Add(new CodeLine(Operator.Run, "text"));
 
             // code.Add(new CodeLine(Operator.Run, "isMorning"));
 
@@ -53,15 +54,33 @@ namespace SimpleStackVM
             code.Add(new CodeLine(Operator.Push, "Done!"));
             code.Add(new CodeLine(Operator.Run, "text"));
 
-            var labels = new Dictionary<string, int>();
-            // labels["NotMorning"] = 14;
-            // labels["AfterGreeting"] = 16;
+            var startScope = new Scope("Start", code);
 
-            var vm = new VirtualMachine(code, labels);
+            var vm = new VirtualMachine();
+            vm.AddScope(startScope);
             vm.OnRunCommand += OnRunCommand;
             vm.OnGetVariable += OnGetVariable;
 
-            vm.Run();
+            code = new List<CodeLine>();
+            code.Add(new CodeLine(Operator.Push, "Questions!"));
+            code.Add(new CodeLine(Operator.Run, "text"));
+            code.Add(new CodeLine(Operator.Push, "More Questions!"));
+            code.Add(new CodeLine(Operator.Run, "text"));
+            code.Add(new CodeLine(Operator.Return));
+            var questionScope = new Scope("Questions", code);
+            vm.AddScope(questionScope);
+
+            try
+            {
+                vm.Run("Start");
+            }
+            catch (VirtualMachineException exp)
+            {
+                Console.WriteLine(exp.Message);
+                var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
+                Console.WriteLine($"VM Stack: {stackTrace}");
+                Console.WriteLine(exp.StackTrace);
+            }
         }
 
         private static IValue OnGetVariable(string varName, VirtualMachine vm)
@@ -104,7 +123,7 @@ namespace SimpleStackVM
             else if (command == "text")
             {
                 var text = vm.PopStackString();
-                Console.WriteLine($"TEXT: {text}");
+                Console.WriteLine($"TEXT [{vm.CurrentScope.ScopeName}:{vm.ProgramCounter}]: {text}");
             }
         }
         #endregion
