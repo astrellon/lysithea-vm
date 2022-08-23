@@ -20,6 +20,29 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
+            var json = SimpleJSON.JSON.Parse(File.ReadAllText("testCode.json"));
+            var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
+
+            var vm = new VirtualMachine();
+            vm.AddScopes(scopes);
+            vm.OnGetVariable += OnGetVariable;
+            vm.OnRunCommand += OnRunCommand;
+
+            try
+            {
+                vm.Run("Start");
+            }
+            catch (VirtualMachineException exp)
+            {
+                Console.WriteLine(exp.Message);
+                var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
+                Console.WriteLine($"VM Stack: {stackTrace}");
+                Console.WriteLine(exp.StackTrace);
+            }
+        }
+
+        public static void OldMain(string[] args)
+        {
             var code = new List<CodeLine>();
             code.Add(new CodeLine(Operator.Push, 5));
             code.Add(new CodeLine(Operator.Push, 12));
@@ -106,7 +129,7 @@ namespace SimpleStackVM
             }
             else if (command == "isMorning")
             {
-                vm.PushStack((BoolValue)false);
+                vm.PushStack((BoolValue)true);
             }
             else if (command == "append")
             {

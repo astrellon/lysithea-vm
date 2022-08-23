@@ -720,7 +720,7 @@ namespace SimpleJSON
     }
     // End of JSONNode
 
-    public partial class JSONArray : JSONNode
+    public partial class JSONArray : JSONNode, IReadOnlyList<JSONNode>
     {
         private List<JSONNode> m_List = new List<JSONNode>();
         private bool inline = false;
@@ -840,6 +840,16 @@ namespace SimpleJSON
             if (aMode == JSONTextMode.Indent)
                 aSB.AppendLine().Append(' ', aIndent);
             aSB.Append(']');
+        }
+
+        IEnumerator<JSONNode> IEnumerable<JSONNode>.GetEnumerator()
+        {
+            return ((IEnumerable<JSONNode>)m_List).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)m_List).GetEnumerator();
         }
     }
     // End of JSONArray

@@ -62,6 +62,11 @@ namespace SimpleStackVM
             this.scopes[scope.ScopeName] = scope;
         }
 
+        public void AddScopes(IEnumerable<Scope> scopes)
+        {
+            foreach (var scope in scopes) { this.AddScope(scope); }
+        }
+
         public void Stop()
         {
             this.running = false;
@@ -132,7 +137,7 @@ namespace SimpleStackVM
                         var top = this.PopObject();
                         if (codeLine.Input != null)
                         {
-                            if (top.Equals(false))
+                            if (top.Equals(BoolValue.False))
                             {
                                 this.JumpToLabel(this.EvaluateLineString(codeLine.Input));
                             }
@@ -152,7 +157,7 @@ namespace SimpleStackVM
                         var top = this.PopObject();
                         if (codeLine.Input != null)
                         {
-                            if (top.Equals(true))
+                            if (top.Equals(BoolValue.True))
                             {
                                 this.JumpToLabel(this.EvaluateLineString(codeLine.Input));
                             }

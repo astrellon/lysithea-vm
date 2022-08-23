@@ -3,6 +3,9 @@ namespace SimpleStackVM
     public struct BoolValue : IValue
     {
         #region Fields
+        public static BoolValue True = new BoolValue(true);
+        public static BoolValue False = new BoolValue(false);
+
         public readonly bool Value;
         public object RawValue => this.Value;
         #endregion
@@ -18,9 +21,9 @@ namespace SimpleStackVM
         public override bool Equals(object? other)
         {
             if (other == null) return false;
-            if (other is BoolValue otherBool)
+            if (other is BoolValue otherBoolValue)
             {
-                return otherBool.Value == this.Value;
+                return otherBoolValue.Value == this.Value;
             }
             return false;
         }

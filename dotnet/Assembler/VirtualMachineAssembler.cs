@@ -4,12 +4,14 @@ using SimpleJSON;
 
 namespace SimpleStackVM
 {
-    public class VirtualMachineAssembler
+    public static class VirtualMachineAssembler
     {
         private interface ITempCodeLine { }
+
         private class LabelCodeLine : ITempCodeLine
         {
             public readonly string Label;
+
             public LabelCodeLine(string label) { this.Label = label; }
         }
 
@@ -24,25 +26,15 @@ namespace SimpleStackVM
                 this.Argument = argument;
             }
         }
-        #region Fields
-        #endregion
-
-        #region Constructor
-        public VirtualMachineAssembler()
-        {
-
-        }
-        #endregion
-
         #region Methods
-        public List<Scope> ParseScopes(JSONArray input)
+        public static List<Scope> ParseScopes(JSONArray input)
         {
             var result = new List<Scope>();
             foreach (var child in input.Children)
             {
                 if (child.IsObject)
                 {
-                    var scope = this.ParseScope(child.AsObject);
+                    var scope = ParseScope(child.AsObject);
                     result.Add(scope);
                 }
             }
@@ -50,7 +42,7 @@ namespace SimpleStackVM
             return result;
         }
 
-        public Scope ParseScope(JSONObject input)
+        public static Scope ParseScope(JSONObject input)
         {
             var scopeName = input["scopeName"].Value;
             var data = input["data"].AsArray;
@@ -60,14 +52,43 @@ namespace SimpleStackVM
             {
                 if (child.IsString)
                 {
-
+                    var list = new JSONNode[] { child };
+                    tempCodeLines.AddRange(ParseCodeLine(list));
+                }
+                else if (child.IsArray)
+                {
+                    tempCodeLines.AddRange(ParseCodeLine(child.AsArray));
+                }
+                else
+                {
+                    throw new Exception($"Invalid Json node: {input.ToString()}");
                 }
             }
 
-            return new Scope(scopeName, null);
+            return ProcessScope(scopeName, tempCodeLines);
         }
 
-        private IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)
+        private static Scope ProcessScope(string scopeName, IReadOnlyList<ITempCodeLine> tempCode)
+        {
+            var labels = new Dictionary<string, int>();
+            var code = new List<CodeLine>();
+
+            foreach (var tempLine in tempCode)
+            {
+                if (tempLine is LabelCodeLine labelCodeLine)
+                {
+                    labels.Add(labelCodeLine.Label, code.Count);
+                }
+                else if (tempLine is TempCodeLine tempCodeLine)
+                {
+                    code.Add(new CodeLine(tempCodeLine.Operator, tempCodeLine.Argument));
+                }
+            }
+
+            return new Scope(scopeName, code, labels);
+        }
+
+        private static IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)
         {
             if (!input.Any())
             {
@@ -78,10 +99,12 @@ namespace SimpleStackVM
             if (first[0] == ':')
             {
                 yield return new LabelCodeLine(first);
+                yield break;
             }
 
             var opCode = Operator.Unknown;
             IValue codeLineInput = NullValue.Value;
+            var childrenToPushStart = 1;
             if (first[0] == '$')
             {
                 opCode = Operator.Run;
@@ -93,11 +116,24 @@ namespace SimpleStackVM
                 {
                     throw new Exception($"Unknown operator: {first}");
                 }
+
+                if (opCode == Operator.Call ||
+                    opCode == Operator.Push ||
+                    opCode == Operator.Jump ||
+                    opCode == Operator.JumpFalse ||
+                    opCode == Operator.JumpTrue)
+                {
+                    childrenToPushStart = 2;
+                    if (!TryParseJson(input[1], out codeLineInput))
+                    {
+                        throw new Exception($"Error parsing command argument: {input[1].ToString()}");
+                    }
+                }
             }
 
-            foreach (var child in input.Skip(1))
+            foreach (var child in input.Skip(childrenToPushStart))
             {
-                if (this.TryParseJson(child, out var pushValue))
+                if (TryParseJson(child, out var pushValue))
                 {
                     yield return new TempCodeLine(Operator.Push, pushValue);
                 }
@@ -107,10 +143,10 @@ namespace SimpleStackVM
                 }
             }
 
-            yield return new TempCodeLine(opCode);
+            yield return new TempCodeLine(opCode, codeLineInput);
         }
 
-        private bool TryParseJson(JSONNode input, out IValue result)
+        private static bool TryParseJson(JSONNode input, out IValue result)
         {
             if (input.IsString)
             {
@@ -135,16 +171,18 @@ namespace SimpleStackVM
                 var objectDictionary = new Dictionary<string, IValue>();
                 foreach (var kvp in input)
                 {
-                    if (this.TryParseJson(kvp.Value, out var dictionaryValue))
+                    if (TryParseJson(kvp.Value, out var dictionaryValue))
                     {
                         objectDictionary[kvp.Key] = dictionaryValue;
                     }
                     else
                     {
-                        // throw new Exception($"Error turning JSON into ObjectValue: {kvp.Value.ToString()}");
                         return false;
                     }
                 }
+
+                result = new ObjectValue(objectDictionary);
+                return true;
             }
 
             if (input.IsNull)
