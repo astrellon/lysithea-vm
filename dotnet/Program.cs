@@ -129,15 +129,15 @@ namespace SimpleStackVM
             }
             else if (command == "isMorning")
             {
-                vm.PushStack((BoolValue)true);
+                vm.PushStack((BoolValue)false);
             }
-            else if (command == "append")
+            else if (command == "prepend")
             {
                 var top = vm.PopStackString();
                 var top2 = vm.PopStackString();
                 vm.PushStack((StringValue)(top + top2));
             }
-            else if (command == "prepend")
+            else if (command == "append")
             {
                 var top = vm.PopStackString();
                 var top2 = vm.PopStackString();

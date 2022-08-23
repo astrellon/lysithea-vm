@@ -3,7 +3,7 @@ using System.Text;
 
 namespace SimpleStackVM
 {
-    public struct ObjectValue : IValue
+    public struct ObjectValue : IValue, IValueContainer
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;

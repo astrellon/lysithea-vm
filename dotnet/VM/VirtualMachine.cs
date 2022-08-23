@@ -265,12 +265,22 @@ namespace SimpleStackVM
                         result = this.OnGetVariable.Invoke(path.Current, this);
                     }
 
-                    if (path.HasMorePath && result is ObjectValue objectValue)
+                    if (path.HasMorePath)
                     {
-                        if (objectValue.TryGetValue(path.NextIndex(), out var objectResult))
+                        if (result is ObjectValue objectValue)
                         {
-                            return objectResult;
+                            if (objectValue.TryGetValue(path.NextIndex(), out var objectResult))
+                            {
+                                return objectResult;
+                            }
                         }
+                        // else if (result is ArrayValue arrayValue)
+                        // {
+                        //     if (arrayValue.TryGetValue(path.NextIndex(), out var objectResult))
+                        //     {
+                        //         return arrayValue;
+                        //     }
+                        // }
 
                         throw new OperatorException(this.CreateStackTrace(), $"Unable to get path from variable {path.Path.ToString()}");
                     }
