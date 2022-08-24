@@ -18,9 +18,9 @@ namespace SimpleStackVM
         private class TempCodeLine : ITempCodeLine
         {
             public readonly Operator Operator;
-            public readonly IValue Argument;
+            public readonly IValue? Argument;
 
-            public TempCodeLine(Operator op, IValue argument)
+            public TempCodeLine(Operator op, IValue? argument)
             {
                 this.Operator = op;
                 this.Argument = argument;
@@ -44,7 +44,7 @@ namespace SimpleStackVM
 
         public static Scope ParseScope(JSONObject input)
         {
-            var scopeName = input["scopeName"].Value;
+            var scopeName = input["name"].Value;
             var data = input["data"].AsArray;
             var tempCodeLines = new List<ITempCodeLine>();
 
@@ -103,8 +103,7 @@ namespace SimpleStackVM
             }
 
             var opCode = Operator.Unknown;
-            IValue codeLineInput = NullValue.Value;
-            var childrenToPushStart = 1;
+            IValue? codeLineInput = null;
             if (first[0] == '$')
             {
                 opCode = Operator.Run;
@@ -116,22 +115,9 @@ namespace SimpleStackVM
                 {
                     throw new Exception($"Unknown operator: {first}");
                 }
-
-                if (opCode == Operator.Call ||
-                    opCode == Operator.Push ||
-                    opCode == Operator.Jump ||
-                    opCode == Operator.JumpFalse ||
-                    opCode == Operator.JumpTrue)
-                {
-                    childrenToPushStart = 2;
-                    if (!TryParseJson(input[1], out codeLineInput))
-                    {
-                        throw new Exception($"Error parsing command argument: {input[1].ToString()}");
-                    }
-                }
             }
 
-            foreach (var child in input.Skip(childrenToPushStart))
+            foreach (var child in input.Skip(1))
             {
                 if (TryParseJson(child, out var pushValue))
                 {
@@ -143,7 +129,14 @@ namespace SimpleStackVM
                 }
             }
 
-            yield return new TempCodeLine(opCode, codeLineInput);
+            if (opCode != Operator.Push)
+            {
+                if (codeLineInput != null)
+                {
+                    yield return new TempCodeLine(Operator.Push, codeLineInput);
+                }
+                yield return new TempCodeLine(opCode, null);
+            }
         }
 
         private static bool TryParseJson(JSONNode input, out IValue result)
@@ -182,6 +175,26 @@ namespace SimpleStackVM
                 }
 
                 result = new ObjectValue(objectDictionary);
+                return true;
+            }
+
+            if (input.IsArray)
+            {
+                var array = new List<IValue>();
+
+                foreach (var child in input.Children)
+                {
+                    if (TryParseJson(child, out var arrayValue))
+                    {
+                        array.Add(arrayValue);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                result = new ArrayValue(array);
                 return true;
             }
 

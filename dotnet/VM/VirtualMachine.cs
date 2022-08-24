@@ -20,7 +20,6 @@ namespace SimpleStackVM
         }
 
         #region Fields
-        public delegate IValue GetVariableHandler(string name, VirtualMachine vm);
         public delegate void RunCommandHandler(string command, VirtualMachine vm);
 
         public readonly int StackSize;
@@ -36,12 +35,12 @@ namespace SimpleStackVM
         private bool running;
         private bool paused;
 
-        public event GetVariableHandler? OnGetVariable;
         public event RunCommandHandler? OnRunCommand;
 
         public bool IsRunning => this.running;
         public int ProgramCounter => this.programCounter;
         public Scope CurrentScope => this.currentScope;
+        public IReadOnlyDictionary<string, Scope> Scopes => this.scopes;
         #endregion
 
         #region Constructor
@@ -72,15 +71,22 @@ namespace SimpleStackVM
             this.running = false;
         }
 
-        public void Run(string startScopeName)
+        public void Run(string? startScopeName = null)
         {
-            if (this.scopes.TryGetValue(startScopeName, out var startScope))
+            if (startScopeName != null)
             {
-                this.currentScope = startScope;
+                if (this.scopes.TryGetValue(startScopeName, out var startScope))
+                {
+                    this.currentScope = startScope;
+                }
+                else
+                {
+                    throw new ScopeException(this.CreateStackTrace(), $"Unable to find start scope: {startScopeName}");
+                }
             }
-            else
+            else if (this.currentScope.IsEmpty)
             {
-                throw new ScopeException(this.CreateStackTrace(), $"Unable to find start scope: {startScopeName}");
+                throw new Exception("Cannot run virtual machine with an empty scope");
             }
 
             this.running = true;
@@ -124,7 +130,7 @@ namespace SimpleStackVM
                         {
                             throw new OperatorException(this.CreateStackTrace(), "Push requires input");
                         }
-                        this.stack.Add(this.EvaluateLine(codeLine.Input));
+                        this.stack.Add(codeLine.Input);
                         break;
                     }
                 case Operator.Pop:
@@ -134,68 +140,34 @@ namespace SimpleStackVM
                     }
                 case Operator.JumpFalse:
                     {
+                        var label = this.PopStackString();
                         var top = this.PopObject();
-                        if (codeLine.Input != null)
+                        if (top.Equals(BoolValue.False))
                         {
-                            if (top.Equals(BoolValue.False))
-                            {
-                                this.JumpToLabel(this.EvaluateLineString(codeLine.Input));
-                            }
-                        }
-                        else
-                        {
-                            var label = this.PopStackString();
-                            if (top.Equals(false))
-                            {
-                                this.JumpToLabel(label);
-                            }
+                            this.JumpToLabel(label);
                         }
                         break;
                     }
                 case Operator.JumpTrue:
                     {
+                        var label = this.PopStackString();
                         var top = this.PopObject();
-                        if (codeLine.Input != null)
+                        if (top.Equals(BoolValue.True))
                         {
-                            if (top.Equals(BoolValue.True))
-                            {
-                                this.JumpToLabel(this.EvaluateLineString(codeLine.Input));
-                            }
-                        }
-                        else
-                        {
-                            var label = this.PopStackString();
-                            if (top.Equals(true))
-                            {
-                                this.JumpToLabel(label);
-                            }
+                            this.JumpToLabel(label);
                         }
                         break;
                     }
                 case Operator.Jump:
                     {
-                        if (codeLine.Input != null)
-                        {
-                            this.JumpToLabel(this.EvaluateLineString(codeLine.Input));
-                        }
-                        else
-                        {
-                            var label = this.PopStackString();
-                            this.JumpToLabel(label);
-                        }
+                        var label = this.PopStackString();
+                        this.JumpToLabel(label);
                         break;
                     }
                 case Operator.Call:
                     {
-                        if (codeLine.Input != null)
-                        {
-                            this.CallToLabel(this.EvaluateLineString(codeLine.Input));
-                        }
-                        else
-                        {
-                            var label = this.PopStackString();
-                            this.CallToLabel(label);
-                        }
+                        var label = this.PopStackString();
+                        this.CallToLabel(label);
                         break;
                     }
                 case Operator.Return:
@@ -205,93 +177,16 @@ namespace SimpleStackVM
                     }
                 case Operator.Run:
                     {
-                        if (codeLine.Input != null)
+                        var top = this.PopStackString();
+                        if (this.OnRunCommand == null)
                         {
-                            var commandName = this.EvaluateLineString(codeLine.Input);
-                            if (this.OnRunCommand == null)
-                            {
-                                throw new OperatorException(this.CreateStackTrace(), $"Cannot run command {commandName}, no listener set");
-                            }
-
-                            this.OnRunCommand.Invoke(commandName, this);
+                            throw new OperatorException(this.CreateStackTrace(), $"Cannot run command {top}, no listener set");
                         }
-                        else
-                        {
-                            var top = this.PopStackString();
-                            if (this.OnRunCommand == null)
-                            {
-                                throw new OperatorException(this.CreateStackTrace(), $"Cannot run command {top}, no listener set");
-                            }
 
-                            this.OnRunCommand.Invoke(top, this);
-                        }
+                        this.OnRunCommand.Invoke(top, this);
                         break;
                     }
             }
-        }
-
-        public string EvaluateLineString(IValue input)
-        {
-            var result = this.EvaluateLine(input);
-            return result.ToString() ?? "<null>";
-        }
-
-        public IValue EvaluateLine(IValue input)
-        {
-            if (input is StringValue str)
-            {
-                var strValue = str.Value;
-                if (string.IsNullOrEmpty(strValue))
-                {
-                    return StringValue.Empty;
-                }
-
-                if (strValue.First() == '{' && strValue.Last() == '}')
-                {
-                    IValue result = NullValue.Value;
-                    var varName = strValue.Substring(1, strValue.Length - 2);
-                    var path = ObjectPath.Create(varName);
-                    if (path.Path.First() == "TOP")
-                    {
-                        result = this.stack.Last();
-                    }
-                    else
-                    {
-                        if (this.OnGetVariable == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"Cannot get variable {varName}, no listener set");
-                        }
-
-                        result = this.OnGetVariable.Invoke(path.Current, this);
-                    }
-
-                    if (path.HasMorePath)
-                    {
-                        if (result is ObjectValue objectValue)
-                        {
-                            if (objectValue.TryGetValue(path.NextIndex(), out var objectResult))
-                            {
-                                return objectResult;
-                            }
-                        }
-                        // else if (result is ArrayValue arrayValue)
-                        // {
-                        //     if (arrayValue.TryGetValue(path.NextIndex(), out var objectResult))
-                        //     {
-                        //         return arrayValue;
-                        //     }
-                        // }
-
-                        throw new OperatorException(this.CreateStackTrace(), $"Unable to get path from variable {path.Path.ToString()}");
-                    }
-
-                    return result;
-                }
-
-                return str;
-            }
-
-            return input;
         }
 
         public void CallToLabel(string label)
@@ -366,34 +261,21 @@ namespace SimpleStackVM
             return obj;
         }
 
-        public double PopStackDouble()
+        public T PopObject<T>() where T : IValue
         {
             var obj = this.PopObject();
-
-            if (obj is NumberValue num)
+            if (obj.GetType() == typeof(T))
             {
-                return num.Value;
+                return (T)obj;
             }
 
-            throw new StackException(this.CreateStackTrace(), $"Top of stack not a double: {obj}");
-        }
-
-        public int PopStackInt()
-        {
-            var obj = this.PopObject();
-
-            if (obj is NumberValue num)
-            {
-                return (int)num.Value;
-            }
-
-            throw new StackException(this.CreateStackTrace(), $"Top of stack not an int: {obj}");
+            throw new StackException(this.CreateStackTrace(), "Unable to pop stack, type cast error");
         }
 
         public string PopStackString()
         {
             var obj = this.PopObject();
-            return obj.ToString() ?? "<null>";
+            return obj.ToString();
         }
 
         public void PushStack(IValue value)

@@ -4,14 +4,14 @@ namespace SimpleStackVM
     {
         #region Fields
         public readonly Operator Operator;
-        public readonly IValue Input;
+        public readonly IValue? Input;
         #endregion
 
         #region Constructors
         public CodeLine(Operator op, IValue? input = null)
         {
             this.Operator = op;
-            this.Input = input ?? NullValue.Value;
+            this.Input = input;
         }
 
         public CodeLine(Operator op, bool input)

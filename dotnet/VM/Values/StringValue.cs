@@ -11,7 +11,7 @@ namespace SimpleStackVM
         #region Constructor
         public StringValue(string value)
         {
-            this.Value = value;
+            this.Value = value ?? "<<null>>";
         }
         #endregion
 
@@ -28,7 +28,7 @@ namespace SimpleStackVM
 
         public override string ToString()
         {
-            return this.Value.ToString();
+            return this.Value;
         }
 
         public override int GetHashCode()
