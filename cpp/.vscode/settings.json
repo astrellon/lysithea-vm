@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "array": "cpp",
+        "atomic": "cpp",
+        "string_view": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp",
+        "fstream": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "ranges": "cpp",
+        "sstream": "cpp",
+        "streambuf": "cpp"
+    }
+}
