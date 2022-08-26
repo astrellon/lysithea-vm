@@ -201,7 +201,7 @@ namespace stack_vm
             throw std::runtime_error("Unable to return, stack trace empty");
         }
 
-        const auto last = *stack_trace.rbegin();
+        auto last = stack_trace.back();
         stack_trace.pop_back();
         current_scope = last.scope;
         program_counter = last.line_counter;
@@ -209,8 +209,8 @@ namespace stack_vm
 
     value virtual_machine::pop_stack()
     {
-        auto end = *stack.rbegin();
-        stack.erase(stack.end());
+        auto end = stack.back();
+        stack.pop_back();
         return end;
     }
 
