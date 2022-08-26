@@ -1,59 +1,81 @@
 #pragma once
 
-#include <string>
-#include <vector>
 #include <map>
+#include <vector>
+#include <variant>
+#include <any>
+#include <sstream>
 
 namespace stack_vm
 {
-    enum class ValueType
-    {
-        String, Number, Bool, Object, Array
-    };
+    class Value;
 
-    union ValueData
-    {
-        double number;
-        bool boolean;
-        std::string string;
-
-        ValueData(double value) : number(value) { }
-        ValueData(bool value) : boolean(value) { }
-        ValueData(const std::string &value) : string(value) { }
-        ~ValueData() { }
-    };
+    using object_value = std::map<std::string, Value>;
+    using array_value = std::vector<Value>;
 
     class Value
     {
         public:
             // Fields
-            const ValueType type;
-            const ValueData data;
+            const std::variant<bool, double, std::string, object_value, array_value> data;
 
             // Constructor
-            Value(char const *s) : Value(std::string(s)) { }
-            Value(const std::string &value) : type(ValueType::String), data(value) { }
-            Value(double value) : type(ValueType::Number), data(value) { }
-            Value(bool value) : type(ValueType::Bool), data(value) { }
-            ~Value()
-            {
-                if (type == ValueType::String)
-                {
-                    data.string.~basic_string();
-                }
-            }
+            Value(bool value) : data(value) { }
+            Value(double value) : data(value) { }
+            Value(const char * value) : Value(std::string(value)) { }
+            Value(const std::string &value) : data(value) { }
+            Value(const object_value &value) : data(value) { }
+            Value(const array_value &value) : data(value) { }
 
             // Methods
-            std::string toString() const
+            std::string to_string() const
             {
-                switch (type)
+                switch (data.index())
                 {
-                    case ValueType::String: return data.string;
-                    case ValueType::Bool: return data.boolean ? "true" : "false";
-                    case ValueType::Number: return std::to_string(data.number);
-                }
+                    case 0: return std::get<bool>(data) ? "true" : "false";
+                    case 1: return std::to_string(std::get<double>(data));
+                    case 2: return std::get<std::string>(data);
+                    case 3:
+                    {
+                        std::stringstream ss;
+                        ss << '{';
+                        auto first = true;
+                        for (const auto &iter : std::get<object_value>(data))
+                        {
+                            if (!first)
+                            {
+                                ss << ',';
+                            }
+                            first = false;
 
-                return "<<Unknown>>";
+                            ss << '"';
+                            ss << iter.first;
+                            ss << "\":";
+                            ss << iter.second.to_string();
+                        }
+                        ss << '}';
+                        return ss.str();
+                    }
+                    case 4:
+                    {
+                        std::stringstream ss;
+                        ss << '[';
+                        auto first = true;
+                        for (const auto &iter : std::get<array_value>(data))
+                        {
+                            if (!first)
+                            {
+                                ss << ',';
+                            }
+                            first = false;
+
+                            ss << iter.to_string();
+                        }
+                        ss << ']';
+                        return ss.str();
+                    }
+                    default: return "<<Unknown>>";
+                }
             }
     };
 } // stack_vm
