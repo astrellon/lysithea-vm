@@ -17,10 +17,11 @@ namespace stack_vm
     {
         public:
             // Fields
-            const std::variant<bool, double, std::string, object_value, array_value> data;
+            std::variant<bool, double, std::string, object_value, array_value> data;
 
             // Constructor
             Value(bool value) : data(value) { }
+            Value(int value) : data((double)value) { }
             Value(double value) : data(value) { }
             Value(const char * value) : Value(std::string(value)) { }
             Value(const std::string &value) : data(value) { }
@@ -28,6 +29,44 @@ namespace stack_vm
             Value(const array_value &value) : data(value) { }
 
             // Methods
+            bool is_string() const
+            {
+                return data.index() == 2;
+            }
+            bool is_number() const
+            {
+                return data.index() == 1;
+            }
+            bool is_bool() const
+            {
+                return data.index() == 0;
+            }
+            bool is_object() const
+            {
+                return data.index() == 3;
+            }
+            bool is_array() const
+            {
+                return data.index() == 4;
+            }
+            bool is_true() const
+            {
+                switch (data.index())
+                {
+                    case 0: return std::get<bool>(data) == true;
+                    default: return false;
+                }
+            }
+
+            bool is_false() const
+            {
+                switch (data.index())
+                {
+                    case 0: return std::get<bool>(data) == false;
+                    default: return false;
+                }
+            }
+
             std::string to_string() const
             {
                 switch (data.index())
