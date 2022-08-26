@@ -22,6 +22,7 @@ namespace stack_vm
             // Constructor
             value(bool input) : data(input) { }
             value(int input) : data((double)input) { }
+            value(unsigned int input) : data((double)input) { }
             value(double input) : data(input) { }
             value(const char * input) : value(std::string(input)) { }
             value(const std::string &input) : data(input) { }

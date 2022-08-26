@@ -40,6 +40,7 @@ namespace stack_vm
 
             // Methods
             void add_scope(std::shared_ptr<scope> scope);
+            void add_scopes(const std::vector<std::shared_ptr<scope>> scopes);
             void run(const std::string &start_scope_name);
             void stop();
             void pause(bool value);

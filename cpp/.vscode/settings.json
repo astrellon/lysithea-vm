@@ -61,6 +61,13 @@
         "ratio": "cpp",
         "stop_token": "cpp",
         "thread": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "codecvt": "cpp",
+        "condition_variable": "cpp",
+        "forward_list": "cpp",
+        "iomanip": "cpp",
+        "mutex": "cpp",
+        "cfenv": "cpp",
+        "valarray": "cpp"
     }
 }

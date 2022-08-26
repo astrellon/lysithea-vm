@@ -13,6 +13,14 @@ namespace stack_vm
         scopes[scope->name] = scope;
     }
 
+    void virtual_machine::add_scopes(std::vector<std::shared_ptr<scope>> scopes)
+    {
+        for (auto &scope : scopes)
+        {
+            add_scope(scope);
+        }
+    }
+
     void virtual_machine::run(const std::string &startScopeName)
     {
         if (startScopeName.size() > 0)

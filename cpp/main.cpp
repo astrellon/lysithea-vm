@@ -1,9 +1,10 @@
 #include <iostream>
 
 #include <random>
+#include <fstream>
 
-#include "src/value.hpp"
 #include "src/virtual_machine.hpp"
+#include "src/assembler.hpp"
 
 using namespace stack_vm;
 
@@ -40,36 +41,21 @@ void runHandler(const value &input, virtual_machine &vm)
 
 int main()
 {
-    std::vector<code_line> code;
-    code.emplace_back(vm_operator::push, value(0.0));
-    code.emplace_back(vm_operator::push, value(array_value{value(""), value("Step")}));
-    code.emplace_back(vm_operator::call);
-    code.emplace_back(vm_operator::push, value("isDone"));
-    code.emplace_back(vm_operator::run);
-    code.emplace_back(vm_operator::push, value(":Start"));
-    code.emplace_back(vm_operator::jump_false);
-    code.emplace_back(vm_operator::push, value("done"));
-    code.emplace_back(vm_operator::run);
+    std::ifstream json_input;
+    json_input.open("perfTest.json");
+    if (!json_input)
+    {
+        std::cout << "Could not find file to open!\n";
+        return -1;
+    }
 
-    std::map<std::string, int> labels;
-    labels[":Start"] = 1;
-    auto mainScope = std::make_shared<scope>("Main", code, labels);
+    nlohmann::json json;
+    json_input >> json;
 
-    std::vector<code_line> code2;
-    code2.emplace_back(vm_operator::push, value("rand"));
-    code2.emplace_back(vm_operator::run);
-    code2.emplace_back(vm_operator::push, value("rand"));
-    code2.emplace_back(vm_operator::run);
-    code2.emplace_back(vm_operator::push, value("add"));
-    code2.emplace_back(vm_operator::run);
-    code2.emplace_back(vm_operator::push, value("add"));
-    code2.emplace_back(vm_operator::run);
-    code2.emplace_back(vm_operator::call_return);
-    auto scope2 = std::make_shared<scope>("Step", code2);
+    auto parsed_scopes = assembler::parse_scopes(json);
 
     virtual_machine vm(64, runHandler);
-    vm.add_scope(mainScope);
-    vm.add_scope(scope2);
+    vm.add_scopes(parsed_scopes);
 
     vm.run("Main");
 

@@ -17,6 +17,7 @@ namespace stack_vm
             // Constructor
             code_line(vm_operator op) : op(op) { }
             code_line(vm_operator op, const stack_vm::value &value) : op(op), value(value) { }
+            code_line(vm_operator op, const std::optional<stack_vm::value> value) : op(op), value(value) { }
 
             // Methods
     };
