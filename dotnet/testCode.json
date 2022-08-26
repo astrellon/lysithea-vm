@@ -5,7 +5,7 @@
             ["$add", 5, 12],
             ["$prepend", "The results: "],
             "$text",
-            ["Push", "[Questions]"],
+            ["Push", [":Start", "Questions"]],
             ["Call"],
             ["$text", {"name": "TestObject"}],
             ["$text", ["Hello", 1, 2, {"age": 12}]],
@@ -18,14 +18,11 @@
             ":Start",
             ["$text", "Here are some questions:"],
             "$isMorning",
-
             ["JumpFalse", ":NotMorning"],
             ["$text", "Here are the morning questions:"],
             ["Jump", ":AfterQuestions"],
-
             ":NotMorning",
             ["$text", "Here are the afternoon questions:"],
-
             ":AfterQuestions",
             ["$text", "Done with questions"],
             "Return"

@@ -20,7 +20,7 @@ namespace SimpleStackVM
         }
 
         #region Fields
-        public delegate void RunCommandHandler(string command, VirtualMachine vm);
+        public delegate void RunCommandHandler(IValue command, VirtualMachine vm);
 
         public readonly int StackSize;
         public bool DebugMode = false;
@@ -135,13 +135,13 @@ namespace SimpleStackVM
                     }
                 case Operator.Pop:
                     {
-                        this.PopObject();
+                        this.PopStack();
                         break;
                     }
                 case Operator.JumpFalse:
                     {
-                        var label = this.PopStackString();
-                        var top = this.PopObject();
+                        var label = this.PopStack();
+                        var top = this.PopStack();
                         if (top.Equals(BoolValue.False))
                         {
                             this.JumpToLabel(label);
@@ -150,8 +150,8 @@ namespace SimpleStackVM
                     }
                 case Operator.JumpTrue:
                     {
-                        var label = this.PopStackString();
-                        var top = this.PopObject();
+                        var label = this.PopStack();
+                        var top = this.PopStack();
                         if (top.Equals(BoolValue.True))
                         {
                             this.JumpToLabel(label);
@@ -160,13 +160,13 @@ namespace SimpleStackVM
                     }
                 case Operator.Jump:
                     {
-                        var label = this.PopStackString();
+                        var label = this.PopStack();
                         this.JumpToLabel(label);
                         break;
                     }
                 case Operator.Call:
                     {
-                        var label = this.PopStackString();
+                        var label = this.PopStack();
                         this.CallToLabel(label);
                         break;
                     }
@@ -177,7 +177,7 @@ namespace SimpleStackVM
                     }
                 case Operator.Run:
                     {
-                        var top = this.PopStackString();
+                        var top = this.PopStack();
                         if (this.OnRunCommand == null)
                         {
                             throw new OperatorException(this.CreateStackTrace(), $"Cannot run command {top}, no listener set");
@@ -189,7 +189,7 @@ namespace SimpleStackVM
             }
         }
 
-        public void CallToLabel(string label)
+        public void CallToLabel(IValue label)
         {
             this.stackTrace.Add(new ScopeFrame(this.programCounter, this.currentScope));
             this.JumpToLabel(label);
@@ -208,37 +208,47 @@ namespace SimpleStackVM
             this.programCounter = scopeFrame.LineCounter;
         }
 
-        public void JumpToLabel(string label)
+        public void JumpToLabel(IValue jumpTo)
         {
-            if (!label.Any())
+            if (jumpTo is StringValue stringValue)
             {
-                throw new OperatorException(this.CreateStackTrace(), "Cannot jump with empty label");
+                this.JumpToLabel(stringValue.Value, null);
             }
-
-            if (label[0] == '[')
+            else if (jumpTo is ArrayValue arrayValue)
             {
-                var endScope = label.IndexOf(']');
-                if (endScope < 0)
+                if (arrayValue.Value.Count == 0)
                 {
-                    throw new ScopeException(this.CreateStackTrace(), $"Invalid scope name jump label: {label}");
+                    throw new OperatorException(this.CreateStackTrace(), "Cannot jump to an empty array");
+                }
+                string? scopeName = null;
+                var label = arrayValue.Value[0].ToString();
+                if (arrayValue.Value.Count > 1)
+                {
+                    scopeName = arrayValue.Value[1].ToString();
                 }
 
-                var scopeName = label.Substring(1, endScope - 1);
+                this.JumpToLabel(label, scopeName);
+            }
+        }
+
+        public void JumpToLabel(string label, string? scopeName)
+        {
+            if (!string.IsNullOrEmpty(scopeName))
+            {
                 if (this.scopes.TryGetValue(scopeName, out var scope))
                 {
                     this.currentScope = scope;
                 }
                 else
                 {
-                    throw new ScopeException(this.CreateStackTrace(), $"Unable to find scope: {scopeName} for jump: {label}");
+                    throw new ScopeException(this.CreateStackTrace(), $"Unable to find scope: {scopeName} for jump.");
                 }
+            }
 
-                label = label.Substring(endScope + 1).TrimStart();
-                if (label.Length == 0)
-                {
-                    this.programCounter = 0;
-                    return;
-                }
+            if (string.IsNullOrEmpty(label))
+            {
+                this.programCounter = 0;
+                return;
             }
 
             if (this.currentScope.Labels.TryGetValue(label, out var line))
@@ -251,7 +261,7 @@ namespace SimpleStackVM
             }
         }
 
-        public IValue PopObject()
+        public IValue PopStack()
         {
             if (!this.stack.TryPop(out var obj))
             {
@@ -261,9 +271,9 @@ namespace SimpleStackVM
             return obj;
         }
 
-        public T PopObject<T>() where T : IValue
+        public T PopStack<T>() where T : IValue
         {
-            var obj = this.PopObject();
+            var obj = this.PopStack();
             if (obj.GetType() == typeof(T))
             {
                 return (T)obj;
@@ -274,7 +284,7 @@ namespace SimpleStackVM
 
         public string PopStackString()
         {
-            var obj = this.PopObject();
+            var obj = this.PopStack();
             return obj.ToString();
         }
 
