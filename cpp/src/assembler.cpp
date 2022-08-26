@@ -163,6 +163,7 @@ namespace stack_vm
                 }
                 return value(arr);
             }
+            default: return nullptr;
         }
 
         return nullptr;
