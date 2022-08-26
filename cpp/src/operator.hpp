@@ -2,7 +2,7 @@
 
 namespace stack_vm
 {
-    enum class Operator {
-        Unknown, Push, Pop, Call, Run, Return, Jump, JumpTrue, JumpFalse
+    enum class vm_operator {
+        unknown, push, pop, call, run, call_return, jump, jump_true, jump_false
     };
 } // namespace stack_vm

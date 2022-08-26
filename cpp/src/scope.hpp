@@ -8,17 +8,17 @@
 
 namespace stack_vm
 {
-    class Scope
+    class scope
     {
         public:
             // Fields
             const std::string name;
-            const std::vector<CodeLine> code;
+            const std::vector<code_line> code;
             const std::map<std::string, int> labels;
 
             // Constructor
-            Scope(const std::string &name, const std::vector<CodeLine> &code) : name(name), code(code) { }
-            Scope(const std::string &name, const std::vector<CodeLine> &code, const std::map<std::string, int> &labels) : name(name), code(code), labels(labels) { }
+            scope(const std::string &name, const std::vector<code_line> &code) : name(name), code(code) { }
+            scope(const std::string &name, const std::vector<code_line> &code, const std::map<std::string, int> &labels) : name(name), code(code), labels(labels) { }
 
             // Methods
     };

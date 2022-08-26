@@ -7,16 +7,16 @@
 
 namespace stack_vm
 {
-    class CodeLine
+    class code_line
     {
         public:
             // Fields
-            const Operator op;
-            const std::optional<Value> value;
+            const vm_operator op;
+            const std::optional<stack_vm::value> value;
 
             // Constructor
-            CodeLine(Operator op) : op(op) { }
-            CodeLine(Operator op, const Value &value) : op(op), value(value) { }
+            code_line(vm_operator op) : op(op) { }
+            code_line(vm_operator op, const stack_vm::value &value) : op(op), value(value) { }
 
             // Methods
     };

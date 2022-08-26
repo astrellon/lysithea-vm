@@ -2,18 +2,18 @@
 
 namespace stack_vm
 {
-    VirtualMachine::VirtualMachine(int stackSize, RunHandler runHandler) : stackSize(stackSize), programCounter(0), running(false), paused(false), runHandler(runHandler)
+    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler run_handler) : stack_size(stack_size), program_counter(0), running(false), paused(false), run_handler(run_handler)
     {
-        stack.reserve(stackSize);
-        stackTrace.reserve(stackSize);
+        stack.reserve(stack_size);
+        stack_trace.reserve(stack_size);
     }
 
-    void VirtualMachine::addScope(std::shared_ptr<Scope> scope)
+    void virtual_machine::add_scope(std::shared_ptr<scope> scope)
     {
         scopes[scope->name] = scope;
     }
 
-    void VirtualMachine::run(const std::string &startScopeName)
+    void virtual_machine::run(const std::string &startScopeName)
     {
         if (startScopeName.size() > 0)
         {
@@ -24,7 +24,7 @@ namespace stack_vm
             }
             else
             {
-                currentScope = find->second;
+                current_scope = find->second;
             }
         }
 
@@ -37,25 +37,25 @@ namespace stack_vm
         }
     }
 
-    void VirtualMachine::stop()
+    void virtual_machine::stop()
     {
         running = false;
     }
 
-    void VirtualMachine::pause(bool value)
+    void virtual_machine::pause(bool value)
     {
         paused = value;
     }
 
-    void VirtualMachine::step()
+    void virtual_machine::step()
     {
-        if (programCounter >= currentScope->code.size())
+        if (program_counter >= current_scope->code.size())
         {
             stop();
             return;
         }
 
-        const auto &codeLine = currentScope->code[programCounter++];
+        const auto &codeLine = current_scope->code[program_counter++];
 
         switch (codeLine.op)
         {
@@ -63,7 +63,7 @@ namespace stack_vm
             {
                 throw std::runtime_error("Unknown operator");
             }
-            case Operator::Push:
+            case vm_operator::push:
             {
                 if (!codeLine.value.has_value())
                 {
@@ -73,64 +73,64 @@ namespace stack_vm
                 stack.push_back(codeLine.value.value());
                 break;
             }
-            case Operator::Pop:
+            case vm_operator::pop:
             {
                 stack.pop_back();
                 break;
             }
-            case Operator::Jump:
+            case vm_operator::jump:
             {
-                const auto &label = popStack();
+                const auto &label = pop_stack();
                 jump(label);
                 break;
             }
-            case Operator::JumpTrue:
+            case vm_operator::jump_true:
             {
-                const auto &label = popStack();
-                const auto &top = popStack();
+                const auto &label = pop_stack();
+                const auto &top = pop_stack();
                 if (top.is_true())
                 {
                     jump(label);
                 }
                 break;
             }
-            case Operator::JumpFalse:
+            case vm_operator::jump_false:
             {
-                const auto &label = popStack();
-                const auto &top = popStack();
+                const auto &label = pop_stack();
+                const auto &top = pop_stack();
                 if (top.is_false())
                 {
                     jump(label);
                 }
                 break;
             }
-            case Operator::Call:
+            case vm_operator::call:
             {
-                const auto &label = popStack();
+                const auto &label = pop_stack();
                 call(label);
                 break;
             }
-            case Operator::Return:
+            case vm_operator::call_return:
             {
-                callReturn();
+                call_return();
                 break;
             }
-            case Operator::Run:
+            case vm_operator::run:
             {
-                const auto &top = popStack();
-                runHandler(top, *this);
+                const auto &top = pop_stack();
+                run_handler(top, *this);
                 break;
             }
         }
     }
 
-    void VirtualMachine::call(const Value &input)
+    void virtual_machine::call(const value &input)
     {
-        stackTrace.emplace_back(programCounter, currentScope);
+        stack_trace.emplace_back(program_counter, current_scope);
         jump(input);
     }
 
-    void VirtualMachine::jump(const Value &input)
+    void virtual_machine::jump(const value &input)
     {
         if (input.is_string())
         {
@@ -156,7 +156,7 @@ namespace stack_vm
         }
     }
 
-    void VirtualMachine::jump(const std::string &label, const std::string &scopeName)
+    void virtual_machine::jump(const std::string &label, const std::string &scopeName)
     {
         if (scopeName.size() > 0)
         {
@@ -167,46 +167,46 @@ namespace stack_vm
             }
             else
             {
-                currentScope = find->second;
+                current_scope = find->second;
             }
         }
 
         if (label.size() == 0)
         {
-            programCounter = 0;
+            program_counter = 0;
             return;
         }
 
-        auto findLabel = currentScope->labels.find(label);
-        if (findLabel == currentScope->labels.end())
+        auto findLabel = current_scope->labels.find(label);
+        if (findLabel == current_scope->labels.end())
         {
             throw std::runtime_error("Unable to find label in current scope to jump to");
         }
 
-        programCounter = findLabel->second;
+        program_counter = findLabel->second;
     }
 
-    void VirtualMachine::callReturn()
+    void virtual_machine::call_return()
     {
-        if (stackTrace.size() == 0)
+        if (stack_trace.size() == 0)
         {
             throw std::runtime_error("Unable to return, stack trace empty");
         }
 
-        const auto last = *stackTrace.rbegin();
-        stackTrace.pop_back();
-        currentScope = last.scope;
-        programCounter = last.lineCounter;
+        const auto last = *stack_trace.rbegin();
+        stack_trace.pop_back();
+        current_scope = last.scope;
+        program_counter = last.line_counter;
     }
 
-    Value VirtualMachine::popStack()
+    value virtual_machine::pop_stack()
     {
         auto end = *stack.rbegin();
         stack.erase(stack.end());
         return end;
     }
 
-    void VirtualMachine::pushStack(Value input)
+    void virtual_machine::push_stack(value input)
     {
         stack.push_back(input);
     }

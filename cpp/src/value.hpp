@@ -8,25 +8,25 @@
 
 namespace stack_vm
 {
-    class Value;
+    class value;
 
-    using object_value = std::map<std::string, Value>;
-    using array_value = std::vector<Value>;
+    using object_value = std::map<std::string, value>;
+    using array_value = std::vector<value>;
 
-    class Value
+    class value
     {
         public:
             // Fields
             std::variant<bool, double, std::string, object_value, array_value> data;
 
             // Constructor
-            Value(bool value) : data(value) { }
-            Value(int value) : data((double)value) { }
-            Value(double value) : data(value) { }
-            Value(const char * value) : Value(std::string(value)) { }
-            Value(const std::string &value) : data(value) { }
-            Value(const object_value &value) : data(value) { }
-            Value(const array_value &value) : data(value) { }
+            value(bool input) : data(input) { }
+            value(int input) : data((double)input) { }
+            value(double input) : data(input) { }
+            value(const char * input) : value(std::string(input)) { }
+            value(const std::string &input) : data(input) { }
+            value(const object_value &input) : data(input) { }
+            value(const array_value &input) : data(input) { }
 
             // Methods
             bool is_string() const

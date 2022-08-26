@@ -13,57 +13,57 @@
 
 namespace stack_vm
 {
-    class VirtualMachine;
+    class virtual_machine;
 
-    using RunHandler = std::function<void(const Value &, VirtualMachine &)>;
+    using run_handler = std::function<void(const value &, virtual_machine &)>;
 
-    class ScopeFrame
+    class scope_frame
     {
         public:
             // Fields
-            const int lineCounter;
-            const std::shared_ptr<Scope> scope;
+            const int line_counter;
+            const std::shared_ptr<stack_vm::scope> scope;
 
             // Constructor
-            ScopeFrame(int lineCounter, std::shared_ptr<Scope> scope) : lineCounter(lineCounter), scope(scope) { }
+            scope_frame(int line_counter, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), scope(scope) { }
 
             // Methods
     };
 
-    class VirtualMachine
+    class virtual_machine
     {
         public:
             // Fields
 
             // Constructor
-            VirtualMachine(int stackSize, RunHandler runHandler);
+            virtual_machine(int stackSize, run_handler run_handler);
 
             // Methods
-            void addScope(std::shared_ptr<Scope> scope);
-            void run(const std::string &startScopeName);
+            void add_scope(std::shared_ptr<scope> scope);
+            void run(const std::string &start_scope_name);
             void stop();
             void pause(bool value);
             void step();
 
-            void call(const Value &label);
-            void jump(const Value &label);
-            void jump(const std::string &label, const std::string &scopeName);
-            void callReturn();
+            void call(const value &label);
+            void jump(const value &label);
+            void jump(const std::string &label, const std::string &scope_name);
+            void call_return();
 
-            Value popStack();
-            void pushStack(Value input);
+            value pop_stack();
+            void push_stack(value input);
 
         private:
             // Fields
-            std::vector<Value> stack;
-            std::map<std::string, std::shared_ptr<Scope>> scopes;
-            std::vector<ScopeFrame> stackTrace;
-            std::shared_ptr<Scope> currentScope;
-            int programCounter;
-            int stackSize;
+            std::vector<value> stack;
+            std::map<std::string, std::shared_ptr<scope>> scopes;
+            std::vector<scope_frame> stack_trace;
+            std::shared_ptr<scope> current_scope;
+            int program_counter;
+            int stack_size;
             bool running;
             bool paused;
-            RunHandler runHandler;
+            stack_vm::run_handler run_handler;
 
             // Methods
     };
