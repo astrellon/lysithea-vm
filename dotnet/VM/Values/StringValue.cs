@@ -11,7 +11,7 @@ namespace SimpleStackVM
         #region Constructor
         public StringValue(string value)
         {
-            this.Value = value ?? "<<null>>";
+            this.Value = string.Intern(value) ?? "<<null>>";
         }
         #endregion
 

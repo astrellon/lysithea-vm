@@ -27,9 +27,8 @@ namespace SimpleStackVM
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("perfTest.json"));
             var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
 
-            var vm = new VirtualMachine();
+            var vm = new VirtualMachine(64, OnRunCommandPerfTest);
             vm.AddScopes(scopes);
-            vm.OnRunCommand += OnRunCommandPerfTest;
 
             // var disassembled = VirtualMachineDisassembler.Disassemble(vm);
             // File.WriteAllText("output.json", disassembled.ToString(4));

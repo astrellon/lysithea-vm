@@ -3,7 +3,7 @@ using System.Text;
 
 namespace SimpleStackVM
 {
-    public struct ObjectValue : IValue, IValueContainer
+    public struct ObjectValue : IValue
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;
@@ -63,29 +63,6 @@ namespace SimpleStackVM
             }
             result.Append('}');
             return result.ToString();
-        }
-
-        public bool TryGetValue(string path, out IValue result)
-        {
-            var split = path.Split('.');
-            return this.TryGetValue(new ObjectPath(split, 0), out result);
-        }
-
-        public bool TryGetValue(ObjectPath path, out IValue result)
-        {
-            if (this.Value.TryGetValue(path.Current, out var tempResult))
-            {
-                if (path.HasMorePath && tempResult is ObjectValue nextObject)
-                {
-                    return nextObject.TryGetValue(path.NextIndex(), out result);
-                }
-
-                result = tempResult;
-                return true;
-            }
-
-            result = NullValue.Value;
-            return false;
         }
 
         public override int GetHashCode()

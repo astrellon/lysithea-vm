@@ -34,8 +34,7 @@ namespace SimpleStackVM
         private int programCounter;
         private bool running;
         private bool paused;
-
-        public event RunCommandHandler? OnRunCommand;
+        private RunCommandHandler runHandler;
 
         public bool IsRunning => this.running;
         public int ProgramCounter => this.programCounter;
@@ -44,9 +43,10 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructor
-        public VirtualMachine(int stackSize = 64)
+        public VirtualMachine(int stackSize, RunCommandHandler runHandler)
         {
             this.StackSize = stackSize;
+            this.runHandler = runHandler;
 
             this.scopes = new Dictionary<string, Scope>();
             this.programCounter = 0;
@@ -178,12 +178,7 @@ namespace SimpleStackVM
                 case Operator.Run:
                     {
                         var top = this.PopStack();
-                        if (this.OnRunCommand == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"Cannot run command {top}, no listener set");
-                        }
-
-                        this.OnRunCommand.Invoke(top, this);
+                        this.runHandler.Invoke(top, this);
                         break;
                     }
             }
