@@ -1,10 +1,11 @@
 using System;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 
 namespace SimpleStackVM
 {
-    public class ArrayValue : IValue
+    public struct ArrayValue : IValue
     {
         #region Fields
         public readonly IReadOnlyList<IValue> Value;

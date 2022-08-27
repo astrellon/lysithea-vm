@@ -24,7 +24,7 @@ namespace SimpleStackVM
         {
             if (list.Any())
             {
-                result = list.Last();;
+                result = list.Last();
                 list.RemoveAt(list.Count - 1);
                 return true;
             }

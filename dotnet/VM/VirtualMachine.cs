@@ -25,8 +25,8 @@ namespace SimpleStackVM
         public readonly int StackSize;
         public bool DebugMode = false;
 
-        private readonly List<IValue> stack;
-        private readonly List<ScopeFrame> stackTrace;
+        private readonly FixedStack<IValue> stack;
+        private readonly FixedStack<ScopeFrame> stackTrace;
 
         private readonly Dictionary<string, Scope> scopes;
         private Scope currentScope;
@@ -50,8 +50,8 @@ namespace SimpleStackVM
 
             this.scopes = new Dictionary<string, Scope>();
             this.programCounter = 0;
-            this.stack = new List<IValue>(stackSize);
-            this.stackTrace = new List<ScopeFrame>(stackSize);
+            this.stack = new FixedStack<IValue>(stackSize);
+            this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
         #endregion
 
@@ -130,7 +130,10 @@ namespace SimpleStackVM
                         {
                             throw new OperatorException(this.CreateStackTrace(), "Push requires input");
                         }
-                        this.stack.Add(codeLine.Input);
+                        if (!this.stack.TryPush(codeLine.Input))
+                        {
+                            throw new StackException(this.CreateStackTrace(), "Stack is full!");
+                        }
                         break;
                     }
                 case Operator.Pop:
@@ -186,19 +189,20 @@ namespace SimpleStackVM
 
         public void CallToLabel(IValue label)
         {
-            this.stackTrace.Add(new ScopeFrame(this.programCounter, this.currentScope));
+            if (!this.stackTrace.TryPush(new ScopeFrame(this.programCounter, this.currentScope)))
+            {
+                throw new StackException(this.CreateStackTrace(), "Unable to call, call stack full");
+            }
             this.JumpToLabel(label);
         }
 
         public void Return()
         {
-            if (!this.stackTrace.Any())
+            if (!this.stackTrace.TryPop(out var scopeFrame))
             {
                 throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
             }
 
-            var scopeFrame = this.stackTrace.Last();
-            this.stackTrace.Pop();
             this.currentScope = scopeFrame.Scope;
             this.programCounter = scopeFrame.LineCounter;
         }
@@ -211,13 +215,13 @@ namespace SimpleStackVM
             }
             else if (jumpTo is ArrayValue arrayValue)
             {
-                if (arrayValue.Value.Count == 0)
+                if (arrayValue.Value.Count() == 0)
                 {
                     throw new OperatorException(this.CreateStackTrace(), "Cannot jump to an empty array");
                 }
                 string? scopeName = null;
                 var label = arrayValue.Value[0].ToString();
-                if (arrayValue.Value.Count > 1)
+                if (arrayValue.Value.Count() > 1)
                 {
                     scopeName = arrayValue.Value[1].ToString();
                 }
@@ -285,7 +289,10 @@ namespace SimpleStackVM
 
         public void PushStack(IValue value)
         {
-            this.stack.Add(value);
+            if (!this.stack.TryPush(value))
+            {
+                throw new StackException(this.CreateStackTrace(), "Unable to push stack, stack is full");
+            }
         }
 
         public IReadOnlyList<string> CreateStackTrace()
@@ -293,9 +300,9 @@ namespace SimpleStackVM
             var result = new List<string>();
 
             result.Add(DebugScopeLine(this.currentScope, this.programCounter - 1));
-            for (var i = this.stackTrace.Count - 1; i >= 0; i--)
+            for (var i = this.stackTrace.Data.Count() - 1; i >= 0; i--)
             {
-                var stackFrame = this.stackTrace[i];
+                var stackFrame = this.stackTrace.Data[i];
                 result.Add(DebugScopeLine(stackFrame.Scope, stackFrame.LineCounter));
             }
 
