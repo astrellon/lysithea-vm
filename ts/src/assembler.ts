@@ -168,7 +168,7 @@ function parseOperator(input: string) : Operator
         case 'call':
         case 'return':
         case 'jump':
-        case 'run': return input as Operator;
+        case 'run': return lower as Operator;
         case 'jumptrue': return 'jumpTrue';
         case 'jumpfalse': return 'jumpFalse';
         default: return 'unknown';
