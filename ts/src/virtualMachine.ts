@@ -90,7 +90,7 @@ export default class VirtualMachine
 
         switch (codeLine.operator)
         {
-            case Operator.Push:
+            case 'push':
                 {
                     if (codeLine.value == null)
                     {
@@ -100,18 +100,18 @@ export default class VirtualMachine
                     this._stack.push(codeLine.value);
                     break;
                 }
-            case Operator.Pop:
+            case 'pop':
                 {
                     this.popObject();
                     break;
                 }
-            case Operator.Jump:
+            case 'jump':
                 {
                     const label = this.popObject();
                     this.jumpValue(label);
                     break;
                 }
-            case Operator.JumpTrue:
+            case 'jumpTrue':
                 {
                     const label = this.popObject();
                     const top = this.popObject();
@@ -121,7 +121,7 @@ export default class VirtualMachine
                     }
                     break;
                 }
-            case Operator.JumpFalse:
+            case 'jumpFalse':
                 {
                     const label = this.popObject();
                     const top = this.popObject();
@@ -131,18 +131,18 @@ export default class VirtualMachine
                     }
                     break;
                 }
-            case Operator.Call:
+            case 'call':
                 {
                     const label = this.popObject();
                     this.call(label);
                     break;
                 }
-            case Operator.Return:
+            case 'return':
                 {
                     this.callReturn();
                     break;
                 }
-            case Operator.Run:
+            case 'run':
                 {
                     const top = this.popObject();
                     this._runHandler(top, this);

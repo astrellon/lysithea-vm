@@ -1,13 +1,13 @@
-import { CodeLine, Operator, Scope, Value } from "./types";
+import { CodeLine, Scope, Value } from "./types";
 import VirtualMachine from "./virtualMachine";
 
 const code: CodeLine[] = [
-    { operator: Operator.Push, value: 5 },
-    { operator: Operator.Push, value: 7 },
-    { operator: Operator.Push, value: 'add' },
-    { operator: Operator.Run },
-    { operator: Operator.Push, value: 'text' },
-    { operator: Operator.Run },
+    { operator: 'push', value: 5 },
+    { operator: 'push', value: 7 },
+    { operator: 'push', value: 'add' },
+    { operator: 'run' },
+    { operator: 'push', value: 'text' },
+    { operator: 'run' },
 ];
 const scope: Scope = {
     name: 'Start',
