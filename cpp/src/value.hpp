@@ -21,6 +21,7 @@ namespace stack_vm
             std::variant<bool, double, std::string, std::shared_ptr<object_value>, std::shared_ptr<array_value>> data;
 
             // Constructor
+            value() : data(false) { }
             value(bool input) : data(input) { }
             value(int input) : data((double)input) { }
             value(unsigned int input) : data((double)input) { }

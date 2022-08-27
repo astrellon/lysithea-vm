@@ -4,8 +4,6 @@ namespace stack_vm
 {
     virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler run_handler) : stack_size(stack_size), program_counter(0), running(false), paused(false), run_handler(run_handler)
     {
-        stack.reserve(stack_size);
-        stack_trace.reserve(stack_size);
     }
 
     void virtual_machine::add_scope(std::shared_ptr<scope> scope)
@@ -78,12 +76,12 @@ namespace stack_vm
                     throw std::runtime_error("Push code line requires input");
                 }
 
-                stack.push_back(codeLine.value.value());
+                stack.push(codeLine.value.value());
                 break;
             }
             case vm_operator::pop:
             {
-                stack.pop_back();
+                stack.pop();
                 break;
             }
             case vm_operator::jump:
@@ -134,7 +132,7 @@ namespace stack_vm
 
     void virtual_machine::call(const value &input)
     {
-        stack_trace.emplace_back(program_counter, current_scope);
+        stack_trace.push(scope_frame(program_counter, current_scope));
         jump(input);
     }
 
@@ -201,21 +199,21 @@ namespace stack_vm
             throw std::runtime_error("Unable to return, stack trace empty");
         }
 
-        auto last = stack_trace.back();
-        stack_trace.pop_back();
+        auto last = stack_trace.top();
+        stack_trace.pop();
         current_scope = last.scope;
         program_counter = last.line_counter;
     }
 
     value virtual_machine::pop_stack()
     {
-        auto end = stack.back();
-        stack.pop_back();
+        auto end = stack.top();
+        stack.pop();
         return end;
     }
 
     void virtual_machine::push_stack(value input)
     {
-        stack.push_back(input);
+        stack.push(input);
     }
 } // namespace stack_vm

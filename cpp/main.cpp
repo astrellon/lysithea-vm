@@ -41,6 +41,7 @@ void runHandler(const value &input, virtual_machine &vm)
 
 int main()
 {
+    std::cout << "Size: " << sizeof(value) << "\n";
     std::ifstream json_input;
     json_input.open("perfTest.json");
     if (!json_input)

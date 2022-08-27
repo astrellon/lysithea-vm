@@ -2,6 +2,7 @@
 
 #include <functional>
 #include <vector>
+#include <stack>
 #include <map>
 #include <string>
 #include <memory>
@@ -25,6 +26,7 @@ namespace stack_vm
             const std::shared_ptr<stack_vm::scope> scope;
 
             // Constructor
+            scope_frame() : line_counter(0), scope(nullptr) { }
             scope_frame(int line_counter, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), scope(scope) { }
 
             // Methods
@@ -56,9 +58,9 @@ namespace stack_vm
 
         private:
             // Fields
-            std::vector<value> stack;
+            std::stack<value> stack;
+            std::stack<scope_frame> stack_trace;
             std::map<std::string, std::shared_ptr<scope>> scopes;
-            std::vector<scope_frame> stack_trace;
             std::shared_ptr<scope> current_scope;
             int program_counter;
             int stack_size;
