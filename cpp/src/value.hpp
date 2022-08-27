@@ -5,6 +5,7 @@
 #include <variant>
 #include <any>
 #include <sstream>
+#include <memory>
 
 namespace stack_vm
 {
@@ -17,7 +18,7 @@ namespace stack_vm
     {
         public:
             // Fields
-            std::variant<bool, double, std::string, object_value, array_value> data;
+            std::variant<bool, double, std::string, std::shared_ptr<object_value>, std::shared_ptr<array_value>> data;
 
             // Constructor
             value(bool input) : data(input) { }
@@ -26,8 +27,8 @@ namespace stack_vm
             value(double input) : data(input) { }
             value(const char * input) : value(std::string(input)) { }
             value(const std::string &input) : data(input) { }
-            value(const object_value &input) : data(input) { }
-            value(const array_value &input) : data(input) { }
+            value(std::shared_ptr<object_value> input) : data(input) { }
+            value(std::shared_ptr<array_value> input) : data(input) { }
 
             // Methods
             bool is_string() const
@@ -80,7 +81,7 @@ namespace stack_vm
                         std::stringstream ss;
                         ss << '{';
                         auto first = true;
-                        for (const auto &iter : std::get<object_value>(data))
+                        for (const auto &iter : *std::get<std::shared_ptr<object_value>>(data))
                         {
                             if (!first)
                             {
@@ -101,7 +102,7 @@ namespace stack_vm
                         std::stringstream ss;
                         ss << '[';
                         auto first = true;
-                        for (const auto &iter : std::get<array_value>(data))
+                        for (const auto &iter : *std::get<std::shared_ptr<array_value>>(data))
                         {
                             if (!first)
                             {

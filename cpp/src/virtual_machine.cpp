@@ -146,7 +146,7 @@ namespace stack_vm
         }
         else if (input.is_array())
         {
-            const auto &list = std::get<array_value>(input.data);
+            const auto &list = *std::get<std::shared_ptr<array_value>>(input.data);
             if (list.size() == 0)
             {
                 throw std::runtime_error("Cannot jump to empty array");

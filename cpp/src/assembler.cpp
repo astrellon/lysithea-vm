@@ -136,7 +136,7 @@ namespace stack_vm
             }
             case json::value_t::object:
             {
-                object_value obj;
+                auto obj = std::make_shared<object_value>();
                 for (auto iter = j.begin(); iter != j.end(); ++iter)
                 {
                     auto parsed_value = parse_json_value(iter.value());
@@ -144,14 +144,13 @@ namespace stack_vm
                     {
                         throw std::runtime_error("Error parsing object value");
                     }
-                    // obj[iter.key()] = parsed_value.value();
-                    obj.emplace(iter.key(), parsed_value.value());
+                    obj->emplace(iter.key(), parsed_value.value());
                 }
                 return value(obj);
             }
             case json::value_t::array:
             {
-                array_value arr;
+                auto arr = std::make_shared<array_value>();
                 for (auto &item : j)
                 {
                     auto parsed_value = parse_json_value(item);
@@ -159,7 +158,7 @@ namespace stack_vm
                     {
                         throw std::runtime_error("Error parsing array value");
                     }
-                    arr.push_back(parsed_value.value());
+                    arr->push_back(parsed_value.value());
                 }
                 return value(arr);
             }
