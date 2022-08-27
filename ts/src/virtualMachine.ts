@@ -186,7 +186,7 @@ export default class VirtualMachine
                 throw new Error(`Cannot jump to an empty array`);
             }
 
-            const scopeName = value.length > 1 ? value[0] as string : undefined;
+            const scopeName = value.length > 1 ? value[1] as string : undefined;
             this.jump(value[0], scopeName);
         }
     }

@@ -1,20 +1,32 @@
-import { CodeLine, Scope, Value } from "./types";
+import { InputScope, parseScopes } from "./assembler";
+import { Value } from "./types";
 import VirtualMachine from "./virtualMachine";
 
-const code: CodeLine[] = [
-    { operator: 'push', value: 5 },
-    { operator: 'push', value: 7 },
-    { operator: 'push', value: 'add' },
-    { operator: 'run' },
-    { operator: 'push', value: 'text' },
-    { operator: 'run' },
-];
-const scope: Scope = {
-    name: 'Start',
-    code,
-    labels: {}
-}
+const rawCode: InputScope[] = [
+    {
+        "name": "Main",
+        "data": [
+            ["Push", 0],
+            ":Start",
+            ["Call", ["", "Step"]],
+            ["$isDone"],
+            ["JumpFalse", ":Start"],
+            "$done"
+        ]
+    },
+    {
+        "name": "Step",
+        "data": [
+            ["$rand"],
+            ["$rand"],
+            ["$add"],
+            ["$add"],
+            "Return"
+        ]
+    }
+]
 
+let counter = 0;
 function runHandler(value: Value, vm: VirtualMachine)
 {
     const commandName = value?.toString();
@@ -23,16 +35,30 @@ function runHandler(value: Value, vm: VirtualMachine)
         const num1 = vm.popObject() as number;
         const num2 = vm.popObject() as number;
         vm.pushObject(num1 + num2);
-        return;
     }
-    if (commandName === 'text')
+    else if (commandName === 'rand')
+    {
+        vm.pushObject(Math.random());
+    }
+    else if (commandName === 'isDone')
+    {
+        vm.pushObject(counter++ > 1000000);
+    }
+    else if (commandName === 'done')
+    {
+        const total = vm.popObject() as number;
+        console.log('Total:', total);
+    }
+    else if (commandName === 'text')
     {
         const top = vm.popObject();
         console.log('TEXT:', top);
     }
 }
 
-const vm = new VirtualMachine(64, runHandler);
-vm.addScope(scope);
+const scopes = parseScopes(rawCode);
 
-vm.run('Start');
+const vm = new VirtualMachine(64, runHandler);
+vm.addScopes(scopes);
+
+vm.run('Main');
