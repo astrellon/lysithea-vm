@@ -47,24 +47,21 @@ function runHandler(value: Value, vm: VirtualMachine)
             throw new Error('No choices to wait for!');
         }
 
-        let choiceValid = false;
-        do
+        vm.paused = true;
+        let choiceIndexStr = '-1';
+        rl.question('Enter choice:', (choice) =>
         {
-            let choiceIndexStr = '-1';
-            rl.question('Enter choice:', (choice) =>
-            {
-                choiceIndexStr = choice;
-            });
+            choiceIndexStr = choice;
             let choiceIndex = Number.parseInt(choiceIndexStr);
             if (doChoice(choiceIndex, vm))
             {
-                choiceValid = true;
+                vm.run(null);
             }
             else
             {
                 console.log('Invalid choice');
             }
-        } while (!choiceValid);
+        });
     }
     else if (commandName === 'openTheShop')
     {
@@ -73,6 +70,14 @@ function runHandler(value: Value, vm: VirtualMachine)
     else if (commandName === 'openShop')
     {
         console.log('Opening the shop to the player and quitting dialogue');
+    }
+    else if (commandName === 'isShopEnabled')
+    {
+        vm.pushObject(isShopEnabled);
+    }
+    else
+    {
+        console.error('Unknown command:', commandName);
     }
 }
 

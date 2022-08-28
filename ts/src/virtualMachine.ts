@@ -94,7 +94,7 @@ export default class VirtualMachine
                 {
                     if (codeLine.value == null)
                     {
-                        throw new Error(`Push requires input`);
+                        throw new Error(`${this.getScopeLine()}: Push requires input`);
                     }
 
                     this._stack.push(codeLine.value);
@@ -150,7 +150,7 @@ export default class VirtualMachine
                 }
             default:
                 {
-                    throw new Error(`Unknown operator: ${codeLine.operator}`);
+                    throw new Error(`${this.getScopeLine()}: Unknown operator: ${codeLine.operator}`);
                 }
         }
     }
@@ -166,7 +166,7 @@ export default class VirtualMachine
         const scopeFrame = this._stackTrace.pop();
         if (scopeFrame == undefined)
         {
-            throw new Error(`Unable to return, call stack empty`);
+            throw new Error(`${this.getScopeLine()}: Unable to return, call stack empty`);
         }
 
         this._currentScope = scopeFrame.scope;
@@ -183,7 +183,7 @@ export default class VirtualMachine
         {
             if (value.length == 0)
             {
-                throw new Error(`Cannot jump to an empty array`);
+                throw new Error(`${this.getScopeLine()}: Cannot jump to an empty array`);
             }
 
             const scopeName = value.length > 1 ? value[1] as string : undefined;
@@ -198,7 +198,7 @@ export default class VirtualMachine
             const newScope = this._scopes[scopeName];
             if (newScope == null)
             {
-                throw new Error(`Unable to find scope to jump to ${scopeName}`);
+                throw new Error(`${this.getScopeLine()}: Unable to find scope to jump to ${scopeName}`);
             }
             this._currentScope = newScope;
         }
@@ -223,7 +223,7 @@ export default class VirtualMachine
         const result = this._stack.pop();
         if (result == undefined)
         {
-            throw new Error("Popped empty stack");
+            throw new Error(`${this.getScopeLine()}: Popped empty stack`);
         }
         return result;
     }
@@ -233,7 +233,7 @@ export default class VirtualMachine
         const result = this._stack.pop();
         if (result == undefined)
         {
-            throw new Error("Popped empty stack");
+            throw new Error(`${this.getScopeLine()}: Popped empty stack`);
         }
         return result as T;
     }
@@ -241,5 +241,10 @@ export default class VirtualMachine
     public pushObject(value: Value)
     {
         this._stack.push(value);
+    }
+
+    private getScopeLine()
+    {
+        return `${this._currentScope.name}:${this._programCounter}`;
     }
 }
