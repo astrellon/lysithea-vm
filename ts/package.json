@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node ./src/index.ts",
+    "diag": "ts-node ./src/dialogueTreeIndex.ts",
     "tsc": "tsc && terser --compress --mangle --output simple-stack-vm.mini.js -- simple-stack-vm.js",
     "init": "tsc --init"
   },

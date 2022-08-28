@@ -228,6 +228,16 @@ export default class VirtualMachine
         return result;
     }
 
+    public popObjectCast<T extends Value>() : T
+    {
+        const result = this._stack.pop();
+        if (result == undefined)
+        {
+            throw new Error("Popped empty stack");
+        }
+        return result as T;
+    }
+
     public pushObject(value: Value)
     {
         this._stack.push(value);
