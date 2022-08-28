@@ -139,7 +139,8 @@ namespace SimpleStackVM
                     }
                 case Operator.JumpFalse:
                     {
-                        var label = this.PopStack();
+                        var label = codeLine.Input ?? this.PopStack();
+
                         var top = this.PopStack();
                         if (top.Equals(BoolValue.False))
                         {
@@ -149,7 +150,7 @@ namespace SimpleStackVM
                     }
                 case Operator.JumpTrue:
                     {
-                        var label = this.PopStack();
+                        var label = codeLine.Input ?? this.PopStack();
                         var top = this.PopStack();
                         if (top.Equals(BoolValue.True))
                         {
@@ -159,13 +160,13 @@ namespace SimpleStackVM
                     }
                 case Operator.Jump:
                     {
-                        var label = this.PopStack();
+                        var label = codeLine.Input ?? this.PopStack();
                         this.JumpToLabel(label);
                         break;
                     }
                 case Operator.Call:
                     {
-                        var label = this.PopStack();
+                        var label = codeLine.Input ?? this.PopStack();
                         this.CallToLabel(label);
                         break;
                     }
@@ -176,7 +177,7 @@ namespace SimpleStackVM
                     }
                 case Operator.Run:
                     {
-                        var top = this.PopStack();
+                        var top = codeLine.Input ?? this.PopStack();
                         this.runHandler.Invoke(top, this);
                         break;
                     }
@@ -294,7 +295,7 @@ namespace SimpleStackVM
             var result = new List<string>();
 
             result.Add(DebugScopeLine(this.currentScope, this.programCounter - 1));
-            for (var i = this.stackTrace.Data.Count() - 1; i >= 0; i--)
+            for (var i = this.stackTrace.Index - 1; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];
                 result.Add(DebugScopeLine(stackFrame.Scope, stackFrame.LineCounter));

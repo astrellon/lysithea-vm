@@ -104,11 +104,13 @@ namespace SimpleStackVM
             }
 
             var opCode = Operator.Unknown;
+            var pushChildOffset = 1;
             IValue? codeLineInput = null;
             if (first[0] == '$')
             {
                 opCode = Operator.Run;
                 codeLineInput = new StringValue(first.Substring(1));
+                pushChildOffset = 0;
             }
             else
             {
@@ -116,10 +118,19 @@ namespace SimpleStackVM
                 {
                     throw new Exception($"Unknown operator: {first}");
                 }
+
+                if (input.Count > 1)
+                {
+                    if (!TryParseJson(input.Last(), out codeLineInput))
+                    {
+                        throw new Exception($"Error parsing input for: {input.ToString()}");
+                    }
+                }
             }
 
-            foreach (var child in input.Skip(1))
+            for (var i = 1; i < input.Count - pushChildOffset; i++)
             {
+                var child = input[i];
                 if (TryParseJson(child, out var pushValue))
                 {
                     yield return new TempCodeLine(Operator.Push, pushValue);
@@ -130,14 +141,7 @@ namespace SimpleStackVM
                 }
             }
 
-            if (opCode != Operator.Push)
-            {
-                if (codeLineInput != null)
-                {
-                    yield return new TempCodeLine(Operator.Push, codeLineInput);
-                }
-                yield return new TempCodeLine(opCode, null);
-            }
+            yield return new TempCodeLine(opCode, codeLineInput);
         }
 
         private static bool TryParseJson(JSONNode input, out IValue result)

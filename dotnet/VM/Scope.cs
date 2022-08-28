@@ -11,8 +11,8 @@ namespace SimpleStackVM
         public static readonly Scope Empty = new Scope("<<empty>>", EmptyCode, EmptyLabels);
 
         public readonly string ScopeName;
-        public readonly IReadOnlyList<CodeLine> Code;
-        public readonly IReadOnlyDictionary<string, int> Labels;
+        public readonly IReadOnlyList<CodeLine> Code = EmptyCode;
+        public readonly IReadOnlyDictionary<string, int> Labels = EmptyLabels;
 
         public bool IsEmpty => this.Code.Count == 0;
         #endregion

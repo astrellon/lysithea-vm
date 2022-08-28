@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -24,7 +25,10 @@ namespace SimpleStackVM
 
             try
             {
+                var sw = Stopwatch.StartNew();
                 vm.Run("Main");
+                sw.Stop();
+                Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
             }
             catch (VirtualMachineException exp)
             {
