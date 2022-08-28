@@ -15,7 +15,13 @@ int counter = 0;
 
 void runHandler(const value &input, virtual_machine &vm)
 {
-    const auto command = input.to_string();
+    if (!input.is_string())
+    {
+        return;
+    }
+
+    const auto &command = *std::get<std::shared_ptr<std::string>>(input.data).get();
+
     if (command == "rand")
     {
         std::uniform_real_distribution<double> dist(0.0, 1.0);
