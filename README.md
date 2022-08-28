@@ -1,7 +1,7 @@
 Simple Stack Virtual Machine
 =
 
-This repository contains code for a simple stack based virtual machine. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. The final command is to run an external command through a handler.
+This repository contains code for a simple stack based virtual machine. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. The final command is to run an external command through a handler.
 
 This is built it contains no math functions, string manipulation or anything, but the values the stack support is:
 - Strings
@@ -32,3 +32,31 @@ Currently the code is written in JSON. This skips the need for specialised gramm
 ```
 
 This will push the `5`, `12` and `"add"` to the stack, run the command at the top of the stack (`"add"`), then push `"print"` to the stack and call run again. As for what `"add"` and `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console the number `17`.
+
+Here is an example of a run command handler for the above program in C#:
+```csharp
+private static void OnRunCommand(IValue command, VirtualMachine vm)
+{
+    var commandName = command.ToString();
+    if (commandName == "add")
+    {
+        var num1 = vm.PopStack<NumberValue>();
+        var num2 = vm.PopStack<NumberValue>();
+        vm.PushStack((NumberValue)(num1.Value + num2.Value));
+        return;
+    }
+    if (commandName == "print")
+    {
+        var total = vm.PopStack();
+        Console.WriteLine($"Print: {total.ToString()}");
+    }
+}
+```
+
+The program will output
+
+```
+Print: 17
+```
+
+A more complex example about a dialogue tree can be found under `dotnet/DialogueTreeProcess.cs`.
