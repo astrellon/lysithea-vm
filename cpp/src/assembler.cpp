@@ -72,7 +72,7 @@ namespace stack_vm
         if (first[0] == '$')
         {
             op_code = vm_operator::run;
-            code_line_input = value(first.substr(1));
+            code_line_input = value(std::make_shared<std::string>(first.substr(1)));
         }
         else
         {
@@ -116,7 +116,7 @@ namespace stack_vm
         {
             case json::value_t::string:
             {
-                return value(j.get<std::string>());
+                return value(std::make_shared<std::string>(j.get<std::string>()));
             }
             case json::value_t::boolean:
             {

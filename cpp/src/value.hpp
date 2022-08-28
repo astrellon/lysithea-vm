@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <map>
 #include <vector>
 #include <variant>
@@ -18,7 +19,7 @@ namespace stack_vm
     {
         public:
             // Fields
-            std::variant<bool, double, std::string, std::shared_ptr<object_value>, std::shared_ptr<array_value>> data;
+            std::variant<bool, double, std::shared_ptr<std::string>, std::shared_ptr<object_value>, std::shared_ptr<array_value>> data;
 
             // Constructor
             value() : data(false) { }
@@ -26,8 +27,8 @@ namespace stack_vm
             value(int input) : data((double)input) { }
             value(unsigned int input) : data((double)input) { }
             value(double input) : data(input) { }
-            value(const char * input) : value(std::string(input)) { }
-            value(const std::string &input) : data(input) { }
+            value(const char * input) : value(std::make_shared<std::string>(input)) { }
+            value(std::shared_ptr<std::string> input) : data(input) { }
             value(std::shared_ptr<object_value> input) : data(input) { }
             value(std::shared_ptr<array_value> input) : data(input) { }
 
@@ -76,7 +77,7 @@ namespace stack_vm
                 {
                     case 0: return std::get<bool>(data) ? "true" : "false";
                     case 1: return std::to_string(std::get<double>(data));
-                    case 2: return std::get<std::string>(data);
+                    case 2: return *std::get<std::shared_ptr<std::string>>(data);
                     case 3:
                     {
                         std::stringstream ss;

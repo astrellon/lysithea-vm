@@ -140,7 +140,7 @@ namespace stack_vm
     {
         if (input.is_string())
         {
-            jump(std::get<std::string>(input.data), "");
+            jump(*std::get<std::shared_ptr<std::string>>(input.data), "");
         }
         else if (input.is_array())
         {
