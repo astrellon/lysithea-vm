@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
@@ -22,6 +23,7 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPush(T item)
         {
             if (this.index >= this.data.Length)
@@ -32,6 +34,7 @@ namespace SimpleStackVM
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPop([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result)
         {
             if (this.index <= 0)

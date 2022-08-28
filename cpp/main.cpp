@@ -42,7 +42,7 @@ void runHandler(const value &input, virtual_machine &vm)
 int main()
 {
     std::ifstream json_input;
-    json_input.open("perfTest.json");
+    json_input.open("../../examples/perfTest.json");
     if (!json_input)
     {
         std::cout << "Could not find file to open!\n";

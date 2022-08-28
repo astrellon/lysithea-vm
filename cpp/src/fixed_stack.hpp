@@ -15,7 +15,7 @@ namespace stack_vm
             fixed_stack(int size) : data(size), index(0) { }
 
             // Methods
-            bool pop()
+            inline bool pop()
             {
                 if (index <= 0)
                 {
@@ -26,7 +26,7 @@ namespace stack_vm
                 return true;
             }
 
-            bool pop(T* result)
+            inline bool pop(T* result)
             {
                 if (index <= 0)
                 {
@@ -37,7 +37,7 @@ namespace stack_vm
                 return true;
             }
 
-            bool push(T value)
+            inline bool push(T value)
             {
                 if (index >= data.capacity())
                 {
@@ -48,7 +48,7 @@ namespace stack_vm
                 return true;
             }
 
-            int stack_size() const { return data.capacity(); }
+            inline int stack_size() const { return data.capacity(); }
 
         private:
             // Fields

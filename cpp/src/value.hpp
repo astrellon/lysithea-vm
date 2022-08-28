@@ -32,27 +32,27 @@ namespace stack_vm
             value(std::shared_ptr<array_value> input) : data(input) { }
 
             // Methods
-            bool is_string() const
+            inline bool is_string() const
             {
                 return data.index() == 2;
             }
-            bool is_number() const
+            inline bool is_number() const
             {
                 return data.index() == 1;
             }
-            bool is_bool() const
+            inline bool is_bool() const
             {
                 return data.index() == 0;
             }
-            bool is_object() const
+            inline bool is_object() const
             {
                 return data.index() == 3;
             }
-            bool is_array() const
+            inline bool is_array() const
             {
                 return data.index() == 4;
             }
-            bool is_true() const
+            inline bool is_true() const
             {
                 switch (data.index())
                 {
@@ -61,7 +61,7 @@ namespace stack_vm
                 }
             }
 
-            bool is_false() const
+            inline bool is_false() const
             {
                 switch (data.index())
                 {

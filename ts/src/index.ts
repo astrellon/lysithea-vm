@@ -1,30 +1,7 @@
 import { InputScope, parseScopes } from "./assembler";
 import { Value } from "./types";
 import VirtualMachine from "./virtualMachine";
-
-const rawCode: InputScope[] = [
-    {
-        "name": "Main",
-        "data": [
-            ["Push", 0],
-            ":Start",
-            ["Call", ["", "Step"]],
-            ["$isDone"],
-            ["JumpFalse", ":Start"],
-            "$done"
-        ]
-    },
-    {
-        "name": "Step",
-        "data": [
-            ["$rand"],
-            ["$rand"],
-            ["$add"],
-            ["$add"],
-            "Return"
-        ]
-    }
-]
+import fs from "fs";
 
 let counter = 0;
 function runHandler(value: Value, vm: VirtualMachine)
@@ -56,7 +33,8 @@ function runHandler(value: Value, vm: VirtualMachine)
     }
 }
 
-const scopes = parseScopes(rawCode);
+const inputJson: InputScope[] = JSON.parse(fs.readFileSync('../examples/perfTest.json', 'utf-8'));
+const scopes = parseScopes(inputJson);
 
 const vm = new VirtualMachine(64, runHandler);
 vm.addScopes(scopes);

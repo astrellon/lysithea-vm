@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
@@ -22,15 +22,12 @@ namespace SimpleStackVM
         #region Fields
         public delegate void RunCommandHandler(IValue command, VirtualMachine vm);
 
-        public readonly int StackSize;
         public bool DebugMode = false;
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-
         private readonly Dictionary<string, Scope> scopes;
         private Scope currentScope;
-
         private int programCounter;
         private bool running;
         private bool paused;
@@ -45,7 +42,6 @@ namespace SimpleStackVM
         #region Constructor
         public VirtualMachine(int stackSize, RunCommandHandler runHandler)
         {
-            this.StackSize = stackSize;
             this.runHandler = runHandler;
 
             this.scopes = new Dictionary<string, Scope>();
@@ -187,6 +183,7 @@ namespace SimpleStackVM
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CallToLabel(IValue label)
         {
             if (!this.stackTrace.TryPush(new ScopeFrame(this.programCounter, this.currentScope)))
@@ -260,6 +257,7 @@ namespace SimpleStackVM
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IValue PopStack()
         {
             if (!this.stack.TryPop(out var obj))
@@ -270,6 +268,7 @@ namespace SimpleStackVM
             return obj;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T PopStack<T>() where T : IValue
         {
             var obj = this.PopStack();
@@ -281,12 +280,7 @@ namespace SimpleStackVM
             throw new StackException(this.CreateStackTrace(), "Unable to pop stack, type cast error");
         }
 
-        public string PopStackString()
-        {
-            var obj = this.PopStack();
-            return obj.ToString();
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PushStack(IValue value)
         {
             if (!this.stack.TryPush(value))

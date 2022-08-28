@@ -204,16 +204,4 @@ namespace stack_vm
         current_scope = last.scope;
         program_counter = last.line_counter;
     }
-
-    value virtual_machine::pop_stack()
-    {
-        auto end = stack.top();
-        stack.pop();
-        return end;
-    }
-
-    void virtual_machine::push_stack(value input)
-    {
-        stack.push(input);
-    }
 } // namespace stack_vm

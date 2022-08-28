@@ -53,8 +53,17 @@ namespace stack_vm
             void jump(const std::string &label, const std::string &scope_name);
             void call_return();
 
-            value pop_stack();
-            void push_stack(value input);
+            inline value pop_stack()
+            {
+                auto end = stack.top();
+                stack.pop();
+                return end;
+            }
+
+            inline void push_stack(value input)
+            {
+                stack.push(input);
+            }
 
         private:
             // Fields

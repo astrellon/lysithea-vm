@@ -30,3 +30,5 @@ Currently the code is written in JSON. This skips the need for specialised gramm
     }
 ]
 ```
+
+This will push the `5`, `12` and `"add"` to the stack, run the command at the top of the stack (`"add"`), then push `"print"` to the stack and call run again. As for what `"add"` and `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console the number `17`.
