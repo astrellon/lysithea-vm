@@ -15,4 +15,4 @@ file(GLOB FILE_SRC
     "src/*.cpp"
 )
 
-add_executable(app ${FILE_SRC} main.cpp)
+add_executable(app ${FILE_SRC} dialogueTreeMain.cpp)
