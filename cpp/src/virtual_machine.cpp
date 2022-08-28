@@ -19,11 +19,11 @@ namespace stack_vm
         }
     }
 
-    void virtual_machine::run(const std::string &startScopeName)
+    void virtual_machine::run(const std::string &start_scope_name)
     {
-        if (startScopeName.size() > 0)
+        if (start_scope_name.size() > 0)
         {
-            auto find = scopes.find(startScopeName);
+            auto find = scopes.find(start_scope_name);
             if (find == scopes.end())
             {
                 throw std::runtime_error("Unable to find start scope");
@@ -162,11 +162,11 @@ namespace stack_vm
         }
     }
 
-    void virtual_machine::jump(const std::string &label, const std::string &scopeName)
+    void virtual_machine::jump(const std::string &label, const std::string &scope_name)
     {
-        if (scopeName.size() > 0)
+        if (scope_name.size() > 0)
         {
-            auto find = scopes.find(scopeName);
+            auto find = scopes.find(scope_name);
             if (find == scopes.end())
             {
                 throw std::runtime_error("Unable to find scope to jump to");
@@ -183,13 +183,13 @@ namespace stack_vm
             return;
         }
 
-        auto findLabel = current_scope->labels.find(label);
-        if (findLabel == current_scope->labels.end())
+        auto find_label = current_scope->labels.find(label);
+        if (find_label == current_scope->labels.end())
         {
             throw std::runtime_error("Unable to find label in current scope to jump to");
         }
 
-        program_counter = findLabel->second;
+        program_counter = find_label->second;
     }
 
     void virtual_machine::call_return()
