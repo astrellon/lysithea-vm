@@ -68,11 +68,13 @@ namespace stack_vm
 
         std::vector<temp_code_line> result;
         auto op_code = vm_operator::unknown;
+        auto push_child_offset = 1;
         std::optional<value> code_line_input;
         if (first[0] == '$')
         {
             op_code = vm_operator::run;
             code_line_input = value(std::make_shared<std::string>(first.substr(1)));
+            push_child_offset = 0;
         }
         else
         {
@@ -81,11 +83,21 @@ namespace stack_vm
             {
                 throw std::runtime_error("Unknown operator");
             }
+
+            if (j.size() > 1)
+            {
+                code_line_input = parse_json_value(j.back());
+                if (!code_line_input.has_value())
+                {
+                    throw std::runtime_error("Error parsing code line");
+                }
+
+            }
         }
 
         if (!string_input)
         {
-            for (auto iter = j.begin() + 1; iter != j.end(); ++iter)
+            for (auto iter = j.begin() + 1; iter != j.end() - push_child_offset; ++iter)
             {
                 auto parsed_value = parse_json_value(iter.value());
                 if (!parsed_value.has_value())
@@ -97,12 +109,12 @@ namespace stack_vm
             }
         }
 
-        if (op_code != vm_operator::push)
+        if (code_line_input.has_value())
         {
-            if (code_line_input.has_value())
-            {
-                result.emplace_back(vm_operator::push, code_line_input.value());
-            }
+            result.emplace_back(op_code, code_line_input.value());
+        }
+        else
+        {
             result.emplace_back(op_code);
         }
 

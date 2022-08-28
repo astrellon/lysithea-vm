@@ -78,5 +78,6 @@ namespace stack_vm
             stack_vm::run_handler run_handler;
 
             // Methods
+            value get_arg(const code_line &input);
     };
 } // stack_vm

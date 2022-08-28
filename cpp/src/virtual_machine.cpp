@@ -53,6 +53,16 @@ namespace stack_vm
         paused = value;
     }
 
+    value virtual_machine::get_arg(const code_line &input)
+    {
+        if (input.value.has_value())
+        {
+            return input.value.value();
+        }
+
+        return pop_stack();
+    }
+
     void virtual_machine::step()
     {
         if (program_counter >= current_scope->code.size())
@@ -61,9 +71,9 @@ namespace stack_vm
             return;
         }
 
-        const auto &codeLine = current_scope->code[program_counter++];
+        const auto &code_line = current_scope->code[program_counter++];
 
-        switch (codeLine.op)
+        switch (code_line.op)
         {
             default:
             {
@@ -71,12 +81,12 @@ namespace stack_vm
             }
             case vm_operator::push:
             {
-                if (!codeLine.value.has_value())
+                if (!code_line.value.has_value())
                 {
                     throw std::runtime_error("Push code line requires input");
                 }
 
-                stack.push(codeLine.value.value());
+                stack.push(code_line.value.value());
                 break;
             }
             case vm_operator::pop:
@@ -86,13 +96,13 @@ namespace stack_vm
             }
             case vm_operator::jump:
             {
-                const auto &label = pop_stack();
+                const auto &label = get_arg(code_line);
                 jump(label);
                 break;
             }
             case vm_operator::jump_true:
             {
-                const auto &label = pop_stack();
+                const auto &label = get_arg(code_line);
                 const auto &top = pop_stack();
                 if (top.is_true())
                 {
@@ -102,7 +112,7 @@ namespace stack_vm
             }
             case vm_operator::jump_false:
             {
-                const auto &label = pop_stack();
+                const auto &label = get_arg(code_line);
                 const auto &top = pop_stack();
                 if (top.is_false())
                 {
@@ -112,7 +122,7 @@ namespace stack_vm
             }
             case vm_operator::call:
             {
-                const auto &label = pop_stack();
+                const auto &label = get_arg(code_line);
                 call(label);
                 break;
             }
@@ -123,7 +133,7 @@ namespace stack_vm
             }
             case vm_operator::run:
             {
-                const auto &top = pop_stack();
+                const auto &top = get_arg(code_line);
                 run_handler(top, *this);
                 break;
             }
