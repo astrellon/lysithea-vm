@@ -19,21 +19,27 @@ namespace SimpleStackVM
             }
         }
 
+        [Flags]
+        public enum FlagValues : byte
+        {
+            None = 0,
+            Running = 1 << 1,
+            Paused = 1 << 2,
+            DebugMode = 1 << 3
+        }
+
         #region Fields
         public delegate void RunCommandHandler(IValue command, VirtualMachine vm);
 
-        public bool DebugMode = false;
+        public FlagValues Flags;
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
         private readonly Dictionary<string, Scope> scopes;
-        private Scope currentScope;
+        private Scope currentScope = Scope.Empty;
         private int programCounter;
-        private bool running;
-        private bool paused;
         private RunCommandHandler runHandler;
 
-        public bool IsRunning => this.running;
         public int ProgramCounter => this.programCounter;
         public Scope CurrentScope => this.currentScope;
         public IReadOnlyDictionary<string, Scope> Scopes => this.scopes;
@@ -62,11 +68,6 @@ namespace SimpleStackVM
             foreach (var scope in scopes) { this.AddScope(scope); }
         }
 
-        public void Stop()
-        {
-            this.running = false;
-        }
-
         public void Run(string? startScopeName = null)
         {
             if (startScopeName != null)
@@ -85,30 +86,49 @@ namespace SimpleStackVM
                 throw new Exception("Cannot run virtual machine with an empty scope");
             }
 
-            this.running = true;
-            this.paused = false;
-            while (this.running && !this.paused)
+            this.SetRunning(true);
+            this.SetPause(false);
+            while (this.Flags.HasFlag(FlagValues.Running) && !this.Flags.HasFlag(FlagValues.Paused))
             {
                 this.Step();
             }
         }
 
+        public void SetRunning(bool running)
+        {
+            if (running)
+            {
+                this.Flags |= FlagValues.Running;
+            }
+            else
+            {
+                this.Flags &= ~FlagValues.Running;
+            }
+        }
+
         public void SetPause(bool paused)
         {
-            this.paused = paused;
+            if (paused)
+            {
+                this.Flags |= FlagValues.Paused;
+            }
+            else
+            {
+                this.Flags &= ~FlagValues.Paused;
+            }
         }
 
         public void Step()
         {
             if (this.programCounter >= this.currentScope.Code.Count)
             {
-                this.Stop();
+                this.SetRunning(false);
                 return;
             }
 
             var codeLine = this.currentScope.Code[this.programCounter++];
 
-            if (this.DebugMode)
+            if (this.Flags.HasFlag(FlagValues.DebugMode))
             {
                 var debugLine = DebugScopeLine(this.currentScope, this.programCounter - 1);
                 Console.WriteLine($"- {debugLine}");

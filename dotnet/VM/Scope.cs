@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace SimpleStackVM
 {
-    public struct Scope
+    public class Scope
     {
         #region Fields
         private static IReadOnlyList<CodeLine> EmptyCode = new CodeLine[0];
