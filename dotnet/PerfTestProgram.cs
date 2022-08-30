@@ -11,7 +11,8 @@ namespace SimpleStackVM
         private static int Counter = 0;
 
         #region Methods
-        public static void Run()
+        // public static void Run()
+        public static void Main(string[] args)
         {
 #if RELEASE
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../../examples/perfTest.json"));
@@ -26,7 +27,12 @@ namespace SimpleStackVM
             try
             {
                 var sw = Stopwatch.StartNew();
-                vm.Run("Main");
+                vm.SetScope("Main");
+                vm.SetRunning(true);
+                while (vm.IsRunning && !vm.IsPaused)
+                {
+                    vm.Step();
+                }
                 sw.Stop();
                 Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
             }

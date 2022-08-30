@@ -1,0 +1,16 @@
+[
+    {
+        "name": "Main",
+        "data": [
+            ["$actor", "SELF"],
+            ["$beginLine"],
+            ["$text", "Hello {PLAYER}!"],
+            ["$wait", 1000],
+            ["$text", " How are you going?"],
+            ["$endLine"],
+            ["$beginLine"],
+            ["$text", "Second line!"],
+            ["$endLine"]
+        ]
+    }
+]

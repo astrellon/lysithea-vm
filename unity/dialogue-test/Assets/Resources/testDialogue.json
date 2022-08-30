@@ -1,0 +1,70 @@
+[
+    {
+        "name": "Main",
+        "data": [
+            ["$say", "Here is the test dialogue tree"],
+            ["$say", "What is your name? "],
+            "$getPlayerName",
+            ["$say", "Hello {playerName}, hope you are well."],
+
+            ":Start",
+
+            ["$isShopEnabled"],
+            ["JumpFalse", ":ShopIsClosed"],
+            ["$randomSay", ["Welcome to my shop", "Come on in! What can I do for you?"]],
+            ["$choice", "Open Shop", ["", "OpenShop"]],
+            ["$choice", "Questions", ["", "Questions"]],
+            ["$choice", "Good bye", ["", "GoodBye"]],
+            "$waitForChoice",
+
+            ":ShopIsClosed",
+            ["$randomSay", ["Welcome stranger", "Hey, come on in"]],
+            ["$choice", "Questions", ["", "Questions"]],
+            ["$choice", "Good bye", ["", "GoodBye"]],
+            "$waitForChoice"
+        ]
+    },
+    {
+        "name": "OpenShop",
+        "data": [
+            "$openShop"
+        ]
+    },
+    {
+        "name": "Questions",
+        "data": [
+            ":Start",
+            ["$say", "What do you want to know?"],
+            ["$choice", "Who are you?", ":WhoAmI"],
+            ["$choice", "Where am I?", ":WhereAmI"],
+            ["$isShopEnabled"],
+            ["JumpTrue", ":WaitForChoice"],
+            ["$choice", "Can you open the shop?", ":OpenTheShop"],
+            ":WaitForChoice",
+            ["$choice", "I've asked enough questions", ":JumpToMain"],
+            ["$waitForChoice"],
+
+            ":WhoAmI",
+            ["$say", "I'm just a person"],
+            ["Jump", ":Start"],
+
+            ":WhereAmI",
+            ["$say", "Approximately here"],
+            ["Jump", ":Start"],
+
+            ":OpenTheShop",
+            ["$say", "Yea sure thing"],
+            "$openTheShop",
+            ["Jump", ":Start"],
+
+            ":JumpToMain",
+            ["Jump", [":Start", "Main"]]
+        ]
+    },
+    {
+        "name": "GoodBye",
+        "data": [
+            ["$randomSay", ["Catch you around!", "See you later {playerName}!"]]
+        ]
+    }
+]

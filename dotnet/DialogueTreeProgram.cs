@@ -28,7 +28,12 @@ namespace SimpleStackVM
 
             try
             {
-                vm.Run("Main");
+                vm.SetScope("Main");
+                vm.SetRunning(true);
+                while (vm.IsRunning && !vm.IsPaused)
+                {
+                    vm.Step();
+                }
             }
             catch (VirtualMachineException exp)
             {
