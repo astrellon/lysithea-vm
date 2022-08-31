@@ -198,11 +198,16 @@ namespace SimpleStackVM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CallToLabel(IValue label)
         {
-            if (!this.stackTrace.TryPush(new ScopeFrame(this.programCounter, this.currentScope)))
+            this.PushToStackTrace(this.programCounter, this.currentScope);
+            this.JumpToLabel(label);
+        }
+
+        public void PushToStackTrace(int line, Scope scope)
+        {
+            if (!this.stackTrace.TryPush(new ScopeFrame(line, scope)))
             {
                 throw new StackException(this.CreateStackTrace(), "Unable to call, call stack full");
             }
-            this.JumpToLabel(label);
         }
 
         public void Return()

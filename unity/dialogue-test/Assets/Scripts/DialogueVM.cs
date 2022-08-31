@@ -19,6 +19,9 @@ namespace SimpleStackVM.Unity
         public string StartScopeName;
         public TextAsset TextAsset;
 
+        public string DebugScopeName;
+        public int DebugLine;
+
         public bool Running;
 
         private VirtualMachine vm;
@@ -45,17 +48,29 @@ namespace SimpleStackVM.Unity
         // Update is called once per frame
         void Update()
         {
-            while (vm.IsRunning && !vm.IsPaused)
+            if (this.Running)
             {
-                if (this.waitUntil > 0.0f)
+                while (this.vm.IsRunning && !this.vm.IsPaused)
                 {
-                    this.waitUntil -= Time.deltaTime;
                     if (this.waitUntil > 0.0f)
                     {
-                        break;
+                        this.waitUntil -= Time.deltaTime;
+                        if (this.waitUntil > 0.0f)
+                        {
+                            break;
+                        }
                     }
+                    this.vm.Step();
+
+                    this.DebugScopeName = this.vm.CurrentScope.ScopeName;
+                    this.DebugLine = this.vm.ProgramCounter;
                 }
-                vm.Step();
+
+                if (!this.vm.IsRunning)
+                {
+                    this.Running = false;
+                    this.OnDone?.Invoke();
+                }
             }
         }
 
@@ -72,8 +87,27 @@ namespace SimpleStackVM.Unity
             }
 
             var choiceLabel = this.choiceBuffer[index];
-            this.vm.CallToLabel(choiceLabel);
-            this.vm.SetPause(true);
+            Debug.Log($"Selecting choice: {index}, {choiceLabel.ToString()}");
+            if (choiceLabel is ArrayValue arrayValue)
+            {
+                var firstArg = arrayValue.Value[0].ToString();
+                if (firstArg == "scopeJump")
+                {
+                    var scopeLabel = new ArrayValue(new []{StringValue.Empty, arrayValue.Value[1]});
+                    this.vm.JumpToLabel(scopeLabel);
+                }
+                else if (firstArg == "return")
+                {
+                    this.vm.PushToStackTrace(0, this.vm.CurrentScope);
+                    var scopeLabel = new ArrayValue(new []{StringValue.Empty, arrayValue.Value[1]});
+                    this.vm.JumpToLabel(scopeLabel);
+                }
+            }
+            else
+            {
+                this.vm.CallToLabel(choiceLabel);
+            }
+            this.vm.SetPause(false);
         }
 
         private void OnRunHandler(IValue command, VirtualMachine vm)
