@@ -23,10 +23,14 @@ namespace SimpleStackVM
         #region Methods
         public override bool Equals(object? other)
         {
-            if (other == null) return false;
+            if (other == null) return this.Value == false;
             if (other is BoolValue otherBoolValue)
             {
                 return otherBoolValue.Value == this.Value;
+            }
+            if (other is NullValue)
+            {
+                return this.Value == false;
             }
             return false;
         }

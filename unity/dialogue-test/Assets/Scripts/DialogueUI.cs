@@ -9,15 +9,17 @@ namespace SimpleStackVM.Unity
     {
         public TMP_Text DialogueText;
         public TMP_Text CharNameText;
-        public DialogueVM vm;
+        public DialogueVM DialogueVM;
+        public DialogueChoiceUI ChoicePrefab;
+        public Transform ChoiceTarget;
 
         // Start is called before the first frame update
         void Start()
         {
-            this.vm.OnBeginLine += this.OnBeginLine;
-            this.vm.OnDone += this.OnDone;
-            this.vm.OnShowChoice += this.OnShowChoice;
-            this.vm.OnTextSegment += this.OnTextSegment;
+            this.DialogueVM.OnBeginLine += this.OnBeginLine;
+            this.DialogueVM.OnDone += this.OnDone;
+            this.DialogueVM.OnShowChoice += this.OnShowChoice;
+            this.DialogueVM.OnTextSegment += this.OnTextSegment;
         }
 
         private void OnTextSegment(IValue text)
@@ -27,7 +29,10 @@ namespace SimpleStackVM.Unity
 
         private void OnShowChoice(IValue text, int index)
         {
-            // throw new NotImplementedException();
+            var newChoice = Instantiate(this.ChoicePrefab, this.ChoiceTarget);
+            newChoice.ChoiceText = text.ToString();
+            newChoice.ChoiceIndex = index;
+            newChoice.DialogueVM = this.DialogueVM;
         }
 
         private void OnDone()
@@ -38,14 +43,24 @@ namespace SimpleStackVM.Unity
         private void OnBeginLine(IValue actor)
         {
             this.gameObject.SetActive(true);
-            this.DialogueText.text = "";
+            this.Clear();
             this.CharNameText.text = actor.ToString();
         }
 
-        // Update is called once per frame
-        void Update()
+        private void Clear()
         {
+            this.DialogueText.text = "";
+            this.CharNameText.text = "";
 
+            while (this.ChoiceTarget.childCount > 0)
+            {
+                Destroy(this.ChoiceTarget.GetChild(0));
+            }
+        }
+
+        public void ContinueDialogue()
+        {
+            this.DialogueVM.Continue();
         }
     }
 }

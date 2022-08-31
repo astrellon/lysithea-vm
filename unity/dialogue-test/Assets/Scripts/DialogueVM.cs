@@ -23,6 +23,8 @@ namespace SimpleStackVM.Unity
 
         private VirtualMachine vm;
         private IValue currentActor = NullValue.Value;
+        private List<IValue> choiceBuffer = new List<IValue>();
+        private Dictionary<string, IValue> variables = new Dictionary<string, IValue>();
 
         private float waitUntil = -1.0f;
 
@@ -33,7 +35,7 @@ namespace SimpleStackVM.Unity
             var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
 
             var scopes = VirtualMachineAssembler.ParseScopes(json);
-            this.vm = new VirtualMachine(64, this.OnRunHandler);
+            this.vm = new VirtualMachine(32, this.OnRunHandler);
             vm.AddScopes(scopes);
 
             vm.SetScope(this.StartScopeName);
@@ -62,6 +64,18 @@ namespace SimpleStackVM.Unity
             vm.SetPause(false);
         }
 
+        public void SelectChoice(int index)
+        {
+            if (index < 0 || index >= this.choiceBuffer.Count)
+            {
+                return;
+            }
+
+            var choiceLabel = this.choiceBuffer[index];
+            this.vm.CallToLabel(choiceLabel);
+            this.vm.SetPause(true);
+        }
+
         private void OnRunHandler(IValue command, VirtualMachine vm)
         {
             var commandName = command.ToString();
@@ -71,20 +85,75 @@ namespace SimpleStackVM.Unity
             }
             else if (commandName == "beginLine")
             {
-                this.OnBeginLine?.Invoke(this.currentActor);
+                this.BeginLine();
             }
             else if (commandName == "text")
             {
-                this.OnTextSegment?.Invoke(vm.PopStack());
+                this.ShowText(vm.PopStack());
             }
             else if (commandName == "endLine")
             {
-                vm.SetPause(true);
+                this.EndLine(vm);
+            }
+            else if (commandName == "choice")
+            {
+                var choiceValue = vm.PopStack();
+                var choiceLabel = vm.PopStack();
+                this.CreateChoice(choiceValue, choiceLabel);
+            }
+            else if (commandName == "get")
+            {
+                var key = vm.PopStack().ToString();
+                vm.PushStack(this.GetVariable(key));
+            }
+            else if (commandName == "set")
+            {
+                var value = vm.PopStack();
+                var key = vm.PopStack().ToString();
+                this.SetVariable(key, value);
             }
             else if (commandName == "wait")
             {
-                this.waitUntil = (float)vm.PopStack<NumberValue>().Value;
+                this.waitUntil = ((float)vm.PopStack<NumberValue>().Value) / 1000.0f;
             }
+        }
+
+        public void SetVariable(string key, IValue value)
+        {
+            this.variables[key] = value;
+        }
+
+        public IValue GetVariable(string key)
+        {
+            if (this.variables.TryGetValue(key, out var result))
+            {
+                return result;
+            }
+
+            return NullValue.Value;
+        }
+
+        public void BeginLine()
+        {
+            this.choiceBuffer.Clear();
+            this.OnBeginLine?.Invoke(this.currentActor);
+        }
+
+        public void EndLine(VirtualMachine vm)
+        {
+            vm.SetPause(true);
+        }
+
+        public void ShowText(IValue value)
+        {
+            this.OnTextSegment?.Invoke(value);
+        }
+
+        public void CreateChoice(IValue choiceValue, IValue choiceLabel)
+        {
+            var index = this.choiceBuffer.Count;
+            this.choiceBuffer.Add(choiceValue);
+            this.OnShowChoice?.Invoke(choiceLabel, index);
         }
     }
 }

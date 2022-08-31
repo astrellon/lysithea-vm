@@ -7,9 +7,90 @@
             ["$text", "Hello {PLAYER}!"],
             ["$wait", 1000],
             ["$text", " How are you going?"],
+            ["$choice", "Choice 1", ["scopeJump", "Choice1"]],
+            ["$choice", "Choice 2", ["scopeJump", "Choice2"]],
+            ["$choice", "Question", ["return", "Question"]],
             ["$endLine"],
             ["$beginLine"],
             ["$text", "Second line!"],
+            ["$endLine"]
+        ]
+    },
+    {
+        "name": "Choice1",
+        "data": [
+            ["$actor", "PLAYER"],
+            ["$beginLine"],
+            ["$text", "Hello {SELF}!"],
+            ["$text", "This is choice 1"],
+            ["$endLine"],
+            ["Jump", ["", "Choice2"]]
+        ]
+    },
+    {
+        "name": "Choice2",
+        "data": [
+            ["$actor", "PLAYER"],
+            ["$beginLine"],
+            ["$text", "Hello {SELF}!"],
+            ["$text", "This is choice 2"],
+            ["$choice", "Same question", ["return", "Question"]],
+            ["$endLine"],
+            ["Jump", ["", "Done"]]
+        ]
+    },
+    {
+        "name": "Question",
+        "data": [
+            ["$actor", "SELF"],
+
+            ":Start",
+            ["$beginLine"],
+            ["$text", "What do you want to know?"],
+            ["$choice", "Who are you?", ":WhoAmI"],
+
+            ["$get", "WhoAmI"],
+            ["JumpFalse", ":AfterChoices"],
+            ["$choice", "Where is this?", ":WhereIsThis"],
+
+            ["$get", "WhereIsThis"],
+            ["JumpFalse", ":AfterChoices"],
+            ["$choice", "What is this?", ":WhatIsThis"],
+
+            ":AfterChoices",
+            ["$choice", "Enough Questions", ":JumpToMain"],
+            ["$endLine"],
+
+            ":WhoAmI",
+            ["$set", "WhoAmI", true],
+            ["$beginLine"],
+            ["$text", "I'm just a person"],
+            ["$endLine"],
+            ["Jump", ":Start"],
+
+            ":WhereIsThis",
+            ["$set", "WhereIsThis", true],
+            ["$beginLine"],
+            ["$text", "I'm just a person"],
+            ["$endLine"],
+            ["Jump", ":Start"],
+
+            ":WhatIsThis",
+            ["$beginLine"],
+            ["$text", "This a shop for talking about dialogue."],
+            ["$endLine"],
+            ["Jump", ":Start"],
+
+            ":JumpToMain",
+            "$return"
+        ]
+    },
+    {
+        "name": "Done",
+        "data": [
+            ["$actor", "SELF"],
+            ["$beginLine"],
+            ["$text", "Thanks for coming by {PLAYER}, see you later"],
             ["$endLine"]
         ]
     }
