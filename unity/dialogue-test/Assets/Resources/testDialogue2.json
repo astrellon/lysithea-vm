@@ -35,6 +35,7 @@
             ["$text", "Hello {SELF}!"],
             ["$text", "This is choice 2"],
             ["$choice", "Next", ":Continue"],
+            ["$choice", "Back", ["scopeJump", "Choice1"]],
             ["$choice", "Same question", ["return", "Question"]],
             ["$endLine"],
             ":Continue",

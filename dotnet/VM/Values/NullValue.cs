@@ -24,6 +24,10 @@ namespace SimpleStackVM
             {
                 return true;
             }
+            if (other is BoolValue boolValue)
+            {
+                return boolValue.Value == false;
+            }
             return false;
         }
 
