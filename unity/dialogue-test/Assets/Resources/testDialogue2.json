@@ -34,8 +34,10 @@
             ["$beginLine"],
             ["$text", "Hello {SELF}!"],
             ["$text", "This is choice 2"],
+            ["$choice", "Next", ":Continue"],
             ["$choice", "Same question", ["return", "Question"]],
             ["$endLine"],
+            ":Continue",
             ["Jump", ["", "Done"]]
         ]
     },
@@ -58,7 +60,7 @@
             ["$choice", "What is this?", ":WhatIsThis"],
 
             ":AfterChoices",
-            ["$choice", "Enough Questions", ":JumpToMain"],
+            ["$choice", "Enough Questions", ":Return"],
             ["$endLine"],
 
             ":WhoAmI",
@@ -81,8 +83,8 @@
             ["$endLine"],
             ["Jump", ":Start"],
 
-            ":JumpToMain",
-            "$return"
+            ":Return",
+            ["Return"]
         ]
     },
     {

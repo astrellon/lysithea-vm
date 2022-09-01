@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -52,10 +53,9 @@ namespace SimpleStackVM.Unity
             this.DialogueText.text = "";
             this.CharNameText.text = "";
 
-            while (this.ChoiceTarget.childCount > 0)
-            {
-                Destroy(this.ChoiceTarget.GetChild(0));
-            }
+            var children = new List<GameObject>();
+            foreach (Transform child in this.ChoiceTarget) children.Add(child.gameObject);
+            children.ForEach(child => Destroy(child));
         }
 
         public void ContinueDialogue()

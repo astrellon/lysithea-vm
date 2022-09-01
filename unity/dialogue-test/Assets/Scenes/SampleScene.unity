@@ -757,7 +757,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   StartScopeName: Main
   TextAsset: {fileID: 4900000, guid: 3c62613a71d6941bfa7e723fa9aefe32, type: 3}
-  Running: 0
+  DebugScopeName: 
+  DebugLine: 0
+  Running: 1
 --- !u!4 &1571150331
 Transform:
   m_ObjectHideFlags: 0
@@ -958,7 +960,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:

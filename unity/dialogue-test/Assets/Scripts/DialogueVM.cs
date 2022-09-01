@@ -76,6 +76,12 @@ namespace SimpleStackVM.Unity
 
         public void Continue()
         {
+            if (choiceBuffer.Count > 0)
+            {
+                Debug.Log("Cannot continue, needs to make a choice.");
+                return;
+            }
+
             vm.SetPause(false);
         }
 
@@ -105,7 +111,7 @@ namespace SimpleStackVM.Unity
             }
             else
             {
-                this.vm.CallToLabel(choiceLabel);
+                this.vm.JumpToLabel(choiceLabel);
             }
             this.vm.SetPause(false);
         }
@@ -148,8 +154,13 @@ namespace SimpleStackVM.Unity
             }
             else if (commandName == "wait")
             {
-                this.waitUntil = ((float)vm.PopStack<NumberValue>().Value) / 1000.0f;
+                this.waitUntil = ((float)this.vm.PopStack<NumberValue>().Value) / 1000.0f;
             }
+            else
+            {
+                Debug.LogWarning($"Unknown VM run command: {commandName}");
+            }
+
         }
 
         public void SetVariable(string key, IValue value)
