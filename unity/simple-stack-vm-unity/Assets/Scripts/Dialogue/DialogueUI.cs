@@ -1,5 +1,5 @@
 using System.Linq;
-using System.Collections;
+using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +9,8 @@ namespace SimpleStackVM.Unity
 {
     public class DialogueUI : MonoBehaviour
     {
+        private static Regex TextReplaceRegex = new Regex("({\\w+})");
+
         public TMP_Text DialogueText;
         public TMP_Text CharNameText;
         public DialogueVM DialogueVM;
@@ -61,7 +63,7 @@ namespace SimpleStackVM.Unity
 
         private void OnTextSegment(IValue text)
         {
-            this.DialogueText.text += text.ToString();
+            this.DialogueText.text += this.ProcessText(text.ToString());
         }
 
         private void OnShowChoice(IValue text, int index)
@@ -95,7 +97,6 @@ namespace SimpleStackVM.Unity
 
             var actor = this.DialogueVM.CurrentActor;
             this.CharNameText.text = actor.Name;
-            this.Portrait.sprite = actor.FaceIdle;
         }
 
         private void Clear()
@@ -106,6 +107,20 @@ namespace SimpleStackVM.Unity
             var children = new List<GameObject>();
             foreach (Transform child in this.ChoiceTarget) children.Add(child.gameObject);
             children.ForEach(child => Destroy(child));
+        }
+
+        private string ProcessText(string input)
+        {
+            return TextReplaceRegex.Replace(input, (a) =>
+            {
+                if (a.Value[0] == '{')
+                {
+                    var actorName = a.Value.Substring(1, a.Value.Length - 2);
+                    var actor = this.DialogueVM.GetActor(actorName);
+                    return actor.Name;
+                }
+                return a.Value;
+            });
         }
 
         public void ContinueDialogue()

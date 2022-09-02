@@ -29,8 +29,7 @@ namespace SimpleStackVM.Unity
         public event SectionHandler OnSectionChange;
         public event EmotionHandler OnEmotion;
 
-        public string StartScopeName;
-        public TextAsset TextAsset;
+        public static DialogueVM Instance;
 
         public bool Running;
         public DialogueActor CurrentActor { get; private set; }
@@ -40,21 +39,15 @@ namespace SimpleStackVM.Unity
         private readonly Dictionary<string, IValue> variables = new Dictionary<string, IValue>();
 
         public List<ActorPair> Actors;
+        private DialogueActor selfActor;
 
         private float waitUntil = -1.0f;
 
         // Start is called before the first frame update
-        void Start()
+        void Awake()
         {
-            var jsonStr = this.TextAsset.text;
-            var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
-
-            var scopes = VirtualMachineAssembler.ParseScopes(json);
+            Instance = this;
             this.vm = new VirtualMachine(32, this.OnRunHandler);
-            vm.AddScopes(scopes);
-
-            vm.SetScope(this.StartScopeName);
-            vm.SetRunning(true);
         }
 
         // Update is called once per frame
@@ -81,6 +74,16 @@ namespace SimpleStackVM.Unity
                     this.OnSectionChange?.Invoke(SectionType.DialogueEnded);
                 }
             }
+        }
+
+        public void StartDialogue(DialogueObject dialogue, string startScope, DialogueActor selfActor)
+        {
+            dialogue.Awake();
+            this.selfActor = selfActor;
+            this.vm.SetScopes(dialogue.Scopes);
+            this.vm.SetCurrentScope(startScope);
+            this.vm.Restart();
+            this.Running = true;
         }
 
         public void Continue()
@@ -125,13 +128,26 @@ namespace SimpleStackVM.Unity
             this.vm.SetPause(false);
         }
 
+        public DialogueActor GetActor(string scriptId)
+        {
+            if (scriptId == "SELF")
+            {
+                return this.selfActor;
+            }
+            else
+            {
+                return this.Actors.Find(n => n.ScriptId == scriptId).Actor;
+            }
+        }
+
         private void OnRunHandler(IValue command, VirtualMachine vm)
         {
             var commandName = command.ToString();
             if (commandName == "actor")
             {
                 var actorScriptId = vm.PopStack().ToString();
-                this.CurrentActor = this.Actors.Find(n => n.ScriptId == actorScriptId).Actor;
+                this.CurrentActor = this.GetActor(actorScriptId);
+                this.OnEmotion?.Invoke("idle");
             }
             else if (commandName == "beginLine")
             {

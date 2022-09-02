@@ -9,8 +9,8 @@
             ["$wait", 1000],
             ["$emotion", "happy"],
             ["$text", " How are you going?"],
-            ["$choice", "Choice 1", ["scopeJump", "Choice1"]],
-            ["$choice", "Choice 2", ["scopeJump", "Choice2"]],
+            ["$choice", "I'm good thank you", ["scopeJump", "Choice1"]],
+            ["$choice", "I'm not good", ["scopeJump", "Choice2"]],
             ["$choice", "Question", ["return", "Question"]],
             ["$endLine"],
             ["$beginLine"],
@@ -22,31 +22,40 @@
         "name": "Choice1",
         "data": [
             ["$actor", "PLAYER"],
-            ["$beginLineText", "Hello {SELF}"],
-            ["$text", "This is choice 1"],
+            ["$emotion", "happy"],
+            ["$beginLineText", "Hello {SELF} I'm good thankyou"],
             ["$endLine"],
-            ["Jump", ["", "Choice2"]]
+
+            ["$actor", "SELF"],
+            ["$emotion", "happy"],
+            ["$beginLineText", "Glad to hear it!"],
+            ["$choice", "Good bye", ["scopeJump", "Done"]],
+            ["$choice", "Question", ["return", "Question"]],
+            ["$endLine"]
         ]
     },
     {
         "name": "Choice2",
         "data": [
             ["$actor", "PLAYER"],
-            ["$beginLineText", "Hello {SELF}! This is choice 1"],
-            ["$choice", "Next", ":Continue"],
-            ["$choice", "Back", ["scopeJump", "Choice1"]],
-            ["$choice", "Same question", ["return", "Question"]],
+            ["$emotion", "sad"],
+            ["$beginLineText", "Oh hey {SELF}. I'm not doing so good."],
             ["$endLine"],
-            ":Continue",
-            ["Jump", ["", "Done"]]
+
+            ["$actor", "SELF"],
+            ["$emotion", "sad"],
+            ["$beginLineText", "I'm sorry to hear that."],
+            ["$choice", "Good bye", ["scopeJump", "Done"]],
+            ["$choice", "Question", ["return", "Question"]],
+            ["$endLine"]
         ]
     },
     {
         "name": "Question",
         "data": [
-            ["$actor", "SELF"],
-
             ":Start",
+            ["$actor", "SELF"],
+            ["$emotion", "idle"],
             ["$beginLine"],
             ["$text", "What do you want to know?"],
             ["$choice", "Who are you?", ":WhoAmI"],
@@ -67,16 +76,27 @@
             ["$set", "WhoAmI", true],
             ["$beginLineText", "I'm just a person"],
             ["$endLine"],
+            ["$actor", "PLAYER"],
+            ["$emotion", "shocked"],
+            ["$beginLineText", "I knew it!"],
+            ["$endLine"],
             ["Jump", ":Start"],
 
             ":WhereIsThis",
             ["$set", "WhereIsThis", true],
             ["$beginLineText", "This is a text box"],
             ["$endLine"],
+            ["$actor", "PLAYER"],
+            ["$emotion", "shocked"],
+            ["$beginLineText", "I knew it!"],
+            ["$endLine"],
             ["Jump", ":Start"],
 
             ":WhatIsThis",
             ["$beginLineText", "This a shop for talking about dialogue."],
+            ["$endLine"],
+            ["$actor", "PLAYER"],
+            ["$beginLineText", "I knew it."],
             ["$endLine"],
             ["Jump", ":Start"],
 
