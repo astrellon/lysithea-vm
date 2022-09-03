@@ -111,7 +111,7 @@ namespace SimpleStackVM
 
         public void Step()
         {
-            if (this.programCounter >= this.currentScope.Code.Count)
+            if (this.programCounter >= this.currentScope.Code.Count || this.programCounter < 0)
             {
                 this.SetRunning(false);
                 return;
@@ -265,6 +265,16 @@ namespace SimpleStackVM
             {
                 throw new OperatorException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
             }
+        }
+
+        public void Jump(int line)
+        {
+            if (line < 0 || line >= this.currentScope.Code.Count)
+            {
+                throw new OverflowException("Jumping to a line outside the current scope code.");
+            }
+
+            this.programCounter = line;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

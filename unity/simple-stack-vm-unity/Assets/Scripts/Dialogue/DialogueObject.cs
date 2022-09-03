@@ -20,7 +20,6 @@ namespace SimpleStackVM.Unity
                 return;
             }
 
-            Debug.Log("Object awake!");
             var jsonStr = this.JsonText.text;
             var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
 

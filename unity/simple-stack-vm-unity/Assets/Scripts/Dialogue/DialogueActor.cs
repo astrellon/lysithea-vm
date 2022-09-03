@@ -11,17 +11,5 @@ namespace SimpleStackVM.Unity
         public Sprite FaceHappy;
         public Sprite FaceSad;
         public Sprite FaceShock;
-
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
     }
 }

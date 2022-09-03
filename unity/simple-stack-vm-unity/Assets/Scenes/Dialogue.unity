@@ -1322,6 +1322,7 @@ GameObject:
   - component: {fileID: 1571150331}
   - component: {fileID: 1571150330}
   - component: {fileID: 1571150332}
+  - component: {fileID: 1571150333}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -1341,7 +1342,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9d17b61154b04b8e999277765cae95d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Running: 1
+  VMRunner: {fileID: 1571150333}
   Actors:
   - ScriptId: PLAYER
     Actor: {fileID: 1571150332}
@@ -1377,6 +1378,21 @@ MonoBehaviour:
   FaceHappy: {fileID: -917903663, guid: 41175803995b5d05bb70be27891f4bd0, type: 3}
   FaceSad: {fileID: 2086155325, guid: 41175803995b5d05bb70be27891f4bd0, type: 3}
   FaceShock: {fileID: -760106058, guid: 41175803995b5d05bb70be27891f4bd0, type: 3}
+--- !u!114 &1571150333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571150329}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a16a6ffe68bcc15ebb055de2e02994f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Running: 1
+  WaitUntil: -1
+  VMStepTiming: 0.5
 --- !u!1 &1579702125
 GameObject:
   m_ObjectHideFlags: 0

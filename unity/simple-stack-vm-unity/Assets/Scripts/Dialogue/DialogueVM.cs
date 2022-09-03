@@ -31,49 +31,25 @@ namespace SimpleStackVM.Unity
 
         public static DialogueVM Instance;
 
-        public bool Running;
         public DialogueActor CurrentActor { get; private set; }
+        public VMRunner VMRunner;
 
-        private VirtualMachine vm;
+        private VirtualMachine vm => this.VMRunner.VM;
         private readonly List<IValue> choiceBuffer = new List<IValue>();
         private readonly Dictionary<string, IValue> variables = new Dictionary<string, IValue>();
 
         public List<ActorPair> Actors;
         private DialogueActor selfActor;
 
-        private float waitUntil = -1.0f;
-
         // Start is called before the first frame update
         void Awake()
         {
             Instance = this;
-            this.vm = new VirtualMachine(32, this.OnRunHandler);
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-            if (this.Running)
+            this.VMRunner.Init(32, this.OnRunHandler);
+            this.VMRunner.OnComplete += (runner) =>
             {
-                while (this.vm.IsRunning && !this.vm.IsPaused)
-                {
-                    if (this.waitUntil > 0.0f)
-                    {
-                        this.waitUntil -= Time.deltaTime;
-                        if (this.waitUntil > 0.0f)
-                        {
-                            break;
-                        }
-                    }
-                    this.vm.Step();
-                }
-
-                if (!this.vm.IsRunning)
-                {
-                    this.Running = false;
-                    this.OnSectionChange?.Invoke(SectionType.DialogueEnded);
-                }
-            }
+                this.OnSectionChange?.Invoke(SectionType.DialogueEnded);
+            };
         }
 
         public void StartDialogue(DialogueObject dialogue, string startScope, DialogueActor selfActor)
@@ -83,7 +59,7 @@ namespace SimpleStackVM.Unity
             this.vm.SetScopes(dialogue.Scopes);
             this.vm.SetCurrentScope(startScope);
             this.vm.Restart();
-            this.Running = true;
+            this.VMRunner.Running = true;
         }
 
         public void Continue()
@@ -190,7 +166,7 @@ namespace SimpleStackVM.Unity
             }
             else if (commandName == "wait")
             {
-                this.waitUntil = ((float)this.vm.PopStack<NumberValue>().Value) / 1000.0f;
+                this.VMRunner.WaitUntil = ((float)this.vm.PopStack<NumberValue>().Value) / 1000.0f;
             }
             else
             {
