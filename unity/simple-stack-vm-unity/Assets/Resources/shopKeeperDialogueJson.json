@@ -5,7 +5,10 @@
             ["$actor", "SELF"],
             ["$beginLine"],
             ["$emotion", "shocked"],
-            ["$text", "Hello {PLAYER}!"],
+
+            ["$randomPick", ["Hello {PLAYER}!", "Welcome {PLAYER}!"]],
+            "$text",
+
             ["$wait", 1000],
             ["$emotion", "happy"],
             ["$text", " How are you going?"],

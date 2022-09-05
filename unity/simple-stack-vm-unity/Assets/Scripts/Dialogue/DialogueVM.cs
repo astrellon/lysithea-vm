@@ -137,6 +137,10 @@ namespace SimpleStackVM.Unity
             {
                 this.BeginLine();
             }
+            else if (commandName == "randomPick")
+            {
+                this.RandomPick(vm.PopStack(), vm);
+            }
             else if (commandName == "text")
             {
                 this.ShowText(vm.PopStack());
@@ -208,6 +212,19 @@ namespace SimpleStackVM.Unity
         {
             vm.SetPause(true);
             this.OnSectionChange?.Invoke(this.choiceBuffer.Count > 0 ? SectionType.ForChoices : SectionType.ToContinue);
+        }
+
+        public void RandomPick(IValue value, VirtualMachine vm)
+        {
+            if (value is ArrayValue arrayValue)
+            {
+                var index = UnityEngine.Random.Range(0, arrayValue.Value.Count);
+                vm.PushStack(arrayValue.Value[index]);
+            }
+            else
+            {
+                vm.PushStack(value);
+            }
         }
 
         public void ShowText(IValue value)

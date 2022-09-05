@@ -5,7 +5,8 @@
             ["$actor", "SELF"],
             "$beginLine",
             ["$text", "Welcome {PLAYER}, I've been expecting you."],
-            ["$wait", 2000],
+            "$endLine",
+
             ["$actor", "PLAYER"],
             ["$emotion", "shocked"],
 
@@ -18,8 +19,38 @@
             ["$beginLineText", "What is it that you wish to know?"],
             ["$choice", "Do you have powers?", ["returnLabel", ":AskQuestion", "WhatPowers"]],
             ["$choice", "Do you sell stuff?", ["returnLabel", ":AskQuestion", "DoYouSell"]],
+            ["$choice", "Chance?", ["returnLabel", ":AskQuestion", "Chance"]],
             ["$choice", "Good bye", ["", "Done"]],
             "$endLine"
+        ]
+    },
+    {
+        "name": "Chance",
+        "data": [
+            ["$actor", "SELF"],
+            ["$beginLineText", "Are you ready for some chance?\n"],
+            ["$randomPick", [":Choice1", ":Choice2", ":Choice3"]],
+            ["Jump"],
+
+            ":Choice1",
+            ["$emotion", "happy"],
+            ["$text", "Random choice 1"],
+            ["Jump", ":AfterChoices"],
+
+            ":Choice2",
+            ["$emotion", "shocked"],
+            ["$text", "Random choice 2"],
+            ["Jump", ":AfterChoices"],
+
+            ":Choice3",
+            ["$emotion", "sad"],
+            ["$text", "Random choice 3"],
+            ["Jump", ":AfterChoices"],
+
+            ":AfterChoices",
+            ["$text", "\nAfter random choices"],
+            "$endLine",
+            ["Return"]
         ]
     },
     {
