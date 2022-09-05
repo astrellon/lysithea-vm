@@ -1,0 +1,112 @@
+[
+    {
+        "name": "Main",
+        "data": [
+            ["$actor", "SELF"],
+            "$beginLine",
+            ["$text", "Welcome {PLAYER}, I've been expecting you."],
+            ["$wait", 2000],
+            ["$actor", "PLAYER"],
+            ["$emotion", "shocked"],
+
+            "$beginLine",
+            ["$text", "You have? How did you know I was coming?"],
+            "$endLine",
+
+            ":AskQuestion",
+            ["$actor", "SELF"],
+            ["$beginLineText", "What is it that you wish to know?"],
+            ["$choice", "Do you have powers?", ["returnLabel", ":AskQuestion", "WhatPowers"]],
+            ["$choice", "Do you sell stuff?", ["returnLabel", ":AskQuestion", "DoYouSell"]],
+            ["$choice", "Good bye", ["", "Done"]],
+            "$endLine"
+        ]
+    },
+    {
+        "name": "WhatPowers",
+        "data": [
+            ["$actor", "PLAYER"],
+
+            ["$emotion", "happy"],
+            ["$beginLineText", "What kind of powers do you have?"],
+
+            ":Start",
+            ["$choice", "Can you shoot fire?", ":CanShootFire?"],
+            ["$choice", "Can freeze water?", ":CanFreezeWater?"],
+            ["$choice", "Can make lightning?", ":CanMakeLightning?"],
+            ["$choice", "I'm done", ":Return"],
+            "$endLine",
+
+            ":CanShootFire?",
+            ["$actor", "SELF"],
+            ["$emotion", "happy"],
+            ["$beginLineText", "Most definitely I can shoot fire!"],
+            "$endLine",
+            ["Jump", ":Start"],
+
+            ":CanFreezeWater?",
+            ["$actor", "SELF"],
+            ["$beginLineText", "I can, but only using a freezer."],
+            "$endLine",
+            ["$actor", "PLAYER"],
+            ["$beginLineText", "Oh, that's not all that impressive."],
+            "$endLine",
+            ["Jump", ":Start"],
+
+            ":CanMakeLightning?",
+            ["$actor", "SELF"],
+            ["$beginLineText", "Sometimes, usually on even numbered days though."],
+            "$endLine",
+
+            ["$actor", "PLAYER"],
+            ["$beginLineText", "Yea that makes sense"],
+            "$endLine",
+            ["Jump", ":Start"],
+
+            ":Return",
+            "Return"
+        ]
+    },
+    {
+        "name": "DoYouSell",
+        "data": [
+            ["$actor", "PLAYER"],
+            ["$beginLineText", "Do you have anything to sell?"],
+            ["$endLine"],
+
+            ["$actor", "SELF"],
+            ["$emotion", "sad"],
+            ["$beginLineText", "Unfortunately I do not at this time, if only someone could complete this quest."],
+            ["$choice", "I can quest", ":ICanQuest"],
+            ["$choice", "Hope you find someone", ":FindSomeoneElse"],
+            ["$endLine"],
+
+            ":ICanQuest",
+            ["$actor", "PLAYER"],
+            ["$emotion", "happy"],
+            ["$beginLineText", "I can go on a quest for you!"],
+            "$endLine",
+
+            ["$actor", "SELF"],
+            ["$emotion", "happy"],
+            ["$beginLineText", "Thank you kind fellow"],
+            "$endLine",
+            ["Return"],
+
+            ":FindSomeoneElse",
+            ["$actor", "PLAYER"],
+            ["$emotion", "sad"],
+            ["$beginLineText", "Gee, well I hope you find someone."],
+            "$endLine",
+            ["Return"]
+        ]
+    },
+    {
+        "name": "Done",
+        "data": [
+            ["$actor", "SELF"],
+            ["$beginLineText", "Thanks for coming by {PLAYER}, see you later"],
+            ["$endLine"]
+        ]
+    }
+]

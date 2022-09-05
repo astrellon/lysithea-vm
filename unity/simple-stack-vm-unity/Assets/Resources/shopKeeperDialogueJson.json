@@ -13,8 +13,9 @@
             ["$choice", "I'm not good", ["scopeJump", "Choice2"]],
             ["$choice", "Question", ["return", "Question"]],
             ["$endLine"],
+
             ["$beginLine"],
-            ["$text", "Second line!"],
+            ["$text", "Text that should never appear"],
             ["$endLine"]
         ]
     },

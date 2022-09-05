@@ -87,14 +87,22 @@ namespace SimpleStackVM.Unity
                 var firstArg = arrayValue.Value[0].ToString();
                 if (firstArg == "scopeJump")
                 {
-                    var scopeLabel = new ArrayValue(new []{StringValue.Empty, arrayValue.Value[1]});
+                    var scopeLabel = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
                     this.vm.JumpToLabel(scopeLabel);
                 }
                 else if (firstArg == "return")
                 {
                     this.vm.PushToStackTrace(0, this.vm.CurrentScope);
-                    var scopeLabel = new ArrayValue(new []{StringValue.Empty, arrayValue.Value[1]});
-                    this.vm.JumpToLabel(scopeLabel);
+                    var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
+                    this.vm.JumpToLabel(jumpScope);
+                }
+                else if (firstArg == "returnLabel")
+                {
+                    var returnLabel =  arrayValue.Value[1];
+                    var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[2] });
+                    var returnLine = this.vm.CurrentScope.Labels[returnLabel.ToString()];
+                    this.vm.PushToStackTrace(returnLine, this.vm.CurrentScope);
+                    this.vm.JumpToLabel(jumpScope);
                 }
             }
             else
