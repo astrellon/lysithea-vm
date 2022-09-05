@@ -19,6 +19,11 @@ namespace SimpleStackVM
                 this.LineCounter = lineCounter;
                 this.Scope = scope;
             }
+
+            public override string ToString()
+            {
+                return $"{this.Scope.ScopeName}:{this.LineCounter}";
+            }
         }
 
         [Flags]
@@ -48,6 +53,9 @@ namespace SimpleStackVM
 
         public bool IsRunning => this.Flags.HasFlag(FlagValues.Running);
         public bool IsPaused => this.Flags.HasFlag(FlagValues.Paused);
+
+        public IReadOnlyFixedStack<IValue> Stack => this.stack;
+        public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
         #endregion
 
         #region Constructor
@@ -73,7 +81,20 @@ namespace SimpleStackVM
             foreach (var scope in scopes) { this.AddScope(scope); }
         }
 
-        public void SetScope(string scopeName)
+        public void SetScopes(IEnumerable<Scope> scopes)
+        {
+            this.scopes.Clear();
+            this.AddScopes(scopes);
+        }
+
+        public void Restart()
+        {
+            this.programCounter = 0;
+            this.SetRunning(true);
+            this.SetPause(false);
+        }
+
+        public void SetCurrentScope(string scopeName)
         {
             if (this.scopes.TryGetValue(scopeName, out var scope))
             {
@@ -111,7 +132,7 @@ namespace SimpleStackVM
 
         public void Step()
         {
-            if (this.programCounter >= this.currentScope.Code.Count || this.programCounter < 0)
+            if (this.currentScope.IsEmpty || this.programCounter >= this.currentScope.Code.Count)
             {
                 this.SetRunning(false);
                 return;
@@ -248,7 +269,7 @@ namespace SimpleStackVM
         {
             if (!string.IsNullOrEmpty(scopeName))
             {
-                this.SetScope(scopeName);
+                this.SetCurrentScope(scopeName);
             }
 
             if (string.IsNullOrEmpty(label))

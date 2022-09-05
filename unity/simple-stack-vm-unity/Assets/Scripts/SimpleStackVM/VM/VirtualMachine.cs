@@ -19,6 +19,11 @@ namespace SimpleStackVM
                 this.LineCounter = lineCounter;
                 this.Scope = scope;
             }
+
+            public override string ToString()
+            {
+                return $"{this.Scope.ScopeName}:{this.LineCounter}";
+            }
         }
 
         [Flags]
@@ -48,6 +53,9 @@ namespace SimpleStackVM
 
         public bool IsRunning => this.Flags.HasFlag(FlagValues.Running);
         public bool IsPaused => this.Flags.HasFlag(FlagValues.Paused);
+
+        public IReadOnlyFixedStack<IValue> Stack => this.stack;
+        public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
         #endregion
 
         #region Constructor

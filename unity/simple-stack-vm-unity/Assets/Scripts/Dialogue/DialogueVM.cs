@@ -166,7 +166,8 @@ namespace SimpleStackVM.Unity
             }
             else if (commandName == "wait")
             {
-                this.VMRunner.WaitUntil = ((float)this.vm.PopStack<NumberValue>().Value) / 1000.0f;
+                var waitTime = TimeSpan.FromMilliseconds(this.vm.PopStack<NumberValue>().Value);
+                this.VMRunner.Wait(waitTime);
             }
             else
             {

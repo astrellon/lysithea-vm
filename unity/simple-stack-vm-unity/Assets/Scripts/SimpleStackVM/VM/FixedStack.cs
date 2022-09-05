@@ -7,7 +7,13 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    public class FixedStack<T>
+    public interface IReadOnlyFixedStack<T>
+    {
+        int Index { get; }
+        IReadOnlyList<T> Data { get; }
+    }
+
+    public class FixedStack<T> : IReadOnlyFixedStack<T>
     {
         #region Fields
         private readonly T[] data;

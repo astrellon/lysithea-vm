@@ -28,7 +28,7 @@ namespace SimpleStackVM
 
             try
             {
-                vm.SetScope("Main");
+                vm.SetCurrentScope("Main");
                 vm.SetRunning(true);
                 while (vm.IsRunning && !vm.IsPaused)
                 {
