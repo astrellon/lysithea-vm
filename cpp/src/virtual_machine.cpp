@@ -89,11 +89,6 @@ namespace stack_vm
                 stack.push(code_line.value.value());
                 break;
             }
-            case vm_operator::pop:
-            {
-                stack.pop();
-                break;
-            }
             case vm_operator::jump:
             {
                 const auto &label = get_arg(code_line);

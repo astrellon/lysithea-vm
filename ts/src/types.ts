@@ -1,4 +1,4 @@
-export type Operator = 'unknown' | 'push' | 'pop' | 'call' | 'return' | 'jump' | 'jumpTrue' | 'jumpFalse' | 'run';
+export type Operator = 'unknown' | 'push' | 'call' | 'return' | 'jump' | 'jumpTrue' | 'jumpFalse' | 'run';
 
 export type Value = string | boolean | number | ArrayValue | ObjectValue | null;
 export type ArrayValue = ReadonlyArray<Value>;

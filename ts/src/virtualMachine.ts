@@ -100,11 +100,6 @@ export default class VirtualMachine
                     this._stack.push(codeLine.value);
                     break;
                 }
-            case 'pop':
-                {
-                    this.popObject();
-                    break;
-                }
             case 'jump':
                 {
                     const label = this.popObject();

@@ -30,6 +30,7 @@
             ["$actor", "SELF"],
             ["$beginLineText", "Are you ready for some chance?\n"],
             ["$randomPick", [":Choice1", ":Choice2", ":Choice3"]],
+            ["$text"],
             ["Jump"],
 
             ":Choice1",

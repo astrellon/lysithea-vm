@@ -164,11 +164,6 @@ namespace SimpleStackVM
                         }
                         break;
                     }
-                case Operator.Pop:
-                    {
-                        this.PopStack();
-                        break;
-                    }
                 case Operator.JumpFalse:
                     {
                         var label = codeLine.Input ?? this.PopStack();
