@@ -5,18 +5,18 @@
             ["Push", 0],
             ":Start",
             ["Call", ["", "Step"]],
-            ["$isDone"],
+            ["isDone"],
             ["JumpFalse", ":Start"],
-            "$done"
+            "done"
         ]
     },
     {
         "name": "Step",
         "data": [
-            ["$rand"],
-            ["$rand"],
-            ["$add"],
-            ["$add"],
+            ["rand"],
+            ["rand"],
+            ["add"],
+            ["add"],
             "Return"
         ]
     }

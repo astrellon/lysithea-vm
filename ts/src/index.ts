@@ -39,4 +39,8 @@ const scopes = parseScopes(inputJson);
 const vm = new VirtualMachine(64, runHandler);
 vm.addScopes(scopes);
 
+const before = Date.now();
 vm.run('Main');
+const after = Date.now();
+
+console.log('Time taken:', (after - before), 'ms');

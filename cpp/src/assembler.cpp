@@ -67,32 +67,23 @@ namespace stack_vm
         }
 
         std::vector<temp_code_line> result;
-        auto op_code = vm_operator::unknown;
+        auto op_code = parse_operator(first);
         auto push_child_offset = 1;
         std::optional<value> code_line_input;
-        if (first[0] == '$')
+        if (op_code == vm_operator::unknown)
         {
             op_code = vm_operator::run;
-            code_line_input = value(std::make_shared<std::string>(first.substr(1)));
+            code_line_input = value(std::make_shared<std::string>(first));
             push_child_offset = 0;
         }
-        else
+        else if (j.size() > 1)
         {
-            op_code = parse_operator(first);
-            if (op_code == vm_operator::unknown)
+            code_line_input = parse_json_value(j.back());
+            if (!code_line_input.has_value())
             {
-                throw std::runtime_error("Unknown operator");
+                throw std::runtime_error("Error parsing code line");
             }
 
-            if (j.size() > 1)
-            {
-                code_line_input = parse_json_value(j.back());
-                if (!code_line_input.has_value())
-                {
-                    throw std::runtime_error("Error parsing code line");
-                }
-
-            }
         }
 
         if (!string_input)

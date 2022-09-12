@@ -75,23 +75,25 @@ export function *parseCodeLine(input: InputDataArgs): IterableIterator<TempCodeL
         return yield { label: first }
     }
 
-    let opCode: Operator = 'unknown';
+    let opCode = parseOperator(first);
     let codeLineInput: Value = null;
-    if (first[0] === '$')
+    let pushChildOffset = 1;
+    if (opCode === 'unknown')
     {
         opCode = 'run';
-        codeLineInput = first.substring(1);
+        codeLineInput = first;
+        pushChildOffset = 0;
     }
-    else
+    else if (input.length > 1)
     {
-        opCode = parseOperator(first);
-        if (opCode === 'unknown')
+        codeLineInput = parseValue(input[input.length - 1]);
+        if (codeLineInput == null)
         {
-            throw new Error(`Unknown operator: ${opCode}`);
+            throw new Error(`Error parsing input for line ${JSON.stringify(input)}`);
         }
     }
 
-    for (let i = 1; i < input.length; i++)
+    for (let i = 1; i < input.length - pushChildOffset; i++)
     {
         const parsedValue = parseValue(input[i]);
         if (parsedValue == null)
@@ -102,14 +104,7 @@ export function *parseCodeLine(input: InputDataArgs): IterableIterator<TempCodeL
         yield { operator: 'push', value: parsedValue }
     }
 
-    if (opCode !== 'push')
-    {
-        if (codeLineInput != null)
-        {
-            yield { operator: 'push', value: codeLineInput }
-        }
-        yield { operator: opCode }
-    }
+    yield { operator: opCode, value: codeLineInput }
 }
 
 function parseValue(input: any) : Value

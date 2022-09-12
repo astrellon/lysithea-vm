@@ -102,13 +102,13 @@ export default class VirtualMachine
                 }
             case 'jump':
                 {
-                    const label = this.popObject();
+                    const label = codeLine.value ?? this.popObject();
                     this.jumpValue(label);
                     break;
                 }
             case 'jumpTrue':
                 {
-                    const label = this.popObject();
+                    const label = codeLine.value ?? this.popObject();
                     const top = this.popObject();
                     if (top == true)
                     {
@@ -118,7 +118,7 @@ export default class VirtualMachine
                 }
             case 'jumpFalse':
                 {
-                    const label = this.popObject();
+                    const label = codeLine.value ?? this.popObject();
                     const top = this.popObject();
                     if (top == false)
                     {
@@ -128,7 +128,7 @@ export default class VirtualMachine
                 }
             case 'call':
                 {
-                    const label = this.popObject();
+                    const label = codeLine.value ?? this.popObject();
                     this.call(label);
                     break;
                 }
@@ -139,7 +139,7 @@ export default class VirtualMachine
                 }
             case 'run':
                 {
-                    const top = this.popObject();
+                    const top = codeLine.value ?? this.popObject();
                     this._runHandler(top, this);
                     break;
                 }

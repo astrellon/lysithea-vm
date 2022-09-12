@@ -108,25 +108,18 @@ namespace SimpleStackVM
             var opCode = Operator.Unknown;
             var pushChildOffset = 1;
             IValue? codeLineInput = null;
-            if (first[0] == '$')
+
+            if (!Enum.TryParse<Operator>(first, true, out opCode))
             {
                 opCode = Operator.Run;
-                codeLineInput = new StringValue(first.Substring(1));
+                codeLineInput = new StringValue(first);
                 pushChildOffset = 0;
             }
-            else
+            else if (input.Count > 1)
             {
-                if (!Enum.TryParse<Operator>(first, true, out opCode))
+                if (!TryParseJson(input.Last(), out codeLineInput))
                 {
-                    throw new Exception($"Unknown operator: {first}");
-                }
-
-                if (input.Count > 1)
-                {
-                    if (!TryParseJson(input.Last(), out codeLineInput))
-                    {
-                        throw new Exception($"Error parsing input for: {input.ToString()}");
-                    }
+                    throw new Exception($"Error parsing input for: {input.ToString()}");
                 }
             }
 

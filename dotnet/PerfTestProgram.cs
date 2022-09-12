@@ -11,8 +11,8 @@ namespace SimpleStackVM
         private static int Counter = 0;
 
         #region Methods
-        // public static void Run()
-        public static void Main(string[] args)
+        public static void Run()
+        // public static void Main(string[] args)
         {
 #if RELEASE
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../../examples/perfTest.json"));

@@ -18,7 +18,6 @@ namespace stack_vm
     vm_operator parse_operator(const std::string &input)
     {
         if (equals_ignore_case(input, "PUSH")) return vm_operator::push;
-        if (equals_ignore_case(input, "POP")) return vm_operator::pop;
         if (equals_ignore_case(input, "RUN")) return vm_operator::run;
         if (equals_ignore_case(input, "CALL")) return vm_operator::call;
         if (equals_ignore_case(input, "JUMP")) return vm_operator::jump;

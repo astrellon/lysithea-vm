@@ -15,6 +15,7 @@ namespace SimpleStackVM
 
         #region Methods
         public static void Run()
+        // public static void Main(string[] args)
         {
 #if RELEASE
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../../examples/testDialogue.json"));
