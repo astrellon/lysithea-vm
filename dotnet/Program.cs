@@ -11,6 +11,7 @@ namespace SimpleStackVM
             Console.WriteLine("Choose program to run: ");
             Console.WriteLine("1: Perf Test");
             Console.WriteLine("2: Dialogue Tree");
+            Console.WriteLine("3: Run Commands Tree");
 
             var input = Console.ReadLine()?.Trim();
             if (input == "1")
@@ -20,6 +21,10 @@ namespace SimpleStackVM
             else if (input == "2")
             {
                 DialogueTreeProgram.Run();
+            }
+            else if (input == "3")
+            {
+                RunCommandProgram.Run();
             }
             else
             {

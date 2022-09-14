@@ -53,18 +53,14 @@ namespace SimpleStackVM
 
             foreach (var child in data.Children)
             {
-                if (child.IsString)
-                {
-                    var list = new JSONNode[] { child };
-                    tempCodeLines.AddRange(ParseCodeLine(list));
-                }
-                else if (child.IsArray)
+                if (child.IsArray)
                 {
                     tempCodeLines.AddRange(ParseCodeLine(child.AsArray));
                 }
                 else
                 {
-                    throw new Exception($"Invalid Json node: {input.ToString()}");
+                    var list = new JSONNode[] { child };
+                    tempCodeLines.AddRange(ParseCodeLine(list));
                 }
             }
 
@@ -98,8 +94,13 @@ namespace SimpleStackVM
                 yield break;
             }
 
-            var first = input.First().Value;
-            if (first[0] == ':')
+            var first = input.First();
+            if (first.IsString && first.Value.Length == 0)
+            {
+                yield break;
+            }
+
+            if (first.IsString && first.Value[0] == ':')
             {
                 yield return new LabelCodeLine(first);
                 yield break;
@@ -109,10 +110,13 @@ namespace SimpleStackVM
             var pushChildOffset = 1;
             IValue? codeLineInput = null;
 
-            if (!Enum.TryParse<Operator>(first, true, out opCode))
+            if (!TryParseOperator(first.Value, out opCode))
             {
                 opCode = Operator.Run;
-                codeLineInput = new StringValue(first);
+                if (!TryParseJson(first, out codeLineInput))
+                {
+                    throw new Exception($"Error parsing input for: {input.ToString()}");
+                }
                 pushChildOffset = 0;
             }
             else if (input.Count > 1)
@@ -205,6 +209,42 @@ namespace SimpleStackVM
 
             return false;
         }
+
+        private static bool TryParseOperator(string input, out Operator result)
+        {
+            result = Operator.Unknown;
+            if (input.Equals("push", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.Push;
+            }
+            else if (input.Equals("run", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.Run;
+            }
+            else if (input.Equals("call", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.Call;
+            }
+            else if (input.Equals("return", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.Return;
+            }
+            else if (input.Equals("jump", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.Jump;
+            }
+            else if (input.Equals("jumptrue", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.JumpTrue;
+            }
+            else if (input.Equals("jumpfalse", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.JumpFalse;
+            }
+
+            return result != Operator.Unknown;
+        }
+
         #endregion
     }
 }

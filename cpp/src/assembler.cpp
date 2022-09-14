@@ -73,7 +73,11 @@ namespace stack_vm
         if (op_code == vm_operator::unknown)
         {
             op_code = vm_operator::run;
-            code_line_input = value(std::make_shared<std::string>(first));
+            code_line_input = parse_json_value(j.front());
+            if (!code_line_input.has_value())
+            {
+                throw std::runtime_error("Error parsing code line");
+            }
             push_child_offset = 0;
         }
         else if (j.size() > 1)
