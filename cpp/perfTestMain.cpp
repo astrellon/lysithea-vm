@@ -20,7 +20,7 @@ void runHandler(const value &input, virtual_machine &vm)
         return;
     }
 
-    const auto &command = *std::get<std::shared_ptr<std::string>>(input.data).get();
+    const auto &command = *input.get_string().get();
 
     if (command == "rand")
     {
@@ -31,7 +31,7 @@ void runHandler(const value &input, virtual_machine &vm)
     {
         auto num1 = vm.pop_stack();
         auto num2 = vm.pop_stack();
-        vm.push_stack(value(std::get<double>(num1.data) + std::get<double>(num2.data)));
+        vm.push_stack(value(num1.get_number() + num2.get_number()));
     }
     else if (command == "isDone")
     {
@@ -40,8 +40,10 @@ void runHandler(const value &input, virtual_machine &vm)
     }
     else if (command == "done")
     {
-        auto total = std::get<double>(vm.pop_stack().data);
-        std::cout << "Done: " << total << "\n";
+        auto total = vm.pop_stack();
+        auto str = total.to_string();
+
+        std::cout << "Done: " << total.get_number() << "\n";
     }
 }
 

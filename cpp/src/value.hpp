@@ -14,12 +14,15 @@ namespace stack_vm
 
     using object_value = std::map<std::string, value>;
     using array_value = std::vector<value>;
+    using string_ptr = std::shared_ptr<std::string>;
+    using object_ptr = std::shared_ptr<object_value>;
+    using array_ptr = std::shared_ptr<array_value>;
 
     class value
     {
         public:
             // Fields
-            std::variant<bool, double, std::shared_ptr<std::string>, std::shared_ptr<object_value>, std::shared_ptr<array_value>> data;
+            std::variant<bool, double, string_ptr, object_ptr, array_ptr> data;
 
             // Constructor
             value() : data(false) { }
@@ -28,9 +31,9 @@ namespace stack_vm
             value(unsigned int input) : data((double)input) { }
             value(double input) : data(input) { }
             value(const char * input) : value(std::make_shared<std::string>(input)) { }
-            value(std::shared_ptr<std::string> input) : data(input) { }
-            value(std::shared_ptr<object_value> input) : data(input) { }
-            value(std::shared_ptr<array_value> input) : data(input) { }
+            value(string_ptr input) : data(input) { }
+            value(object_ptr input) : data(input) { }
+            value(array_ptr input) : data(input) { }
 
             // Methods
             inline bool is_string() const
@@ -55,35 +58,63 @@ namespace stack_vm
             }
             inline bool is_true() const
             {
-                switch (data.index())
+                if (is_bool())
                 {
-                    case 0: return std::get<bool>(data) == true;
-                    default: return false;
+                    return get_bool() == true;
                 }
+
+                return false;
             }
 
             inline bool is_false() const
             {
-                switch (data.index())
+                if (is_bool())
                 {
-                    case 0: return std::get<bool>(data) == false;
-                    default: return false;
+                    return get_bool() == false;
                 }
+
+                return false;
+            }
+
+            inline bool get_bool() const
+            {
+                return std::get<bool>(data);
+            }
+
+            inline double get_number() const
+            {
+                return std::get<double>(data);
+            }
+
+            inline string_ptr get_string() const
+            {
+                return std::get<string_ptr>(data);
+            }
+
+            inline object_ptr get_object() const
+            {
+                return std::get<object_ptr>(data);
+            }
+
+            inline array_ptr get_array() const
+            {
+                return std::get<array_ptr>(data);
             }
 
             std::string to_string() const
             {
                 switch (data.index())
                 {
-                    case 0: return std::get<bool>(data) ? "true" : "false";
-                    case 1: return std::to_string(std::get<double>(data));
-                    case 2: return *std::get<std::shared_ptr<std::string>>(data);
+                    case 0: return get_bool() ? "true" : "false";
+                    case 1: return std::to_string(get_number());
+                    case 2: return *get_string();
                     case 3:
                     {
                         std::stringstream ss;
                         ss << '{';
                         auto first = true;
-                        for (const auto &iter : *std::get<std::shared_ptr<object_value>>(data))
+                        auto object = get_object();
+                        for (const auto &iter : *object)
                         {
                             if (!first)
                             {
@@ -104,7 +135,8 @@ namespace stack_vm
                         std::stringstream ss;
                         ss << '[';
                         auto first = true;
-                        for (const auto &iter : *std::get<std::shared_ptr<array_value>>(data))
+                        auto array = get_array();
+                        for (const auto &iter : *array)
                         {
                             if (!first)
                             {

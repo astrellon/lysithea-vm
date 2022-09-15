@@ -24,9 +24,22 @@ namespace stack_vm
 
         for (auto &data_line_json : data_json)
         {
-            for (auto &line : parse_code_line(data_line_json))
+            if (data_line_json.type() == json::value_t::array)
             {
-                temp_code.push_back(line);
+                for (auto &line : parse_code_line(data_line_json))
+                {
+                    temp_code.push_back(line);
+                }
+            }
+            else
+            {
+                auto temp_json_array = json::array();
+                temp_json_array.push_back(data_line_json);
+
+                for (auto &line : parse_code_line(temp_json_array))
+                {
+                    temp_code.push_back(line);
+                }
             }
         }
 
@@ -49,31 +62,33 @@ namespace stack_vm
 
     std::vector<assembler::temp_code_line> assembler::parse_code_line(const json &j)
     {
-        auto string_input = false;
-        std::string first;
-        if (j.type() == json::value_t::string)
-        {
-            string_input = true;
-            first = j.get_to(first);
-        }
-        else
-        {
-            j.begin()->get_to(first);
-        }
-
-        if (first[0] == ':')
-        {
-            return std::vector<temp_code_line>{ first };
-        }
-
         std::vector<temp_code_line> result;
-        auto op_code = parse_operator(first);
+
+        if (j.size() == 0)
+        {
+            return result;
+        }
+
+        const json &first = j.front();
+        std::string first_string_token;
+
+        if (first.type() == json::value_t::string)
+        {
+            first.get_to(first_string_token);
+        }
+
+        if (first_string_token.size() > 0 && first_string_token[0] == ':')
+        {
+            return std::vector<temp_code_line>{ first_string_token };
+        }
+
+        auto op_code = parse_operator(first_string_token);
         auto push_child_offset = 1;
         std::optional<value> code_line_input;
         if (op_code == vm_operator::unknown)
         {
             op_code = vm_operator::run;
-            code_line_input = parse_json_value(j.front());
+            code_line_input = parse_json_value(first);
             if (!code_line_input.has_value())
             {
                 throw std::runtime_error("Error parsing code line");
@@ -90,18 +105,16 @@ namespace stack_vm
 
         }
 
-        if (!string_input)
+        for (auto i = 1; i < j.size() - push_child_offset; i++)
         {
-            for (auto iter = j.begin() + 1; iter != j.end() - push_child_offset; ++iter)
+            const auto &item = j.at(i);
+            auto parsed_value = parse_json_value(item);
+            if (!parsed_value.has_value())
             {
-                auto parsed_value = parse_json_value(iter.value());
-                if (!parsed_value.has_value())
-                {
-                    throw std::runtime_error("Error parsing code line");
-                }
-
-                result.emplace_back(vm_operator::push, parsed_value.value());
+                throw std::runtime_error("Error parsing code line");
             }
+
+            result.emplace_back(vm_operator::push, parsed_value.value());
         }
 
         if (code_line_input.has_value())

@@ -2,6 +2,6 @@
 ./buildRelease.sh
 if [ $? -eq 0 ]; then
     cd ./Release
-    ./app
+    ./dialogueTree
     cd ../
 fi

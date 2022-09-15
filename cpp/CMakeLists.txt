@@ -15,5 +15,7 @@ file(GLOB FILE_SRC
     "src/*.cpp"
 )
 
-add_executable(app ${FILE_SRC} main.cpp)
-# add_executable(controlApp controlMain.cpp)
+add_executable(perfTest ${FILE_SRC} perfTestMain.cpp)
+add_executable(dialogueTree ${FILE_SRC} dialogueTreeMain.cpp)
+add_executable(runCommands ${FILE_SRC} runCommandsMain.cpp)
+add_executable(controlApp controlMain.cpp)

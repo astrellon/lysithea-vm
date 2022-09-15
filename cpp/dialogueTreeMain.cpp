@@ -25,7 +25,7 @@ void say(const value &input)
 
 void random_say(const value &input)
 {
-    const auto &array = *std::get<std::shared_ptr<array_value>>(input.data).get();
+    const auto &array = *input.get_array().get();
     std::uniform_real_distribution<float> dist(0.0f, static_cast<float>(array.size()));
     auto rand_index = static_cast<int>(dist(_rand));
     say(array[rand_index]);
@@ -58,7 +58,7 @@ void runHandler(const value &input, virtual_machine &vm)
         return;
     }
 
-    const auto &command = *std::get<std::shared_ptr<std::string>>(input.data).get();
+    const auto &command = *input.get_string().get();
 
     if (command == "say")
     {
