@@ -5,11 +5,33 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Run PerfTest",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net6.0/dotnet.dll",
+            "preLaunchTask": "build-perf-test",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/perfTest.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run Dialogue Tree",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-diag-tree",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/dialogueTree.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run RunCommands",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-run-commands",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/runCommands.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",

@@ -2,38 +2,38 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build-perf-test",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/dotnet.csproj",
+                "${workspaceFolder}/perfTest.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish",
+            "label": "build-diag-tree",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "publish",
-                "${workspaceFolder}/dotnet.csproj",
+                "build",
+                "${workspaceFolder}/dialogueTree.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "watch",
+            "label": "build-run-commands",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/dotnet.csproj"
+                "build",
+                "${workspaceFolder}/runCommands.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         }

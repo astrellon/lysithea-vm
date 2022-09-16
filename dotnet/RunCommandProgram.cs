@@ -7,14 +7,9 @@ namespace SimpleStackVM
     public static class RunCommandProgram
     {
         #region Methods
-        public static void Run()
-        // public static void Main(string[] args)
+        public static void Main(string[] args)
         {
-#if RELEASE
-            var json = SimpleJSON.JSON.Parse(File.ReadAllText("../../examples/testRunCommands.json"));
-#else
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testRunCommands.json"));
-#endif
             var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
 
             var vm = new VirtualMachine(64, OnRunCommand);
