@@ -37,7 +37,7 @@ namespace SimpleStackVM
 
         public override string ToString()
         {
-            return this.Value.ToString();
+            return this.Value ? "true" : "false";
         }
 
         public override int GetHashCode()

@@ -66,11 +66,11 @@ namespace SimpleStackVM
             }
             else if (command is NumberValue numberValue)
             {
-                Console.WriteLine($"The number: {numberValue.Value}");
+                Console.WriteLine($"The number: {numberValue.ToString()}");
             }
             else if (command is BoolValue booleanValue)
             {
-                Console.WriteLine($"The boolean: {booleanValue.Value}");
+                Console.WriteLine($"The boolean: {booleanValue.ToString()}");
             }
             else if (command is ArrayValue arrayValue)
             {

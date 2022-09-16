@@ -95,11 +95,6 @@ namespace SimpleStackVM
             }
 
             var first = input.First();
-            if (first.IsString && first.Value.Length == 0)
-            {
-                yield break;
-            }
-
             if (first.IsString && first.Value[0] == ':')
             {
                 yield return new LabelCodeLine(first);
