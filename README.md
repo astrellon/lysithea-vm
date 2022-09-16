@@ -17,7 +17,7 @@ Code:
 
 Currently the code is written in JSON. This skips the need for specialised grammar or lexer, plus it gives the ability to load complex objects and arrays 'for free'.
 
-```json
+```jsonc
 [
     {
         "name": "Main",
@@ -65,7 +65,7 @@ Labels:
 
 Labels are used to let you jump around the code, optionally based on some condition.
 
-```json
+```jsonc
 [
     {
         "name": "Main",
@@ -88,7 +88,7 @@ Labels are used to let you jump around the code, optionally based on some condit
 ]
 ```
 Or using the run command shorthand (see below)
-```json
+```jsonc
 [
     {
         "name": "Main",
@@ -112,7 +112,7 @@ Push Command Shorthand:
 -
 
 Since pushing is a very common thing to do each command technically allows you to push to the stack. The intended use is with either the `Push` command directly or in use with the `Run` command.
-```json
+```jsonc
 [
     {
         "name": "Main",
@@ -146,7 +146,7 @@ Additionally extra lines after any command are assumed to be pushed to the stack
 
 For example, each add and then print section are equivalent:
 
-```json
+```jsonc
 [
     {
         "name": "Main",
@@ -168,7 +168,7 @@ For example, each add and then print section are equivalent:
 
             ["Push", 5, 12],
             "add",              // Takes the top two stack items and pushes the added result back to the stack
-            "print",             // Prints the top: 17
+            "print",            // Prints the top: 17
 
 
             ["add", 5, 12],     // As add is not a known operator it is assumed that it should be a run command with the code line value "add"
