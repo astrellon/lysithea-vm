@@ -1,6 +1,6 @@
-import { InputScope, parseScopes } from "./assembler";
-import { isValueArray, isValueBoolean, isValueNumber, isValueObject, isValueString, Value, valueToString } from "./types";
-import VirtualMachine from "./virtualMachine";
+import { InputScope, parseScopes } from "../src/assembler";
+import { isValueArray, isValueBoolean, isValueNumber, isValueObject, isValueString, Value, valueToString } from "../src/types";
+import VirtualMachine from "../src/virtualMachine";
 import fs from "fs";
 
 function runHandler(value: Value, vm: VirtualMachine)

@@ -6,7 +6,7 @@ This repository contains code for a simple stack based virtual machine. It is ex
 This is built it contains no math functions, string manipulation or anything, but the values the stack support is:
 - Null: An empty value, not really intended to be pushed around, but if a command does not have a value (because the operator is taking a value from the stack) then the code line value will be null.
 - Strings: Based off the standard string type from the host programming language. But it is generally based off the C# model which means immutable and UTF-8.
-- Boolean: True/False
+- Boolean: true/false
 - Number: 64 bit double.
 - Object/Dictionary/Map: Key value pair with string keys and the value being another valid VM value.
 - List/Array: A list of VM values.
@@ -45,9 +45,8 @@ private static void OnRunCommand(IValue command, VirtualMachine vm)
         var num1 = vm.PopStack<NumberValue>();
         var num2 = vm.PopStack<NumberValue>();
         vm.PushStack((NumberValue)(num1.Value + num2.Value));
-        return;
     }
-    if (commandName == "print")
+    else if (commandName == "print")
     {
         var total = vm.PopStack();
         Console.WriteLine($"Print: {total.ToString()}");
@@ -88,13 +87,60 @@ Labels are used to let you jump around the code, optionally based on some condit
     }
 ]
 ```
+Or using the run command shorthand (see below)
+```json
+[
+    {
+        "name": "Main",
+        "data": [
+            ["Push", 0],
+
+            ":Start",
+
+            "inc",
+            "isDone",
+
+            ["JumpFalse", ":Start"],
+
+            "done"
+        ]
+    }
+]
+```
+
+Push Command Shorthand:
+-
+
+Since pushing is a very common thing to do each command technically allows you to push to the stack. The intended use is with either the `Push` command directly or in use with the `Run` command.
+```json
+[
+    {
+        "name": "Main",
+        "data": [
+            ["Push", 1],
+            ["Push", 2],
+            ["Push", 3],            // Push each value
+
+            ["Push", 1, 2, 3],      // Equivalent, this gets turned into 3 pushes by the assembler.
+
+            ...
+
+            ["Push", 5],
+            ["Jump", ":Label"],     // The current stack will have 5 and the ":Label" will be tied to the Jump code line.
+            ["Jump", 5, ":Label"]   // This line will push 5 onto the stack leaving the ":Label" as apart of the Jump code line.
+        ]
+    }
+]
+```
+
+Internally the assembler sees only the last argument as the code line argument except in the case of the `Run` command which has it's own runs (see below). So all other arguments in between are turned into `Push` commands.
 
 Run Command Shorthand:
 -
 
 The previous examples show that calling the run command is a bit cumbersome, along with pushing values that are likely to be used by a run command.
 
-So any first argument in a line that isn't an operator ("Push", "Run", "Jump", "JumpTrue", "JumpFalse", "Call", "Return") or a label (must start with a colon :) will assume to be a run command.
+So any first argument in a line that isn't an operator (`"Push"`, `"Run"`, `"Jump"`, `"JumpTrue"`, `"JumpFalse"`, `"Call"`, `"Return"`) or a label (must start with a colon :) will assume to be a run command.
 
 Additionally extra lines after any command are assumed to be pushed to the stack except with the final argument being tied to the command line itself.
 
@@ -132,4 +178,11 @@ For example, each add and then print section are equivalent:
 ]
 ```
 
-A more complex example about a dialogue tree can be found under `dotnet/DialogueTreeProcess.cs`.
+Ports
+-
+
+Current ports are for C++17, C# and TypeScript. The C++17 makes use of `std::variant` and `std::optional` which gives it the more recent C++ requirement.
+
+Author
+-
+Alan Lawrey 2022

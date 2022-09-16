@@ -68,7 +68,6 @@ export function processScope(name: string, tempCode: ReadonlyArray<TempCodeLine>
 
 export function *parseCodeLine(input: InputDataLine): IterableIterator<TempCodeLine>
 {
-    console.log('Parsing', input);
     if (input.length === 0)
     {
         return;

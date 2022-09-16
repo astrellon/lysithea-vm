@@ -1,6 +1,6 @@
-import { InputScope, parseScopes } from "./assembler";
-import { Value } from "./types";
-import VirtualMachine from "./virtualMachine";
+import { InputScope, parseScopes } from "../src/assembler";
+import { Value } from "../src/types";
+import VirtualMachine from "../src/virtualMachine";
 import fs from "fs";
 
 let counter = 0;

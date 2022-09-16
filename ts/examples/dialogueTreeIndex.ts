@@ -1,6 +1,6 @@
-import { InputScope, parseScopes } from "./assembler";
-import { ArrayValue, Value } from "./types";
-import VirtualMachine from "./virtualMachine";
+import { InputScope, parseScopes } from "../src/assembler";
+import { ArrayValue, Value } from "../src/types";
+import VirtualMachine from "../src/virtualMachine";
 import fs from "fs";
 import readline from "readline";
 

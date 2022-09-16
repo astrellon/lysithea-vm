@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "AMD",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "outFile": "./simple-stack-vm.js"
+  },
+  "include": ["src/**/*"]
+}

@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "A simple stack based virtual machine.",
   "scripts": {
-    "perfTest": "ts-node ./src/perfTestIndex.ts",
-    "diagTree": "ts-node ./src/dialogueTreeIndex.ts",
-    "runCommands": "ts-node ./src/runCommandsIndex.ts",
-    "tsc": "tsc && terser --compress --mangle --output simple-stack-vm.mini.js -- simple-stack-vm.js",
-    "init": "tsc --init"
+    "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",
+    "diagTree": "ts-node --project ./examples/tsconfig.json ./examples/dialogueTreeIndex.ts",
+    "runCommands": "ts-node --project ./examples/tsconfig.json ./examples/runCommandsIndex.ts",
+    "build": "tsc --project ./tsconfig.build.json && terser --compress --mangle --output simple-stack-vm.mini.js -- simple-stack-vm.js"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Alan Lawrey",
+  "license": "MIT",
   "devDependencies": {
     "@tsconfig/node18": "^1.0.1",
     "terser": "^5.15.0",
