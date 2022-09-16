@@ -1,8 +1,12 @@
 import { CodeLine, Operator, Scope, Value } from "./types";
 
-export type InputDataArg = string | boolean | number | ReadonlyArray<InputDataArg> | { readonly [key: string]: InputDataArg };
-export type InputDataArgs = [string, ...InputDataArg[]];
-export type InputDataLine = string | InputDataArgs;
+export type InputArrayValue = ReadonlyArray<InputDataArg>;
+export interface InputObjectValue
+{
+    readonly [key: string]: InputDataArg;
+}
+export type InputDataArg = string | boolean | number | InputArrayValue | InputObjectValue;
+export type InputDataLine = InputDataArg[];
 export interface InputScope
 {
     readonly name: string;
@@ -28,7 +32,7 @@ export function parseScope(input: InputScope)
     const tempCodeLines: TempCodeLine[] = [];
     for (let inputLine of input.data)
     {
-        if (typeof(inputLine) === 'string')
+        if (!isArray(inputLine))
         {
             inputLine = [inputLine];
         }
@@ -62,15 +66,16 @@ export function processScope(name: string, tempCode: ReadonlyArray<TempCodeLine>
     return { name, code, labels }
 }
 
-export function *parseCodeLine(input: InputDataArgs): IterableIterator<TempCodeLine>
+export function *parseCodeLine(input: InputDataLine): IterableIterator<TempCodeLine>
 {
+    console.log('Parsing', input);
     if (input.length === 0)
     {
         return;
     }
 
     const first = input[0];
-    if (first[0] === ':')
+    if (typeof(first) === 'string' && first[0] === ':')
     {
         return yield { label: first }
     }
@@ -81,7 +86,7 @@ export function *parseCodeLine(input: InputDataArgs): IterableIterator<TempCodeL
     if (opCode === 'unknown')
     {
         opCode = 'run';
-        codeLineInput = first;
+        codeLineInput = parseValue(first);
         pushChildOffset = 0;
     }
     else if (input.length > 1)
@@ -107,7 +112,17 @@ export function *parseCodeLine(input: InputDataArgs): IterableIterator<TempCodeL
     yield { operator: opCode, value: codeLineInput }
 }
 
-function parseValue(input: any) : Value
+function isArray(input: InputDataArg): input is InputArrayValue
+{
+    return Array.isArray(input);
+}
+
+function isObject(input: InputDataArg): input is InputObjectValue
+{
+    return typeof(input) === 'object' && !isArray(input);
+}
+
+function parseValue(input: InputDataArg) : Value
 {
     if (input == null)
     {
@@ -120,7 +135,7 @@ function parseValue(input: any) : Value
         return input;
     }
 
-    if (Array.isArray(input))
+    if (isArray(input))
     {
         const result: Value[] = [];
         for (const child of input)
@@ -135,7 +150,7 @@ function parseValue(input: any) : Value
         return result;
     }
 
-    if (typeof(input) === 'object')
+    if (isObject(input))
     {
         const result: { [key: string]: Value } = {};
         for (const prop in input)
@@ -153,8 +168,13 @@ function parseValue(input: any) : Value
     return null;
 }
 
-function parseOperator(input: string) : Operator
+function parseOperator(input: InputDataArg) : Operator
 {
+    if (typeof(input) !== 'string')
+    {
+        return 'unknown';
+    }
+
     const lower = input.toLowerCase();
     switch (lower)
     {
