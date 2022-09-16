@@ -283,6 +283,16 @@ namespace SimpleStackVM
             }
         }
 
+        public void Jump(int line)
+        {
+            if (line < 0 || line >= this.currentScope.Code.Count)
+            {
+                throw new OverflowException("Jumping to a line outside the current scope code.");
+            }
+
+            this.programCounter = line;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IValue PopStack()
         {
