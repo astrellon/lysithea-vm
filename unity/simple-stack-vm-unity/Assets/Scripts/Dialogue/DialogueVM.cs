@@ -52,11 +52,12 @@ namespace SimpleStackVM.Unity
             };
         }
 
-        public void StartDialogue(DialogueObject dialogue, string startScope, DialogueActor selfActor)
+        public void StartDialogue(DialogueScript dialogue, string startScope, DialogueActor selfActor)
         {
             dialogue.Awake();
             this.selfActor = selfActor;
-            this.vm.SetScopes(dialogue.Scopes);
+            this.vm.ClearScopes();
+            this.vm.AddScopes(dialogue.Scopes);
             this.vm.SetCurrentScope(startScope);
             this.vm.Restart();
             this.VMRunner.Running = true;

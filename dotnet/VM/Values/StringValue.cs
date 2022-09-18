@@ -39,7 +39,13 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
+        public StringValue Append(string input)
+        {
+            return new StringValue(this.Value + input);
+        }
+
         public static explicit operator StringValue(string input) => new StringValue(input);
+        public static implicit operator string (StringValue str) => str.Value;
         #endregion
     }
 }

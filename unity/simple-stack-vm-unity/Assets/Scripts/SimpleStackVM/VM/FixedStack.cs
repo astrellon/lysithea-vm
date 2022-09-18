@@ -11,13 +11,14 @@ namespace SimpleStackVM
     {
         int Index { get; }
         IReadOnlyList<T> Data { get; }
+        bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result);
     }
 
     public class FixedStack<T> : IReadOnlyFixedStack<T>
     {
         #region Fields
         private readonly T[] data;
-        private int index = 0;
+        private int index = -1;
 
         public int Index => this.index;
         public IReadOnlyList<T> Data => this.data;
@@ -31,6 +32,11 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public void Clear()
+        {
+            this.index = -1;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPush(T item)
         {
@@ -38,20 +44,33 @@ namespace SimpleStackVM
             {
                 return false;
             }
-            this.data[this.index++] = item;
+            this.data[++this.index] = item;
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPop([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result)
         {
-            if (this.index <= 0)
+            if (this.index < 0)
             {
                 result = default(T);
                 return false;
             }
 
-            result = this.data[--this.index];
+            result = this.data[this.index--];
+            return result != null;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result)
+        {
+            if (this.index < 0)
+            {
+                result = default(T);
+                return false;
+            }
+
+            result = this.data[this.index];
             return result != null;
         }
         #endregion

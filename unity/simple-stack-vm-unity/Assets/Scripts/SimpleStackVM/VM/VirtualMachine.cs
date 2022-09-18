@@ -81,15 +81,16 @@ namespace SimpleStackVM
             foreach (var scope in scopes) { this.AddScope(scope); }
         }
 
-        public void SetScopes(IEnumerable<Scope> scopes)
+        public void ClearScopes()
         {
             this.scopes.Clear();
-            this.AddScopes(scopes);
         }
 
         public void Restart()
         {
             this.programCounter = 0;
+            this.stack.Clear();
+            this.stackTrace.Clear();
             this.SetRunning(true);
             this.SetPause(false);
         }
@@ -314,6 +315,29 @@ namespace SimpleStackVM
             }
 
             throw new StackException(this.CreateStackTrace(), "Unable to pop stack, type cast error");
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IValue PeekStack()
+        {
+            if (!this.stack.TryPeek(out var obj))
+            {
+                throw new StackException(this.CreateStackTrace(), "Unable to peek stack, empty");
+            }
+
+            return obj;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T PeekStack<T>() where T : IValue
+        {
+            var obj = this.PeekStack();
+            if (obj.GetType() == typeof(T))
+            {
+                return (T)obj;
+            }
+
+            throw new StackException(this.CreateStackTrace(), "Unable to peek stack, type cast error");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

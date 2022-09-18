@@ -23,7 +23,10 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        #endregion
+        public ArrayValue Append(IValue input)
+        {
+            return new ArrayValue(this.Value.Append(input).ToList());
+        }
 
         public override bool Equals(object? other)
         {
@@ -73,5 +76,6 @@ namespace SimpleStackVM
         {
             return this.Value.GetHashCode();
         }
+        #endregion
     }
 }

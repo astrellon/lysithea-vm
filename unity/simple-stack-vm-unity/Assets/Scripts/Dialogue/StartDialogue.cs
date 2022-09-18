@@ -7,7 +7,7 @@ namespace SimpleStackVM.Unity
     public class StartDialogue : MonoBehaviour
     {
         #region Fields
-        public DialogueObject Dialogue;
+        public DialogueScript Dialogue;
         public string StartScope;
         public DialogueActor SelfActor;
         #endregion

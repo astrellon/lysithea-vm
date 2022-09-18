@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace SimpleStackVM.Unity
 {
-    [CreateAssetMenu(fileName="DialogueObject", menuName="SimpleStackVM/DialogueObject")]
-    public class DialogueObject : ScriptableObject
+    [CreateAssetMenu(fileName="DialogueScript", menuName="SimpleStackVM/DialogueScript")]
+    public class DialogueScript : ScriptableObject
     {
         #region Fields
         public TextAsset JsonText;

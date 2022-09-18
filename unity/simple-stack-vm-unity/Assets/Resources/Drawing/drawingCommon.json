@@ -1,0 +1,16 @@
+[
+    {
+        "name": "MakeGround",
+        "data": [
+            ["Push", "Plane", {"x": 0, "y": 0, "z": 0}, {}],
+
+            "randomColour",
+            ["setKey", "colour"],
+
+            ["setKey", 100, "scale"],
+            "drawComplex",
+
+            "Return"
+        ]
+    }
+]

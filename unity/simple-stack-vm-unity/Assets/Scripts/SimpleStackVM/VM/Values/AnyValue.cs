@@ -18,6 +18,11 @@ namespace SimpleStackVM
         {
             this.Value = value;
         }
+
+        public AnyValue(object rawValue) : this()
+        {
+            this.Value = rawValue;
+        }
         #endregion
 
         #region Methods

@@ -24,12 +24,13 @@ namespace SimpleStackVM.Unity
         {
             if (this.VM != null && this.Running)
             {
+                var runOnce = false;
                 while (this.VM.IsRunning && !this.VM.IsPaused)
                 {
                     if (this.WaitUntil > 0.0f)
                     {
                         this.WaitUntil -= Time.deltaTime;
-                        if (this.WaitUntil > 0.0f)
+                        if (runOnce || this.WaitUntil > 0.0f)
                         {
                             break;
                         }
@@ -42,6 +43,8 @@ namespace SimpleStackVM.Unity
                     {
                         this.WaitUntil = this.VMStepTiming;
                     }
+
+                    runOnce = true;
 
                     this.IsWaiting = false;
 
