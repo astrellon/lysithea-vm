@@ -1,0 +1,23 @@
+[
+    {
+        "name": "Main",
+        "data": [
+            ["Push", 0],
+
+            ":Start",
+
+            ["+", 1],
+
+            "Push",
+            ["*", 10],
+            "math:sinDeg",
+            "print",
+
+            "Push",
+            ["<", 10],
+            ["JumpTrue", ":Start"],
+
+            ["print", "Done!"]
+        ]
+    }
+]

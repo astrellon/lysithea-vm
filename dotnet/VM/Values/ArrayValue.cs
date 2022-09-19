@@ -76,6 +76,32 @@ namespace SimpleStackVM
         {
             return this.Value.GetHashCode();
         }
+
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is ArrayValue otherArray)
+            {
+                var compareLength = this.Value.Count.CompareTo(otherArray.Value);
+                if (compareLength != 0)
+                {
+                    return compareLength;
+                }
+
+                for (var i = 0; i < this.Value.Count; i++)
+                {
+                    var compare = this.Value[i].CompareTo(otherArray.Value[i]);
+                    if (compare != 0)
+                    {
+                        return compare;
+                    }
+                }
+
+                return 0;
+            }
+
+            return 1;
+        }
         #endregion
     }
 }

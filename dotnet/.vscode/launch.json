@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run PerfTest",
+            "name": "Run Perf Test",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-perf-test",
@@ -27,11 +27,22 @@
             "stopAtEntry": false
         },
         {
-            "name": "Run RunCommands",
+            "name": "Run Run Commands",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-run-commands",
             "program": "${workspaceFolder}/bin/Debug/net6.0/runCommands.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run Standard Library",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-standard-library",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/standardLibrary.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",

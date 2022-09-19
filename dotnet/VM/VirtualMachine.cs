@@ -7,6 +7,8 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
+    using RunCommandHandler = Func<IValue, VirtualMachine, bool>;
+
     public class VirtualMachine
     {
         public struct ScopeFrame
@@ -36,8 +38,6 @@ namespace SimpleStackVM
         }
 
         #region Fields
-        public delegate void RunCommandHandler(IValue command, VirtualMachine vm);
-
         public FlagValues Flags;
 
         private readonly FixedStack<IValue> stack;
@@ -45,7 +45,7 @@ namespace SimpleStackVM
         private readonly Dictionary<string, Scope> scopes;
         private Scope currentScope = Scope.Empty;
         private int programCounter;
-        private RunCommandHandler runHandler;
+        private List<RunCommandHandler> runHandlers;
 
         public int ProgramCounter => this.programCounter;
         public Scope CurrentScope => this.currentScope;
@@ -59,9 +59,14 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructor
-        public VirtualMachine(int stackSize, RunCommandHandler runHandler)
+        public VirtualMachine(int stackSize, RunCommandHandler runHandler) : this(stackSize, new[] { runHandler })
         {
-            this.runHandler = runHandler;
+
+        }
+
+        public VirtualMachine(int stackSize, IEnumerable<RunCommandHandler> runHandlers)
+        {
+            this.runHandlers = runHandlers.ToList();
 
             this.scopes = new Dictionary<string, Scope>();
             this.programCounter = 0;
@@ -89,6 +94,8 @@ namespace SimpleStackVM
         public void Restart()
         {
             this.programCounter = 0;
+            this.stack.Clear();
+            this.stackTrace.Clear();
             this.SetRunning(true);
             this.SetPause(false);
         }
@@ -153,14 +160,25 @@ namespace SimpleStackVM
                     }
                 case Operator.Push:
                     {
-                        if (codeLine.Input.IsNull)
+                        if (codeLine.Input != null)
                         {
-                            throw new OperatorException(this.CreateStackTrace(), "Push requires input");
+                            if (!this.stack.TryPush(codeLine.Input))
+                            {
+                                throw new StackException(this.CreateStackTrace(), "Stack is full!");
+                            }
                         }
-                        if (!this.stack.TryPush(codeLine.Input))
+                        else if (this.Stack.TryPeek(out var topOfStack))
                         {
-                            throw new StackException(this.CreateStackTrace(), "Stack is full!");
+                            if (!this.stack.TryPush(topOfStack))
+                            {
+                                throw new StackException(this.CreateStackTrace(), "Stack is full!");
+                            }
                         }
+                        else
+                        {
+                            throw new StackException(this.CreateStackTrace(), "Unable to copy top of an empty stack");
+                        }
+
                         break;
                     }
                 case Operator.JumpFalse:
@@ -204,9 +222,20 @@ namespace SimpleStackVM
                 case Operator.Run:
                     {
                         var top = codeLine.Input ?? this.PopStack();
-                        this.runHandler.Invoke(top, this);
+                        this.RunCommand(top);
                         break;
                     }
+            }
+        }
+
+        private void RunCommand(IValue value)
+        {
+            foreach (var handler in this.runHandlers)
+            {
+                if (handler.Invoke(value, this))
+                {
+                    break;
+                }
             }
         }
 

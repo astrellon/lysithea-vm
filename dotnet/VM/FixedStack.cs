@@ -32,6 +32,11 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public void Clear()
+        {
+            this.index = -1;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPush(T item)
         {

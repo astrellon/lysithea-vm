@@ -22,7 +22,7 @@ namespace SimpleStackVM.Unity
             this.VMRunner.Init(32, this.OnRunHandler);
         }
 
-        public void StartDrawing(IEnumerable<DrawingScript> drawingScripts, string startScope)
+        public void StartDrawing(IEnumerable<IDrawingScript> drawingScripts, string startScope)
         {
             this.vm.ClearScopes();
             foreach (var drawingScript in drawingScripts)

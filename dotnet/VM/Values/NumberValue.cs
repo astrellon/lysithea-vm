@@ -38,6 +38,17 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is NumberValue otherNum)
+            {
+                return this.Value.CompareTo(otherNum.Value);
+            }
+
+            return 1;
+        }
+
         public static explicit operator NumberValue(double input) => new NumberValue(input);
         public static implicit operator double (NumberValue number) => number.Value;
         public static implicit operator float (NumberValue number) => (float)number.Value;

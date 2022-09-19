@@ -4,12 +4,14 @@ using UnityEngine;
 namespace SimpleStackVM.Unity
 {
     [CreateAssetMenu(fileName="DrawingScript", menuName="SimpleStackVM/DrawingScript")]
-    public class DrawingScript : ScriptableObject
+    public class DrawingScript : ScriptableObject, IDrawingScript
     {
         #region Fields
         public TextAsset JsonText;
 
         public List<Scope> Scopes;
+
+        IEnumerable<Scope> IDrawingScript.Scopes => this.Scopes;
         #endregion
 
         #region Methods

@@ -16,7 +16,7 @@ namespace SimpleStackVM
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/perfTest.json"));
             var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
 
-            var vm = new VirtualMachine(64, OnRunCommand);
+            var vm = new VirtualMachine(64, new[] { StandardLibrary.Standard, OnRunCommand});
             vm.AddScopes(scopes);
 
             try
@@ -40,32 +40,35 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(IValue command, VirtualMachine vm)
+        private static bool OnRunCommand(IValue command, VirtualMachine vm)
         {
             var commandName = command.ToString();
             if (commandName == "rand")
             {
                 vm.PushStack((NumberValue)Rand.NextDouble());
-                return;
             }
-            if (commandName == "add")
+            else if (commandName == "add")
             {
                 var num1 = vm.PopStack<NumberValue>();
                 var num2 = vm.PopStack<NumberValue>();
                 vm.PushStack((NumberValue)(num1.Value + num2.Value));
-                return;
             }
-            if (commandName == "isDone")
+            else if (commandName == "isDone")
             {
                 Counter++;
                 vm.PushStack((BoolValue)(Counter >= 1_000_000));
-                return;
             }
-            if (commandName == "done")
+            else if (commandName == "done")
             {
                 var total = vm.PopStack<NumberValue>();
                 Console.WriteLine($"Done: {total.Value}");
             }
+            else
+            {
+                return false;
+            }
+
+            return true;
         }
         #endregion
     }

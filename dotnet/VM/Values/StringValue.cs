@@ -14,7 +14,7 @@ namespace SimpleStackVM
         #region Constructor
         public StringValue(string value)
         {
-            this.Value = string.Intern(value) ?? "<<null>>";
+            this.Value = string.Intern(value ?? "<<null>>");
         }
         #endregion
 
@@ -42,6 +42,22 @@ namespace SimpleStackVM
         public StringValue Append(string input)
         {
             return new StringValue(this.Value + input);
+        }
+
+        public StringValue Prepend(string input)
+        {
+            return new StringValue(input + this.Value);
+        }
+
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is StringValue otherString)
+            {
+                return this.Value.CompareTo(otherString.Value);
+            }
+
+            return 1;
         }
 
         public static explicit operator StringValue(string input) => new StringValue(input);
