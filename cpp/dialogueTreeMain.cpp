@@ -51,11 +51,11 @@ bool do_choice(int index, virtual_machine &vm)
     return true;
 }
 
-void runHandler(const value &input, virtual_machine &vm)
+bool runHandler(const value &input, virtual_machine &vm)
 {
     if (!input.is_string())
     {
-        return;
+        return false;
     }
 
     const auto &command = *input.get_string().get();
@@ -114,6 +114,12 @@ void runHandler(const value &input, virtual_machine &vm)
     {
         std::cout << "Opening the shop to the player and quitting dialogue\n";
     }
+    else
+    {
+        return false;
+    }
+
+    return true;
 }
 
 int main()

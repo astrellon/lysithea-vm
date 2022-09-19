@@ -16,7 +16,7 @@ namespace stack_vm
 {
     class virtual_machine;
 
-    using run_handler = std::function<void(const value &, virtual_machine &)>;
+    using run_handler = std::function<bool (const value &, virtual_machine &)>;
 
     class scope_frame
     {
@@ -39,6 +39,7 @@ namespace stack_vm
 
             // Constructor
             virtual_machine(int stackSize, run_handler run_handler);
+            virtual_machine(int stackSize, std::vector<run_handler> run_handlers);
 
             // Methods
             void add_scope(std::shared_ptr<scope> scope);
@@ -65,6 +66,11 @@ namespace stack_vm
                 stack.push(input);
             }
 
+            inline value peek_stack() const
+            {
+                return stack.top();
+            }
+
         private:
             // Fields
             std::stack<value> stack;
@@ -75,7 +81,7 @@ namespace stack_vm
             int stack_size;
             bool running;
             bool paused;
-            stack_vm::run_handler run_handler;
+            std::vector<stack_vm::run_handler> run_handlers;
 
             // Methods
             value get_arg(const code_line &input);

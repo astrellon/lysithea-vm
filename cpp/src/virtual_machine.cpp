@@ -2,7 +2,11 @@
 
 namespace stack_vm
 {
-    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler run_handler) : stack_size(stack_size), program_counter(0), running(false), paused(false), run_handler(run_handler)
+    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler run_handler) : virtual_machine(stack_size, std::vector<stack_vm::run_handler>{run_handler})
+    {
+    }
+
+    virtual_machine::virtual_machine(int stack_size, std::vector<stack_vm::run_handler> run_handlers) : stack_size(stack_size), program_counter(0), running(false), paused(false), run_handlers(run_handlers)
     {
     }
 
@@ -83,10 +87,13 @@ namespace stack_vm
             {
                 if (!code_line.value.has_value())
                 {
-                    throw std::runtime_error("Push code line requires input");
+                    auto top = peek_stack();
+                    stack.push(top);
                 }
-
-                stack.push(code_line.value.value());
+                else
+                {
+                    stack.push(code_line.value.value());
+                }
                 break;
             }
             case vm_operator::jump:
@@ -129,7 +136,13 @@ namespace stack_vm
             case vm_operator::run:
             {
                 const auto &top = get_arg(code_line);
-                run_handler(top, *this);
+                for (auto iter : run_handlers)
+                {
+                    if (iter(top, *this))
+                    {
+                        break;
+                    }
+                }
                 break;
             }
         }

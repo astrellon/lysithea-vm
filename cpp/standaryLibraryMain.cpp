@@ -8,12 +8,21 @@
 
 using namespace stack_vm;
 
-std::random_device _rd;
-std::mt19937 _rand(_rd());
+bool standard_handler(const value &input, virtual_machine &vm)
+{
+    if (!input.is_string())
+    {
+        return false;
+    }
 
-int counter = 0;
+    const auto &command = *input.get_string().get();
+    if (command == "+")
+    {
 
-bool runHandler(const value &input, virtual_machine &vm)
+    }
+}
+
+bool run_handler(const value &input, virtual_machine &vm)
 {
     if (!input.is_string())
     {
@@ -22,28 +31,12 @@ bool runHandler(const value &input, virtual_machine &vm)
 
     const auto &command = *input.get_string().get();
 
-    if (command == "rand")
-    {
-        std::uniform_real_distribution<double> dist(0.0, 1.0);
-        vm.push_stack(value(dist(_rand)));
-    }
-    else if (command == "add")
-    {
-        auto num1 = vm.pop_stack();
-        auto num2 = vm.pop_stack();
-        vm.push_stack(value(num1.get_number() + num2.get_number()));
-    }
-    else if (command == "isDone")
-    {
-        counter++;
-        vm.push_stack(value(counter >= 1000000));
-    }
-    else if (command == "done")
+    if (command == "print")
     {
         auto total = vm.pop_stack();
         auto str = total.to_string();
 
-        std::cout << "Done: " << total.get_number() << "\n";
+        std::cout << "Print: " << total.get_number() << "\n";
     }
     else
     {
@@ -56,7 +49,7 @@ bool runHandler(const value &input, virtual_machine &vm)
 int main()
 {
     std::ifstream json_input;
-    json_input.open("../../examples/perfTest.json");
+    json_input.open("../../examples/testStandardLibrary.json");
     if (!json_input)
     {
         std::cout << "Could not find file to open!\n";
@@ -68,7 +61,7 @@ int main()
 
     auto parsed_scopes = assembler::parse_scopes(json);
 
-    virtual_machine vm(64, runHandler);
+    virtual_machine vm(64, std::vector<stack_vm::run_handler>{ standard_handler, ::run_handler });
     vm.add_scopes(parsed_scopes);
 
     vm.run("Main");

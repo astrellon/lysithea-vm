@@ -7,7 +7,7 @@
 
 using namespace stack_vm;
 
-void runHandler(const value &input, virtual_machine &vm)
+bool runHandler(const value &input, virtual_machine &vm)
 {
     if (input.is_string())
     {
@@ -48,6 +48,12 @@ void runHandler(const value &input, virtual_machine &vm)
     {
         std::cout << "The object command: " << input.to_string() << "\n";
     }
+    else
+    {
+        return false;
+    }
+
+    return true;
 }
 
 int main()

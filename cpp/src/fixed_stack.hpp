@@ -12,12 +12,17 @@ namespace stack_vm
             // Fields
 
             // Constructor
-            fixed_stack(int size) : data(size), index(0) { }
+            fixed_stack(int size) : data(size), index(-1) { }
 
             // Methods
+            inline void clear()
+            {
+                index = -1;
+            }
+
             inline bool pop()
             {
-                if (index <= 0)
+                if (index < 0)
                 {
                     return false;
                 }
@@ -28,12 +33,12 @@ namespace stack_vm
 
             inline bool pop(T* result)
             {
-                if (index <= 0)
+                if (index < 0)
                 {
                     return false;
                 }
 
-                *result = data[--index];
+                *result = data[index--];
                 return true;
             }
 
@@ -44,7 +49,18 @@ namespace stack_vm
                     return false;
                 }
 
-                data[index++] = value;
+                data[++index] = value;
+                return true;
+            }
+
+            inline bool peek(T* result)
+            {
+                if (index < 0)
+                {
+                    return false;
+                }
+
+                *result = data[index];
                 return true;
             }
 
