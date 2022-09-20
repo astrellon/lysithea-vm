@@ -33,7 +33,7 @@ namespace SimpleStackVM
             }
         }
 
-        private static bool OnRunCommand(IValue command, VirtualMachine vm)
+        private static void OnRunCommand(IValue command, VirtualMachine vm)
         {
             if (command is StringValue stringValue)
             {
@@ -76,12 +76,6 @@ namespace SimpleStackVM
             {
                 Console.WriteLine($"The object command: {objectValue.ToString()}");
             }
-            else
-            {
-                return false;
-            }
-
-            return true;
         }
         #endregion
     }

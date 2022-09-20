@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    using RunCommandHandler = Func<IValue, VirtualMachine, bool>;
+    using RunCommandHandler = Action<IValue, VirtualMachine>;
 
     public class VirtualMachine
     {
@@ -38,14 +38,16 @@ namespace SimpleStackVM
         }
 
         #region Fields
+        private static readonly RunCommandHandler EmptyHandler = (i, vm) => { };
         public FlagValues Flags;
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
         private readonly Dictionary<string, Scope> scopes;
+        private readonly Dictionary<string, RunCommandHandler> runHandlers;
+        private RunCommandHandler globalRunHandler;
         private Scope currentScope = Scope.Empty;
         private int programCounter;
-        private List<RunCommandHandler> runHandlers;
 
         public int ProgramCounter => this.programCounter;
         public Scope CurrentScope => this.currentScope;
@@ -59,15 +61,10 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructor
-        public VirtualMachine(int stackSize, RunCommandHandler runHandler) : this(stackSize, new[] { runHandler })
+        public VirtualMachine(int stackSize, RunCommandHandler? globalRunHandler = null)
         {
-
-        }
-
-        public VirtualMachine(int stackSize, IEnumerable<RunCommandHandler> runHandlers)
-        {
-            this.runHandlers = runHandlers.ToList();
-
+            this.runHandlers = new Dictionary<string, RunCommandHandler>();
+            this.globalRunHandler = globalRunHandler ?? EmptyHandler;
             this.scopes = new Dictionary<string, Scope>();
             this.programCounter = 0;
             this.stack = new FixedStack<IValue>(stackSize);
@@ -76,6 +73,16 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public void AddRunHandler(string commandNameSpace, RunCommandHandler runCommandHandler)
+        {
+            this.runHandlers[commandNameSpace] = runCommandHandler;
+        }
+
+        public void SetGlobalRunHandler(RunCommandHandler runCommandHandler)
+        {
+            this.globalRunHandler = runCommandHandler;
+        }
+
         public void AddScope(Scope scope)
         {
             this.scopes[scope.ScopeName] = scope;
@@ -228,14 +235,19 @@ namespace SimpleStackVM
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RunCommand(IValue value)
         {
-            foreach (var handler in this.runHandlers)
+            if (value is ArrayValue arrayValue)
             {
-                if (handler.Invoke(value, this))
+                if (this.runHandlers.TryGetValue(arrayValue.Value[0].ToString(), out var handler))
                 {
-                    break;
+                    handler.Invoke(arrayValue.Value[1], this);
                 }
+            }
+            else
+            {
+                this.globalRunHandler.Invoke(value, this);
             }
         }
 

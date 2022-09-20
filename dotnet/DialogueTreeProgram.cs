@@ -40,7 +40,7 @@ namespace SimpleStackVM
             }
         }
 
-        private static bool OnRunCommand(IValue command, VirtualMachine vm)
+        private static void OnRunCommand(IValue command, VirtualMachine vm)
         {
             var commandName = command.ToString();
             if (commandName == "say")
@@ -104,12 +104,6 @@ namespace SimpleStackVM
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
             }
-            else
-            {
-                return false;
-            }
-
-            return true;
         }
 
         private static bool DoChoice(int index, VirtualMachine vm)
