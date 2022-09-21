@@ -23,11 +23,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public ArrayValue Append(IValue input)
-        {
-            return new ArrayValue(this.Value.Append(input).ToList());
-        }
-
         public override bool Equals(object? other)
         {
             if (other == null) return false;

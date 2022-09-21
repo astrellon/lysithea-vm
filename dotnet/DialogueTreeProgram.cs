@@ -40,33 +40,32 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(IValue command, VirtualMachine vm)
+        private static void OnRunCommand(string command, VirtualMachine vm)
         {
-            var commandName = command.ToString();
-            if (commandName == "say")
+            if (command == "say")
             {
                 Say(vm.PopStack());
             }
-            else if (commandName == "getPlayerName")
+            else if (command == "getPlayerName")
             {
                 PlayerName = Console.ReadLine()?.Trim() ?? "<Empty>";
             }
-            else if (commandName == "randomSay")
+            else if (command == "randomSay")
             {
                 RandomSay(vm.PopStack<ArrayValue>());
             }
-            else if (commandName == "isShopEnabled")
+            else if (command == "isShopEnabled")
             {
                 vm.PushStack((BoolValue)IsShopEnabled);
             }
-            else if (commandName == "choice")
+            else if (command == "choice")
             {
                 var choiceJumpLabel = vm.PopStack();
                 var choiceText = vm.PopStack();
                 ChoiceBuffer.Add(choiceJumpLabel);
                 SayChoice(choiceText);
             }
-            else if (commandName == "waitForChoice")
+            else if (command == "waitForChoice")
             {
                 if (!ChoiceBuffer.Any())
                 {
@@ -96,11 +95,11 @@ namespace SimpleStackVM
 
                 } while (!choiceValid);
             }
-            else if (commandName == "openTheShop")
+            else if (command == "openTheShop")
             {
                 IsShopEnabled = true;
             }
-            else if (commandName == "openShop")
+            else if (command == "openShop")
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
             }

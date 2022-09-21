@@ -13,7 +13,9 @@ namespace SimpleStackVM
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testStandardLibrary.json"));
             var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
 
+
             var vm = new VirtualMachine(64, OnRunCommand);
+            StandardLibrary.AddToVirtualMachine(vm, StandardLibrary.LibraryType.All);
             vm.AddScopes(scopes);
 
             try
@@ -34,21 +36,12 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(IValue input, VirtualMachine vm)
+        private static void OnRunCommand(string command, VirtualMachine vm)
         {
-            if (input is StringValue stringValue)
+            if (command == "print")
             {
-                var command = stringValue.Value;
-
-                switch (command)
-                {
-                    case "print":
-                    {
-                        var top = vm.PopStack();
-                        Console.WriteLine($"Print: {top.ToString()}");
-                        break;
-                    }
-                }
+                var top = vm.PopStack();
+                Console.WriteLine($"Print: {top.ToString()}");
             }
         }
         #endregion

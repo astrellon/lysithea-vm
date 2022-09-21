@@ -12,15 +12,15 @@
             ["isShopEnabled"],
             ["JumpFalse", ":ShopIsClosed"],
             ["randomSay", ["Welcome to my shop", "Come on in! What can I do for you?"]],
-            ["choice", "Open Shop", ["", "OpenShop"]],
-            ["choice", "Questions", ["", "Questions"]],
-            ["choice", "Good bye", ["", "GoodBye"]],
+            ["choice", "Open Shop", "OpenShop"],
+            ["choice", "Questions", "Questions"],
+            ["choice", "Good bye", "GoodBye"],
             "waitForChoice",
 
             ":ShopIsClosed",
             ["randomSay", ["Welcome stranger", "Hey, come on in"]],
-            ["choice", "Questions", ["", "Questions"]],
-            ["choice", "Good bye", ["", "GoodBye"]],
+            ["choice", "Questions", "Questions"],
+            ["choice", "Good bye", "GoodBye"],
             "waitForChoice"
         ]
     },

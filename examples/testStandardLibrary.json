@@ -6,15 +6,15 @@
 
             ":Start",
 
-            ["+", 1],
+            ["math.add", 1],
 
             "Push",
-            ["*", 10],
-            "math:sinDeg",
+            ["math.mul", 10],
+            "math.sinDeg",
             "print",
 
             "Push",
-            ["<", 10],
+            ["comp.less", 10],
             ["JumpTrue", ":Start"],
 
             ["print", "Done!"]

@@ -4,7 +4,7 @@
         "data": [
             ["Push", 0],
             ":Start",
-            ["Call", ["", "Step"]],
+            ["Call", "Step"],
             ["isDone"],
             ["JumpFalse", ":Start"],
             "done"

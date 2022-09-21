@@ -39,16 +39,6 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
-        public StringValue Append(string input)
-        {
-            return new StringValue(this.Value + input);
-        }
-
-        public StringValue Prepend(string input)
-        {
-            return new StringValue(input + this.Value);
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null) return 1;

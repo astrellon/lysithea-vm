@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    using RunCommandHandler = Action<IValue, VirtualMachine>;
+    using RunCommandHandler = Action<string, VirtualMachine>;
 
     public class VirtualMachine
     {
@@ -242,12 +242,12 @@ namespace SimpleStackVM
             {
                 if (this.runHandlers.TryGetValue(arrayValue.Value[0].ToString(), out var handler))
                 {
-                    handler.Invoke(arrayValue.Value[1], this);
+                    handler.Invoke(arrayValue.Value[1].ToString(), this);
                 }
             }
             else
             {
-                this.globalRunHandler.Invoke(value, this);
+                this.globalRunHandler.Invoke(value.ToString(), this);
             }
         }
 
@@ -281,7 +281,7 @@ namespace SimpleStackVM
         {
             if (jumpTo is StringValue stringValue)
             {
-                this.JumpToLabel(stringValue.Value, null);
+                this.JumpToLabel(stringValue.Value);
             }
             else if (jumpTo is ArrayValue arrayValue)
             {
@@ -296,11 +296,30 @@ namespace SimpleStackVM
                     scopeName = arrayValue.Value[1].ToString();
                 }
 
-                this.JumpToLabel(label, scopeName);
+                this.DoJump(label, scopeName);
             }
         }
 
-        public void JumpToLabel(string label, string? scopeName)
+        public void JumpToLabel(string input)
+        {
+            if (!string.IsNullOrEmpty(input))
+            {
+                if (input[0] == ':')
+                {
+                    this.DoJump(input, null);
+                }
+                else
+                {
+                    this.DoJump(null, input);
+                }
+            }
+            else
+            {
+                this.programCounter = 0;
+            }
+        }
+
+        private void DoJump(string? label, string? scopeName)
         {
             if (!string.IsNullOrEmpty(scopeName))
             {

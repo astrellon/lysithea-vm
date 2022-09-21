@@ -40,25 +40,24 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(IValue command, VirtualMachine vm)
+        private static void OnRunCommand(string command, VirtualMachine vm)
         {
-            var commandName = command.ToString();
-            if (commandName == "rand")
+            if (command == "rand")
             {
                 vm.PushStack((NumberValue)Rand.NextDouble());
             }
-            else if (commandName == "add")
+            else if (command == "add")
             {
                 var num1 = vm.PopStack<NumberValue>();
                 var num2 = vm.PopStack<NumberValue>();
                 vm.PushStack((NumberValue)(num1.Value + num2.Value));
             }
-            else if (commandName == "isDone")
+            else if (command == "isDone")
             {
                 Counter++;
                 vm.PushStack((BoolValue)(Counter >= 1_000_000));
             }
-            else if (commandName == "done")
+            else if (command == "done")
             {
                 var total = vm.PopStack<NumberValue>();
                 Console.WriteLine($"Done: {total.Value}");
