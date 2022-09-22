@@ -13,7 +13,8 @@ namespace SimpleStackVM
             String = 1 << 2,
             Array = 1 << 3,
             Object = 1 << 4,
-            All = (1 << 5) - 1
+            Value = 1 << 5,
+            All = (1 << 6) - 1
         }
 
         #region Methods
@@ -38,6 +39,10 @@ namespace SimpleStackVM
             if (libraries.HasFlag(LibraryType.Object))
             {
                 StandardObjectLibrary.AddHandler(vm);
+            }
+            if (libraries.HasFlag(LibraryType.Value))
+            {
+                StandardValueLibrary.AddHandler(vm);
             }
         }
         #endregion

@@ -188,6 +188,19 @@ namespace SimpleStackVM
 
                         break;
                     }
+                case Operator.Swap:
+                    {
+                        var value = codeLine.Input ?? this.PopStack();
+                        if (value is NumberValue number)
+                        {
+                            this.Swap((int)number.Value);
+                        }
+                        else
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Swap operator needs a number value");
+                        }
+                        break;
+                    }
                 case Operator.JumpFalse:
                     {
                         var label = codeLine.Input ?? this.PopStack();
@@ -235,8 +248,13 @@ namespace SimpleStackVM
             }
         }
 
+        public void Swap(int topOffset)
+        {
+            this.stack.Swap(topOffset);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void RunCommand(IValue value)
+        public void RunCommand(IValue value)
         {
             if (value is ArrayValue arrayValue)
             {

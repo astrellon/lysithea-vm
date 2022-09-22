@@ -13,7 +13,6 @@ namespace SimpleStackVM
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testStandardLibrary.json"));
             var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
 
-
             var vm = new VirtualMachine(64, OnRunCommand);
             StandardLibrary.AddToVirtualMachine(vm, StandardLibrary.LibraryType.All);
             vm.AddScopes(scopes);

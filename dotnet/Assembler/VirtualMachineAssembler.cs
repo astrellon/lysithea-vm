@@ -313,6 +313,10 @@ namespace SimpleStackVM
             {
                 result = Operator.JumpFalse;
             }
+            else if (input.Equals("swap", StringComparison.OrdinalIgnoreCase))
+            {
+                result = Operator.Swap;
+            }
 
             return result != Operator.Unknown;
         }

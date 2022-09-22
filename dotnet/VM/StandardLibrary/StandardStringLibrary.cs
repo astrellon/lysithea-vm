@@ -20,13 +20,6 @@ namespace SimpleStackVM
         {
             switch (command)
             {
-                case "toString":
-                    {
-                        var top = vm.PopStack();
-                        vm.PushStack(new StringValue(top.ToString()));
-                        break;
-                    }
-
                 // String Operators
                 case "append":
                     {
@@ -59,7 +52,7 @@ namespace SimpleStackVM
                     {
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
-                        var top = vm.PeekStack<StringValue>();
+                        var top = vm.PopStack<StringValue>();
                         vm.PushStack(top.Set((int)index, value.ToString()));
                         break;
                     }
@@ -67,7 +60,7 @@ namespace SimpleStackVM
                     {
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
-                        var top = vm.PeekStack<StringValue>();
+                        var top = vm.PopStack<StringValue>();
                         vm.PushStack(top.Insert((int)index, value.ToString()));
                         break;
                     }

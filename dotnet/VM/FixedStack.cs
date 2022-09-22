@@ -37,6 +37,21 @@ namespace SimpleStackVM
             this.index = -1;
         }
 
+        public void Swap(int topOffset)
+        {
+            var newIndex = this.index - topOffset;
+            if (newIndex < 0 || newIndex >= this.index)
+            {
+                throw new ArgumentException($"Unable to stack swap, invalid offset");
+            }
+
+            var top = this.data[this.index];
+            var other = this.data[newIndex];
+
+            this.data[this.index] = other;
+            this.data[newIndex] = top;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPush(T item)
         {

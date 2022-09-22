@@ -45,7 +45,7 @@ namespace SimpleStackVM
                     }
                 case "keys":
                     {
-                        var top = vm.PeekStack<ObjectValue>();
+                        var top = vm.PopStack<ObjectValue>();
                         var keys = top.Value.Keys.Select(k => new StringValue(k)).Cast<IValue>().ToList();
                         var list = new ArrayValue(keys);
                         vm.PushStack(list);
@@ -53,14 +53,14 @@ namespace SimpleStackVM
                     }
                 case "values":
                     {
-                        var top = vm.PeekStack<ObjectValue>();
+                        var top = vm.PopStack<ObjectValue>();
                         var list = new ArrayValue(top.Value.Values.ToList());
                         vm.PushStack(list);
                         break;
                     }
                 case "length":
                     {
-                        var top = vm.PeekStack<ObjectValue>();
+                        var top = vm.PopStack<ObjectValue>();
                         vm.PushStack(new NumberValue(top.Value.Count));
                         break;
                     }

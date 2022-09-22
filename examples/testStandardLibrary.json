@@ -4,6 +4,11 @@
         "data": [
             ["Push", 0],
 
+            "value.typeof",
+            ["Swap", "The number is a: ", 1],
+            "string.append",
+            "print",
+
             ":Start",
 
             ["math.add", 1],
@@ -17,7 +22,10 @@
             ["comp.less", 10],
             ["JumpTrue", ":Start"],
 
-            ["print", "Done!"]
+            "value.typeof",
+            ["Push", "Done!: "],
+            "string.prepend",
+            "print"
         ]
     }
 ]

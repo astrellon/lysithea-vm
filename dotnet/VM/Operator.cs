@@ -3,7 +3,9 @@ namespace SimpleStackVM
     public enum Operator : byte
     {
         Unknown,
-        Push, Run, Call, Return,
+        Push, Swap,
+        Run,
+        Call, Return,
         Jump, JumpTrue, JumpFalse
     }
 }
