@@ -35,7 +35,9 @@ namespace stack_vm
             value(const char * input) : value(std::make_shared<std::string>(input)) { }
             value(const std::string &input) : value(std::make_shared<std::string>(input)) { }
             value(string_ptr input) : data(input) { }
+            value(const object_value &input) : data(std::make_shared<object_value>(input)) { }
             value(object_ptr input) : data(input) { }
+            value(const array_value &input) : data(std::make_shared<array_value>(input)) { }
             value(array_ptr input) : data(input) { }
 
             // Methods
