@@ -88,7 +88,7 @@ namespace stack_vm
         if (op_code == vm_operator::unknown)
         {
             op_code = vm_operator::run;
-            code_line_input = parse_json_value(first);
+            code_line_input = parse_run_command(first);
             if (!code_line_input.has_value())
             {
                 throw std::runtime_error("Error parsing code line");
@@ -97,12 +97,22 @@ namespace stack_vm
         }
         else if (j.size() > 1)
         {
-            code_line_input = parse_json_value(j.back());
-            if (!code_line_input.has_value())
+            if (is_jump_call(op_code))
             {
-                throw std::runtime_error("Error parsing code line");
+                code_line_input = parse_jump_label(j.back());
+                if (!code_line_input.has_value())
+                {
+                    throw std::runtime_error("Error parsing jump style opcode line");
+                }
             }
-
+            else
+            {
+                code_line_input = parse_json_value(j.back());
+                if (!code_line_input.has_value())
+                {
+                    throw std::runtime_error("Error parsing code line");
+                }
+            }
         }
 
         for (auto i = 1; i < j.size() - push_child_offset; i++)
@@ -186,6 +196,68 @@ namespace stack_vm
         }
 
         return nullptr;
+    }
+
+    std::optional<value> assembler::parse_run_command(const json &j)
+    {
+        return parse_two_string_input(j, '.', false);
+    }
+
+    std::optional<value> assembler::parse_jump_label(const json &j)
+    {
+        return parse_two_string_input(j, ':', true);
+    }
+
+    std::optional<value> assembler::parse_two_string_input(const json &j, char delimiter, bool include_delimiter)
+    {
+        if (j.type() == json::value_t::string)
+        {
+            auto str = j.get<std::string>();
+            auto delimiter_find = str.find(delimiter);
+            if (delimiter_find != str.npos && delimiter_find > 0)
+            {
+                auto arr = std::make_shared<array_value>();
+                arr->emplace_back(std::make_shared<std::string>(str.substr(0, delimiter_find)));
+                if (include_delimiter)
+                {
+                    arr->emplace_back(std::make_shared<std::string>(str.substr(delimiter_find)));
+                }
+                else
+                {
+                    arr->emplace_back(std::make_shared<std::string>(str.substr(delimiter_find + 1)));
+                }
+
+                return value(arr);
+            }
+
+            return value(std::make_shared<std::string>(str));
+        }
+        else if (j.type() == json::value_t::array)
+        {
+            if (j.size() == 1)
+            {
+                return parse_two_string_input(j.front(), delimiter, include_delimiter);
+            }
+
+            auto parsed = parse_json_value(j);
+            if (parsed.has_value())
+            {
+                auto parsed_array = parsed->get_array();
+                if (parsed_array->at(0).is_string() &&
+                    parsed_array->at(1).is_string())
+                {
+                    return parsed_array;
+                }
+            }
+        }
+
+        return nullptr;
+    }
+
+    bool assembler::is_jump_call(vm_operator input)
+    {
+        return input == vm_operator::call || input == vm_operator::jump ||
+            input == vm_operator::jump_true || input == vm_operator::jump_false;
     }
 
 } // stack_vm

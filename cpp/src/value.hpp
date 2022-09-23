@@ -8,6 +8,8 @@
 #include <sstream>
 #include <memory>
 
+#include "utils.hpp"
+
 namespace stack_vm
 {
     class value;
@@ -101,6 +103,72 @@ namespace stack_vm
                 return std::get<array_ptr>(data);
             }
 
+            int compare(const value &other) const
+            {
+                if (other.data.index() != data.index())
+                {
+                    return 1;
+                }
+
+                switch (data.index())
+                {
+                    case 0: return get_bool() - other.get_bool();
+                    case 1: return stack_vm::compare(get_number(), other.get_number());
+                    case 2: return get_string()->compare(*other.get_string());
+                    case 3:
+                    {
+                        auto this_array = get_array();
+                        auto other_array = other.get_array();
+                        auto compare_length = stack_vm::compare(this_array->size(), other_array->size());
+                        if (compare_length != 0)
+                        {
+                            return compare_length;
+                        }
+
+                        for (auto i = 0; i < this_array->size(); i++)
+                        {
+                            auto compare_value = this_array->at(i).compare(other_array->at(i));
+                            if (compare_value != 0)
+                            {
+                                return 0;
+                            }
+                        }
+
+                        return 0;
+                    }
+                    case 4:
+                    {
+                        auto this_object = get_object();
+                        auto other_object = other.get_object();
+                        auto compare_length = stack_vm::compare(this_object->size(), other_object->size());
+                        if (compare_length != 0)
+                        {
+                            return compare_length;
+                        }
+
+                        // for (auto i = 0; i < this_object->size(); i++)
+                        for (auto iter = this_object->begin(); iter != this_object->end(); ++iter)
+                        {
+                            auto find_other = other_object->find(iter->first);
+                            if (find_other == other_object->end())
+                            {
+                                return 1;
+                            }
+
+                            auto compare_value = iter->second.compare(find_other->second);
+                            if (compare_value != 0)
+                            {
+                                return 0;
+                            }
+                        }
+
+                        return 0;
+                    }
+                }
+
+                return 1;
+            }
+
             std::string to_string() const
             {
                 switch (data.index())
@@ -152,5 +220,6 @@ namespace stack_vm
                     default: return "<<Unknown>>";
                 }
             }
+
     };
 } // stack_vm

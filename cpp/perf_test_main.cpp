@@ -13,15 +13,8 @@ std::mt19937 _rand(_rd());
 
 int counter = 0;
 
-bool runHandler(const value &input, virtual_machine &vm)
+void runHandler(const std::string &command, virtual_machine &vm)
 {
-    if (!input.is_string())
-    {
-        return false;
-    }
-
-    const auto &command = *input.get_string().get();
-
     if (command == "rand")
     {
         std::uniform_real_distribution<double> dist(0.0, 1.0);
@@ -45,12 +38,6 @@ bool runHandler(const value &input, virtual_machine &vm)
 
         std::cout << "Done: " << total.get_number() << "\n";
     }
-    else
-    {
-        return false;
-    }
-
-    return true;
 }
 
 int main()
@@ -70,8 +57,13 @@ int main()
 
     virtual_machine vm(64, runHandler);
     vm.add_scopes(parsed_scopes);
+    vm.set_current_scope("Main");
+    vm.running = true;
 
-    vm.run("Main");
+    while (vm.running && !vm.paused)
+    {
+        vm.step();
+    }
 
     return 0;
 }

@@ -2,11 +2,7 @@
 
 namespace stack_vm
 {
-    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler run_handler) : virtual_machine(stack_size, std::vector<stack_vm::run_handler>{run_handler})
-    {
-    }
-
-    virtual_machine::virtual_machine(int stack_size, std::vector<stack_vm::run_handler> run_handlers) : stack_size(stack_size), program_counter(0), running(false), paused(false), run_handlers(run_handlers)
+    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler global_run_handler) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false), global_run_handler(global_run_handler)
     {
     }
 
@@ -23,38 +19,31 @@ namespace stack_vm
         }
     }
 
-    void virtual_machine::run(const std::string &start_scope_name)
+    void virtual_machine::add_run_handler(const std::string &handler_name, stack_vm::run_handler handler)
     {
-        if (start_scope_name.size() > 0)
+        run_handlers[handler_name] = handler;
+    }
+
+    void virtual_machine::set_current_scope(const std::string &scope_name)
+    {
+        auto find = scopes.find(scope_name);
+        if (find == scopes.end())
         {
-            auto find = scopes.find(start_scope_name);
-            if (find == scopes.end())
-            {
-                throw std::runtime_error("Unable to find start scope");
-            }
-            else
-            {
-                current_scope = find->second;
-            }
+            throw std::runtime_error("Unable to find scope");
         }
-
-        running = true;
-        paused = false;
-
-        while (running && !paused)
+        else
         {
-            step();
+            current_scope = find->second;
         }
     }
 
-    void virtual_machine::stop()
+    void virtual_machine::reset()
     {
+        program_counter = 0;
+        stack.clear();
+        stack_trace.clear();
         running = false;
-    }
-
-    void virtual_machine::pause(bool value)
-    {
-        paused = value;
+        paused = false;
     }
 
     value virtual_machine::get_arg(const code_line &input)
@@ -71,9 +60,11 @@ namespace stack_vm
     {
         if (program_counter >= current_scope->code.size())
         {
-            stop();
+            running = false;
             return;
         }
+
+        print_stack_debug();
 
         const auto &code_line = current_scope->code[program_counter++];
 
@@ -93,6 +84,20 @@ namespace stack_vm
                 else
                 {
                     stack.push(code_line.value.value());
+                }
+                break;
+            }
+            case vm_operator::swap:
+            {
+                std::cout << "Do swap!\n";
+                const auto &value = get_arg(code_line);
+                if (value.is_number())
+                {
+                    swap(static_cast<int>(value.get_number()));
+                }
+                else
+                {
+                    throw std::runtime_error("Swap operator needs a number value");
                 }
                 break;
             }
@@ -136,15 +141,29 @@ namespace stack_vm
             case vm_operator::run:
             {
                 const auto &top = get_arg(code_line);
-                for (auto iter : run_handlers)
-                {
-                    if (iter(top, *this))
-                    {
-                        break;
-                    }
-                }
+                run_command(top);
                 break;
             }
+        }
+    }
+
+    void virtual_machine::run_command(const value &input)
+    {
+        if (input.is_array())
+        {
+            auto arr = input.get_array();
+            auto ns = arr->at(0).get_string();
+            auto find_ns = run_handlers.find(*ns.get());
+            if (find_ns == run_handlers.end())
+            {
+                throw std::runtime_error("Unable to find namespace for run command");
+            }
+
+            find_ns->second(arr->at(1).to_string(), *this);
+        }
+        else
+        {
+            global_run_handler(input.to_string(), *this);
         }
     }
 
@@ -158,7 +177,7 @@ namespace stack_vm
     {
         if (input.is_string())
         {
-            jump(*std::get<std::shared_ptr<std::string>>(input.data), "");
+            jump(*input.get_string().get());
         }
         else if (input.is_array())
         {
@@ -177,6 +196,25 @@ namespace stack_vm
             {
                 jump(label, "");
             }
+        }
+    }
+
+    void virtual_machine::jump(const std::string &label)
+    {
+        if (label.size() > 0)
+        {
+            if (label[0] == ':')
+            {
+                jump(label, "");
+            }
+            else
+            {
+                jump("", label);
+            }
+        }
+        else
+        {
+            program_counter = 0;
         }
     }
 
@@ -212,14 +250,28 @@ namespace stack_vm
 
     void virtual_machine::call_return()
     {
-        if (stack_trace.size() == 0)
+        scope_frame top;
+        if (!stack_trace.pop(top))
         {
-            throw std::runtime_error("Unable to return, stack trace empty");
+            throw std::runtime_error("Unable to pop stack track, empty stack");
         }
 
-        auto last = stack_trace.top();
-        stack_trace.pop();
-        current_scope = last.scope;
-        program_counter = last.line_counter;
+        current_scope = top.scope;
+        program_counter = top.line_counter;
+    }
+
+    void virtual_machine::swap(int top_offset)
+    {
+        stack.swap(top_offset);
+    }
+
+    void virtual_machine::print_stack_debug()
+    {
+        const auto &data = stack.stack_data();
+        std::cout << "Stack size: " << data.size() << "\n";
+        for (const auto &iter : data)
+        {
+            std::cout << "- " << iter.to_string() << "\n";
+        }
     }
 } // namespace stack_vm

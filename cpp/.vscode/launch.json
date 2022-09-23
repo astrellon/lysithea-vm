@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch (runCommands)",
+            "name": "Launch (standardLibraryTest)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/Debug/runCommands",
+            "program": "${workspaceFolder}/Debug/standardLibraryTest",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/Debug",

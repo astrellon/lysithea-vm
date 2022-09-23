@@ -51,15 +51,8 @@ bool do_choice(int index, virtual_machine &vm)
     return true;
 }
 
-bool runHandler(const value &input, virtual_machine &vm)
+void runHandler(const std::string &command, virtual_machine &vm)
 {
-    if (!input.is_string())
-    {
-        return false;
-    }
-
-    const auto &command = *input.get_string().get();
-
     if (command == "say")
     {
         say(vm.pop_stack());
@@ -114,12 +107,6 @@ bool runHandler(const value &input, virtual_machine &vm)
     {
         std::cout << "Opening the shop to the player and quitting dialogue\n";
     }
-    else
-    {
-        return false;
-    }
-
-    return true;
 }
 
 int main()
@@ -139,8 +126,13 @@ int main()
 
     virtual_machine vm(64, runHandler);
     vm.add_scopes(parsed_scopes);
+    vm.set_current_scope("Main");
+    vm.running = true;
 
-    vm.run("Main");
+    while (vm.running && !vm.paused)
+    {
+        vm.step();
+    }
 
     return 0;
 }

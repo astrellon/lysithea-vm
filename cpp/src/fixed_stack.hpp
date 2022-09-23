@@ -12,64 +12,72 @@ namespace stack_vm
             // Fields
 
             // Constructor
-            fixed_stack(int size) : data(size), index(-1) { }
+            fixed_stack(int size) : max_size(size) { }
 
             // Methods
             inline void clear()
             {
-                index = -1;
+                data.clear();
             }
 
-            inline bool pop()
+            inline bool pop(T &result)
             {
-                if (index < 0)
+                if (stack_size() < max_size)
                 {
-                    return false;
+                    result = data.back();
+                    data.pop_back();
+                    return true;
                 }
 
-                --index;
-                return true;
-            }
-
-            inline bool pop(T* result)
-            {
-                if (index < 0)
-                {
-                    return false;
-                }
-
-                *result = data[index--];
-                return true;
+                return false;
             }
 
             inline bool push(T value)
             {
-                if (index >= data.capacity())
+                if (stack_size() < max_size)
                 {
-                    return false;
+                    data.emplace_back(value);
+                    return true;
                 }
 
-                data[++index] = value;
-                return true;
+                return false;
             }
 
-            inline bool peek(T* result)
+            inline bool peek(T& result) const
             {
-                if (index < 0)
+                if (data.size() == 0)
                 {
                     return false;
                 }
 
-                *result = data[index];
+                result = data.back();
                 return true;
             }
 
-            inline int stack_size() const { return data.capacity(); }
+            inline bool swap(int top_offset)
+            {
+                auto size = stack_size();
+                auto new_index = size - top_offset - 1;
+                if (new_index < 0 || new_index > size)
+                {
+                    return false;
+                }
+
+                std::iter_swap(data.rbegin(), data.begin() + new_index);
+                return true;
+            }
+
+            inline int stack_size() const { return static_cast<int>(data.size()); }
+
+            const std::vector<T> stack_data() const
+            {
+                return data;
+            }
 
         private:
             // Fields
-            const std::vector<T> data;
-            int index;
+            std::vector<T> data;
+            int max_size;
 
             // Methods
     };
