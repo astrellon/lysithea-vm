@@ -33,6 +33,7 @@ namespace stack_vm
             value(unsigned int input) : data((double)input) { }
             value(double input) : data(input) { }
             value(const char * input) : value(std::make_shared<std::string>(input)) { }
+            value(const std::string &input) : value(std::make_shared<std::string>(input)) { }
             value(string_ptr input) : data(input) { }
             value(object_ptr input) : data(input) { }
             value(array_ptr input) : data(input) { }
@@ -86,6 +87,11 @@ namespace stack_vm
             inline double get_number() const
             {
                 return std::get<double>(data);
+            }
+
+            inline int get_int() const
+            {
+                return static_cast<int>(get_number());
             }
 
             inline string_ptr get_string() const

@@ -1,5 +1,6 @@
 #include "standard_value_library.hpp"
 
+#include "../value.hpp"
 #include "../virtual_machine.hpp"
 #include "../utils.hpp"
 
@@ -19,13 +20,21 @@ namespace stack_vm
             case hash("typeof"):
             {
                 const auto &top = vm.pop_stack();
-                vm.push_stack(std::make_shared<std::string>(top.type()));
+                vm.push_stack(top.type());
                 break;
             }
             case hash("toString"):
             {
                 const auto &top = vm.pop_stack();
-                vm.push_stack(std::make_shared<std::string>(top.to_string()));
+                vm.push_stack(top.to_string());
+                break;
+            }
+            case hash("compareTo"):
+            {
+                const auto &right = vm.pop_stack();
+                const auto &left = vm.pop_stack();
+                vm.push_stack(left.compare(right));
+                break;
             }
         }
     }
