@@ -108,7 +108,7 @@ namespace SimpleStackVM
             if (!TryParseOperator(first.Value, out opCode))
             {
                 opCode = Operator.Run;
-                if (!TryParseRun(first, out codeLineInput))
+                if (!TryParseRunCommand(first, out codeLineInput))
                 {
                     throw new Exception($"Error parsing run input for: {input.ToString()}");
                 }
@@ -159,7 +159,7 @@ namespace SimpleStackVM
             return TryParseTwoStringInput(input, ':', true, out result);
         }
 
-        private static bool TryParseRun(JSONNode input, out IValue result)
+        private static bool TryParseRunCommand(JSONNode input, out IValue result)
         {
             return TryParseTwoStringInput(input, '.', false, out result);
         }
@@ -168,7 +168,7 @@ namespace SimpleStackVM
         {
             if (input.IsString)
             {
-                var delimiterIndex = input.Value.IndexOf('.');
+                var delimiterIndex = input.Value.IndexOf(delimiter);
                 if (delimiterIndex > 0)
                 {
                     var array = new List<IValue>(2);
@@ -194,7 +194,7 @@ namespace SimpleStackVM
                 var jsonArray = input.AsArray;
                 if (jsonArray.Count == 1)
                 {
-                    return TryParseJumpLabel(jsonArray[0], out result);
+                    return TryParseTwoStringInput(jsonArray[0], delimiter, includeDelimiter, out result);
                 }
 
                 if (TryParseJson(jsonArray, out var parsed))
@@ -284,41 +284,13 @@ namespace SimpleStackVM
 
         private static bool TryParseOperator(string input, out Operator result)
         {
-            result = Operator.Unknown;
-            if (input.Equals("push", StringComparison.OrdinalIgnoreCase))
+            if (!Enum.TryParse<Operator>(input, true, out result))
             {
-                result = Operator.Push;
-            }
-            else if (input.Equals("run", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Run;
-            }
-            else if (input.Equals("call", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Call;
-            }
-            else if (input.Equals("return", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Return;
-            }
-            else if (input.Equals("jump", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Jump;
-            }
-            else if (input.Equals("jumptrue", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.JumpTrue;
-            }
-            else if (input.Equals("jumpfalse", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.JumpFalse;
-            }
-            else if (input.Equals("swap", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Swap;
+                result = Operator.Unknown;
+                return false;
             }
 
-            return result != Operator.Unknown;
+            return true;
         }
 
         #endregion

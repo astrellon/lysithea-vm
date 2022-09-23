@@ -28,34 +28,21 @@ namespace SimpleStackVM
             }
         }
 
-        [Flags]
-        public enum FlagValues : byte
-        {
-            None = 0,
-            Running = 1 << 1,
-            Paused = 1 << 2,
-            DebugMode = 1 << 3
-        }
-
         #region Fields
         private static readonly RunCommandHandler EmptyHandler = (i, vm) => { };
-        public FlagValues Flags;
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
         private readonly Dictionary<string, Scope> scopes;
         private readonly Dictionary<string, RunCommandHandler> runHandlers;
         private RunCommandHandler globalRunHandler;
-        private Scope currentScope = Scope.Empty;
-        private int programCounter;
 
-        public int ProgramCounter => this.programCounter;
-        public Scope CurrentScope => this.currentScope;
+        public Scope CurrentScope { get; private set; } = Scope.Empty;
+        public int ProgramCounter { get; private set; }
+        public bool Running;
+        public bool Paused;
+
         public IReadOnlyDictionary<string, Scope> Scopes => this.scopes;
-
-        public bool IsRunning => this.Flags.HasFlag(FlagValues.Running);
-        public bool IsPaused => this.Flags.HasFlag(FlagValues.Paused);
-
         public IReadOnlyFixedStack<IValue> Stack => this.stack;
         public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
         #endregion
@@ -66,7 +53,7 @@ namespace SimpleStackVM
             this.runHandlers = new Dictionary<string, RunCommandHandler>();
             this.globalRunHandler = globalRunHandler ?? EmptyHandler;
             this.scopes = new Dictionary<string, Scope>();
-            this.programCounter = 0;
+            this.ProgramCounter = 0;
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
@@ -98,20 +85,20 @@ namespace SimpleStackVM
             this.scopes.Clear();
         }
 
-        public void Restart()
+        public void Reset()
         {
-            this.programCounter = 0;
+            this.ProgramCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
-            this.SetRunning(true);
-            this.SetPause(false);
+            this.Running = false;
+            this.Paused = false;
         }
 
         public void SetCurrentScope(string scopeName)
         {
             if (this.scopes.TryGetValue(scopeName, out var scope))
             {
-                this.currentScope = scope;
+                this.CurrentScope = scope;
             }
             else
             {
@@ -119,45 +106,15 @@ namespace SimpleStackVM
             }
         }
 
-        public void SetRunning(bool running)
-        {
-            if (running)
-            {
-                this.Flags |= FlagValues.Running;
-            }
-            else
-            {
-                this.Flags &= ~FlagValues.Running;
-            }
-        }
-
-        public void SetPause(bool paused)
-        {
-            if (paused)
-            {
-                this.Flags |= FlagValues.Paused;
-            }
-            else
-            {
-                this.Flags &= ~FlagValues.Paused;
-            }
-        }
-
         public void Step()
         {
-            if (this.currentScope.IsEmpty || this.programCounter >= this.currentScope.Code.Count)
+            if (this.CurrentScope.IsEmpty || this.ProgramCounter >= this.CurrentScope.Code.Count)
             {
-                this.SetRunning(false);
+                this.Running = false;
                 return;
             }
 
-            var codeLine = this.currentScope.Code[this.programCounter++];
-
-            if (this.Flags.HasFlag(FlagValues.DebugMode))
-            {
-                var debugLine = DebugScopeLine(this.currentScope, this.programCounter - 1);
-                Console.WriteLine($"- {debugLine}");
-            }
+            var codeLine = this.CurrentScope.Code[this.ProgramCounter++];
 
             switch (codeLine.Operator)
             {
@@ -208,7 +165,7 @@ namespace SimpleStackVM
                         var top = this.PopStack();
                         if (top.Equals(BoolValue.False))
                         {
-                            this.JumpToLabel(label);
+                            this.Jump(label);
                         }
                         break;
                     }
@@ -218,14 +175,14 @@ namespace SimpleStackVM
                         var top = this.PopStack();
                         if (top.Equals(BoolValue.True))
                         {
-                            this.JumpToLabel(label);
+                            this.Jump(label);
                         }
                         break;
                     }
                 case Operator.Jump:
                     {
                         var label = codeLine.Input ?? this.PopStack();
-                        this.JumpToLabel(label);
+                        this.Jump(label);
                         break;
                     }
                 case Operator.Call:
@@ -250,7 +207,10 @@ namespace SimpleStackVM
 
         public void Swap(int topOffset)
         {
-            this.stack.Swap(topOffset);
+            if (!this.stack.TrySwap(topOffset))
+            {
+                throw new StackException(this.CreateStackTrace(), $"Unable to swap stack, out of range: {topOffset}");
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -272,8 +232,8 @@ namespace SimpleStackVM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CallToLabel(IValue label)
         {
-            this.PushToStackTrace(this.programCounter, this.currentScope);
-            this.JumpToLabel(label);
+            this.PushToStackTrace(this.ProgramCounter, this.CurrentScope);
+            this.Jump(label);
         }
 
         public void PushToStackTrace(int line, Scope scope)
@@ -291,15 +251,15 @@ namespace SimpleStackVM
                 throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
             }
 
-            this.currentScope = scopeFrame.Scope;
-            this.programCounter = scopeFrame.LineCounter;
+            this.CurrentScope = scopeFrame.Scope;
+            this.ProgramCounter = scopeFrame.LineCounter;
         }
 
-        public void JumpToLabel(IValue jumpTo)
+        public void Jump(IValue jumpTo)
         {
             if (jumpTo is StringValue stringValue)
             {
-                this.JumpToLabel(stringValue.Value);
+                this.Jump(stringValue.Value);
             }
             else if (jumpTo is ArrayValue arrayValue)
             {
@@ -314,30 +274,30 @@ namespace SimpleStackVM
                     scopeName = arrayValue.Value[1].ToString();
                 }
 
-                this.DoJump(label, scopeName);
+                this.Jump(label, scopeName);
             }
         }
 
-        public void JumpToLabel(string input)
+        public void Jump(string input)
         {
             if (!string.IsNullOrEmpty(input))
             {
                 if (input[0] == ':')
                 {
-                    this.DoJump(input, null);
+                    this.Jump(input, null);
                 }
                 else
                 {
-                    this.DoJump(null, input);
+                    this.Jump(null, input);
                 }
             }
             else
             {
-                this.programCounter = 0;
+                this.ProgramCounter = 0;
             }
         }
 
-        private void DoJump(string? label, string? scopeName)
+        public void Jump(string? label, string? scopeName)
         {
             if (!string.IsNullOrEmpty(scopeName))
             {
@@ -346,13 +306,13 @@ namespace SimpleStackVM
 
             if (string.IsNullOrEmpty(label))
             {
-                this.programCounter = 0;
+                this.ProgramCounter = 0;
                 return;
             }
 
-            if (this.currentScope.Labels.TryGetValue(label, out var line))
+            if (this.CurrentScope.Labels.TryGetValue(label, out var line))
             {
-                this.programCounter = line;
+                this.ProgramCounter = line;
             }
             else
             {
@@ -362,12 +322,12 @@ namespace SimpleStackVM
 
         public void Jump(int line)
         {
-            if (line < 0 || line >= this.currentScope.Code.Count)
+            if (line < 0 || line >= this.CurrentScope.Code.Count)
             {
                 throw new OverflowException("Jumping to a line outside the current scope code.");
             }
 
-            this.programCounter = line;
+            this.ProgramCounter = line;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -429,7 +389,7 @@ namespace SimpleStackVM
         {
             var result = new List<string>();
 
-            result.Add(DebugScopeLine(this.currentScope, this.programCounter - 1));
+            result.Add(DebugScopeLine(this.CurrentScope, this.ProgramCounter - 1));
             for (var i = this.stackTrace.Index - 1; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];

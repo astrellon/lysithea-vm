@@ -25,8 +25,8 @@ namespace SimpleStackVM
             try
             {
                 vm.SetCurrentScope("Main");
-                vm.SetRunning(true);
-                while (vm.IsRunning && !vm.IsPaused)
+                vm.Running = true;
+                while (vm.Running && !vm.Paused)
                 {
                     vm.Step();
                 }
@@ -116,7 +116,7 @@ namespace SimpleStackVM
 
             var choice = ChoiceBuffer[index];
             ChoiceBuffer.Clear();
-            vm.JumpToLabel(choice);
+            vm.Jump(choice);
             return true;
         }
 
