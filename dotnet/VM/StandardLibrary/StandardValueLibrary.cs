@@ -22,23 +22,11 @@ namespace SimpleStackVM
             {
                 case "toString":
                     {
-                        var top = vm.PeekStack();
-                        vm.PushStack(new StringValue(top.ToString()));
-                        break;
-                    }
-                case "toString!":
-                    {
                         var top = vm.PopStack();
                         vm.PushStack(new StringValue(top.ToString()));
                         break;
                     }
                 case "typeof":
-                    {
-                        var top = vm.PeekStack();
-                        vm.PushStack(new StringValue(GetTypeOf(top)));
-                        break;
-                    }
-                case "typeof!":
                     {
                         var top = vm.PopStack();
                         vm.PushStack(new StringValue(GetTypeOf(top)));

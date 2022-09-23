@@ -4,6 +4,7 @@
         "data": [
             ["Push", 0],
 
+            "Push",
             "value.typeof",
             ["Swap", "The number is a: ", 1],
             "string.append",
@@ -22,6 +23,7 @@
             ["comp.less", 10],
             ["JumpTrue", ":Start"],
 
+            "Push",
             "value.typeof",
             ["Push", "Done!: "],
             "string.prepend",
