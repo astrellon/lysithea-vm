@@ -37,14 +37,14 @@ namespace SimpleStackVM
                     }
                 case "length":
                     {
-                        var top = vm.PeekStack<StringValue>();
+                        var top = vm.PopStack<StringValue>();
                         vm.PushStack(new NumberValue(top.Value.Length));
                         break;
                     }
                 case "get":
                     {
                         var index = vm.PopStack<NumberValue>();
-                        var top = vm.PeekStack<StringValue>();
+                        var top = vm.PopStack<StringValue>();
                         vm.PushStack(new StringValue(top.Value[(int)index.Value].ToString()));
                         break;
                     }
@@ -64,7 +64,7 @@ namespace SimpleStackVM
                         vm.PushStack(top.Insert((int)index, value.ToString()));
                         break;
                     }
-                case "subString":
+                case "substring":
                     {
                         var length = vm.PopStack<NumberValue>();
                         var index = vm.PopStack<NumberValue>();

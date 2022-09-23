@@ -113,13 +113,13 @@ namespace SimpleStackVM
                     }
                 case "parse":
                     {
-                        var top = vm.PopStack();
+                        var top = vm.PeekStack();
                         if (top is NumberValue)
                         {
-                            vm.PushStack(top);
                             break;
                         }
 
+                        top = vm.PopStack();
                         var num = double.Parse(top.ToString());
                         vm.PushStack(new NumberValue(num));
                         break;
@@ -150,16 +150,22 @@ namespace SimpleStackVM
                     }
                 case "max":
                     {
-                        var right = vm.PopStack<NumberValue>();
-                        var left = vm.PopStack<NumberValue>();
-                        vm.PushStack(new NumberValue(System.Math.Max(left.Value, right.Value)));
+                        var right = vm.PopStack();
+                        var left = vm.PopStack();
+                        if (left.CompareTo(right) > 0)
+                        {
+                            vm.PushStack(left);
+                        }
                         break;
                     }
                 case "min":
                     {
-                        var right = vm.PopStack<NumberValue>();
-                        var left = vm.PopStack<NumberValue>();
-                        vm.PushStack(new NumberValue(System.Math.Min(left.Value, right.Value)));
+                        var right = vm.PopStack();
+                        var left = vm.PopStack();
+                        if (left.CompareTo(right) > 0)
+                        {
+                            vm.PushStack(right);
+                        }
                         break;
                     }
                 case "+":

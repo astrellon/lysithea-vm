@@ -30,6 +30,10 @@ namespace SimpleStackVM.Extensions
 
         public static StringValue SubString(this StringValue self, int index, int length)
         {
+            if (length < 0)
+            {
+                return new StringValue(self.Value.Substring(index));
+            }
             return new StringValue(self.Value.Substring(index, length));
         }
         #endregion

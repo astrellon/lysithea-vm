@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using SimpleStackVM.Extensions;
 
 namespace SimpleStackVM
 {
@@ -30,6 +28,13 @@ namespace SimpleStackVM
                     {
                         var top = vm.PopStack();
                         vm.PushStack(new StringValue(GetTypeOf(top)));
+                        break;
+                    }
+                case "compareTo":
+                    {
+                        var right = vm.PopStack();
+                        var left = vm.PopStack();
+                        vm.PushStack(new NumberValue(left.CompareTo(right)));
                         break;
                     }
             }

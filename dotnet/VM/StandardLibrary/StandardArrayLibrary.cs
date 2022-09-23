@@ -98,7 +98,7 @@ namespace SimpleStackVM
                         vm.PushStack(new NumberValue(top.IndexOf(value)));
                         break;
                     }
-                case "subList":
+                case "sublist":
                     {
                         var length = vm.PopStack<NumberValue>();
                         var index = vm.PopStack<NumberValue>();
