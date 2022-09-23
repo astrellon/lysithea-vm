@@ -64,7 +64,7 @@ namespace stack_vm
             return;
         }
 
-        print_stack_debug();
+        // print_stack_debug();
 
         const auto &code_line = current_scope->code[program_counter++];
 
@@ -89,7 +89,6 @@ namespace stack_vm
             }
             case vm_operator::swap:
             {
-                std::cout << "Do swap!\n";
                 const auto &value = get_arg(code_line);
                 if (value.is_number())
                 {

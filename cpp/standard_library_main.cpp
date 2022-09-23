@@ -12,88 +12,155 @@ using namespace stack_vm;
 
 void value_handler(const std::string &command, virtual_machine &vm)
 {
-    if (command == "typeof")
+    switch (hash(command))
     {
-        vm.push_stack("number2");
+        case hash("typeof"):
+        {
+            const auto &top = vm.peek_stack();
+            vm.push_stack(std::make_shared<std::string>(top.type()));
+            break;
+        }
+        case hash("toString"):
+        {
+            const auto &top = vm.peek_stack();
+            vm.push_stack(std::make_shared<std::string>(top.to_string()));
+        }
     }
 }
 
 void comparison_handler(const std::string &command, virtual_machine &vm)
 {
-    if (command == ">" || command == "greater")
+    switch (hash(command))
     {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        vm.push_stack(left.compare(right) > 0);
-    }
-    if (command == ">=" || command == "greaterEqual")
-    {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        vm.push_stack(left.compare(right) >= 0);
-    }
-    if (command == "==" || command == "equals")
-    {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        vm.push_stack(left.compare(right) == 0);
-    }
-    if (command == "!=" || command == "notEquals")
-    {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        vm.push_stack(left.compare(right) != 0);
-    }
-    if (command == "<" || command == "less")
-    {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        vm.push_stack(left.compare(right) < 0);
-    }
-    if (command == "<=" || command == "lessEqual")
-    {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        vm.push_stack(left.compare(right) <= 0);
-    }
-    if (command == "!" || command == "not")
-    {
-        const auto &top = vm.pop_stack();
-        vm.push_stack(!top.get_bool());
+        case hash(">"):
+        case hash("greater"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.compare(right) > 0);
+            break;
+        }
+        case hash(">="):
+        case hash("greaterEquals"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.compare(right) >= 0);
+            break;
+        }
+        case hash("=="):
+        case hash("equals"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.compare(right) == 0);
+            break;
+        }
+        case hash("!="):
+        case hash("notEquals"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.compare(right) != 0);
+            break;
+        }
+        case hash("<"):
+        case hash("less"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.compare(right) < 0);
+            break;
+        }
+        case hash("<="):
+        case hash("lessEquals"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.compare(right) <= 0);
+            break;
+        }
+        case hash("!"):
+        case hash("not"):
+        {
+            const auto &top = vm.pop_stack();
+            vm.push_stack(!top.get_bool());
+            break;
+        }
     }
 }
 
 void string_handler(const std::string &command, virtual_machine &vm)
 {
-    if (command == "append")
+    switch (hash(command))
     {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        auto str = std::make_shared<std::string>(left.to_string() + right.to_string());
-        vm.push_stack(str);
-    }
-    else if (command == "prepend")
-    {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        auto str = std::make_shared<std::string>(right.to_string() + left.to_string());
-        vm.push_stack(str);
+        case hash("append"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            auto str = std::make_shared<std::string>(left.to_string() + right.to_string());
+            vm.push_stack(str);
+            break;
+        }
+        case hash("prepend"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            auto str = std::make_shared<std::string>(right.to_string() + left.to_string());
+            vm.push_stack(str);
+            break;
+        }
     }
 }
 
 void math_handler(const std::string &command, virtual_machine &vm)
 {
-    if (command == "+" || command == "add")
+    switch (hash(command))
     {
-        const auto &right = vm.pop_stack();
-        const auto &left = vm.pop_stack();
-        std::cout << "Adding: " << left.to_string() << " + " << right.to_string() << "\n";
-        vm.push_stack(left.get_number() + right.get_number());
-    }
-    else if (command == "sinDeg")
-    {
-        const auto &top = vm.pop_stack();
-        vm.push_stack(sin(M_DEG_TO_RAD * top.get_number()));
+        case hash("+"):
+        case hash("add"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.get_number() + right.get_number());
+            break;
+        }
+        case hash("-"):
+        case hash("sub"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.get_number() - right.get_number());
+            break;
+        }
+        case hash("*"):
+        case hash("mul"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.get_number() * right.get_number());
+            break;
+        }
+        case hash("/"):
+        case hash("command"):
+        {
+            const auto &right = vm.pop_stack();
+            const auto &left = vm.pop_stack();
+            vm.push_stack(left.get_number() / right.get_number());
+            break;
+        }
+        case hash("sin"):
+        {
+            const auto &top = vm.pop_stack();
+            vm.push_stack(sin(top.get_number()));
+            break;
+        }
+        case hash("sinDeg"):
+        {
+            const auto &top = vm.pop_stack();
+            vm.push_stack(sin(M_DEG_TO_RAD * top.get_number()));
+            break;
+        }
     }
 }
 

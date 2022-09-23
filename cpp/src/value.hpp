@@ -117,27 +117,6 @@ namespace stack_vm
                     case 2: return get_string()->compare(*other.get_string());
                     case 3:
                     {
-                        auto this_array = get_array();
-                        auto other_array = other.get_array();
-                        auto compare_length = stack_vm::compare(this_array->size(), other_array->size());
-                        if (compare_length != 0)
-                        {
-                            return compare_length;
-                        }
-
-                        for (auto i = 0; i < this_array->size(); i++)
-                        {
-                            auto compare_value = this_array->at(i).compare(other_array->at(i));
-                            if (compare_value != 0)
-                            {
-                                return 0;
-                            }
-                        }
-
-                        return 0;
-                    }
-                    case 4:
-                    {
                         auto this_object = get_object();
                         auto other_object = other.get_object();
                         auto compare_length = stack_vm::compare(this_object->size(), other_object->size());
@@ -156,6 +135,27 @@ namespace stack_vm
                             }
 
                             auto compare_value = iter->second.compare(find_other->second);
+                            if (compare_value != 0)
+                            {
+                                return 0;
+                            }
+                        }
+
+                        return 0;
+                    }
+                    case 4:
+                    {
+                        auto this_array = get_array();
+                        auto other_array = other.get_array();
+                        auto compare_length = stack_vm::compare(this_array->size(), other_array->size());
+                        if (compare_length != 0)
+                        {
+                            return compare_length;
+                        }
+
+                        for (auto i = 0; i < this_array->size(); i++)
+                        {
+                            auto compare_value = this_array->at(i).compare(other_array->at(i));
                             if (compare_value != 0)
                             {
                                 return 0;
@@ -221,5 +221,18 @@ namespace stack_vm
                 }
             }
 
+            std::string type() const
+            {
+                switch (data.index())
+                {
+                    case 0: return "bool";
+                    case 1: return "number";
+                    case 2: return "string";
+                    case 3: return "object";
+                    case 4: return "array";
+                }
+
+                return "unknown";
+            }
     };
 } // stack_vm
