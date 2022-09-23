@@ -30,7 +30,7 @@ namespace SimpleStackVM
                         break;
                     }
                 case ">=":
-                case "greaterEqual":
+                case "greaterEquals":
                     {
                         var right = vm.PopStack();
                         var left = vm.PopStack();
@@ -62,7 +62,7 @@ namespace SimpleStackVM
                         break;
                     }
                 case "<=":
-                case "lessEqual":
+                case "lessEquals":
                     {
                         var right = vm.PopStack();
                         var left = vm.PopStack();

@@ -19,6 +19,7 @@ namespace SimpleStackVM
         private int index = -1;
 
         public int Index => this.index;
+        public int StackSize => this.index + 1;
         public IReadOnlyList<T> Data => this.data;
         #endregion
 

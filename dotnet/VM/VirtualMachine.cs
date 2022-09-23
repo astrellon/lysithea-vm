@@ -114,6 +114,8 @@ namespace SimpleStackVM
                 return;
             }
 
+            // this.PrintStackDebug();
+
             var codeLine = this.CurrentScope.Code[this.ProgramCounter++];
 
             switch (codeLine.Operator)
@@ -397,6 +399,16 @@ namespace SimpleStackVM
             }
 
             return result;
+        }
+
+        public void PrintStackDebug()
+        {
+            Console.WriteLine($"Stack size: {this.stack.StackSize}");
+            for (var i = 0; i < this.stack.StackSize; i++)
+            {
+                var item = this.stack.Data[i];
+                Console.WriteLine($"- {item.ToString()}");
+            }
         }
 
         private static string DebugScopeLine(Scope scope, int line)
