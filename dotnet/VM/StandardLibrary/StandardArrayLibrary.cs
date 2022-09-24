@@ -70,6 +70,14 @@ namespace SimpleStackVM
                         vm.PushStack(top.Insert((int)index, value));
                         break;
                     }
+                case "insertFlatten":
+                    {
+                        var value = vm.PopStack();
+                        var index = vm.PopStack<NumberValue>();
+                        var top = vm.PopStack<ArrayValue>();
+                        vm.PushStack(top.Insert((int)index, value));
+                        break;
+                    }
                 case "removeAt":
                     {
                         var index = vm.PopStack<NumberValue>();

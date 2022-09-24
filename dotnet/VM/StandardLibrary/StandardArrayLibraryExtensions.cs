@@ -40,6 +40,17 @@ namespace SimpleStackVM.Extensions
             return new ArrayValue(newValue);
         }
 
+        public static ArrayValue InsertFlatten(this ArrayValue self, int index, IValue input)
+        {
+            if (input is ArrayValue arrayInput)
+            {
+                var newValue = self.Value.ToList();
+                newValue.InsertRange(index, arrayInput.Value);
+                return new ArrayValue(newValue);
+            }
+            throw new Exception("Unable to insert a non array type value");
+        }
+
         public static ArrayValue RemoveAt(this ArrayValue self, int index)
         {
             var newValue = self.Value.ToList();
