@@ -21,7 +21,7 @@ namespace stack_vm
             {
                 const auto &right = vm.pop_stack();
                 const auto &left = vm.pop_stack();
-                vm.push_stack(left.compare(right) > 0);
+                vm.push_stack(greater(left, right));
                 break;
             }
             case hash(">="):
@@ -29,7 +29,7 @@ namespace stack_vm
             {
                 const auto &right = vm.pop_stack();
                 const auto &left = vm.pop_stack();
-                vm.push_stack(left.compare(right) >= 0);
+                vm.push_stack(greater_equals(left, right));
                 break;
             }
             case hash("=="):
@@ -37,7 +37,7 @@ namespace stack_vm
             {
                 const auto &right = vm.pop_stack();
                 const auto &left = vm.pop_stack();
-                vm.push_stack(left.compare(right) == 0);
+                vm.push_stack(equals(left, right));
                 break;
             }
             case hash("!="):
@@ -45,7 +45,7 @@ namespace stack_vm
             {
                 const auto &right = vm.pop_stack();
                 const auto &left = vm.pop_stack();
-                vm.push_stack(left.compare(right) != 0);
+                vm.push_stack(not_equals(left, right));
                 break;
             }
             case hash("<"):
@@ -53,7 +53,7 @@ namespace stack_vm
             {
                 const auto &right = vm.pop_stack();
                 const auto &left = vm.pop_stack();
-                vm.push_stack(left.compare(right) < 0);
+                vm.push_stack(less(left, right));
                 break;
             }
             case hash("<="):
@@ -61,7 +61,7 @@ namespace stack_vm
             {
                 const auto &right = vm.pop_stack();
                 const auto &left = vm.pop_stack();
-                vm.push_stack(left.compare(right) <= 0);
+                vm.push_stack(less_equals(left, right));
                 break;
             }
             case hash("!"):

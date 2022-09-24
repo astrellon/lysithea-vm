@@ -24,10 +24,15 @@ namespace stack_vm
     {
         public:
             // Fields
-            std::variant<bool, double, string_ptr, object_ptr, array_ptr> data;
+            std::variant<bool, double, string_ptr, object_ptr, array_ptr, std::nullptr_t> data;
+
+            static const value empty_array;
+            static const value empty_string;
+            static const value empty_object;
+            static const value null;
 
             // Constructor
-            value() : data(false) { }
+            value() : data(nullptr) { }
             value(bool input) : data(input) { }
             value(int input) : data((double)input) { }
             value(unsigned int input) : data((double)input) { }
@@ -79,6 +84,11 @@ namespace stack_vm
                 }
 
                 return false;
+            }
+
+            inline bool is_null() const
+            {
+                return data.index() == 5;
             }
 
             inline bool get_bool() const
@@ -172,6 +182,10 @@ namespace stack_vm
 
                         return 0;
                     }
+                    case 5:
+                    {
+                        return 0;
+                    }
                 }
 
                 return 1;
@@ -225,6 +239,7 @@ namespace stack_vm
                         ss << ']';
                         return ss.str();
                     }
+                    case 5: return "null";
                     default: return "<<Unknown>>";
                 }
             }
@@ -238,6 +253,7 @@ namespace stack_vm
                     case 2: return "string";
                     case 3: return "object";
                     case 4: return "array";
+                    case 5: return "null";
                 }
 
                 return "unknown";
