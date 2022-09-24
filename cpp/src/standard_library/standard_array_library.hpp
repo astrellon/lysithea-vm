@@ -32,7 +32,7 @@ namespace stack_vm
 
             inline static array_ptr copy(const value &target)
             {
-                return std::make_shared<array_value>(target.get_array());
+                return std::make_shared<array_value>(*target.get_array());
             }
 
         private:

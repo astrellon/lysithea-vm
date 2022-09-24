@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "../value.hpp"
 
 namespace stack_vm
 {

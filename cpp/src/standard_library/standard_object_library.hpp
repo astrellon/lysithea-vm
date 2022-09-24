@@ -19,10 +19,12 @@ namespace stack_vm
 
             static value set(const value &target, const std::string &key, const value &input);
             static value get(const value &target, const std::string &key);
+            static value keys(const object_value &target);
+            static value values(const object_value &target);
 
             inline static object_ptr copy(const value &target)
             {
-                return std::make_shared<object_value>(target.get_object());
+                return std::make_shared<object_value>(*target.get_object());
             }
 
         private:

@@ -30,6 +30,24 @@ namespace stack_vm
                 vm.push_stack(get(obj, key.to_string()));
                 break;
             }
+            case hash("keys"):
+            {
+                const auto &top = vm.pop_stack();
+                vm.push_stack(keys(*top.get_object()));
+                break;
+            }
+            case hash("values"):
+            {
+                const auto &top = vm.pop_stack();
+                vm.push_stack(values(*top.get_object()));
+                break;
+            }
+            case hash("length"):
+            {
+                const auto &top = vm.pop_stack();
+                vm.push_stack(static_cast<int>(top.get_object()->size()));
+                break;
+            }
         }
     }
 
@@ -52,4 +70,24 @@ namespace stack_vm
             return value::null;
         }
     }
+
+    value standard_object_library::keys(const object_value &target)
+    {
+        auto arr = std::make_shared<array_value>(target.size());
+        for (auto iter : target)
+        {
+            arr->push_back(iter.first);
+        }
+        return arr;
+    }
+    value standard_object_library::values(const object_value &target)
+    {
+        auto arr = std::make_shared<array_value>(target.size());
+        for (auto iter : target)
+        {
+            arr->push_back(iter.second);
+        }
+        return arr;
+    }
+
 } // stack_vm
