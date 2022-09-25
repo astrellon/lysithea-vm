@@ -8,6 +8,8 @@ namespace SimpleStackVM
         public readonly double Value;
         public object RawValue => this.Value;
         public bool IsNull => false;
+
+        public int IntValue => (int)this.Value;
         #endregion
 
         #region Constructor

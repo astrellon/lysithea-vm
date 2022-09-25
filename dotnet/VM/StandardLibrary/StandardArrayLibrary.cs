@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using SimpleStackVM.Extensions;
 
 namespace SimpleStackVM
@@ -34,13 +35,6 @@ namespace SimpleStackVM
                         vm.PushStack(left.Prepend(right));
                         break;
                     }
-                case "concat":
-                    {
-                        var right = vm.PopStack<ArrayValue>();
-                        var left = vm.PopStack<ArrayValue>();
-                        vm.PushStack(left.Concat(right));
-                        break;
-                    }
                 case "length":
                     {
                         var top = vm.PopStack<ArrayValue>();
@@ -52,14 +46,14 @@ namespace SimpleStackVM
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(top.Set((int)index, value));
+                        vm.PushStack(top.Set(GetIndex(top, index), value));
                         break;
                     }
                 case "get":
                     {
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(top.Value[(int)index]);
+                        vm.PushStack(top.Value[GetIndex(top, index)]);
                         break;
                     }
                 case "insert":
@@ -67,7 +61,7 @@ namespace SimpleStackVM
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(top.Insert((int)index, value));
+                        vm.PushStack(top.Insert(GetIndex(top, index), value));
                         break;
                     }
                 case "insertFlatten":
@@ -75,14 +69,14 @@ namespace SimpleStackVM
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(top.Insert((int)index, value));
+                        vm.PushStack(top.InsertFlatten(GetIndex(top, index), value));
                         break;
                     }
                 case "removeAt":
                     {
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(top.RemoveAt((int)index));
+                        vm.PushStack(top.RemoveAt(GetIndex(top, index)));
                         break;
                     }
                 case "remove":
@@ -111,10 +105,22 @@ namespace SimpleStackVM
                         var length = vm.PopStack<NumberValue>();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(top.SubList((int)index.Value, (int)length.Value));
+                        vm.PushStack(top.SubList(GetIndex(top, index), length.IntValue));
                         break;
                     }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int GetIndex(ArrayValue value, NumberValue input)
+        {
+            var index = input.IntValue;
+            if (index < 0)
+            {
+                return value.Value.Count + index + 1;
+            }
+
+            return index;
         }
         #endregion
     }

@@ -16,11 +16,6 @@ namespace SimpleStackVM.Extensions
             return new ArrayValue(self.Value.Prepend(input).ToList());
         }
 
-        public static ArrayValue Concat(this ArrayValue self, ArrayValue input)
-        {
-            return new ArrayValue(self.Value.Concat(input.Value).ToList());
-        }
-
         public static ArrayValue Set(this ArrayValue self, int index, IValue input)
         {
             var newValue = self.Value.ToList();

@@ -77,7 +77,7 @@ namespace SimpleStackVM
             if (other == null) return 1;
             if (other is ArrayValue otherArray)
             {
-                var compareLength = this.Value.Count.CompareTo(otherArray.Value);
+                var compareLength = this.Value.Count.CompareTo(otherArray.Value.Count);
                 if (compareLength != 0)
                 {
                     return compareLength;

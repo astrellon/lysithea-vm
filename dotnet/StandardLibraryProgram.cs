@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -19,7 +18,7 @@ namespace SimpleStackVM
 
             try
             {
-                vm.SetCurrentScope("Main");
+                vm.SetCurrentScope("Array");
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
                 {

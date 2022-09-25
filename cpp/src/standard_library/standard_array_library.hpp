@@ -39,7 +39,7 @@ namespace stack_vm
             {
                 if (index < 0)
                 {
-                    return value.begin() + (index + value.size() + 1);
+                    return value.begin() + (value.size() + 1 + index);
                 }
                 return value.begin() + index;
             }
