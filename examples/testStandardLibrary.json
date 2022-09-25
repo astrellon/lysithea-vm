@@ -49,15 +49,23 @@
     {
         "name": "ArrayEquals",
         "data": [
+            ["Copy", 1],
+            ["Copy", 1],
             ["comp.equals"],
             ["JumpTrue", ":Success"],
 
             ":Fail",
             ["print", "Not equals when it should be :("],
+            ["string.append", " != "],
+            ["string.prepend"],
+            ["print"],
             ["Jump", ":Done"],
 
             ":Success",
             ["print", "Equals!"],
+            ["string.append", " = "],
+            ["string.prepend"],
+            ["print"],
             ["Jump", ":Done"],
 
             ":Done",
@@ -67,15 +75,23 @@
     {
         "name": "ArrayNotEquals",
         "data": [
+            ["Copy", 1],
+            ["Copy", 1],
             ["comp.notEquals"],
             ["JumpTrue", ":Success"],
 
             ":Fail",
             ["print", "Equals when it should not :("],
+            ["string.append", " = "],
+            ["string.prepend"],
+            ["print"],
             ["Jump", ":Done"],
 
             ":Success",
             ["print", "Not Equals!"],
+            ["string.append", " != "],
+            ["string.prepend"],
+            ["print"],
             ["Jump", ":Done"],
 
             ":Done",

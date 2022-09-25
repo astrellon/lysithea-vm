@@ -57,6 +57,17 @@ namespace SimpleStackVM
             return true;
         }
 
+        public bool TryCopy(int topOffset)
+        {
+            var newIndex = this.index - topOffset;
+            if (newIndex < 0 || newIndex >= this.index)
+            {
+                return false;
+            }
+
+            return this.TryPush(this.data[newIndex]);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPush(T item)
         {

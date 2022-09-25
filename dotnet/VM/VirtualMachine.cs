@@ -152,7 +152,20 @@ namespace SimpleStackVM
                         var value = codeLine.Input ?? this.PopStack();
                         if (value is NumberValue number)
                         {
-                            this.Swap((int)number.Value);
+                            this.Swap(number.IntValue);
+                        }
+                        else
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Swap operator needs a number value");
+                        }
+                        break;
+                    }
+                case Operator.Copy:
+                    {
+                        var value = codeLine.Input ?? this.PopStack();
+                        if (value is NumberValue number)
+                        {
+                            this.Copy(number.IntValue);
                         }
                         else
                         {
@@ -212,6 +225,14 @@ namespace SimpleStackVM
             if (!this.stack.TrySwap(topOffset))
             {
                 throw new StackException(this.CreateStackTrace(), $"Unable to swap stack, out of range: {topOffset}");
+            }
+        }
+
+        public void Copy(int topOffset)
+        {
+            if (!this.stack.TryCopy(topOffset))
+            {
+                throw new StackException(this.CreateStackTrace(), $"Unable to copy stack, out of range: {topOffset}");
             }
         }
 

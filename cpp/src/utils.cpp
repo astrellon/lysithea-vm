@@ -18,6 +18,8 @@ namespace stack_vm
         if (upper_case == "JUMPFALSE") return vm_operator::jump_false;
         if (upper_case == "RETURN") return vm_operator::call_return;
         if (upper_case == "SWAP") return vm_operator::swap;
+        if (upper_case == "COPY") return vm_operator::copy;
+        if (upper_case == "POP") return vm_operator::pop;
 
         return vm_operator::unknown;
     }

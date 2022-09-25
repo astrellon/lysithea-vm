@@ -60,6 +60,7 @@ namespace stack_vm
             void run_command(const value &label);
 
             void swap(int top_offset);
+            void copy(int top_offset);
 
             inline value pop_stack()
             {

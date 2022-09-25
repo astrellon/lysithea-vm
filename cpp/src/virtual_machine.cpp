@@ -87,6 +87,11 @@ namespace stack_vm
                 }
                 break;
             }
+            case vm_operator::pop:
+            {
+                pop_stack();
+                break;
+            }
             case vm_operator::swap:
             {
                 const auto &value = get_arg(code_line);
@@ -97,6 +102,19 @@ namespace stack_vm
                 else
                 {
                     throw std::runtime_error("Swap operator needs a number value");
+                }
+                break;
+            }
+            case vm_operator::copy:
+            {
+                const auto &value = get_arg(code_line);
+                if (value.is_number())
+                {
+                    copy(static_cast<int>(value.get_number()));
+                }
+                else
+                {
+                    throw std::runtime_error("Copy operator needs a number value");
                 }
                 break;
             }
@@ -264,6 +282,11 @@ namespace stack_vm
     void virtual_machine::swap(int top_offset)
     {
         stack.swap(top_offset);
+    }
+
+    void virtual_machine::copy(int top_offset)
+    {
+        stack.copy(top_offset);
     }
 
     void virtual_machine::print_stack_debug()

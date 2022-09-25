@@ -24,15 +24,15 @@ namespace SimpleStackVM
                 case "append":
                     {
                         var right = vm.PopStack();
-                        var left = vm.PopStack<StringValue>();
-                        vm.PushStack(left.Append(right.ToString()));
+                        var left = vm.PopStack();
+                        vm.PushStack(new StringValue(left.ToString() + right.ToString()));
                         break;
                     }
                 case "prepend":
                     {
                         var right = vm.PopStack();
-                        var left = vm.PopStack<StringValue>();
-                        vm.PushStack(left.Prepend(right.ToString()));
+                        var left = vm.PopStack();
+                        vm.PushStack(new StringValue(right.ToString() + left.ToString()));
                         break;
                     }
                 case "length":
