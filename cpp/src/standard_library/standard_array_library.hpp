@@ -35,6 +35,15 @@ namespace stack_vm
                 return std::make_shared<array_value>(*target.get_array());
             }
 
+            inline static array_value::const_iterator get_iter(const array_value &value, int index)
+            {
+                if (index < 0)
+                {
+                    return value.begin() + (index + value.size() + 1);
+                }
+                return value.begin() + index;
+            }
+
         private:
             // Constructor
             standard_array_library() { };

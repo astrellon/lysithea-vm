@@ -18,6 +18,14 @@ namespace stack_vm
         {
             standard_string_library::add_handler(vm);
         }
+        if (libraries & standard_library::array)
+        {
+            standard_array_library::add_handler(vm);
+        }
+        if (libraries & standard_library::object)
+        {
+            standard_object_library::add_handler(vm);
+        }
         if (libraries & standard_library::value)
         {
             standard_value_library::add_handler(vm);

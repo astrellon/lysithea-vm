@@ -155,7 +155,9 @@ namespace stack_vm
             auto find_ns = run_handlers.find(*ns.get());
             if (find_ns == run_handlers.end())
             {
-                throw std::runtime_error("Unable to find namespace for run command");
+                std::string message("Unable to find namespace for run command: ");
+                message += input.to_string();
+                throw std::runtime_error(message);
             }
 
             find_ns->second(arr->at(1).to_string(), *this);

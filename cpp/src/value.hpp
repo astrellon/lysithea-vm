@@ -176,7 +176,7 @@ namespace stack_vm
                             auto compare_value = this_array->at(i).compare(other_array->at(i));
                             if (compare_value != 0)
                             {
-                                return 0;
+                                return compare_value;
                             }
                         }
 

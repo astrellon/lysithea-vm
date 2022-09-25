@@ -1,9 +1,11 @@
 #pragma once
 
-#include "standard_value_library.hpp"
 #include "standard_comparison_library.hpp"
 #include "standard_math_library.hpp"
 #include "standard_string_library.hpp"
+#include "standard_array_library.hpp"
+#include "standard_object_library.hpp"
+#include "standard_value_library.hpp"
 
 namespace stack_vm
 {

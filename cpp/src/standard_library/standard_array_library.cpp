@@ -129,25 +129,32 @@ namespace stack_vm
     value standard_array_library::set(const value &target, int index, const value &input)
     {
         auto arr = copy(target);
-        (*arr)[index] = input;
+        if (index < 0)
+        {
+            (*arr)[arr->size() + index + 1] = input;
+        }
+        else
+        {
+            (*arr)[index] = input;
+        }
         return arr;
     }
     value standard_array_library::insert(const value &target, int index, const value &input)
     {
         auto arr = copy(target);
-        arr->insert(arr->begin() + index, input);
+        arr->insert(get_iter(*arr, index), input);
         return arr;
     }
     value standard_array_library::insert_flatten(const value &target, int index, const array_value &input)
     {
         auto arr = copy(target);
-        arr->insert(arr->begin() + index, input);
+        arr->insert(get_iter(*arr, index), input.begin(), input.end());
         return arr;
     }
     value standard_array_library::remove_at(const value &target, int index)
     {
         auto arr = copy(target);
-        arr->erase(arr->begin() + index);
+        arr->erase(get_iter(*arr, index));
         return arr;
     }
     value standard_array_library::remove(const value &target, const value &value)
@@ -222,10 +229,16 @@ namespace stack_vm
         }
 
         auto arr = target.get_array();
-        if (length < 0 || index + length > arr->size())
+        auto offset = index;
+        if (index < 0)
         {
-            return std::make_shared<array_value>(arr->begin() + index, arr->end());
+            offset = arr->size() + index + 1;
         }
-        return std::make_shared<array_value>(arr->begin() + index, arr->begin() + (index + length));
+
+        if (length < 0 || offset + length > arr->size())
+        {
+            return std::make_shared<array_value>(arr->begin() + offset, arr->end());
+        }
+        return std::make_shared<array_value>(arr->begin() + offset, arr->begin() + (offset + length));
     }
 }

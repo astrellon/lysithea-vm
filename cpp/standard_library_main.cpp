@@ -38,7 +38,7 @@ int main()
     virtual_machine vm(64, ::run_handler);
     standard_library::add_to_virtual_machine(vm);
     vm.add_scopes(parsed_scopes);
-    vm.set_current_scope("Main");
+    vm.set_current_scope("Array");
     vm.running = true;
 
     while (vm.running && !vm.paused)

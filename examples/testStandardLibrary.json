@@ -29,5 +29,57 @@
             "string.prepend",
             "print"
         ]
+    },
+    {
+        "name": "Array",
+        "data": [
+            ["Push", [0, 1, 2]],
+            ["array.set", 1, "b"],
+            ["array.insertFlatten", -1, ["c", "d"]],
+            ["array.insert", 0, "a"],
+            ["array.removeAt", 1],
+            ["array.remove", 2],
+
+            "Push",
+            ["Call", ["a", "b", "c", "e"], "ArrayNotEquals"],
+            ["Call", ["a", "b", "c", "d"], "ArrayEquals"],
+            ["print", "Done!"]
+        ]
+    },
+    {
+        "name": "ArrayEquals",
+        "data": [
+            ["comp.equals"],
+            ["JumpTrue", ":Success"],
+
+            ":Fail",
+            ["print", "Not equals when it should be :("],
+            ["Jump", ":Done"],
+
+            ":Success",
+            ["print", "Equals!"],
+            ["Jump", ":Done"],
+
+            ":Done",
+            "Return"
+        ]
+    },
+    {
+        "name": "ArrayNotEquals",
+        "data": [
+            ["comp.notEquals"],
+            ["JumpTrue", ":Success"],
+
+            ":Fail",
+            ["print", "Equals when it should not :("],
+            ["Jump", ":Done"],
+
+            ":Success",
+            ["print", "Not Equals!"],
+            ["Jump", ":Done"],
+
+            ":Done",
+            "Return"
+        ]
     }
 ]
