@@ -6,6 +6,11 @@ namespace stack_vm
     {
     }
 
+    void virtual_machine_mini::set_global_run_handler(stack_vm::run_handler handler)
+    {
+        global_run_handler = handler;
+    }
+
     void virtual_machine_mini::set_current_scope(const std::shared_ptr<scope> scope)
     {
         current_scope = scope;

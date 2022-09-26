@@ -24,6 +24,11 @@ namespace stack_vm
         run_handlers[handler_name] = handler;
     }
 
+    void virtual_machine::set_global_run_handler(stack_vm::run_handler handler)
+    {
+        global_run_handler = handler;
+    }
+
     void virtual_machine::set_current_scope(const std::string &scope_name)
     {
         auto find = scopes.find(scope_name);
@@ -173,7 +178,7 @@ namespace stack_vm
             auto find_ns = run_handlers.find(*ns.get());
             if (find_ns == run_handlers.end())
             {
-                std::string message("Unable to find namespace for run command: ");
+                std::string message("Unable to find run command namespace: ");
                 message += input.to_string();
                 throw std::runtime_error(message);
             }

@@ -44,8 +44,9 @@ namespace stack_vm
             // Methods
             void add_scope(std::shared_ptr<scope> scope);
             void add_scopes(const std::vector<std::shared_ptr<scope>> scopes);
-            void add_run_handler(const std::string &handler_name, run_handler handler);
             void set_current_scope(const std::string &scope_name);
+            void add_run_handler(const std::string &handler_name, run_handler handler);
+            void set_global_run_handler(run_handler handler);
             void reset();
             void step();
 
