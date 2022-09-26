@@ -23,4 +23,5 @@ file(GLOB STD_LIB_FILE_SRC
 add_executable(perfTest ${FILE_SRC} perf_test_main.cpp)
 add_executable(dialogueTree ${FILE_SRC} dialogue_tree_main.cpp)
 add_executable(standardLibraryTest ${FILE_SRC} ${STD_LIB_FILE_SRC} standard_library_main.cpp)
+add_executable(perfTestMini ${FILE_SRC} perf_test_mini_main.cpp)
 add_executable(controlApp control_main.cpp)

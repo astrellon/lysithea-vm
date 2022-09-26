@@ -19,5 +19,19 @@
             ["add"],
             "Return"
         ]
+    },
+    {
+        "name": "Mini",
+        "data": [
+            ["Push", 0],
+            ":Start",
+            ["rand"],
+            ["rand"],
+            ["add"],
+            ["add"],
+            ["isDone"],
+            ["JumpFalse", ":Start"],
+            ["done"]
+        ]
     }
 ]

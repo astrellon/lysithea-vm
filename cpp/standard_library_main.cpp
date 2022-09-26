@@ -4,12 +4,24 @@
 #include <fstream>
 
 #include "src/virtual_machine.hpp"
+#include "src/virtual_machine_mini.hpp"
 #include "src/assembler.hpp"
 #include "src/standard_library/standard_library.hpp"
 
 using namespace stack_vm;
 
 void run_handler(const std::string &command, virtual_machine &vm)
+{
+    if (command == "print")
+    {
+        auto total = vm.pop_stack();
+        auto str = total.to_string();
+
+        std::cout << "Print: " << total.to_string() << "\n";
+    }
+}
+
+void run_handler_mini(const std::string &command, virtual_machine_mini &vm)
 {
     if (command == "print")
     {
@@ -37,6 +49,7 @@ int main()
 
     virtual_machine vm(64, ::run_handler);
     standard_library::add_to_virtual_machine(vm);
+
     vm.add_scopes(parsed_scopes);
     vm.set_current_scope("Array");
     vm.running = true;
@@ -45,6 +58,10 @@ int main()
     {
         vm.step();
     }
+
+    virtual_machine_mini vm_mini(64, ::run_handler_mini);
+    std::cout << "Sizeof VM: " << sizeof(vm) << "\n";
+    std::cout << "Sizeof VM Mini: " << sizeof(vm_mini) << "\n";
 
     return 0;
 }
