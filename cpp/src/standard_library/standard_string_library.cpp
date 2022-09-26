@@ -110,7 +110,7 @@ namespace stack_vm
     }
     value standard_string_library::insert(const value &target, int index, const std::string &input)
     {
-        return target.to_string().insert(index, input);
+        return target.to_string().insert(get_index(target, index), input);
     }
     value standard_string_library::substring(const value &target, int index, int length)
     {
@@ -119,7 +119,9 @@ namespace stack_vm
     }
     value standard_string_library::remove_at(const value &target, int index)
     {
-        return target.to_string().erase(get_index(target, index));
+        auto str = target.to_string();
+        str.erase(get_index(target, index), 1);
+        return str;
     }
     value standard_string_library::remove_all(const value &target, const std::string &values)
     {

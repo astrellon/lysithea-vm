@@ -73,7 +73,7 @@ namespace stack_vm
 
     value standard_object_library::keys(const object_value &target)
     {
-        auto arr = std::make_shared<array_value>(target.size());
+        auto arr = std::make_shared<array_value>();
         for (auto iter : target)
         {
             arr->push_back(iter.first);
@@ -82,7 +82,7 @@ namespace stack_vm
     }
     value standard_object_library::values(const object_value &target)
     {
-        auto arr = std::make_shared<array_value>(target.size());
+        auto arr = std::make_shared<array_value>();
         for (auto iter : target)
         {
             arr->push_back(iter.second);

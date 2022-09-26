@@ -21,17 +21,6 @@ void run_handler(const std::string &command, virtual_machine &vm)
     }
 }
 
-void run_handler_mini(const std::string &command, virtual_machine_mini &vm)
-{
-    if (command == "print")
-    {
-        auto total = vm.pop_stack();
-        auto str = total.to_string();
-
-        std::cout << "Print: " << total.to_string() << "\n";
-    }
-}
-
 int main()
 {
     std::ifstream json_input;
