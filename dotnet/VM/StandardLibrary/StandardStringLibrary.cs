@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using SimpleStackVM.Extensions;
 
 namespace SimpleStackVM
 {
@@ -45,7 +44,7 @@ namespace SimpleStackVM
                     {
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<StringValue>();
-                        vm.PushStack(new StringValue(top.Value[(int)index.Value].ToString()));
+                        vm.PushStack(Get(top, index.IntValue));
                         break;
                     }
                 case "set":
@@ -53,7 +52,7 @@ namespace SimpleStackVM
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<StringValue>();
-                        vm.PushStack(top.Set((int)index, value.ToString()));
+                        vm.PushStack(Set(top, index.IntValue, value.ToString()));
                         break;
                     }
                 case "insert":
@@ -61,7 +60,7 @@ namespace SimpleStackVM
                         var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<StringValue>();
-                        vm.PushStack(top.Insert((int)index, value.ToString()));
+                        vm.PushStack(Insert(top, index.IntValue, value.ToString()));
                         break;
                     }
                 case "substring":
@@ -69,10 +68,57 @@ namespace SimpleStackVM
                         var length = vm.PopStack<NumberValue>();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<StringValue>();
-                        vm.PushStack(top.SubString((int)index.Value, (int)length.Value));
+                        vm.PushStack(SubString(top, index.IntValue, length.IntValue));
+                        break;
+                    }
+                case "removeAt":
+                    {
+                        var index = vm.PopStack<NumberValue>();
+                        var top = vm.PopStack<StringValue>();
+                        vm.PushStack(RemoveAt(top, index.IntValue));
+                        break;
+                    }
+                case "removeAll":
+                    {
+                        var values = vm.PopStack<StringValue>();
+                        var top = vm.PopStack<StringValue>();
+                        vm.PushStack(RemoveAll(top, values.Value));
                         break;
                     }
             }
+        }
+
+        public static StringValue Set(StringValue self, int index, string value)
+        {
+            index = self.GetIndex(index);
+            var left = self.Value.Substring(0, index);
+            var right = self.Value.Substring(index + 1);
+            return new StringValue($"{left}{value}{right}");
+        }
+
+        public static StringValue Get(StringValue self, int index)
+        {
+            return new StringValue(self.Value[self.GetIndex(index)].ToString());
+        }
+
+        public static StringValue Insert(StringValue self, int index, string value)
+        {
+            return new StringValue(self.Value.Insert(self.GetIndex(index), value));
+        }
+
+        public static StringValue SubString(StringValue self, int index, int length)
+        {
+            return new StringValue(self.Value.Substring(self.GetIndex(index), length));
+        }
+
+        public static StringValue RemoveAt(StringValue self, int index)
+        {
+            return new StringValue(self.Value.Remove(self.GetIndex(index), 1));
+        }
+
+        public static StringValue RemoveAll(StringValue self, string values)
+        {
+            return new StringValue(self.Value.Replace(values, ""));
         }
         #endregion
     }

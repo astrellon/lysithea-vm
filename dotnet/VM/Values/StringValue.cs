@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Runtime.CompilerServices;
+
 namespace SimpleStackVM
 {
     public struct StringValue : IValue
@@ -48,6 +50,17 @@ namespace SimpleStackVM
             }
 
             return 1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetIndex(int index)
+        {
+            if (index < 0)
+            {
+                return this.Value.Length + index;
+            }
+
+            return index;
         }
 
         public static explicit operator StringValue(string input) => new StringValue(input);

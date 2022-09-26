@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using SimpleStackVM.Extensions;
+
+#nullable enable
 
 namespace SimpleStackVM
 {
@@ -26,14 +28,14 @@ namespace SimpleStackVM
                         var value = vm.PopStack();
                         var key = vm.PopStack<StringValue>();
                         var obj = vm.PopStack<ObjectValue>();
-                        vm.PushStack(obj.Set(key, value));
+                        vm.PushStack(Set(obj, key, value));
                         break;
                     }
                 case "get":
                     {
                         var key = vm.PopStack<StringValue>();
                         var obj = vm.PopStack<ObjectValue>();
-                        if (obj.TryGetValue(key, out var value))
+                        if (TryGetValue(obj, key, out var value))
                         {
                             vm.PushStack(value);
                         }
@@ -46,16 +48,13 @@ namespace SimpleStackVM
                 case "keys":
                     {
                         var top = vm.PopStack<ObjectValue>();
-                        var keys = top.Value.Keys.Select(k => new StringValue(k)).Cast<IValue>().ToList();
-                        var list = new ArrayValue(keys);
-                        vm.PushStack(list);
+                        vm.PushStack(Keys(top));
                         break;
                     }
                 case "values":
                     {
                         var top = vm.PopStack<ObjectValue>();
-                        var list = new ArrayValue(top.Value.Values.ToList());
-                        vm.PushStack(list);
+                        vm.PushStack(Values(top));
                         break;
                     }
                 case "length":
@@ -65,6 +64,47 @@ namespace SimpleStackVM
                         break;
                     }
             }
+        }
+
+        public static ArrayValue Keys(ObjectValue self)
+        {
+            var keys = self.Value.Keys.Select(k => new StringValue(k) as IValue).ToList();
+            return new ArrayValue(keys);
+        }
+
+        public static ArrayValue Values(ObjectValue self)
+        {
+            return new ArrayValue(self.Value.Values.ToList());
+        }
+
+        public static bool TryGetValue(ObjectValue self, string key, [NotNullWhen(true)] out IValue? value)
+        {
+            return self.Value.TryGetValue(key, out value);
+        }
+
+        public static bool TryGetValue<T>(ObjectValue self, string key, [NotNullWhen(true)] out T? value) where T : IValue
+        {
+            if (!TryGetValue(self, key, out var result))
+            {
+                value = default(T);
+                return false;
+            }
+
+            if (result is T castedValue)
+            {
+                value = castedValue;
+                return true;
+            }
+
+            value = default(T);
+            return false;
+        }
+
+        public static ObjectValue Set(ObjectValue self, string key, IValue value)
+        {
+            var result = self.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            result[key] = value;
+            return new ObjectValue(result);
         }
         #endregion
     }

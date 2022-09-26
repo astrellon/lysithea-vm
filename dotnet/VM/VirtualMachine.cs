@@ -147,6 +147,11 @@ namespace SimpleStackVM
 
                         break;
                     }
+                case Operator.Pop:
+                    {
+                        this.PopStack();
+                        break;
+                    }
                 case Operator.Swap:
                     {
                         var value = codeLine.Input ?? this.PopStack();
@@ -244,6 +249,10 @@ namespace SimpleStackVM
                 if (this.runHandlers.TryGetValue(arrayValue.Value[0].ToString(), out var handler))
                 {
                     handler.Invoke(arrayValue.Value[1].ToString(), this);
+                }
+                else
+                {
+                    throw new OperatorException(this.CreateStackTrace(), $"Unable to find run command namespace: {value.ToString()}");
                 }
             }
             else
@@ -373,7 +382,7 @@ namespace SimpleStackVM
                 return (T)obj;
             }
 
-            throw new StackException(this.CreateStackTrace(), "Unable to pop stack, type cast error");
+            throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

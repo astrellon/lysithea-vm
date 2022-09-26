@@ -80,7 +80,7 @@ namespace SimpleStackVM
             if (other == null) return 1;
             if (other is ObjectValue otherObject)
             {
-                var compareLength = this.Value.Count.CompareTo(otherObject.Value);
+                var compareLength = this.Value.Count.CompareTo(otherObject.Value.Count);
                 if (compareLength != 0)
                 {
                     return compareLength;

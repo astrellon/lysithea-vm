@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 #nullable enable
 
@@ -70,6 +71,17 @@ namespace SimpleStackVM
         public override int GetHashCode()
         {
             return this.Value.GetHashCode();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetIndex(int index)
+        {
+            if (index < 0)
+            {
+                return this.Value.Count + index;
+            }
+
+            return index;
         }
 
         public int CompareTo(IValue? other)

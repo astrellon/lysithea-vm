@@ -1,6 +1,6 @@
 [
     {
-        "name": "Main",
+        "name": "SmallTest",
         "data": [
             ["Push", 0],
 
@@ -31,8 +31,18 @@
         ]
     },
     {
+        "name": "Main",
+        "data": [
+            ["Call", "String"],
+            ["Call", "Array"],
+            ["Call", "Object"]
+        ]
+    },
+    {
         "name": "Array",
         "data": [
+            ["print", "Running Array Tests"],
+
             ["Push", [0, 1, 2]],
             ["array.set", 1, "b"],
             ["array.insertFlatten", -1, ["c", "d"]],
@@ -40,62 +50,98 @@
             ["array.removeAt", 1],
             ["array.remove", 2],
 
-            "Push",
-            ["Call", ["a", "b", "c", "e"], "ArrayNotEquals"],
-            ["Call", ["a", "b", "c", "d"], "ArrayEquals"],
-            ["print", "Done!"]
+            ["assert.notEquals", ["a", "b", "c", "e"]],
+            ["assert.equals", ["a", "b", "c", "d"]],
+            ["Pop"],
+
+            ["Return"]
         ]
     },
     {
-        "name": "ArrayEquals",
+        "name": "String",
         "data": [
-            ["Copy", 1],
-            ["Copy", 1],
-            ["comp.equals"],
-            ["JumpTrue", ":Success"],
+            ["print", "Running String Tests"],
 
-            ":Fail",
-            ["print", "Not equals when it should be :("],
-            ["string.append", " != "],
-            ["string.prepend"],
-            ["print"],
-            ["Jump", ":Done"],
+            ["Push", "012 hello there"],
+            ["string.set", 1, "b"],
+            ["assert.equals", "0b2 hello there"],
+            ["assert.notEquals", "012 hello there"],
+            ["string.insert", 1, "a"],
+            ["assert.equals", "0ab2 hello there"],
+            ["string.removeAt", 0],
+            ["assert.equals", "ab2 hello there"],
+            ["string.removeAll", "2"],
+            ["assert.equals", "ab hello there"],
+            ["string.insert", -12, "c"],
 
-            ":Success",
-            ["print", "Equals!"],
-            ["string.append", " = "],
-            ["string.prepend"],
-            ["print"],
-            ["Jump", ":Done"],
+            ["assert.equals", "abc hello there"],
+            ["assert.notEquals", "012 hello there"],
 
-            ":Done",
-            "Return"
+            ["Push"],
+            ["string.substring", 0, 3],
+            ["assert.equals", "abc"],
+            ["Pop"],
+
+            ["Push"],
+            ["string.substring", -1, 1],
+            ["assert.equals", "e"],
+            ["Pop"],
+
+            ["Push"],
+            ["string.substring", -11, 1],
+            ["assert.equals", "h"],
+            ["Pop"],
+
+            ["Push"],
+            ["string.substring", -11, 5],
+            ["assert.equals", "hello"],
+            ["Pop"],
+
+            ["Return"]
         ]
     },
     {
-        "name": "ArrayNotEquals",
+        "name": "Object",
         "data": [
-            ["Copy", 1],
-            ["Copy", 1],
-            ["comp.notEquals"],
-            ["JumpTrue", ":Success"],
+            ["print", "Running Object Tests"],
 
-            ":Fail",
-            ["print", "Equals when it should not :("],
-            ["string.append", " = "],
-            ["string.prepend"],
-            ["print"],
-            ["Jump", ":Done"],
+            ["Push", {"name": "Foo", "age": 30}],
 
-            ":Success",
-            ["print", "Not Equals!"],
-            ["string.append", " != "],
-            ["string.prepend"],
-            ["print"],
-            ["Jump", ":Done"],
+            ["object.set", "name", "Bar"],
+            ["assert.equals", {"name": "Bar", "age": 30}],
 
-            ":Done",
-            "Return"
+            ["object.set", "age", 31],
+            ["assert.equals", {"name": "Bar", "age": 31}],
+
+            ["object.set", "hasAddress", true],
+            ["assert.equals", {"name": "Bar", "age": 31, "hasAddress": true}],
+            ["assert.notEquals", {"name": "Foo", "age": 30}],
+
+            ["Push"],
+            ["object.keys"],
+
+            ["Push"],
+            ["array.length"],
+            ["assert.equals", 3],
+            ["Pop"],
+
+            ["Push"],
+            ["array.contains", "name"],
+            ["assert.true"],
+
+            ["Push"],
+            ["array.contains", "age"],
+            ["assert.true"],
+
+            ["Push"],
+            ["array.contains", "hasAddress"],
+            ["assert.true"],
+
+            ["Push"],
+            ["array.contains", "other"],
+            ["assert.false"],
+
+            ["Return"]
         ]
     }
 ]

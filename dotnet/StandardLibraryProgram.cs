@@ -14,11 +14,12 @@ namespace SimpleStackVM
 
             var vm = new VirtualMachine(64, OnRunCommand);
             StandardLibrary.AddToVirtualMachine(vm, StandardLibrary.LibraryType.All);
+            StandardAssertLibrary.AddHandler(vm);
             vm.AddScopes(scopes);
 
             try
             {
-                vm.SetCurrentScope("Array");
+                vm.SetCurrentScope("Main");
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
                 {
