@@ -4,31 +4,30 @@ import VirtualMachine from "../src/virtualMachine";
 import fs from "fs";
 
 let counter = 0;
-function runHandler(value: Value, vm: VirtualMachine)
+function runHandler(command: string, vm: VirtualMachine)
 {
-    const commandName = value?.toString();
-    if (commandName === 'add')
+    if (command === 'add')
     {
-        const num1 = vm.popObject() as number;
-        const num2 = vm.popObject() as number;
-        vm.pushObject(num1 + num2);
+        const num1 = vm.popStack() as number;
+        const num2 = vm.popStack() as number;
+        vm.pushStack(num1 + num2);
     }
-    else if (commandName === 'rand')
+    else if (command === 'rand')
     {
-        vm.pushObject(Math.random());
+        vm.pushStack(Math.random());
     }
-    else if (commandName === 'isDone')
+    else if (command === 'isDone')
     {
-        vm.pushObject(counter++ > 1000000);
+        vm.pushStack(counter++ > 1000000);
     }
-    else if (commandName === 'done')
+    else if (command === 'done')
     {
-        const total = vm.popObject() as number;
+        const total = vm.popStack() as number;
         console.log('Total:', total);
     }
-    else if (commandName === 'text')
+    else if (command === 'text')
     {
-        const top = vm.popObject();
+        const top = vm.popStack();
         console.log('TEXT:', top);
     }
 }

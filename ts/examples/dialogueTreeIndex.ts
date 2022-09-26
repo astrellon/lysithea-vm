@@ -14,14 +14,13 @@ let isShopEnabled = false;
 let playerName = '<Unset>';
 let choiceBuffer: Value[] = [];
 
-function runHandler(value: Value, vm: VirtualMachine)
+function runHandler(command: string, vm: VirtualMachine)
 {
-    const commandName = value?.toString();
-    if (commandName === 'say')
+    if (command === 'say')
     {
-        say(vm.popObject());
+        say(vm.popStack());
     }
-    else if (commandName === 'getPlayerName')
+    else if (command === 'getPlayerName')
     {
         vm.paused = true;
         rl.question('', (name) =>
@@ -30,18 +29,18 @@ function runHandler(value: Value, vm: VirtualMachine)
             vm.paused = false;
         });
     }
-    else if (commandName === 'randomSay')
+    else if (command === 'randomSay')
     {
-        randomSay(vm.popObjectCast<ArrayValue>());
+        randomSay(vm.popStackCast<ArrayValue>());
     }
-    else if (commandName === 'choice')
+    else if (command === 'choice')
     {
-        const choiceJumpLabel = vm.popObject();
-        const choiceText = vm.popObject();
+        const choiceJumpLabel = vm.popStack();
+        const choiceText = vm.popStack();
         choiceBuffer.push(choiceJumpLabel);
         sayChoice(choiceText);
     }
-    else if (commandName === 'waitForChoice')
+    else if (command === 'waitForChoice')
     {
         if (choiceBuffer.length === 0)
         {
@@ -64,21 +63,21 @@ function runHandler(value: Value, vm: VirtualMachine)
             }
         });
     }
-    else if (commandName === 'openTheShop')
+    else if (command === 'openTheShop')
     {
         isShopEnabled = true;
     }
-    else if (commandName === 'openShop')
+    else if (command === 'openShop')
     {
         console.log('Opening the shop to the player and quitting dialogue');
     }
-    else if (commandName === 'isShopEnabled')
+    else if (command === 'isShopEnabled')
     {
-        vm.pushObject(isShopEnabled);
+        vm.pushStack(isShopEnabled);
     }
     else
     {
-        console.error('Unknown command:', commandName);
+        console.error('Unknown command:', command);
     }
 }
 

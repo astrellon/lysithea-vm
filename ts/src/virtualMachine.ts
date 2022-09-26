@@ -1,7 +1,8 @@
-import { Scope, ScopeFrame, Value } from "./types";
+import { isValueArray, Scope, ScopeFrame, Value, valueToString } from "./types";
 
-export type RunHandler = (value: Value, vm: VirtualMachine) => void;
+export type RunHandler = (command: string, vm: VirtualMachine) => void;
 type ScopeMap = { [key: string]: Scope }
+type RunHandlerMap = { [key: string]: RunHandler }
 
 const EmptyScope: Scope = {
     name: '',
@@ -11,6 +12,8 @@ const EmptyScope: Scope = {
 
 export default class VirtualMachine
 {
+    private static readonly EmptyHandler: RunHandler = (command, vm) => { }
+
     private _currentScope: Scope = EmptyScope;
     public get currentScope() { return this._currentScope; }
 
@@ -27,14 +30,15 @@ export default class VirtualMachine
     public get stackTrace(): ReadonlyArray<ScopeFrame> { return this._stackTrace; }
 
     private _scopes: ScopeMap = {};
+    private _runHandlers: RunHandlerMap = {};
 
-    private readonly _runHandler: RunHandler;
+    private _globalRunHandler: RunHandler;
     private readonly _stackSize: number;
 
-    constructor (stackSize: number, runHandler: RunHandler)
+    constructor (stackSize: number, runHandler: RunHandler | null = null)
     {
         this._stackSize = stackSize;
-        this._runHandler = runHandler;
+        this._globalRunHandler = runHandler ?? VirtualMachine.EmptyHandler;
     }
 
     public addScope(scope: Scope)
@@ -75,6 +79,16 @@ export default class VirtualMachine
         this._currentScope = startScope;
     }
 
+    public addRunHandler(handlerName: string, handler: RunHandler)
+    {
+        this._runHandlers[handlerName] = handler;
+    }
+
+    public setGlobalRunHandler(handler: RunHandler | null)
+    {
+        this._globalRunHandler = handler ?? VirtualMachine.EmptyHandler;
+    }
+
     public step()
     {
         if (this._programCounter >= this._currentScope.code.length)
@@ -105,7 +119,7 @@ export default class VirtualMachine
                 }
             case 'swap':
                 {
-                    const value = codeLine.value ?? this.popObject();
+                    const value = codeLine.value ?? this.popStack();
                     if (typeof(value) !== 'number')
                     {
                         throw new Error(`${this.getScopeLine()}: Swap needs value to swap`);
@@ -119,7 +133,7 @@ export default class VirtualMachine
                 }
             case 'copy':
                 {
-                    const value = codeLine.value ?? this.popObject();
+                    const value = codeLine.value ?? this.popStack();
                     if (typeof(value) !== 'number')
                     {
                         throw new Error(`${this.getScopeLine()}: Copy needs value to swap`);
@@ -132,14 +146,14 @@ export default class VirtualMachine
                 }
             case 'jump':
                 {
-                    const label = codeLine.value ?? this.popObject();
+                    const label = codeLine.value ?? this.popStack();
                     this.jumpValue(label);
                     break;
                 }
             case 'jumpTrue':
                 {
-                    const label = codeLine.value ?? this.popObject();
-                    const top = this.popObject();
+                    const label = codeLine.value ?? this.popStack();
+                    const top = this.popStack();
                     if (top == true)
                     {
                         this.jumpValue(label);
@@ -148,8 +162,8 @@ export default class VirtualMachine
                 }
             case 'jumpFalse':
                 {
-                    const label = codeLine.value ?? this.popObject();
-                    const top = this.popObject();
+                    const label = codeLine.value ?? this.popStack();
+                    const top = this.popStack();
                     if (top == false)
                     {
                         this.jumpValue(label);
@@ -158,7 +172,7 @@ export default class VirtualMachine
                 }
             case 'call':
                 {
-                    const label = codeLine.value ?? this.popObject();
+                    const label = codeLine.value ?? this.popStack();
                     this.call(label);
                     break;
                 }
@@ -169,14 +183,34 @@ export default class VirtualMachine
                 }
             case 'run':
                 {
-                    const top = codeLine.value ?? this.popObject();
-                    this._runHandler(top, this);
+                    const top = codeLine.value ?? this.popStack();
+                    this.runCommand(top);
                     break;
                 }
             default:
                 {
                     throw new Error(`${this.getScopeLine()}: Unknown operator: ${codeLine.operator}`);
                 }
+        }
+    }
+
+    public runCommand(value: Value)
+    {
+        if (isValueArray(value))
+        {
+            const handler = this._runHandlers[valueToString(value[0])];
+            if (handler != null)
+            {
+                handler(valueToString(value[1]), this);
+            }
+            else
+            {
+                throw new Error(`Unable to find run command namespace: ${valueToString(value)}`);
+            }
+        }
+        else
+        {
+            this._globalRunHandler(valueToString(value), this);
         }
     }
 
@@ -261,7 +295,7 @@ export default class VirtualMachine
         this._programCounter = line;
     }
 
-    public popObject() : Value
+    public popStack() : Value
     {
         const result = this._stack.pop();
         if (result == undefined)
@@ -271,7 +305,7 @@ export default class VirtualMachine
         return result;
     }
 
-    public popObjectCast<T extends Value>() : T
+    public popStackCast<T extends Value>() : T
     {
         const result = this._stack.pop();
         if (result == undefined)
@@ -281,7 +315,7 @@ export default class VirtualMachine
         return result as T;
     }
 
-    public pushObject(value: Value)
+    public pushStack(value: Value)
     {
         if (this._stack.length >= this._stackSize)
         {

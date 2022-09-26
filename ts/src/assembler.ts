@@ -20,12 +20,10 @@ interface TempCodeLine
     readonly value?: Value;
 }
 
-
 export function parseScopes(input: ReadonlyArray<InputScope>)
 {
     return input.map(parseScope);
 }
-
 
 export function parseScope(input: InputScope)
 {

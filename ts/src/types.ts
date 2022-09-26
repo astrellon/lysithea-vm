@@ -54,18 +54,49 @@ export function isValueObject(value: Value): value is ObjectValue
 {
     return typeof(value) === 'object' && !isValueArray(value);
 }
+export function isValueNull(value: Value)
+{
+    return value == null;
+}
+export function valueTypeof(value: Value)
+{
+    if (value == null)
+    {
+        return 'null';
+    }
+    const type = typeof(value);
+    switch (type)
+    {
+        case 'string':
+        case 'number':
+            return type;
+        case 'boolean':
+            return 'bool';
+    }
+
+    if (isValueObject(value))
+    {
+        return "object";
+    }
+    if (isValueArray(value))
+    {
+        return "array";
+    }
+    return "unknown";
+}
 export function valueToString(value: Value)
 {
     if (value == null)
     {
-        return '<<unknown>>';
+        return 'null';
     }
 
     const type = typeof(value);
     switch (type)
     {
-        case 'number':
         case 'string':
+            return value as string;
+        case 'number':
         case 'boolean': return value.toString();
         case 'object':
             {
@@ -111,4 +142,125 @@ export function valueToString(value: Value)
     }
 
     return '<<unknown>>';
+}
+
+export function numberCompareTo(left: number, right: number)
+{
+    const diff = left - right;
+    if (Math.abs(diff) < 0.0001)
+    {
+        return 0;
+    }
+
+    if (diff < 0)
+    {
+        return -1;
+    }
+
+    return 1;
+}
+export function stringCompareTo(left: string, right: string)
+{
+    const diff = left.localeCompare(right);
+    if (diff == 0)
+    {
+        return 0;
+    }
+    if (diff < 0)
+    {
+        return -1;
+    }
+    return 1;
+}
+export function boolCompareTo(left: boolean, right: boolean)
+{
+    if (left === right)
+    {
+        return 0;
+    }
+    return left ? -1 : 1;
+}
+export function arrayCompareTo(left: ArrayValue, right: ArrayValue)
+{
+    const compareLength = numberCompareTo(left.length, right.length);
+    if (compareLength !== 0)
+    {
+        return compareLength;
+    }
+
+    for (let i = 0; i < left.length; i++)
+    {
+        const compare = valueCompareTo(left[i], right[i]);
+        if (compare !== 0)
+        {
+            return compare;
+        }
+    }
+
+    return 1;
+}
+export function objectLength(input: ObjectValue)
+{
+    return Object.keys(input).length;
+}
+export function objectCompareTo(left: ObjectValue, right: ObjectValue)
+{
+    const compareLength = numberCompareTo(objectLength(left), objectLength(right));
+    if (compareLength !== 0)
+    {
+        return compareLength;
+    }
+
+    for (const prop in left)
+    {
+        const rightValue = right[prop];
+        if (rightValue === undefined)
+        {
+            return 1;
+        }
+        const compare = valueCompareTo(left[prop], rightValue);
+        if (compare !== 0)
+        {
+            return compare;
+        }
+    }
+
+    return 1;
+}
+
+export function valueCompareTo(left: Value, right: Value): number
+{
+    const leftType = valueTypeof(left);
+    const rightType = valueTypeof(right);
+    if (leftType !== rightType)
+    {
+        return 1;
+    }
+
+    switch (leftType)
+    {
+        case 'number':
+            {
+                return numberCompareTo(left as number, right as number);
+            }
+        case 'string':
+            {
+                return stringCompareTo(left as string, right as string);
+            }
+        case 'bool':
+            {
+                return boolCompareTo(left as boolean, right as boolean);
+            }
+        case 'array':
+            {
+                return arrayCompareTo(left as ArrayValue, right as ArrayValue);
+            }
+        case 'object':
+            {
+                return objectCompareTo(left as ObjectValue, right as ObjectValue);
+            }
+        case 'null': return 0;
+    }
+
+    return 1;
 }
