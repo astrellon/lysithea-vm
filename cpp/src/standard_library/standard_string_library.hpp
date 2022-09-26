@@ -1,11 +1,12 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include "../value.hpp"
 
 namespace stack_vm
 {
     class virtual_machine;
-    class value;
 
     class standard_string_library
     {
@@ -23,6 +24,28 @@ namespace stack_vm
             static value set(const value &target, int index, const std::string &input);
             static value insert(const value &target, int index, const std::string &input);
             static value substring(const value &target, int index, int length);
+            static value remove_at(const value &target, int index);
+            static value remove_all(const value &target, const std::string &values);
+
+            inline static int get_index(const string_ptr &input, int index)
+            {
+                if (index < 0)
+                {
+                    return input->size() + index;
+                }
+
+                return index;
+            }
+
+            inline static int get_index(const value &input, int index)
+            {
+                if (index < 0)
+                {
+                    return input.get_string()->size() + index;
+                }
+
+                return index;
+            }
 
         private:
             // Constructor

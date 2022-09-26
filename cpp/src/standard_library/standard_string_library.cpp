@@ -69,6 +69,20 @@ namespace stack_vm
                 vm.push_stack(substring(top, index.get_int(), length.get_int()));
                 break;
             }
+            case hash("removeAt"):
+            {
+                const auto &index = vm.pop_stack();
+                const auto &top = vm.pop_stack();
+                vm.push_stack(remove_at(top, index.get_int()));
+                break;
+            }
+            case hash("removeAll"):
+            {
+                const auto &values = vm.pop_stack();
+                const auto &top = vm.pop_stack();
+                vm.push_stack(remove_all(top, values.to_string()));
+                break;
+            }
         }
     }
 
@@ -82,13 +96,15 @@ namespace stack_vm
     }
     value standard_string_library::get(const value &target, int index)
     {
-        auto ch = target.get_string()->at(index);
+        const auto &str = target.get_string();
+        auto ch = str->at(get_index(str, index));
         return std::make_shared<std::string>(ch, 1);
     }
     value standard_string_library::set(const value &target, int index, const std::string &input)
     {
         std::stringstream ss;
-        const auto str = target.get_string();
+        const auto &str = target.get_string();
+        index = get_index(str, index);
         ss << str->substr(0, index) << input << str->substr(index + 1);
         return ss.str();
     }
@@ -98,10 +114,22 @@ namespace stack_vm
     }
     value standard_string_library::substring(const value &target, int index, int length)
     {
-        if (length < 0)
+        const auto &str = target.get_string();
+        return str->substr(get_index(str, index), length);
+    }
+    value standard_string_library::remove_at(const value &target, int index)
+    {
+        return target.to_string().erase(get_index(target, index));
+    }
+    value standard_string_library::remove_all(const value &target, const std::string &values)
+    {
+        auto str = target.to_string();
+        auto i = str.find(values);
+        while (i != std::string::npos)
         {
-            return target.get_string()->substr(index);
+            str.erase(i, values.length());
+            i = str.find(values, i);
         }
-        return target.get_string()->substr(index, length);
+        return str;
     }
 } // stack_vm

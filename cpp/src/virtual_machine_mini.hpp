@@ -26,7 +26,7 @@ namespace stack_vm
             virtual_machine_mini(int stackSize, run_handler_mini global_run_handler);
 
             // Methods
-            void set_global_run_handler(run_handler handler);
+            void set_global_run_handler(run_handler_mini handler);
             void set_current_scope(const std::shared_ptr<scope> scope);
             void reset();
             void step();

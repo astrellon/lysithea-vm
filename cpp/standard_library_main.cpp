@@ -4,9 +4,9 @@
 #include <fstream>
 
 #include "src/virtual_machine.hpp"
-#include "src/virtual_machine_mini.hpp"
 #include "src/assembler.hpp"
 #include "src/standard_library/standard_library.hpp"
+#include "src/standard_library/standard_assert_library.hpp"
 
 using namespace stack_vm;
 
@@ -49,19 +49,16 @@ int main()
 
     virtual_machine vm(64, ::run_handler);
     standard_library::add_to_virtual_machine(vm);
+    standard_assert_library::add_handler(vm);
 
     vm.add_scopes(parsed_scopes);
-    vm.set_current_scope("Array");
+    vm.set_current_scope("Main");
     vm.running = true;
 
     while (vm.running && !vm.paused)
     {
         vm.step();
     }
-
-    virtual_machine_mini vm_mini(64, ::run_handler_mini);
-    std::cout << "Sizeof VM: " << sizeof(vm) << "\n";
-    std::cout << "Sizeof VM Mini: " << sizeof(vm_mini) << "\n";
 
     return 0;
 }
