@@ -179,6 +179,8 @@ function parseOperator(input: InputDataArg) : Operator
     {
         case 'push':
         case 'pop':
+        case 'copy':
+        case 'swap':
         case 'call':
         case 'return':
         case 'jump':

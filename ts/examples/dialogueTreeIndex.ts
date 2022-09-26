@@ -1,6 +1,7 @@
 import { InputScope, parseScopes } from "../src/assembler";
 import { ArrayValue, Value } from "../src/types";
 import VirtualMachine from "../src/virtualMachine";
+import VirtualMachineRunner from "../src/virtualMachineRunner";
 import fs from "fs";
 import readline from "readline";
 
@@ -26,7 +27,7 @@ function runHandler(value: Value, vm: VirtualMachine)
         rl.question('', (name) =>
         {
             playerName = name;
-            vm.run(null);
+            vm.paused = false;
         });
     }
     else if (commandName === 'randomSay')
@@ -55,7 +56,7 @@ function runHandler(value: Value, vm: VirtualMachine)
             let choiceIndex = Number.parseInt(choiceIndexStr);
             if (doChoice(choiceIndex, vm))
             {
-                vm.run(null);
+                vm.paused = false;
             }
             else
             {
@@ -118,5 +119,7 @@ const scopes = parseScopes(inputJson);
 
 const vm = new VirtualMachine(64, runHandler);
 vm.addScopes(scopes);
+vm.setCurrentScope('Main');
 
-vm.run('Main');
+const runner = new VirtualMachineRunner(vm);
+runner.start();

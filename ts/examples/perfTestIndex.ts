@@ -40,7 +40,12 @@ const vm = new VirtualMachine(64, runHandler);
 vm.addScopes(scopes);
 
 const before = Date.now();
-vm.run('Main');
+vm.setCurrentScope('Main');
+vm.running = true;
+while (vm.running && !vm.paused)
+{
+    vm.step();
+}
 const after = Date.now();
 
 console.log('Time taken:', (after - before), 'ms');

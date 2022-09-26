@@ -1,4 +1,4 @@
-import { Operator, Scope, ScopeFrame, Value } from "./types";
+import { Scope, ScopeFrame, Value } from "./types";
 
 export type RunHandler = (value: Value, vm: VirtualMachine) => void;
 type ScopeMap = { [key: string]: Scope }
@@ -17,8 +17,8 @@ export default class VirtualMachine
     private _programCounter: number = 0;
     public get programCounter() { return this._programCounter; }
 
-    private _running: boolean = false;
-    public get running() { return this._running; }
+    public running: boolean = false;
+    public paused: boolean = false;
 
     private _stack: Value[] = [];
     public get stack(): ReadonlyArray<Value> { return this._stack; }
@@ -26,9 +26,7 @@ export default class VirtualMachine
     private _stackTrace: ScopeFrame[] = [];
     public get stackTrace(): ReadonlyArray<ScopeFrame> { return this._stackTrace; }
 
-    public paused: boolean = false;
-
-    private readonly _scopes: ScopeMap = {};
+    private _scopes: ScopeMap = {};
 
     private readonly _runHandler: RunHandler;
     private readonly _stackSize: number;
@@ -52,37 +50,37 @@ export default class VirtualMachine
         }
     }
 
-    public run(startScopeName: string | null)
+    public clearScopes()
     {
-        if (startScopeName != null)
-        {
-            const startScope = this._scopes[startScopeName];
-            if (startScope == null)
-            {
-                throw new Error(`Unable to find scope: ${startScopeName} to start virtual machine`);
-            }
-
-            this._currentScope = startScope;
-        }
-
-        this._running = true;
-        this.paused = false;
-        while (this._running && !this.paused)
-        {
-            this.step();
-        }
+        this._scopes = {};
     }
 
-    public stop()
+    public reset()
     {
-        this._running = false;
+        this._programCounter = 0;
+        this._stack = [];
+        this._stackTrace = [];
+        this.running = false;
+        this.paused = false;
+    }
+
+    public setCurrentScope(scopeName: string)
+    {
+        const startScope = this._scopes[scopeName];
+        if (startScope == null)
+        {
+            throw new Error(`Unable to find scope: ${scopeName}`);
+        }
+
+        this._currentScope = startScope;
     }
 
     public step()
     {
         if (this._programCounter >= this._currentScope.code.length)
         {
-            this.stop();
+            console.log('VM hits end!');
+            this.running = false;
             return;
         }
 
@@ -99,6 +97,38 @@ export default class VirtualMachine
 
                     this._stack.push(codeLine.value);
                     break;
+                }
+            case 'pop':
+                {
+                    this._stack.pop();
+                    break;
+                }
+            case 'swap':
+                {
+                    const value = codeLine.value ?? this.popObject();
+                    if (typeof(value) !== 'number')
+                    {
+                        throw new Error(`${this.getScopeLine()}: Swap needs value to swap`);
+                    }
+
+                    if (!this.swapStack(value))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Unable to swap, index out of range: ${value}`);
+                    }
+                    break;
+                }
+            case 'copy':
+                {
+                    const value = codeLine.value ?? this.popObject();
+                    if (typeof(value) !== 'number')
+                    {
+                        throw new Error(`${this.getScopeLine()}: Copy needs value to swap`);
+                    }
+
+                    if (!this.copyStack(value))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Unable to copy, index out of range: ${value}`);
+                    }
                 }
             case 'jump':
                 {
@@ -152,6 +182,10 @@ export default class VirtualMachine
 
     public call(value: Value)
     {
+        if (this._stackTrace.length >= this._stackSize)
+        {
+            throw new Error(`${this.getScopeLine()}: Unable to call, stack trace full`);
+        }
         this._stackTrace.push({ lineNumber: this._programCounter, scope: this._currentScope });
         this.jumpValue(value);
     }
@@ -172,7 +206,7 @@ export default class VirtualMachine
     {
         if (typeof(value) === 'string')
         {
-            this.jump(value, undefined);
+            this.jumpLabel(value);
         }
         else if (Array.isArray(value))
         {
@@ -186,16 +220,30 @@ export default class VirtualMachine
         }
     }
 
-    public jump(label: string, scopeName?: string)
+    public jumpLabel(input: string)
+    {
+        if (input == null || input.length === 0)
+        {
+            this._programCounter = 0;
+        }
+        else
+        {
+            if (input[0] == ':')
+            {
+                this.jump(input, undefined);
+            }
+            else
+            {
+                this.jump(undefined, input);
+            }
+        }
+    }
+
+    public jump(label?: string, scopeName?: string)
     {
         if (scopeName != null)
         {
-            const newScope = this._scopes[scopeName];
-            if (newScope == null)
-            {
-                throw new Error(`${this.getScopeLine()}: Unable to find scope to jump to ${scopeName}`);
-            }
-            this._currentScope = newScope;
+            this.setCurrentScope(scopeName);
         }
 
         if (label == null || label.length == 0)
@@ -235,7 +283,42 @@ export default class VirtualMachine
 
     public pushObject(value: Value)
     {
+        if (this._stack.length >= this._stackSize)
+        {
+            throw new Error(`${this.getScopeLine()}: Unable to push, stack full`);
+        }
         this._stack.push(value);
+    }
+
+    public copyStack(topOffset: number)
+    {
+        const newIndex = this._stack.length - topOffset;
+        if (newIndex < 0 || newIndex >= this._stack.length)
+        {
+            return false;
+        }
+
+        this._stack.push(this._stack[newIndex]);
+
+        return true;
+    }
+
+    public swapStack(topOffset: number)
+    {
+        const newIndex = this._stack.length - topOffset;
+        if (newIndex < 0 || newIndex >= this._stack.length)
+        {
+            return false;
+        }
+
+        const topIndex = this._stack.length - 1;
+        const top = this._stack[topIndex];
+        const other = this._stack[newIndex];
+
+        this._stack[topIndex] = other;
+        this._stack[newIndex] = top;
+
+        return true;
     }
 
     private getScopeLine()
