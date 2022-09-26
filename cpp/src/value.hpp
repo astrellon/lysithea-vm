@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <variant>
 #include <any>
@@ -14,7 +14,7 @@ namespace stack_vm
 {
     class value;
 
-    using object_value = std::map<std::string, value>;
+    using object_value = std::unordered_map<std::string, value>;
     using array_value = std::vector<value>;
     using string_ptr = std::shared_ptr<std::string>;
     using object_ptr = std::shared_ptr<object_value>;

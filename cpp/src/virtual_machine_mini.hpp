@@ -1,8 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <vector>
-#include <stack>
 #include <string>
 #include <memory>
 
