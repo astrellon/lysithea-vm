@@ -43,7 +43,7 @@ namespace stack_vm
             {
                 const auto &index = vm.pop_stack();
                 const auto &top = vm.pop_stack();
-                vm.push_stack(top.get_array()->at(index.get_int()));
+                vm.push_stack(get(top, index.get_int()));
                 break;
             }
             case hash("set"):
@@ -131,13 +131,17 @@ namespace stack_vm
         auto arr = copy(target);
         if (index < 0)
         {
-            (*arr)[arr->size() + index + 1] = input;
+            (*arr)[arr->size() + index] = input;
         }
         else
         {
             (*arr)[index] = input;
         }
         return arr;
+    }
+    value standard_array_library::get(const value &target, int index)
+    {
+        return *get_iter(*target.get_array(), index);
     }
     value standard_array_library::insert(const value &target, int index, const value &input)
     {

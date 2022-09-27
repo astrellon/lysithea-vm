@@ -21,6 +21,7 @@ namespace stack_vm
             static value append(const value &target, const value &input);
             static value prepend(const value &target, const value &input);
             static value concat(const value &target, const array_value &input);
+            static value get(const value &target, int index);
             static value set(const value &target, int index, const value &input);
             static value insert(const value &target, int index, const value &input);
             static value insert_flatten(const value &target, int index, const array_value &input);
@@ -40,7 +41,7 @@ namespace stack_vm
             {
                 if (index < 0)
                 {
-                    return value.begin() + (value.size() + 1 + index);
+                    return value.begin() + (value.size() + index);
                 }
                 return value.begin() + index;
             }
