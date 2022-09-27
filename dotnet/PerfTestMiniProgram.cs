@@ -16,17 +16,21 @@ namespace SimpleStackVM
             var scope = new Scope("Main", new []
             {
                 new CodeLine(Operator.Push, new NumberValue(0)),
-                new CodeLine(Operator.Run, new StringValue("rand")),
-                new CodeLine(Operator.Run, new StringValue("rand")),
-                new CodeLine(Operator.Run, new StringValue("add")),
-                new CodeLine(Operator.Run, new StringValue("add")),
+                new CodeLine(Operator.Call, new StringValue(":Step")),
                 new CodeLine(Operator.Run, new StringValue("isDone")),
                 new CodeLine(Operator.JumpFalse, new StringValue(":Start")),
                 new CodeLine(Operator.Run, new StringValue("done")),
+
+                new CodeLine(Operator.Run, new StringValue("rand")),
+                new CodeLine(Operator.Run, new StringValue("rand")),
+                new CodeLine(Operator.Run, new StringValue("add")),
+                new CodeLine(Operator.Run, new StringValue("add")),
+                new CodeLine(Operator.Return, NullValue.Value)
             },
             new Dictionary<string, int>
             {
-                { ":Start", 1 }
+                { ":Start", 1 },
+                { ":Step", 5 }
             });
 
             var vm = new VirtualMachineMini(32, OnRunCommand);
@@ -73,6 +77,7 @@ namespace SimpleStackVM
             {
                 var total = vm.PopStack<NumberValue>();
                 Console.WriteLine($"Done: {total.Value}");
+                vm.Running = false;
             }
         }
         #endregion

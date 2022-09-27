@@ -15,6 +15,7 @@ namespace SimpleStackVM
         private static readonly RunCommandHandler EmptyHandler = (i, vm) => { };
 
         private readonly FixedStack<IValue> stack;
+        private readonly FixedStack<int> stackTrace;
         private RunCommandHandler globalRunHandler;
 
         public Scope CurrentScope { get; private set; } = Scope.Empty;
@@ -30,6 +31,7 @@ namespace SimpleStackVM
             this.globalRunHandler = globalRunHandler ?? EmptyHandler;
             this.ProgramCounter = 0;
             this.stack = new FixedStack<IValue>(stackSize);
+            this.stackTrace = new FixedStack<int>(stackSize);
         }
         #endregion
 
@@ -145,6 +147,17 @@ namespace SimpleStackVM
                         this.Jump(label.ToString());
                         break;
                     }
+                case Operator.Call:
+                    {
+                        var label = codeLine.Input ?? this.PopStack();
+                        this.CallToLabel(label.ToString());
+                        break;
+                    }
+                case Operator.Return:
+                    {
+                        this.Return();
+                        break;
+                    }
                 case Operator.Run:
                     {
                         var top = codeLine.Input ?? this.PopStack();
@@ -174,6 +187,31 @@ namespace SimpleStackVM
         public void RunCommand(IValue value)
         {
             this.globalRunHandler.Invoke(value.ToString(), this);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CallToLabel(string label)
+        {
+            this.PushToStackTrace(this.ProgramCounter);
+            this.Jump(label);
+        }
+
+        public void PushToStackTrace(int line)
+        {
+            if (!this.stackTrace.TryPush(line))
+            {
+                throw new StackException(this.CreateStackTrace(), "Unable to call, call stack full");
+            }
+        }
+
+        public void Return()
+        {
+            if (!this.stackTrace.TryPop(out var scopeLine))
+            {
+                throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
+            }
+
+            this.ProgramCounter = scopeLine;
         }
 
         public void Jump(string? label)
