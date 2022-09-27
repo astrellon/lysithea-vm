@@ -35,6 +35,7 @@ void runHandler(const std::string &command, virtual_machine_mini &vm)
         auto str = total.to_string();
 
         std::cout << "Done: " << total.get_number() << "\n";
+        vm.running = false;
     }
 }
 
@@ -43,17 +44,21 @@ int main()
     auto main_scope = std::make_shared<scope>("Main", std::vector<code_line>
     {
         { vm_operator::push, value(0) },
-        { vm_operator::run, value("rand") },
-        { vm_operator::run, value("rand") },
-        { vm_operator::run, value("add") },
-        { vm_operator::run, value("add") },
+        { vm_operator::call, value(":Step") },
         { vm_operator::run, value("isDone") },
         { vm_operator::jump_false, value(":Start") },
-        { vm_operator::run, value("done") }
+        { vm_operator::run, value("done") },
+
+        { vm_operator::run, value("rand") },
+        { vm_operator::run, value("rand") },
+        { vm_operator::run, value("add") },
+        { vm_operator::run, value("add") },
+        { vm_operator::call_return }
     },
     std::map<std::string, int>
     {
-        { ":Start", 1 }
+        { ":Start", 1 },
+        { ":Step", 5 }
     });
 
     virtual_machine_mini vm(64, runHandler);

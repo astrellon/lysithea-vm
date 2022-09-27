@@ -51,10 +51,11 @@ namespace stack_vm
             void step();
 
             void call(const value &label);
+            void call_return();
+
             void jump(const value &label);
             void jump(const std::string &label);
             void jump(const std::string &label, const std::string &scope_name);
-            void call_return();
 
             void run_command(const value &label);
 

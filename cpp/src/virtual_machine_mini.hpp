@@ -31,6 +31,9 @@ namespace stack_vm
             void reset();
             void step();
 
+            void call(const value &label);
+            void call_return();
+
             void jump(const std::string &label);
 
             void run_command(const value &label);
@@ -71,6 +74,7 @@ namespace stack_vm
         private:
             // Fields
             fixed_stack<value> stack;
+            fixed_stack<int> stack_trace;
             std::shared_ptr<scope> current_scope;
             stack_vm::run_handler_mini global_run_handler;
             int program_counter;

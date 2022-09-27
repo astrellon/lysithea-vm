@@ -2,7 +2,7 @@
 
 namespace stack_vm
 {
-    virtual_machine_mini::virtual_machine_mini(int stack_size, stack_vm::run_handler_mini global_run_handler) : stack(stack_size), program_counter(0), running(false), global_run_handler(global_run_handler)
+    virtual_machine_mini::virtual_machine_mini(int stack_size, stack_vm::run_handler_mini global_run_handler) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), global_run_handler(global_run_handler)
     {
     }
 
@@ -121,6 +121,17 @@ namespace stack_vm
                 }
                 break;
             }
+            case vm_operator::call:
+            {
+                const auto &label = get_arg(code_line);
+                call(label);
+                break;
+            }
+            case vm_operator::call_return:
+            {
+                call_return();
+                break;
+            }
             case vm_operator::run:
             {
                 const auto &top = get_arg(code_line);
@@ -133,6 +144,23 @@ namespace stack_vm
     void virtual_machine_mini::run_command(const value &input)
     {
         global_run_handler(input.to_string(), *this);
+    }
+
+    void virtual_machine_mini::call(const value &input)
+    {
+        stack_trace.push(program_counter);
+        jump(input.to_string());
+    }
+
+    void virtual_machine_mini::call_return()
+    {
+        int top;
+        if (!stack_trace.pop(top))
+        {
+            throw std::runtime_error("Unable to pop stack track, empty stack");
+        }
+
+        program_counter = top;
     }
 
     void virtual_machine_mini::jump(const std::string &label)
