@@ -1,38 +1,35 @@
 import { valueCompareTo, valueToString, valueTypeof } from "../types";
 import VirtualMachine from "../virtualMachine";
 
-export default class StandardValueLibrary
+export const handleName = 'value';
+
+export function addHandler(vm: VirtualMachine)
 {
-    public static readonly HandleName = "value";
+    vm.addRunHandler(handleName, handler)
+}
 
-    public static AddHandler(vm: VirtualMachine)
+export function handler(command: string, vm: VirtualMachine)
+{
+    switch (command)
     {
-        vm.addRunHandler(StandardValueLibrary.HandleName, StandardValueLibrary.Handler)
-    }
-
-    public static Handler(command: string, vm: VirtualMachine)
-    {
-        switch (command)
-        {
-            case "toString":
-                {
-                    const top = vm.popStack();
-                    vm.pushStack(valueToString(top));
-                    break;
-                }
-            case "typeof":
-                {
-                    const top = vm.popStack();
-                    vm.pushStack(valueTypeof(top));
-                    break;
-                }
-            case "compareTo":
-                {
-                    const right = vm.popStack();
-                    const left = vm.popStack();
-                    vm.pushStack(valueCompareTo(left, right));
-                    break;
-                }
-        }
+        case 'toString':
+            {
+                const top = vm.popStack();
+                vm.pushStack(valueToString(top));
+                break;
+            }
+        case 'typeof':
+            {
+                const top = vm.popStack();
+                vm.pushStack(valueTypeof(top));
+                break;
+            }
+        case 'compareTo':
+            {
+                const right = vm.popStack();
+                const left = vm.popStack();
+                vm.pushStack(valueCompareTo(left, right));
+                break;
+            }
     }
 }
