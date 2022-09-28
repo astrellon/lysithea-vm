@@ -5,7 +5,7 @@
   "scripts": {
     "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",
     "diagTree": "ts-node --project ./examples/tsconfig.json ./examples/dialogueTreeIndex.ts",
-    "runCommands": "ts-node --project ./examples/tsconfig.json ./examples/runCommandsIndex.ts",
+    "stdLib": "ts-node --project ./examples/tsconfig.json ./examples/standardLibraryIndex.ts",
     "build": "tsc --project ./tsconfig.build.json && terser --compress --mangle --output simple-stack-vm.mini.js -- simple-stack-vm.js"
   },
   "author": "Alan Lawrey",
