@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
@@ -22,6 +23,29 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        {
+            return this.Value.TryGetValue(key, out value);
+        }
+
+        public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
+        {
+            if (!this.TryGetValue(key, out var result))
+            {
+                value = default(T);
+                return false;
+            }
+
+            if (result is T castedValue)
+            {
+                value = castedValue;
+                return true;
+            }
+
+            value = default(T);
+            return false;
+        }
+
         public override bool Equals(object? other)
         {
             if (other == null) return false;

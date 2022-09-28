@@ -31,14 +31,13 @@ namespace SimpleStackVM.Unity
                 this.vm.AddScopes(drawingScript.Scopes);
             }
             this.vm.SetCurrentScope(startScope);
-            this.vm.Restart();
+            this.vm.Reset();
+            this.vm.Running = true;
             this.VMRunner.Running = true;
         }
 
-        private void OnRunHandler(IValue value, VirtualMachine vm)
+        private void OnRunHandler(string command, VirtualMachine vm)
         {
-            var command = value.ToString();
-
             if (command == "drawComplex")
             {
                 var details = vm.PopStack<ObjectValue>();
@@ -86,7 +85,7 @@ namespace SimpleStackVM.Unity
                 var top = vm.PopStack();
                 var onto = vm.PopStack<ObjectValue>();
 
-                vm.PushStack(onto.Set(key.Value, top));
+                vm.PushStack(StandardObjectLibrary.Set(onto, key.Value, top));
             }
             else if (command == "randomPick")
             {

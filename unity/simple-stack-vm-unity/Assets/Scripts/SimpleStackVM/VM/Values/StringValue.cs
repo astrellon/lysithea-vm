@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Runtime.CompilerServices;
+
 namespace SimpleStackVM
 {
     public struct StringValue : IValue
@@ -14,7 +16,7 @@ namespace SimpleStackVM
         #region Constructor
         public StringValue(string value)
         {
-            this.Value = string.Intern(value) ?? "<<null>>";
+            this.Value = string.Intern(value ?? "<<null>>");
         }
         #endregion
 
@@ -39,9 +41,26 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
-        public StringValue Append(string input)
+        public int CompareTo(IValue? other)
         {
-            return new StringValue(this.Value + input);
+            if (other == null) return 1;
+            if (other is StringValue otherString)
+            {
+                return this.Value.CompareTo(otherString.Value);
+            }
+
+            return 1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetIndex(int index)
+        {
+            if (index < 0)
+            {
+                return this.Value.Length + index;
+            }
+
+            return index;
         }
 
         public static explicit operator StringValue(string input) => new StringValue(input);

@@ -59,7 +59,8 @@ namespace SimpleStackVM.Unity
             this.vm.ClearScopes();
             this.vm.AddScopes(dialogue.Scopes);
             this.vm.SetCurrentScope(startScope);
-            this.vm.Restart();
+            this.vm.Reset();
+            this.vm.Running = true;
             this.VMRunner.Running = true;
         }
 
@@ -71,7 +72,7 @@ namespace SimpleStackVM.Unity
                 return;
             }
 
-            vm.SetPause(false);
+            vm.Paused = false;
         }
 
         public void SelectChoice(int index)
@@ -89,13 +90,13 @@ namespace SimpleStackVM.Unity
                 if (firstArg == "scopeJump")
                 {
                     var scopeLabel = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
-                    this.vm.JumpToLabel(scopeLabel);
+                    this.vm.Jump(scopeLabel);
                 }
                 else if (firstArg == "return")
                 {
                     this.vm.PushToStackTrace(0, this.vm.CurrentScope);
                     var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
-                    this.vm.JumpToLabel(jumpScope);
+                    this.vm.Jump(jumpScope);
                 }
                 else if (firstArg == "returnLabel")
                 {
@@ -103,14 +104,14 @@ namespace SimpleStackVM.Unity
                     var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[2] });
                     var returnLine = this.vm.CurrentScope.Labels[returnLabel.ToString()];
                     this.vm.PushToStackTrace(returnLine, this.vm.CurrentScope);
-                    this.vm.JumpToLabel(jumpScope);
+                    this.vm.Jump(jumpScope);
                 }
             }
             else
             {
-                this.vm.JumpToLabel(choiceLabel);
+                this.vm.Jump(choiceLabel);
             }
-            this.vm.SetPause(false);
+            this.vm.Paused = false;
         }
 
         public DialogueActor GetActor(string scriptId)
@@ -125,66 +126,65 @@ namespace SimpleStackVM.Unity
             }
         }
 
-        private void OnRunHandler(IValue command, VirtualMachine vm)
+        private void OnRunHandler(string command, VirtualMachine vm)
         {
-            var commandName = command.ToString();
-            if (commandName == "actor")
+            if (command == "actor")
             {
                 var actorScriptId = vm.PopStack().ToString();
                 this.CurrentActor = this.GetActor(actorScriptId);
                 this.OnEmotion?.Invoke("idle");
             }
-            else if (commandName == "beginLine")
+            else if (command == "beginLine")
             {
                 this.BeginLine();
             }
-            else if (commandName == "randomPick")
+            else if (command == "randomPick")
             {
                 this.RandomPick(vm.PopStack(), vm);
             }
-            else if (commandName == "text")
+            else if (command == "text")
             {
                 this.ShowText(vm.PopStack());
             }
-            else if (commandName == "beginLineText")
+            else if (command == "beginLineText")
             {
                 this.BeginLine();
                 this.ShowText(vm.PopStack());
             }
-            else if (commandName == "endLine")
+            else if (command == "endLine")
             {
                 this.EndLine(vm);
             }
-            else if (commandName == "choice")
+            else if (command == "choice")
             {
                 var choiceValue = vm.PopStack();
                 var choiceLabel = vm.PopStack();
                 this.CreateChoice(choiceValue, choiceLabel);
             }
-            else if (commandName == "get")
+            else if (command == "get")
             {
                 var key = vm.PopStack().ToString();
                 vm.PushStack(this.GetVariable(key));
             }
-            else if (commandName == "set")
+            else if (command == "set")
             {
                 var value = vm.PopStack();
                 var key = vm.PopStack().ToString();
                 this.SetVariable(key, value);
             }
-            else if (commandName == "emotion")
+            else if (command == "emotion")
             {
                 var emotion = vm.PopStack().ToString();
                 this.OnEmotion?.Invoke(emotion);
             }
-            else if (commandName == "wait")
+            else if (command == "wait")
             {
                 var waitTime = TimeSpan.FromMilliseconds(this.vm.PopStack<NumberValue>().Value);
                 this.VMRunner.Wait(waitTime);
             }
             else
             {
-                Debug.LogWarning($"Unknown VM run command: {commandName}");
+                Debug.LogWarning($"Unknown VM run command: {command}");
             }
         }
 
@@ -211,7 +211,7 @@ namespace SimpleStackVM.Unity
 
         public void EndLine(VirtualMachine vm)
         {
-            vm.SetPause(true);
+            vm.Paused = true;
             this.OnSectionChange?.Invoke(this.choiceBuffer.Count > 0 ? SectionType.ForChoices : SectionType.ToContinue);
         }
 

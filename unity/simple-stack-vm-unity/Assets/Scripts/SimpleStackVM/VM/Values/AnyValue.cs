@@ -49,6 +49,17 @@ namespace SimpleStackVM
         {
             return this.Value.GetHashCode();
         }
+
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is AnyValue otherAny)
+            {
+                return this.RawValue == otherAny.RawValue ? 0 : 1;
+            }
+
+            return 1;
+        }
         #endregion
     }
 }

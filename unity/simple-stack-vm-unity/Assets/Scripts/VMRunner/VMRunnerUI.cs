@@ -9,17 +9,5 @@ namespace SimpleStackVM.Unity
         public VMRunner VMRunner;
 
         public VirtualMachine VM => this.VMRunner.VM;
-
-        // Start is called before the first frame update
-        void Start()
-        {
-
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
     }
 }

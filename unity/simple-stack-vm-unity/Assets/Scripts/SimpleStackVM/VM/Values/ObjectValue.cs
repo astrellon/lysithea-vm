@@ -46,13 +46,6 @@ namespace SimpleStackVM
             return false;
         }
 
-        public ObjectValue Set(string key, IValue value)
-        {
-            var result = this.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            result[key] = value;
-            return new ObjectValue(result);
-        }
-
         public override bool Equals(object? other)
         {
             if (other == null) return false;
@@ -104,6 +97,39 @@ namespace SimpleStackVM
         public override int GetHashCode()
         {
             return this.Value.GetHashCode();
+        }
+
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is ObjectValue otherObject)
+            {
+                var compareLength = this.Value.Count.CompareTo(otherObject.Value.Count);
+                if (compareLength != 0)
+                {
+                    return compareLength;
+                }
+
+                foreach (var kvp in this.Value)
+                {
+                    if (otherObject.Value.TryGetValue(kvp.Key, out var otherValue))
+                    {
+                        var compare = kvp.Value.CompareTo(otherValue);
+                        if (compare != 0)
+                        {
+                            return compare;
+                        }
+                    }
+                    else
+                    {
+                        return 1;
+                    }
+                }
+
+                return 0;
+            }
+
+            return 1;
         }
         #endregion
     }

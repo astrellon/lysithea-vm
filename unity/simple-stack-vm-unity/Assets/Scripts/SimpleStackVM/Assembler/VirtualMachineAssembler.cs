@@ -108,17 +108,27 @@ namespace SimpleStackVM
             if (!TryParseOperator(first.Value, out opCode))
             {
                 opCode = Operator.Run;
-                if (!TryParseJson(first, out codeLineInput))
+                if (!TryParseRunCommand(first, out codeLineInput))
                 {
-                    throw new Exception($"Error parsing input for: {input.ToString()}");
+                    throw new Exception($"Error parsing run input for: {input.ToString()}");
                 }
                 pushChildOffset = 0;
             }
             else if (input.Count > 1)
             {
-                if (!TryParseJson(input.Last(), out codeLineInput))
+                if (IsJumpCall(opCode))
                 {
-                    throw new Exception($"Error parsing input for: {input.ToString()}");
+                    if (!TryParseJumpLabel(input.Last(), out codeLineInput))
+                    {
+                        throw new Exception($"Error parsing {opCode} input: {input.ToString()}");
+                    }
+                }
+                else
+                {
+                    if (!TryParseJson(input.Last(), out codeLineInput))
+                    {
+                        throw new Exception($"Error parsing input for: {input.ToString()}");
+                    }
                 }
             }
 
@@ -136,6 +146,73 @@ namespace SimpleStackVM
             }
 
             yield return new TempCodeLine(opCode, codeLineInput);
+        }
+
+        private static bool IsJumpCall(Operator input)
+        {
+            return input == Operator.Call || input == Operator.Jump ||
+                input == Operator.JumpTrue || input == Operator.JumpFalse;
+        }
+
+        private static bool TryParseJumpLabel(JSONNode input, out IValue result)
+        {
+            return TryParseTwoStringInput(input, ':', true, out result);
+        }
+
+        private static bool TryParseRunCommand(JSONNode input, out IValue result)
+        {
+            return TryParseTwoStringInput(input, '.', false, out result);
+        }
+
+        private static bool TryParseTwoStringInput(JSONNode input, char delimiter, bool includeDelimiter, out IValue result)
+        {
+            if (input.IsString)
+            {
+                var delimiterIndex = input.Value.IndexOf(delimiter);
+                if (delimiterIndex > 0)
+                {
+                    var array = new List<IValue>(2);
+                    array.Add(new StringValue(input.Value.Substring(0, delimiterIndex)));
+                    if (includeDelimiter)
+                    {
+                        array.Add(new StringValue(input.Value.Substring(delimiterIndex)));
+                    }
+                    else
+                    {
+                        array.Add(new StringValue(input.Value.Substring(delimiterIndex + 1)));
+                    }
+
+                    result = new ArrayValue(array);
+                    return true;
+                }
+
+                result = new StringValue(input.Value);
+                return true;
+            }
+            else if (input.IsArray)
+            {
+                var jsonArray = input.AsArray;
+                if (jsonArray.Count == 1)
+                {
+                    return TryParseTwoStringInput(jsonArray[0], delimiter, includeDelimiter, out result);
+                }
+
+                if (TryParseJson(jsonArray, out var parsed))
+                {
+                    if (parsed is ArrayValue parsedArray && parsedArray.Value.Count == 2)
+                    {
+                        if (parsedArray.Value[0] is StringValue &&
+                            parsedArray.Value[1] is StringValue)
+                        {
+                            result = parsedArray;
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            result = NullValue.Value;
+            return false;
         }
 
         private static bool TryParseJson(JSONNode input, out IValue result)
@@ -207,37 +284,13 @@ namespace SimpleStackVM
 
         private static bool TryParseOperator(string input, out Operator result)
         {
-            result = Operator.Unknown;
-            if (input.Equals("push", StringComparison.OrdinalIgnoreCase))
+            if (!Enum.TryParse<Operator>(input, true, out result))
             {
-                result = Operator.Push;
-            }
-            else if (input.Equals("run", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Run;
-            }
-            else if (input.Equals("call", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Call;
-            }
-            else if (input.Equals("return", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Return;
-            }
-            else if (input.Equals("jump", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.Jump;
-            }
-            else if (input.Equals("jumptrue", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.JumpTrue;
-            }
-            else if (input.Equals("jumpfalse", StringComparison.OrdinalIgnoreCase))
-            {
-                result = Operator.JumpFalse;
+                result = Operator.Unknown;
+                return false;
             }
 
-            return result != Operator.Unknown;
+            return true;
         }
 
         #endregion

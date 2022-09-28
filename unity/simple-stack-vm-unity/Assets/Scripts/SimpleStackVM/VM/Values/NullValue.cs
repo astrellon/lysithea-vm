@@ -40,6 +40,13 @@ namespace SimpleStackVM
         {
             return -1;
         }
+
+        public int CompareTo(IValue? other)
+        {
+            if (other == null || other is NullValue) return 0;
+
+            return 1;
+        }
         #endregion
     }
 }

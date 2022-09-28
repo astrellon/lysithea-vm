@@ -45,6 +45,17 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is BoolValue otherBoolValue)
+            {
+                return this.Value.CompareTo(otherBoolValue.Value);
+            }
+
+            return 1;
+        }
+
         public static explicit operator BoolValue(bool input) => new BoolValue(input);
         #endregion
     }

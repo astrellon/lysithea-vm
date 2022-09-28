@@ -16,7 +16,7 @@ namespace SimpleStackVM.Unity
         public float WaitUntil = -1.0f;
         public float VMStepTiming = -1.0f;
 
-        public bool IsWaiting { get; private set; }
+        public bool IsWaiting => this.WaitUntil > 0.0f;
         #endregion
 
         #region Unity Methods
@@ -25,9 +25,9 @@ namespace SimpleStackVM.Unity
             if (this.VM != null && this.Running)
             {
                 var runOnce = false;
-                while (this.VM.IsRunning && !this.VM.IsPaused)
+                while (this.VM.Running && !this.VM.Paused)
                 {
-                    if (this.WaitUntil > 0.0f)
+                    if (this.IsWaiting)
                     {
                         this.WaitUntil -= Time.deltaTime;
                         if (runOnce || this.WaitUntil > 0.0f)
@@ -46,13 +46,11 @@ namespace SimpleStackVM.Unity
 
                     runOnce = true;
 
-                    this.IsWaiting = false;
-
                     this.VM.Step();
 
                 }
 
-                if (!this.VM.IsRunning)
+                if (!this.VM.Running)
                 {
                     this.Running = false;
                     this.OnComplete?.Invoke(this);
@@ -62,7 +60,7 @@ namespace SimpleStackVM.Unity
         #endregion
 
         #region Methods
-        public void Init(int stackSize, VirtualMachine.RunCommandHandler runHandler)
+        public void Init(int stackSize, Action<string, VirtualMachine> runHandler)
         {
             this.VM = new VirtualMachine(stackSize, runHandler);
         }
@@ -70,7 +68,6 @@ namespace SimpleStackVM.Unity
         public void Wait(TimeSpan timespan)
         {
             this.WaitUntil = (float)timespan.TotalSeconds;
-            this.IsWaiting = true;
         }
         #endregion
     }

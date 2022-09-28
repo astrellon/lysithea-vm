@@ -3,15 +3,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-#nullable enable
-
 namespace SimpleStackVM
 {
     public interface IReadOnlyFixedStack<T>
     {
         int Index { get; }
         IReadOnlyList<T> Data { get; }
-        bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result);
+        bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T result);
     }
 
     public class FixedStack<T> : IReadOnlyFixedStack<T>
@@ -21,6 +19,7 @@ namespace SimpleStackVM
         private int index = -1;
 
         public int Index => this.index;
+        public int StackSize => this.index + 1;
         public IReadOnlyList<T> Data => this.data;
         #endregion
 
@@ -35,6 +34,38 @@ namespace SimpleStackVM
         public void Clear()
         {
             this.index = -1;
+            for (var i = 0; i < this.data.Length; i++)
+            {
+                this.data[i] = default(T);
+            }
+        }
+
+        public bool TrySwap(int topOffset)
+        {
+            var newIndex = this.index - topOffset;
+            if (newIndex < 0 || newIndex >= this.index)
+            {
+                return false;
+            }
+
+            var top = this.data[this.index];
+            var other = this.data[newIndex];
+
+            this.data[this.index] = other;
+            this.data[newIndex] = top;
+
+            return true;
+        }
+
+        public bool TryCopy(int topOffset)
+        {
+            var newIndex = this.index - topOffset;
+            if (newIndex < 0 || newIndex >= this.index)
+            {
+                return false;
+            }
+
+            return this.TryPush(this.data[newIndex]);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -49,7 +80,7 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryPop([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result)
+        public bool TryPop([MaybeNullWhen(false)] [NotNullWhen(true)] out T result)
         {
             if (this.index < 0)
             {
@@ -62,7 +93,7 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T? result)
+        public bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T result)
         {
             if (this.index < 0)
             {

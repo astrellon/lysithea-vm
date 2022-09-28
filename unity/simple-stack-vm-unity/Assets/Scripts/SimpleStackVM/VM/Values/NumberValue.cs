@@ -8,6 +8,8 @@ namespace SimpleStackVM
         public readonly double Value;
         public object RawValue => this.Value;
         public bool IsNull => false;
+
+        public int IntValue => (int)this.Value;
         #endregion
 
         #region Constructor
@@ -36,6 +38,17 @@ namespace SimpleStackVM
         public override int GetHashCode()
         {
             return this.Value.GetHashCode();
+        }
+
+        public int CompareTo(IValue? other)
+        {
+            if (other == null) return 1;
+            if (other is NumberValue otherNum)
+            {
+                return this.Value.CompareTo(otherNum.Value);
+            }
+
+            return 1;
         }
 
         public static explicit operator NumberValue(double input) => new NumberValue(input);

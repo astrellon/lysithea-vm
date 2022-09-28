@@ -295,8 +295,9 @@ GameObject:
   m_Component:
   - component: {fileID: 2257589032699571792}
   - component: {fileID: 2257589032699571806}
+  - component: {fileID: 861786757040027268}
   m_Layer: 5
-  m_Name: Flags
+  m_Name: Status
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -351,6 +352,24 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &861786757040027268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2257589032699571793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8e3e53fa03b489c9a87ced56529dfb4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  VMRunnerUI: {fileID: 2257589033379336921}
+  OnColour: {r: 0.5882353, g: 1, b: 0.25882354, a: 0.39215687}
+  OffColour: {r: 1, g: 0.43529412, b: 0.25882354, a: 0.39215687}
+  WaitingImage: {fileID: 2257589034302500562}
+  RunningImage: {fileID: 2257589033480733366}
+  PausedImage: {fileID: 2257589034130001011}
 --- !u!1 &2257589032722321797
 GameObject:
   m_ObjectHideFlags: 0
@@ -982,7 +1001,6 @@ GameObject:
   - component: {fileID: 2257589033480733352}
   - component: {fileID: 2257589033480733365}
   - component: {fileID: 2257589033480733366}
-  - component: {fileID: 2257589033480733367}
   m_Layer: 5
   m_Name: IsActive
   m_TagString: Untagged
@@ -1049,22 +1067,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2257589033480733367
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2257589033480733353}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7514d2f35d8f75cc924e417f85311d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Image: {fileID: 2257589033480733366}
-  VMRunnerUI: {fileID: 2257589033379336921}
-  Flag: 2
-  OnColour: {r: 0.5880467, g: 1, b: 0.2588235, a: 0.39215687}
 --- !u!1 &2257589033827520274
 GameObject:
   m_ObjectHideFlags: 0
@@ -1361,7 +1363,6 @@ GameObject:
   - component: {fileID: 2257589034130001013}
   - component: {fileID: 2257589034130001010}
   - component: {fileID: 2257589034130001011}
-  - component: {fileID: 2257589034130001012}
   m_Layer: 5
   m_Name: IsPaused
   m_TagString: Untagged
@@ -1428,22 +1429,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2257589034130001012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2257589034130001014}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7514d2f35d8f75cc924e417f85311d4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Image: {fileID: 2257589034130001011}
-  VMRunnerUI: {fileID: 2257589033379336921}
-  Flag: 4
-  OnColour: {r: 0.5880467, g: 1, b: 0.2588235, a: 0.39215687}
 --- !u!1 &2257589034195888213
 GameObject:
   m_ObjectHideFlags: 0
@@ -1531,7 +1516,6 @@ GameObject:
   - component: {fileID: 2257589034302500564}
   - component: {fileID: 2257589034302500561}
   - component: {fileID: 2257589034302500562}
-  - component: {fileID: 2257589034302500560}
   m_Layer: 5
   m_Name: IsWaiting
   m_TagString: Untagged
@@ -1598,18 +1582,3 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2257589034302500560
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2257589034302500565}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d6feada120269fc73b420c319cf584c0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Image: {fileID: 2257589034302500562}
-  VMRunnerUI: {fileID: 2257589033379336921}
-  OnColour: {r: 0.5882353, g: 1, b: 0.25882354, a: 0.39215687}
