@@ -152,20 +152,14 @@ namespace SimpleStackVM
                     {
                         var right = vm.PopStack();
                         var left = vm.PopStack();
-                        if (left.CompareTo(right) > 0)
-                        {
-                            vm.PushStack(left);
-                        }
+                        vm.PushStack(left.CompareTo(right) > 0 ? left : right);
                         break;
                     }
                 case "min":
                     {
                         var right = vm.PopStack();
                         var left = vm.PopStack();
-                        if (left.CompareTo(right) > 0)
-                        {
-                            vm.PushStack(right);
-                        }
+                        vm.PushStack(left.CompareTo(right) < 0 ? left : right);
                         break;
                     }
                 case "+":

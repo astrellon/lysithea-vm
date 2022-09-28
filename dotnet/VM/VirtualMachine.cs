@@ -443,6 +443,15 @@ namespace SimpleStackVM
 
         private static string DebugScopeLine(Scope scope, int line)
         {
+            if (line >= scope.Code.Count)
+            {
+                return $"[{scope.ScopeName}:{line - 1}: end of code";
+            }
+            if (line < 0)
+            {
+                return $"[{scope.ScopeName}:{line - 1}: before start of code";
+            }
+
             var codeLine = scope.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
             return $"[{scope.ScopeName}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";

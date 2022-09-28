@@ -64,10 +64,17 @@ namespace SimpleStackVM
                     }
                 case "insertFlatten":
                     {
-                        var value = vm.PopStack();
+                        var value = vm.PopStack<ArrayValue>();
                         var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(InsertFlatten(top, index.IntValue, value));
+                        break;
+                    }
+                case "remove":
+                    {
+                        var value = vm.PopStack();
+                        var top = vm.PopStack<ArrayValue>();
+                        vm.PushStack(Remove(top, value));
                         break;
                     }
                 case "removeAt":
@@ -77,11 +84,11 @@ namespace SimpleStackVM
                         vm.PushStack(RemoveAt(top, index.IntValue));
                         break;
                     }
-                case "remove":
+                case "removeAll":
                     {
                         var value = vm.PopStack();
                         var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Remove(top, value));
+                        vm.PushStack(RemoveAll(top, value));
                         break;
                     }
                 case "contains":
@@ -138,15 +145,11 @@ namespace SimpleStackVM
             return new ArrayValue(newValue);
         }
 
-        public static ArrayValue InsertFlatten(ArrayValue self, int index, IValue input)
+        public static ArrayValue InsertFlatten(ArrayValue self, int index, ArrayValue input)
         {
-            if (input is ArrayValue arrayInput)
-            {
-                var newValue = self.Value.ToList();
-                newValue.InsertRange(self.GetIndex(index), arrayInput.Value);
-                return new ArrayValue(newValue);
-            }
-            throw new Exception("Unable to insert a non array type value");
+            var newValue = self.Value.ToList();
+            newValue.InsertRange(self.GetIndex(index), input.Value);
+            return new ArrayValue(newValue);
         }
 
         public static ArrayValue RemoveAt(ArrayValue self, int index)
@@ -160,6 +163,13 @@ namespace SimpleStackVM
         {
             var newValue = self.Value.ToList();
             newValue.Remove(input);
+            return new ArrayValue(newValue);
+        }
+
+        public static ArrayValue RemoveAll(ArrayValue self, IValue input)
+        {
+            var newValue = self.Value.ToList();
+            newValue.RemoveAll(v => v.CompareTo(input) == 0);
             return new ArrayValue(newValue);
         }
 

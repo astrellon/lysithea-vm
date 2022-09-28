@@ -20,7 +20,13 @@ namespace SimpleStackVM
             {
                 case "toString":
                     {
-                        var top = vm.PopStack();
+                        var top = vm.PeekStack();
+                        if (top is StringValue)
+                        {
+                            break;
+                        }
+
+                        top = vm.PopStack();
                         vm.PushStack(new StringValue(top.ToString()));
                         break;
                     }

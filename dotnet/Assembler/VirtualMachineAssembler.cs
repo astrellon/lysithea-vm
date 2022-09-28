@@ -199,7 +199,7 @@ namespace SimpleStackVM
 
                 if (TryParseJson(jsonArray, out var parsed))
                 {
-                    if (parsed is ArrayValue parsedArray)
+                    if (parsed is ArrayValue parsedArray && parsedArray.Value.Count == 2)
                     {
                         if (parsedArray.Value[0] is StringValue &&
                             parsedArray.Value[1] is StringValue)
