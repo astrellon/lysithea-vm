@@ -1,20 +1,26 @@
-import { valueCompareTo, valueToString, valueTypeof } from "../types";
+import { isValueString, valueCompareTo, valueToString, valueTypeof } from "../types";
 import VirtualMachine from "../virtualMachine";
 
-export const handleName = 'value';
+export const valueHandleName = 'value';
 
-export function addHandler(vm: VirtualMachine)
+export function addValueHandler(vm: VirtualMachine)
 {
-    vm.addRunHandler(handleName, handler)
+    vm.addRunHandler(valueHandleName, valueHandler)
 }
 
-export function handler(command: string, vm: VirtualMachine)
+export function valueHandler(command: string, vm: VirtualMachine)
 {
     switch (command)
     {
         case 'toString':
             {
-                const top = vm.popStack();
+                let top = vm.peekStack();
+                if (isValueString(top))
+                {
+                    break;
+                }
+
+                top = vm.popStack();
                 vm.pushStack(valueToString(top));
                 break;
             }

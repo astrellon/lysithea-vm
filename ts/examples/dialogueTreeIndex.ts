@@ -31,7 +31,7 @@ function runHandler(command: string, vm: VirtualMachine)
     }
     else if (command === 'randomSay')
     {
-        randomSay(vm.popStackCast<ArrayValue>());
+        randomSay(vm.popStackArray());
     }
     else if (command === 'choice')
     {

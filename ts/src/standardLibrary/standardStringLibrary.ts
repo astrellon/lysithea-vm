@@ -1,14 +1,14 @@
 import { Value, valueToString } from "../types";
 import VirtualMachine from "../virtualMachine";
 
-export const handleName = 'string';
+export const stringHandleName = 'string';
 
-export function addHandler(vm: VirtualMachine)
+export function addStringHandler(vm: VirtualMachine)
 {
-    vm.addRunHandler(handleName, handler)
+    vm.addRunHandler(stringHandleName, stringHandler)
 }
 
-export function handler(command: string, vm: VirtualMachine)
+export function stringHandler(command: string, vm: VirtualMachine)
 {
     switch (command)
     {
@@ -28,59 +28,59 @@ export function handler(command: string, vm: VirtualMachine)
             }
         case 'length':
             {
-                const top = vm.popStackCast<string>();
+                const top = vm.popStackString();
                 vm.pushStack(top.length);
                 break;
             }
         case 'get':
             {
-                const index = vm.popStackCast<number>();
-                const top = vm.popStackCast<string>();
+                const index = vm.popStackNumber();
+                const top = vm.popStackString();
                 vm.pushStack(top[index]);
                 break;
             }
         case 'set':
             {
                 const value = vm.popStack();
-                const index = vm.popStackCast<number>();
-                const top = vm.popStackCast<string>();
+                const index = vm.popStackNumber();
+                const top = vm.popStackString();
                 vm.pushStack(set(top, index, valueToString(value)));
                 break;
             }
         case 'insert':
             {
                 const value = vm.popStack();
-                const index = vm.popStackCast<number>();
-                const top = vm.popStackCast<string>();
+                const index = vm.popStackNumber();
+                const top = vm.popStackString();
                 vm.pushStack(insert(top, index, valueToString(value)));
                 break;
             }
         case 'substring':
             {
-                const length = vm.popStackCast<number>();
-                const index = vm.popStackCast<number>();
-                const top = vm.popStackCast<string>();
-                vm.pushStack(top.substring(index, index + length));
+                const length = vm.popStackNumber();
+                const index = vm.popStackNumber();
+                const top = vm.popStackString();
+                vm.pushStack(substring(top, index, length));
                 break;
             }
         case 'removeAt':
             {
-                const index = vm.popStackCast<number>();
-                const top = vm.popStackCast<string>();
+                const index = vm.popStackNumber();
+                const top = vm.popStackString();
                 vm.pushStack(removeAt(top, index));
                 break;
             }
         case 'removeAll':
             {
-                const values = vm.popStackCast<string>();
-                const top = vm.popStackCast<string>();
+                const values = vm.popStackString();
+                const top = vm.popStackString();
                 vm.pushStack(removeAll(top, values));
                 break;
             }
     }
 }
 
-export function getIndex(input: string, index: number)
+export function getIndex(input: string, index: number): number
 {
     if (index < 0)
     {
@@ -115,10 +115,16 @@ export function insert(input: string, index: number, value: string): string
 export function removeAt(input: string, index: number): string
 {
     index = getIndex(input, index);
-    return `${input.substring(0, index)}${input.substring(index + 1)}}`;
+    return `${input.substring(0, index)}${input.substring(index + 1)}`;
 }
 
 export function removeAll(input: string, values: string): string
 {
     return input.replace(values, '');
+}
+
+export function substring(input: string, index: number, length: number)
+{
+    index = getIndex(input, index);
+    return input.substring(index, index + length);
 }

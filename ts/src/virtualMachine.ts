@@ -1,4 +1,4 @@
-import { isValueArray, Scope, ScopeFrame, Value, valueToString } from "./types";
+import { ArrayValue, isValueArray, isValueBoolean, isValueNumber, isValueObject, isValueString, ObjectValue, Scope, ScopeFrame, Value, valueToString } from "./types";
 
 export type RunHandler = (command: string, vm: VirtualMachine) => void;
 type ScopeMap = { [key: string]: Scope }
@@ -98,18 +98,22 @@ export default class VirtualMachine
             return;
         }
 
+        // this.printStackDebug();
+
         const codeLine = this._currentScope.code[this._programCounter++];
 
         switch (codeLine.operator)
         {
             case 'push':
                 {
-                    if (codeLine.value == null)
+                    if (codeLine.value != null)
                     {
-                        throw new Error(`${this.getScopeLine()}: Push requires input`);
+                        this.pushStack(codeLine.value);
                     }
-
-                    this._stack.push(codeLine.value);
+                    else
+                    {
+                        this.pushStack(this.peekStack());
+                    }
                     break;
                 }
             case 'pop':
@@ -295,7 +299,7 @@ export default class VirtualMachine
         this._programCounter = line;
     }
 
-    public popStack() : Value
+    public popStack(): Value
     {
         const result = this._stack.pop();
         if (result == undefined)
@@ -305,14 +309,63 @@ export default class VirtualMachine
         return result;
     }
 
-    public popStackCast<T extends Value>() : T
+    public popStackBool(): boolean
     {
-        const result = this._stack.pop();
-        if (result == undefined)
+        const result = this.popStack();
+        if (!isValueBoolean(result))
         {
-            throw new Error(`${this.getScopeLine()}: Popped empty stack`);
+            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not a boolean: ${valueToString(result)}`);
         }
-        return result as T;
+        return result;
+    }
+
+    public popStackString(): string
+    {
+        const result = this.popStack();
+        if (!isValueString(result))
+        {
+            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not a string: ${valueToString(result)}`);
+        }
+        return result;
+    }
+
+    public popStackNumber(): number
+    {
+        const result = this.popStack();
+        if (!isValueNumber(result))
+        {
+            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not a number: ${valueToString(result)}`);
+        }
+        return result;
+    }
+
+    public popStackArray(): ArrayValue
+    {
+        const result = this.popStack();
+        if (!isValueArray(result))
+        {
+            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not an array: ${valueToString(result)}`);
+        }
+        return result;
+    }
+
+    public popStackObject(): ObjectValue
+    {
+        const result = this.popStack();
+        if (!isValueObject(result))
+        {
+            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not an object: ${valueToString(result)}`);
+        }
+        return result;
+    }
+
+    public peekStack(): Value
+    {
+        if (this._stack.length === 0)
+        {
+            throw new Error(`${this.getScopeLine()}: Unable to peek, stack empty`);
+        }
+        return this._stack[this._stack.length - 1];
     }
 
     public pushStack(value: Value)
@@ -353,6 +406,45 @@ export default class VirtualMachine
         this._stack[newIndex] = top;
 
         return true;
+    }
+
+    public printStackDebug()
+    {
+        console.log('Stack size:', this._stack.length);
+        for (const stack of this._stack)
+        {
+            console.log('- ', stack);
+        }
+    }
+
+    public createStackTrace()
+    {
+        const result: string[] = [];
+
+        result.push(this.debugScopeLine(this.currentScope, this.programCounter - 1));
+        for (let i = this._stackTrace.length - 1; i >= 0; i--)
+        {
+            const scopeFrame = this._stackTrace[i];
+            result.push(this.debugScopeLine(scopeFrame.scope, scopeFrame.lineNumber));
+        }
+        return result;
+    }
+
+    private debugScopeLine(scope: Scope, line: number)
+    {
+        if (line >= scope.code.length)
+        {
+            return `[${scope.name}]:${line - 1}: end of code`;
+        }
+        else if (line < 0)
+        {
+            return `[${scope.name}]:${line - 1}: before start of code`;
+        }
+
+        const codeLine = scope.code[line];
+        const codeLineInput = valueToString(codeLine.value);
+        return `[${scope.name}]:${line - 1}:${codeLine.operator}: [${codeLineInput}]`;
+
     }
 
     private getScopeLine()

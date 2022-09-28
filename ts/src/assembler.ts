@@ -1,4 +1,4 @@
-import { CodeLine, Operator, Scope, Value } from "./types";
+import { CodeLine, isValueArray, isValueString, Operator, Scope, Value } from "./types";
 
 export type InputArrayValue = ReadonlyArray<InputDataArg>;
 export interface InputObjectValue
@@ -83,15 +83,31 @@ export function *parseCodeLine(input: InputDataLine): IterableIterator<TempCodeL
     if (opCode === 'unknown')
     {
         opCode = 'run';
-        codeLineInput = parseValue(first);
+        codeLineInput = parseRunCommand(first);
+        if (codeLineInput == null)
+        {
+            throw new Error(`Error parsing run command: ${JSON.stringify(input)}`);
+        }
         pushChildOffset = 0;
     }
     else if (input.length > 1)
     {
-        codeLineInput = parseValue(input[input.length - 1]);
-        if (codeLineInput == null)
+        const last = input[input.length - 1];
+        if (isJumpCall(opCode))
         {
-            throw new Error(`Error parsing input for line ${JSON.stringify(input)}`);
+            codeLineInput = parseJumpLabel(last)
+            if (codeLineInput == null)
+            {
+                throw new Error(`Error parsing ${opCode} input: ${JSON.stringify(input)}`);
+            }
+        }
+        else
+        {
+            codeLineInput = parseValue(last);
+            if (codeLineInput == null)
+            {
+                throw new Error(`Error parsing input for line: ${JSON.stringify(input)}`);
+            }
         }
     }
 
@@ -109,6 +125,12 @@ export function *parseCodeLine(input: InputDataLine): IterableIterator<TempCodeL
     yield { operator: opCode, value: codeLineInput }
 }
 
+function isJumpCall(input: Operator): boolean
+{
+    return input === 'call' || input === 'jump' ||
+        input === 'jumpFalse' || input === 'jumpTrue';
+}
+
 function isArray(input: InputDataArg): input is InputArrayValue
 {
     return Array.isArray(input);
@@ -117,6 +139,57 @@ function isArray(input: InputDataArg): input is InputArrayValue
 function isObject(input: InputDataArg): input is InputObjectValue
 {
     return typeof(input) === 'object' && !isArray(input);
+}
+
+function parseJumpLabel(input: InputDataArg)
+{
+    return parseTwoStringInput(input, ':', true);
+}
+function parseRunCommand(input: InputDataArg)
+{
+    return parseTwoStringInput(input, '.', false);
+}
+
+function parseTwoStringInput(input: InputDataArg, delimiter: string, includeDelimiter: boolean): Value
+{
+    if (typeof(input) === 'string')
+    {
+        const delimiterIndex = input.indexOf(delimiter);
+        if (delimiterIndex > 0)
+        {
+            const array: Value[] = [input.substr(0, delimiterIndex)];
+            if (includeDelimiter)
+            {
+                array.push(input.substring(delimiterIndex));
+            }
+            else
+            {
+                array.push(input.substring(delimiterIndex + 1));
+            }
+
+            return array;
+        }
+
+        return input;
+    }
+    else if (isArray(input))
+    {
+        if (input.length === 1)
+        {
+            return parseTwoStringInput(input[0], delimiter, includeDelimiter);
+        }
+
+        const parsed = parseValue(input);
+        if (isValueArray(parsed))
+        {
+            if (parsed.length === 2 && isValueString(parsed[0]) && isValueString(parsed[1]))
+            {
+                return parsed;
+            }
+        }
+    }
+
+    return null;
 }
 
 function parseValue(input: InputDataArg) : Value

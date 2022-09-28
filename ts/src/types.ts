@@ -84,7 +84,7 @@ export function valueTypeof(value: Value)
     }
     return "unknown";
 }
-export function valueToString(value: Value)
+export function valueToString(value?: Value)
 {
     if (value == null)
     {
@@ -197,7 +197,7 @@ export function arrayCompareTo(left: ArrayValue, right: ArrayValue)
         }
     }
 
-    return 1;
+    return 0;
 }
 export function objectLength(input: ObjectValue)
 {
@@ -225,7 +225,7 @@ export function objectCompareTo(left: ObjectValue, right: ObjectValue)
         }
     }
 
-    return 1;
+    return 0;
 }
 
 export function valueCompareTo(left: Value, right: Value): number
