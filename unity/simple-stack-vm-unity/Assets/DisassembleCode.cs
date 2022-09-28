@@ -10,7 +10,7 @@ namespace SimpleStackVM.Unity
 
         public void PullCode()
         {
-            var scopeName = this.UIScope.ScopeName.text;
+            var scopeName = this.UIScope.StartScopeName.text;
             if (!DrawingVM.Instance.VMRunner.VM.Scopes.TryGetValue(scopeName, out var scope))
             {
                 Debug.LogWarning($"No scope in VM that has the name: {scopeName}");

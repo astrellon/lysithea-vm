@@ -16,11 +16,11 @@ namespace SimpleStackVM.Unity
         {
             try
             {
-                var scope = this.UIScope.CreateScope();
-                var script = new DynamicDrawingScript(scope);
+                var scopes = this.UIScope.CreateScopes();
+                var script = new DynamicDrawingScript(scopes);
 
                 var combinedScripts = this.CommonScripts.Cast<IDrawingScript>().Append(script);
-                DrawingVM.Instance.StartDrawing(combinedScripts, scope.ScopeName);
+                DrawingVM.Instance.StartDrawing(combinedScripts, this.UIScope.StartScopeName.text);
             }
             catch (System.Exception exp)
             {

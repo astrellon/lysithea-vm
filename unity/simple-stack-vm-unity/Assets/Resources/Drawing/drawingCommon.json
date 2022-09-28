@@ -1,18 +1,18 @@
 [
-    {
-        "name": "MakeGround",
-        "data": [
-            ["Push", "Plane", {"x": 0, "y": 0, "z": 0}, {}],
+  {
+    "name": "MakeGround",
+    "data": [
+      [ "Push", "Plane", { "x": 0, "y": 0, "z": 0 }, {} ],
 
-            ["Push", "colour"],
-            ["random.colour"],
-            ["object.set"],
+      [ "Push", "colour" ],
+      [ "random.colour" ],
+      [ "object.set" ],
 
-            ["Push", "scale", 100],
-            ["object.set"],
-            "drawComplex",
+      [ "Push", "scale", 100 ],
+      [ "object.set" ],
 
-            "Return"
-        ]
-    }
+      "drawComplex",
+      "Return"
+    ]
+  }
 ]

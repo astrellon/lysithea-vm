@@ -1,40 +1,6 @@
 [
   {
-    "name": "MainSimple",
-    "data": [
-      "clearScene",
-      [ "Push", 100 ],
-
-      // MakeGround is found in the common file
-      [ "Call", "MakeGround" ],
-
-      ":Start",
-      [ "Call", "DrawSimple" ],
-      [ "math.sub", 1 ],
-      [ "Push" ],
-      [ "comp.equals", 0 ],
-      [ "JumpFalse", ":Start" ]
-    ]
-  },
-  {
-    "name": "DrawSimple",
-    "data": [
-      [ "random.pick", [ "Box", "Sphere", "Capsule" ] ],
-      [ "random.vector",
-        { "x": -20, "y": 2, "z": -20 },
-        { "x": 20, "y": 14, "z": 20 }
-      ],
-      [ "random.colour" ],
-      [ "random.vector",
-        { "x": 0.5, "y": 0.5, "z": 0.5 },
-        { "x": 1.75, "y": 1.75, "z": 1.75 }
-      ],
-      [ "drawSimple" ],
-      "Return"
-    ]
-  },
-  {
-    "name": "MainComplex",
+    "name": "Main",
     "data": [
       "clearScene",
       [ "Push", 100 ],

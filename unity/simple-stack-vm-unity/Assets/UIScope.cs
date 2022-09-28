@@ -7,20 +7,13 @@ namespace SimpleStackVM.Unity
 {
     public class UIScope : MonoBehaviour
     {
-        public TMP_InputField ScopeName;
+        public TMP_InputField StartScopeName;
         public TMP_InputField ScopeData;
 
-        public Scope CreateScope()
+        public List<Scope> CreateScopes()
         {
-            var jsonText = $@"{{
-                ""name"": ""{this.ScopeName.text}"",
-                ""data"": [
-                    {this.ScopeData.text}
-                ]
-            }}";
-
-            var json = SimpleJSON.JSON.Parse(jsonText);
-            return VirtualMachineAssembler.ParseScope(json.AsObject);
+            var json = SimpleJSON.JSON.Parse(this.ScopeData.text);
+            return VirtualMachineAssembler.ParseScopes(json.AsArray);
         }
     }
 }

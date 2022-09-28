@@ -15,6 +15,7 @@ namespace SimpleStackVM.Unity
 
         public float WaitUntil = -1.0f;
         public float VMStepTiming = -1.0f;
+        public int MaxStepsPerFrame = 100_000;
 
         public bool IsWaiting => this.WaitUntil > 0.0f;
         #endregion
@@ -24,7 +25,7 @@ namespace SimpleStackVM.Unity
         {
             if (this.VM != null && this.Running)
             {
-                var maxCount = 10_000;
+                var maxCount = this.MaxStepsPerFrame;
                 var runOnce = false;
                 while (this.VM.Running && !this.VM.Paused)
                 {
