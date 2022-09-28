@@ -24,9 +24,9 @@ namespace SimpleStackVM.Unity
 
         private void UpdateText()
         {
-            var textBuilder = new List<string>{ this.prefix };
             var stack = this.VMRunnerUI.VM.Stack;
-            for (var i = 0; i < stack.Index; i++)
+            var textBuilder = new List<string>{ this.prefix + $": {stack.Index + 1}" };
+            for (var i = 0; i <= stack.Index; i++)
             {
                 textBuilder.Add($"{i} - {stack.Data[i]}");
             }

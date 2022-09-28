@@ -4,10 +4,12 @@
         "data": [
             ["Push", "Plane", {"x": 0, "y": 0, "z": 0}, {}],
 
-            "randomColour",
-            ["setKey", "colour"],
+            ["Push", "colour"],
+            ["random.colour"],
+            ["object.set"],
 
-            ["setKey", 100, "scale"],
+            ["Push", "scale", 100],
+            ["object.set"],
             "drawComplex",
 
             "Return"

@@ -40,7 +40,7 @@ namespace SimpleStackVM.Unity
 
             var text = "";
             var lineText = "";
-            var programCounter = vm.ProgramCounter - 1;
+            var programCounter = vm.ProgramCounter;
             if (vm.CurrentScope == null || vm.CurrentScope.IsEmpty)
             {
                 text = "<Empty>";
@@ -51,15 +51,22 @@ namespace SimpleStackVM.Unity
 
                 if (programCounter >= 0)
                 {
-                    var line = vm.CurrentScope.Code[programCounter];
-                    lineText = line.Operator.ToString();
-                    if (line.Input.IsNull)
+                    if (programCounter < vm.CurrentScope.Code.Count)
                     {
-                        lineText += ":<<null>>";
+                        var line = vm.CurrentScope.Code[programCounter];
+                        lineText = line.Operator.ToString();
+                        if (line.Input == null || line.Input.IsNull)
+                        {
+                            lineText += ":<<null>>";
+                        }
+                        else
+                        {
+                            lineText += $":{line.Input.ToString()}";
+                        }
                     }
                     else
                     {
-                        lineText += $":{line.Input.ToString()}";
+                        lineText += ": end of code";
                     }
                 }
             }

@@ -306,13 +306,13 @@ namespace SimpleStackVM
             return result;
         }
 
-        public void PrintStackDebug()
+        public IEnumerable<string> PrintStackDebug()
         {
-            Console.WriteLine($"Stack size: {this.stack.StackSize}");
+            yield return ($"Stack size: {this.stack.StackSize}");
             for (var i = 0; i < this.stack.StackSize; i++)
             {
                 var item = this.stack.Data[i];
-                Console.WriteLine($"- {item.ToString()}");
+                yield return ($"- {item.ToString()}");
             }
         }
 

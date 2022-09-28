@@ -24,6 +24,7 @@ namespace SimpleStackVM.Unity
         {
             if (this.VM != null && this.Running)
             {
+                var maxCount = 10_000;
                 var runOnce = false;
                 while (this.VM.Running && !this.VM.Paused)
                 {
@@ -46,8 +47,17 @@ namespace SimpleStackVM.Unity
 
                     runOnce = true;
 
-                    this.VM.Step();
+                    // Debug.Log(string.Join('\n', this.VM.PrintStackDebug()));
 
+                    this.VM.Step();
+                    maxCount--;
+
+                    if (maxCount < 0)
+                    {
+                        this.Running = false;
+                        Debug.Log("Max step count reached! Breaking!");
+                        break;
+                    }
                 }
 
                 if (!this.VM.Running)
