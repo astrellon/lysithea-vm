@@ -41,8 +41,8 @@ namespace SimpleStackVM
                     }
                 case "set":
                     {
-                        var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
+                        var value = vm.PopStack();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(Set(top, index.IntValue, value));
                         break;
@@ -56,16 +56,16 @@ namespace SimpleStackVM
                     }
                 case "insert":
                     {
-                        var value = vm.PopStack();
                         var index = vm.PopStack<NumberValue>();
+                        var value = vm.PopStack();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(Insert(top, index.IntValue, value));
                         break;
                     }
                 case "insertFlatten":
                     {
-                        var value = vm.PopStack<ArrayValue>();
                         var index = vm.PopStack<NumberValue>();
+                        var value = vm.PopStack<ArrayValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(InsertFlatten(top, index.IntValue, value));
                         break;
@@ -107,8 +107,8 @@ namespace SimpleStackVM
                     }
                 case "sublist":
                     {
-                        var length = vm.PopStack<NumberValue>();
                         var index = vm.PopStack<NumberValue>();
+                        var length = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(SubList(top, index.IntValue, length.IntValue));
                         break;

@@ -56,8 +56,8 @@ namespace SimpleStackVM.Unity
             }
             else if (command == "drawSimple")
             {
-                var scaleValue = vm.PopStack<AnyValue>();
-                var colourValue = vm.PopStack<AnyValue>();
+                var scaleValue = vm.PopStack();
+                var colourValue = vm.PopStack();
                 var positionValue = vm.PopStack();
                 var elementName = vm.PopStack<StringValue>();
 

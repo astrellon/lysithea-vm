@@ -17,6 +17,13 @@ namespace SimpleStackVM.Unity
                     return true;
                 }
             }
+            else if (input is StringValue stringValue)
+            {
+                if (ColorUtility.TryParseHtmlString(stringValue.Value, out result))
+                {
+                    return true;
+                }
+            }
 
             result = Color.black;
             return false;
@@ -45,6 +52,11 @@ namespace SimpleStackVM.Unity
                     result.z = z;
                 }
 
+                return true;
+            }
+            else if (input is NumberValue numberValue)
+            {
+                result = Vector3.one * (float)numberValue.Value;
                 return true;
             }
 

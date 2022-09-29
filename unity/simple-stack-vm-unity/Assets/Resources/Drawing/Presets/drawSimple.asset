@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: drawSimple
   m_EditorClassIdentifier: 
   OptionTitle: Draw Simple
+  StartScope: MainSimple
   JsonText: {fileID: 4900000, guid: 216f293bff9367d208c89113ffa14130, type: 3}

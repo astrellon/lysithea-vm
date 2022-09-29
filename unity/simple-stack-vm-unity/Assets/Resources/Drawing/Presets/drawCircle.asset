@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f07b6d17b7010346990f81800f3f59e, type: 3}
-  m_Name: drawComplex
+  m_Name: drawCircle
   m_EditorClassIdentifier: 
-  OptionTitle: Draw Complex
-  StartScope: MainComplex
-  JsonText: {fileID: 4900000, guid: 00bae40d02e6a007c944dbe3ac00e6ab, type: 3}
+  OptionTitle: Draw In A Circle
+  StartScope: MainCircle
+  JsonText: {fileID: 4900000, guid: b7926248442d0472aae37ff61b89f649, type: 3}

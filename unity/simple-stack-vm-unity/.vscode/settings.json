@@ -53,5 +53,11 @@
         "Temp/":true
     },
     "git.ignoreLimitWarning": true,
-    "omnisharp.useGlobalMono": "always"
+    "omnisharp.useGlobalMono": "always",
+    "[json]": {
+        "editor.tabSize": 2
+    },
+    "[jsonc]": {
+        "editor.tabSize": 2
+    }
 }

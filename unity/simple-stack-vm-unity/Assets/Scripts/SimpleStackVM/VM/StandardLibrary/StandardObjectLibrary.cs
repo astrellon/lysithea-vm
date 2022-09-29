@@ -25,8 +25,8 @@ namespace SimpleStackVM
                 // Object Operators
                 case "set":
                     {
-                        var value = vm.PopStack();
                         var key = vm.PopStack<StringValue>();
+                        var value = vm.PopStack();
                         var obj = vm.PopStack<ObjectValue>();
                         vm.PushStack(Set(obj, key, value));
                         break;

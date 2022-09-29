@@ -1994,7 +1994,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Running: 0
   WaitUntil: -1
-  VMStepTiming: 0
+  VMStepTiming: 1
+  MaxStepsPerFrame: 100000
 --- !u!1 &709112764
 GameObject:
   m_ObjectHideFlags: 0
@@ -3545,7 +3546,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_CaretColor: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
-  m_CustomCaretColor: 0
+  m_CustomCaretColor: 1
   m_SelectionColor: {r: 0.65882355, g: 0.80784315, b: 1, a: 0.7529412}
   m_Text: 
   m_CaretBlinkRate: 0.85
@@ -4464,6 +4465,7 @@ MonoBehaviour:
   TextExamples:
   - {fileID: 11400000, guid: d308d486f44c70dc191131eaab220bf2, type: 2}
   - {fileID: 11400000, guid: 961884cfcab1e6fd9b2928bd3037e699, type: 2}
+  - {fileID: 11400000, guid: 0cdc44104c42f191581f09e2dd811e03, type: 2}
   UIScope: {fileID: 456085787}
   PresetDropdown: {fileID: 1979880028}
 --- !u!1 &1990397222

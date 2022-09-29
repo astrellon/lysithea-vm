@@ -60,12 +60,12 @@
       ],
       [ "Push", {} ],
 
-      [ "Push", "colour" ],
       [ "random.colour" ],
-      [ "object.set" ],
-      [ "Push", "scale" ],
+      [ "object.set", "colour" ],
+
       [ "Call", "RandomDimension" ],
-      [ "object.set" ],
+      [ "object.set", "scale" ],
+
       "drawComplex",
       "Return"
     ]
@@ -79,17 +79,14 @@
       ":DoIndividualDimensions",
       [ "Push", {} ],
 
-      [ "Push", "width" ],
       [ "random.range", 0.5, 1.75 ],
-      [ "object.set" ],
+      [ "object.set", "width" ],
 
-      [ "Push", "height" ],
       [ "random.range", 0.5, 1.75 ],
-      [ "object.set" ],
+      [ "object.set", "height" ],
 
-      [ "Push", "length" ],
       [ "random.range", 0.5, 1.75 ],
-      [ "object.set" ],
+      [ "object.set", "length" ],
       [ "Jump", ":Done" ],
 
       ":DoScale",

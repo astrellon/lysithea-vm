@@ -1,0 +1,55 @@
+[
+  {
+    "name": "MainCircle",
+    "data": [
+      "clearScene",
+      [ "Push", 100 ],
+
+      ":Start",
+
+      [ "Call", "DrawBox" ],
+      [ "math.sub", 1 ],
+      [ "Push" ],
+      [ "comp.equals", 0 ],
+      [ "JumpFalse", ":Start" ]
+    ]
+  },
+  {
+    "name": "DrawBox",
+    "data": [
+
+      [ "Call", "GetPosition" ],
+      [ "Push", "Box" ],
+      [ "Swap", 1 ],
+      [ "Push", "#ff0000", 1 ],
+      [ "drawSimple" ],
+
+      [ "Return" ]
+    ]
+  },
+  {
+    "name": "GetPosition",
+    "data": [
+
+      [ "Push", {} ],
+
+      [ "Copy", 1 ],
+      [ "math.mul", 5.0 ],
+      [ "math.cosDeg" ],
+      [ "math.mul", 20 ],
+      [ "object.set", "x" ],
+
+      [ "Copy", 1 ],
+      [ "math.mul", 5.0 ],
+      [ "math.sinDeg" ],
+      [ "math.mul", 20 ],
+      [ "object.set", "z" ],
+
+      [ "Copy", 1 ],
+      [ "math.mul", 0.15 ],
+      [ "object.set", "y" ],
+
+      [ "Return" ]
+    ]
+  }
+]
