@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 
 #nullable enable
@@ -8,23 +9,33 @@ namespace SimpleStackVM
     public class Scope
     {
         #region Fields
-        private static IReadOnlyList<CodeLine> EmptyCode = new CodeLine[0];
-        private static IReadOnlyDictionary<string, int> EmptyLabels = new Dictionary<string, int>();
-        public static readonly Scope Empty = new Scope("<<empty>>", EmptyCode, EmptyLabels);
-
-        public readonly string ScopeName;
-        public readonly IReadOnlyList<CodeLine> Code = EmptyCode;
-        public readonly IReadOnlyDictionary<string, int> Labels = EmptyLabels;
-
-        public bool IsEmpty => this.Code.Count == 0;
+        private readonly Dictionary<string, IValue> values = new Dictionary<string, IValue>();
+        public IReadOnlyDictionary<string, IValue> Values => this.values;
         #endregion
 
         #region Constructor
-        public Scope(string scopeName, IReadOnlyList<CodeLine> code, IReadOnlyDictionary<string, int>? labels = null)
+        public Scope()
         {
-            this.ScopeName = scopeName;
-            this.Code = code;
-            this.Labels = labels ?? EmptyLabels;
+
+        }
+        #endregion
+
+        #region Methods
+        public void Set(string key, IValue value)
+        {
+            this.values[key] = value;
+        }
+
+        public bool TryGet(string key, out IValue value)
+        {
+            if (this.values.TryGetValue(key, out var foundValue))
+            {
+                value = foundValue;
+                return true;
+            }
+
+            value = NullValue.Value;
+            return false;
         }
         #endregion
     }

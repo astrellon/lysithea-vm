@@ -30,24 +30,24 @@ namespace SimpleStackVM
             }
         }
         #region Methods
-        public static List<Scope> ParseScopes(JSONArray input)
+        public static List<Procedure> ParseProcedures(JSONArray input)
         {
-            var result = new List<Scope>();
+            var result = new List<Procedure>();
             foreach (var child in input.Children)
             {
                 if (child.IsObject)
                 {
-                    var scope = ParseScope(child.AsObject);
-                    result.Add(scope);
+                    var procedure = ParseProcedure(child.AsObject);
+                    result.Add(procedure);
                 }
             }
 
             return result;
         }
 
-        public static Scope ParseScope(JSONObject input)
+        public static Procedure ParseProcedure(JSONObject input)
         {
-            var scopeName = input["name"].Value;
+            var name = input["name"].Value;
             var data = input["data"].AsArray;
             var tempCodeLines = new List<ITempCodeLine>();
 
@@ -64,10 +64,10 @@ namespace SimpleStackVM
                 }
             }
 
-            return ProcessScope(scopeName, tempCodeLines);
+            return ProcessProcedure(name, tempCodeLines);
         }
 
-        private static Scope ProcessScope(string scopeName, IReadOnlyList<ITempCodeLine> tempCode)
+        private static Procedure ProcessProcedure(string name, IReadOnlyList<ITempCodeLine> tempCode)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
@@ -84,7 +84,7 @@ namespace SimpleStackVM
                 }
             }
 
-            return new Scope(scopeName, code, labels);
+            return new Procedure(name, code, null, labels);
         }
 
         private static IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)
@@ -103,11 +103,13 @@ namespace SimpleStackVM
 
             var opCode = Operator.Unknown;
             var pushChildOffset = 1;
+            var countCallNumArgs = false;
             IValue? codeLineInput = null;
 
             if (!TryParseOperator(first.Value, out opCode))
             {
-                opCode = Operator.Run;
+                opCode = Operator.Call;
+                countCallNumArgs = true;
                 if (!TryParseRunCommand(first, out codeLineInput))
                 {
                     throw new Exception($"Error parsing run input for: {input.ToString()}");
@@ -143,6 +145,11 @@ namespace SimpleStackVM
                 {
                     throw new Exception($"Error parsing child for value: {child.ToString()}");
                 }
+            }
+
+            if (countCallNumArgs)
+            {
+                yield return new TempCodeLine(Operator.Push, new NumberValue(input.Count - pushChildOffset - 1));
             }
 
             yield return new TempCodeLine(opCode, codeLineInput);

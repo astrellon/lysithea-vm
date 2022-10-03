@@ -17,14 +17,14 @@ namespace SimpleStackVM
         public static void Main(string[] args)
         {
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testDialogue.json"));
-            var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
+            var scopes = VirtualMachineAssembler.ParseProcedures(json.AsArray);
 
             var vm = new VirtualMachine(64, OnRunCommand);
-            vm.AddScopes(scopes);
+            vm.AddProcedures(scopes);
 
             try
             {
-                vm.SetCurrentScope("Main");
+                vm.SetCurrentProcedure("Main");
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
                 {
@@ -40,7 +40,7 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(string command, VirtualMachine vm)
+        private static void OnRunCommand(string command, ArrayValue args, VirtualMachine vm)
         {
             if (command == "say")
             {

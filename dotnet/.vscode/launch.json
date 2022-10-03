@@ -49,6 +49,17 @@
             "stopAtEntry": false
         },
         {
+            "name": "Run Test Program",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-test-program",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/testProgram.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"

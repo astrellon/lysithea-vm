@@ -10,17 +10,17 @@ namespace SimpleStackVM
         public static JSONNode Disassemble(VirtualMachine vm)
         {
             var result = new JSONArray();
-            foreach (var scope in vm.Scopes.Values)
+            foreach (var scope in vm.Procedures.Values)
             {
                 result.Add(Disassemble(scope));
             }
             return result;
         }
 
-        public static JSONNode Disassemble(Scope scope)
+        public static JSONNode Disassemble(Procedure scope)
         {
             var result = new JSONObject();
-            result["name"] = new JSONString(scope.ScopeName);
+            result["name"] = new JSONString(scope.Name);
 
             var data = new JSONArray();
             result["data"] = data;

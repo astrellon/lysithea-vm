@@ -18,7 +18,7 @@ namespace SimpleStackVM
         private readonly FixedStack<int> stackTrace;
         private RunCommandHandler globalRunHandler;
 
-        public Scope CurrentScope { get; private set; } = Scope.Empty;
+        public Procedure CurrentScope { get; private set; } = Procedure.Empty;
         public int ProgramCounter { get; private set; }
         public bool Running;
 
@@ -48,7 +48,7 @@ namespace SimpleStackVM
             this.Running = false;
         }
 
-        public void SetCurrentScope(Scope scope)
+        public void SetCurrentScope(Procedure scope)
         {
             this.CurrentScope = scope;
         }
@@ -158,12 +158,12 @@ namespace SimpleStackVM
                         this.Return();
                         break;
                     }
-                case Operator.Run:
-                    {
-                        var top = codeLine.Input ?? this.PopStack();
-                        this.RunCommand(top);
-                        break;
-                    }
+                // case Operator.Run:
+                //     {
+                //         var top = codeLine.Input ?? this.PopStack();
+                //         this.RunCommand(top);
+                //         break;
+                //     }
             }
         }
 
@@ -316,11 +316,11 @@ namespace SimpleStackVM
             }
         }
 
-        private static string DebugScopeLine(Scope scope, int line)
+        private static string DebugScopeLine(Procedure scope, int line)
         {
             var codeLine = scope.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{scope.ScopeName}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
+            return $"[{scope.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
         }
         #endregion
     }

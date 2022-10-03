@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace SimpleStackVM
 {
-    public static class PerfTestMiniProgram
+    public static class TestProgram
     {
         private static Random Rand = new Random();
         private static int Counter = 0;
@@ -13,10 +13,12 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var scope = new Procedure("Main", new []
+            var procedure = new Procedure("Main", new []
             {
-                new CodeLine(Operator.Push, new NumberValue(0)),
-                new CodeLine(Operator.Call, new StringValue(":Step")),
+                new CodeLine(Operator.Push, new NumberValue(5)),
+                new CodeLine(Operator.Push, new NumberValue(12)),
+                new CodeLine(Operator.Push, new NumberValue(2)),
+                new CodeLine(Operator.Call, new ArrayValue(new IValue[] { new StringValue("math"), new StringValue("add")})),
                 // new CodeLine(Operator.Run, new StringValue("isDone")),
                 // new CodeLine(Operator.JumpFalse, new StringValue(":Start")),
                 // new CodeLine(Operator.Run, new StringValue("done")),
@@ -33,12 +35,14 @@ namespace SimpleStackVM
                 { ":Step", 5 }
             });
 
-            var vm = new VirtualMachineMini(32, OnRunCommand);
+            var vm = new VirtualMachine(32);
+            vm.AddBuiltinHandler(StandardMathLibrary.Instance);
+            vm.AddProcedure(procedure);
 
             try
             {
                 var sw = Stopwatch.StartNew();
-                vm.SetCurrentScope(scope);
+                vm.SetCurrentProcedure("Main");
                 vm.Running = true;
                 while (vm.Running)
                 {
@@ -56,30 +60,30 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(string command, VirtualMachineMini vm)
-        {
-            if (command == "rand")
-            {
-                vm.PushStack((NumberValue)Rand.NextDouble());
-            }
-            else if (command == "add")
-            {
-                var num1 = vm.PopStack<NumberValue>();
-                var num2 = vm.PopStack<NumberValue>();
-                vm.PushStack((NumberValue)(num1.Value + num2.Value));
-            }
-            else if (command == "isDone")
-            {
-                Counter++;
-                vm.PushStack((BoolValue)(Counter >= 1_000_000));
-            }
-            else if (command == "done")
-            {
-                var total = vm.PopStack<NumberValue>();
-                Console.WriteLine($"Done: {total.Value}");
-                vm.Running = false;
-            }
-        }
+        // private static void OnRunCommand(string command, VirtualMachineMini vm)
+        // {
+        //     if (command == "rand")
+        //     {
+        //         vm.PushStack((NumberValue)Rand.NextDouble());
+        //     }
+        //     else if (command == "add")
+        //     {
+        //         var num1 = vm.PopStack<NumberValue>();
+        //         var num2 = vm.PopStack<NumberValue>();
+        //         vm.PushStack((NumberValue)(num1.Value + num2.Value));
+        //     }
+        //     else if (command == "isDone")
+        //     {
+        //         Counter++;
+        //         vm.PushStack((BoolValue)(Counter >= 1_000_000));
+        //     }
+        //     else if (command == "done")
+        //     {
+        //         var total = vm.PopStack<NumberValue>();
+        //         Console.WriteLine($"Done: {total.Value}");
+        //         vm.Running = false;
+        //     }
+        // }
         #endregion
     }
 }
