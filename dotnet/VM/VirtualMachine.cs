@@ -7,18 +7,18 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    using BuiltinCommandHandler = Action<string, ArrayValue, VirtualMachine>;
+    using BuiltinCommandHandler = Action<string, VirtualMachine>;
 
     public class VirtualMachine
     {
 
         #region Fields
-        private static readonly BuiltinCommandHandler EmptyHandler = (i, args, vm) => { };
+        private static readonly BuiltinCommandHandler EmptyHandler = (i, vm) => { };
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
         private readonly Dictionary<string, Procedure> procedures;
-        private readonly Dictionary<string, BuiltinProcedureCollection> builtinHandlers;
+        private readonly Dictionary<string, BuiltinCommandHandler> builtinHandlers;
         private BuiltinCommandHandler globalBuiltinHandler;
 
         public ScopeFrame CurrentFrame { get; private set; }
@@ -33,7 +33,7 @@ namespace SimpleStackVM
         #region Constructor
         public VirtualMachine(int stackSize, BuiltinCommandHandler? globalBuiltinHandler = null)
         {
-            this.builtinHandlers = new Dictionary<string, BuiltinProcedureCollection>();
+            this.builtinHandlers = new Dictionary<string, BuiltinCommandHandler>();
             this.globalBuiltinHandler = globalBuiltinHandler ?? EmptyHandler;
             this.procedures = new Dictionary<string, Procedure>();
             this.CurrentFrame = new ScopeFrame();
@@ -43,9 +43,9 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public void AddBuiltinHandler(BuiltinProcedureCollection builtinCollection)
+        public void AddBuiltinHandler(string nameSpace, BuiltinCommandHandler builtinCollection)
         {
-            this.builtinHandlers[builtinCollection.NameSpace] = builtinCollection;
+            this.builtinHandlers[nameSpace] = builtinCollection;
         }
 
         public void SetGlobalBuiltinHandler(BuiltinCommandHandler handler)
@@ -159,6 +159,26 @@ namespace SimpleStackVM
                         }
                         break;
                     }
+                case Operator.Get:
+                    {
+                        var value = codeLine.Input ?? this.PopStack();
+                        if (this.CurrentFrame.Scope.TryGet(value.ToString(), out var foundValue))
+                        {
+                            this.PushStack(foundValue);
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to get variable: {value.ToString()}");
+                        }
+                        break;
+                    }
+                case Operator.Set:
+                    {
+                        var key = codeLine.Input ?? this.PopStack();
+                        var value = this.PopStack();
+                        this.CurrentFrame.Scope.Set(key.ToString(), value);
+                        break;
+                    }
                 case Operator.JumpFalse:
                     {
                         var label = codeLine.Input ?? this.PopStack();
@@ -194,8 +214,7 @@ namespace SimpleStackVM
                 case Operator.Call:
                     {
                         var top = codeLine.Input ?? this.PopStack();
-                        var numArgs = this.PopStack<NumberValue>();
-                        this.RunCommand(top, numArgs.IntValue);
+                        this.RunCommand(top);
                         break;
                     }
             }
@@ -219,7 +238,7 @@ namespace SimpleStackVM
             }
         }
 
-        public void RunCommand(IValue value, int numArgs)
+        public ArrayValue GetArgs(int numArgs)
         {
             var args = ArrayValue.Empty;
             if (numArgs > 0)
@@ -231,13 +250,16 @@ namespace SimpleStackVM
                 }
                 args = new ArrayValue(temp);
             }
+            return args;
+        }
 
+        public void RunCommand(IValue value)
+        {
             if (value is ArrayValue arrayValue)
             {
                 if (this.builtinHandlers.TryGetValue(arrayValue.Value[0].ToString(), out var handler))
                 {
-                    // handler.Invoke(arrayValue.Value[1].ToString(), args, this);
-                    handler.TryInvoke(arrayValue.Value[1].ToString(), args, this);
+                    handler.Invoke(arrayValue.Value[1].ToString(), this);
                 }
                 else
                 {
@@ -250,10 +272,17 @@ namespace SimpleStackVM
                 {
                     this.PushToStackTrace(this.CurrentFrame);
                     this.CurrentFrame = new ScopeFrame(procedure, new Scope());
+
+                    var args = this.GetArgs(procedure.Arguments.Count);
+                    for (var i = 0; i < args.Count; i++)
+                    {
+                        var argName = procedure.Arguments[i];
+                        this.CurrentFrame.Scope.Set(argName, args[i]);
+                    }
                 }
                 else
                 {
-                    this.globalBuiltinHandler.Invoke(value.ToString(), args, this);
+                    this.globalBuiltinHandler.Invoke(value.ToString(), this);
                 }
             }
         }

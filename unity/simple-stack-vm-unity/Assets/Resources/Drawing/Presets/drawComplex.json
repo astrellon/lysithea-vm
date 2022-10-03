@@ -6,11 +6,12 @@
       [ "Push", 100 ],
 
       // MakeGround is found in the common file
-      [ "Call", "MakeGround" ],
+      [ "MakeGround" ],
 
       ":Start",
-      [ "Call", "DrawComplex" ],
+      [ "DrawComplex" ],
       [ "math.sub", 1 ],
+
       [ "Push" ],
       [ "comp.equals", 0 ],
       [ "JumpFalse", ":Start" ]
@@ -29,7 +30,7 @@
       [ "random.colour" ],
       [ "object.set", "colour" ],
 
-      [ "Call", "RandomDimension" ],
+      [ "RandomDimension" ],
       [ "object.set", "scale" ],
 
       "drawComplex",

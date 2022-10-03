@@ -5,6 +5,7 @@ namespace SimpleStackVM
         Unknown,
         Push, Pop, Swap, Copy,
         Call, Return,
+        Get, Set,
         Jump, JumpTrue, JumpFalse
     }
 }

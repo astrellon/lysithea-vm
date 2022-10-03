@@ -15,7 +15,7 @@ namespace SimpleStackVM.Unity
         #region Methods
         public static void AddHandler(VirtualMachine vm)
         {
-            vm.AddRunHandler(HandleName, Handler);
+            vm.AddBuiltinHandler(HandleName, Handler);
         }
 
         public static void Handler(string command, VirtualMachine vm)

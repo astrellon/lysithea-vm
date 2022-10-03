@@ -30,24 +30,24 @@ namespace SimpleStackVM
             }
         }
         #region Methods
-        public static List<Scope> ParseScopes(JSONArray input)
+        public static List<Procedure> ParseProcedures(JSONArray input)
         {
-            var result = new List<Scope>();
+            var result = new List<Procedure>();
             foreach (var child in input.Children)
             {
                 if (child.IsObject)
                 {
-                    var scope = ParseScope(child.AsObject);
-                    result.Add(scope);
+                    var procedure = ParseProcedure(child.AsObject);
+                    result.Add(procedure);
                 }
             }
 
             return result;
         }
 
-        public static Scope ParseScope(JSONObject input)
+        public static Procedure ParseProcedure(JSONObject input)
         {
-            var scopeName = input["name"].Value;
+            var name = input["name"].Value;
             var data = input["data"].AsArray;
             var tempCodeLines = new List<ITempCodeLine>();
 
@@ -64,10 +64,16 @@ namespace SimpleStackVM
                 }
             }
 
-            return ProcessScope(scopeName, tempCodeLines);
+            var args = Procedure.EmptyArgs;
+            if (input.HasKey("args"))
+            {
+                args = input["args"].Children.Select(s => s.Value).ToList();
+            }
+
+            return ProcessProcedure(name, args, tempCodeLines);
         }
 
-        private static Scope ProcessScope(string scopeName, IReadOnlyList<ITempCodeLine> tempCode)
+        private static Procedure ProcessProcedure(string name, IReadOnlyList<string> args, IReadOnlyList<ITempCodeLine> tempCode)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
@@ -84,7 +90,7 @@ namespace SimpleStackVM
                 }
             }
 
-            return new Scope(scopeName, code, labels);
+            return new Procedure(name, code, args, labels);
         }
 
         private static IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)
@@ -107,7 +113,7 @@ namespace SimpleStackVM
 
             if (!TryParseOperator(first.Value, out opCode))
             {
-                opCode = Operator.Run;
+                opCode = Operator.Call;
                 if (!TryParseRunCommand(first, out codeLineInput))
                 {
                     throw new Exception($"Error parsing run input for: {input.ToString()}");

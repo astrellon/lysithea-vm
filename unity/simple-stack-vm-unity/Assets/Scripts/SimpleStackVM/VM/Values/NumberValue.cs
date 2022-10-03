@@ -10,6 +10,7 @@ namespace SimpleStackVM
         public bool IsNull => false;
 
         public int IntValue => (int)this.Value;
+        public float FloatValue => (float)this.Value;
         #endregion
 
         #region Constructor

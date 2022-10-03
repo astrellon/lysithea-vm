@@ -3,17 +3,24 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Collections;
 
 #nullable enable
 
 namespace SimpleStackVM
 {
-    public struct ArrayValue : IValue
+    public struct ArrayValue : IValue, IReadOnlyList<IValue>
     {
         #region Fields
+        public static ArrayValue Empty = new ArrayValue(new IValue[0]);
+
         public readonly IReadOnlyList<IValue> Value;
         public object RawValue => this.Value;
         public bool IsNull => false;
+
+        public int Count => Value.Count;
+
+        public IValue this[int index] => Value[this.GetIndex(index)];
         #endregion
 
         #region Constructor
@@ -73,6 +80,36 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
+        public ArrayValue Sublist(int index, int length)
+        {
+            index = this.GetIndex(index);
+            var diff = (index + length) - this.Value.Count;
+            if (diff > 0)
+            {
+                length -= diff;
+            }
+
+            var result = new IValue[length];
+            for (var i = 0; i < length; i++)
+            {
+                result[i] = this.Value[i + index];
+            }
+            return new ArrayValue(result);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T At<T>(int index) where T : IValue
+        {
+            index =  this.GetIndex(index);
+            var obj = this[index];
+            if (obj.GetType() == typeof(T))
+            {
+                return (T)obj;
+            }
+
+            throw new Exception($"Oh no!");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetIndex(int index)
         {
@@ -108,6 +145,16 @@ namespace SimpleStackVM
             }
 
             return 1;
+        }
+
+        public IEnumerator<IValue> GetEnumerator()
+        {
+            return Value.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return ((System.Collections.IEnumerable)Value).GetEnumerator();
         }
         #endregion
     }

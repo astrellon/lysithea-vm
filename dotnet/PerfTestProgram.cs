@@ -40,7 +40,7 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(string command, ArrayValue args, VirtualMachine vm)
+        private static void OnRunCommand(string command, VirtualMachine vm)
         {
             if (command == "rand")
             {

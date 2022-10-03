@@ -36,7 +36,8 @@ namespace SimpleStackVM
             });
 
             var vm = new VirtualMachine(32);
-            vm.AddBuiltinHandler(StandardMathLibrary.Instance);
+            // vm.AddBuiltinHandler(StandardMathLibrary.Instance);
+            StandardMathLibrary.AddHandler(vm);
             vm.AddProcedure(procedure);
 
             try

@@ -9,7 +9,7 @@ using System.Collections;
 
 namespace SimpleStackVM
 {
-    public struct ArrayValue : IValue, IEnumerable<IValue>, IEnumerable, IReadOnlyCollection<IValue>
+    public struct ArrayValue : IValue, IReadOnlyList<IValue>
     {
         #region Fields
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);
@@ -19,6 +19,8 @@ namespace SimpleStackVM
         public bool IsNull => false;
 
         public int Count => Value.Count;
+
+        public IValue this[int index] => Value[this.GetIndex(index)];
         #endregion
 
         #region Constructor
@@ -80,7 +82,7 @@ namespace SimpleStackVM
 
         public ArrayValue Sublist(int index, int length)
         {
-            index = GetIndex(index);
+            index = this.GetIndex(index);
             var diff = (index + length) - this.Value.Count;
             if (diff > 0)
             {
@@ -93,6 +95,19 @@ namespace SimpleStackVM
                 result[i] = this.Value[i + index];
             }
             return new ArrayValue(result);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T At<T>(int index) where T : IValue
+        {
+            index =  this.GetIndex(index);
+            var obj = this[index];
+            if (obj.GetType() == typeof(T))
+            {
+                return (T)obj;
+            }
+
+            throw new Exception($"Oh no!");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

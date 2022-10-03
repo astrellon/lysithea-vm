@@ -5,6 +5,6 @@ namespace SimpleStackVM.Unity
     public interface IDrawingScript
     {
         void Awake();
-        IEnumerable<Scope> Scopes { get; }
+        IEnumerable<Procedure> Procedures { get; }
     }
 }
