@@ -7,7 +7,7 @@ using SimpleJSON;
 
 namespace SimpleStackVM
 {
-    public static class VirtualMachineAssembler
+    public static class VirtualMachineJsonAssembler
     {
         private interface ITempCodeLine { }
 

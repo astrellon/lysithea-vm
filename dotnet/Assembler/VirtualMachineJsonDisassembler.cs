@@ -4,7 +4,7 @@ using SimpleJSON;
 
 namespace SimpleStackVM
 {
-    public static class VirtualMachineDisassembler
+    public static class VirtualMachineJsonDisassembler
     {
         #region Methods
         public static JSONNode Disassemble(VirtualMachine vm)

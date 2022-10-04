@@ -7,7 +7,7 @@
         (math.add count 1)
     )
 
-    (if (comp.less < total 10)
+    (if (comp.less total 10)
         (print "Total less than 10")
         (print "Total greatere than 10")
     )
@@ -16,5 +16,5 @@
 )
 
 (procedure step ()
-    (return (jath.add (rand) (rand)))
+    (return (math.add (rand) (rand)))
 )

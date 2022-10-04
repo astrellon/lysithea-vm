@@ -17,7 +17,7 @@ namespace SimpleStackVM
         public static void Main(string[] args)
         {
             var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testDialogue.json"));
-            var scopes = VirtualMachineAssembler.ParseProcedures(json.AsArray);
+            var scopes = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
 
             var vm = new VirtualMachine(64, OnRunCommand);
             vm.AddProcedures(scopes);
