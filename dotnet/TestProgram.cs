@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Diagnostics;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace SimpleStackVM
@@ -12,13 +11,8 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var file = File.ReadAllText("../examples/perfTest.lisp");
-            // var file = @"(procedure main() (set x 5) (print x))";
-            var tokens = VirtualMachineLispParser.Tokenize(file);
-            var parsed = VirtualMachineLispParser.ReadAllTokens(tokens);
-
             var assembler = new VirtualMachineLispAssembler();
-            var code = assembler.ParseProcedures(parsed).ToList();
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
 
             var vm = new VirtualMachine(64, OnRunCommand);
             StandardLibrary.AddToVirtualMachine(vm);
@@ -27,10 +21,13 @@ namespace SimpleStackVM
             {
                 vm.SetCurrentProcedure("main");
                 vm.Running = true;
+                var sw = Stopwatch.StartNew();
                 while (vm.Running && !vm.Paused)
                 {
                     vm.Step();
                 }
+                sw.Stop();
+                Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
             }
             catch (VirtualMachineException exp)
             {

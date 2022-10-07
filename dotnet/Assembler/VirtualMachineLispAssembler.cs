@@ -64,7 +64,7 @@ namespace SimpleStackVM
             }
         }
         #region Methods
-        public IEnumerable<ITempCodeLine> ParseSetOperator(ArrayValue input)
+        public IEnumerable<ITempCodeLine> ParseSet(ArrayValue input)
         {
             var result = Parse(input[2]).ToList();
             result.Add(new TempCodeLine(Operator.Set, input[1]));
@@ -155,16 +155,15 @@ namespace SimpleStackVM
                         return new[] { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
-                    var isOpCode = TryParseOperator(firstSymbolValue.Value, out var opCode);
-                    if (isOpCode && opCode == Operator.Set)
+                    if (firstSymbolValue.Value == "set")
                     {
-                        return ParseSetOperator(arrayValue);
+                        return ParseSet(arrayValue);
                     }
-                    if (!isOpCode && firstSymbolValue.Value == "loop")
+                    if (firstSymbolValue.Value == "loop")
                     {
                         return ParseLoop(arrayValue);
                     }
-                    if (!isOpCode && firstSymbolValue.Value == "if")
+                    if (firstSymbolValue.Value == "if")
                     {
                         return ParseIf(arrayValue);
                     }
@@ -175,18 +174,37 @@ namespace SimpleStackVM
                         result.AddRange(Parse(item));
                     }
 
-                    if (isOpCode)
+                    IValue? codeLineInput = null;
+
+                    if (!TryParseOperator(firstSymbolValue.Value, out var opCode))
                     {
-                        result.Add(new TempCodeLine(opCode, first));
-                    }
-                    else
-                    {
-                        if (!TryParseRunCommand(firstSymbolValue, out var callCodeLine))
+                        opCode = Operator.Call;
+                        if (!TryParseRunCommand(firstSymbolValue, out codeLineInput))
                         {
                             throw new Exception($"Unable to parse call code: {firstSymbolValue.ToString()}");
                         }
-                        result.Add(new TempCodeLine(Operator.Call, callCodeLine));
+                        result.Add(new TempCodeLine(Operator.Call, codeLineInput));
                     }
+                    else
+                    {
+                        if (IsJumpCall(opCode))
+                        {
+                            if (!TryParseJumpLabel(arrayValue.Last(), out codeLineInput))
+                            {
+                                throw new Exception($"Error parsing {opCode} input: {input.ToString()}");
+                            }
+                        }
+                        else
+                        {
+                            codeLineInput = arrayValue.Last();
+                        }
+
+                        if (opCode != Operator.Push)
+                        {
+                            result.Add(new TempCodeLine(opCode, codeLineInput));
+                        }
+                    }
+
                 }
                 else
                 {
@@ -197,18 +215,37 @@ namespace SimpleStackVM
 
             if (input is SymbolValue symbolValue)
             {
-                return new[] { new TempCodeLine(Operator.Get, symbolValue) };
+                if (symbolValue.Value[0] != ':')
+                {
+                    return new[] { new TempCodeLine(Operator.Get, symbolValue) };
+                }
+                else
+                {
+                    var empty = new ITempCodeLine[0];
+                    return empty;
+                }
             }
 
             throw new Exception("Unknown Lisp value");
         }
 
-        public IEnumerable<Procedure> ParseProcedures(ArrayValue input)
+        private static bool IsJumpCall(Operator input)
         {
-            foreach (ArrayValue item in input)
-            {
-                yield return ParseProcedure(item);
-            }
+            return input == Operator.Call || input == Operator.Jump ||
+                input == Operator.JumpTrue || input == Operator.JumpFalse;
+        }
+
+
+        public List<Procedure> ParseFromText(string input)
+        {
+            var tokens = VirtualMachineLispParser.Tokenize(input);
+            var parsed = VirtualMachineLispParser.ReadAllTokens(tokens);
+            return this.ParseProcedures(parsed);
+        }
+
+        public List<Procedure> ParseProcedures(ArrayValue input)
+        {
+            return input.Select(i => ParseProcedure((ArrayValue)i)).ToList();
         }
 
         public Procedure ParseProcedure(ArrayValue input)

@@ -13,8 +13,10 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/perfTest.json"));
-            var procedures = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
+            // var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/perfTest.json"));
+            // var procedures = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
+            var assembler = new VirtualMachineLispAssembler();
+            var procedures = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 
             var vm = new VirtualMachine(64, OnRunCommand);
             vm.AddProcedures(procedures);
