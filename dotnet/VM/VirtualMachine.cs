@@ -273,10 +273,10 @@ namespace SimpleStackVM
                     this.PushToStackTrace(this.CurrentFrame);
                     this.CurrentFrame = new ScopeFrame(procedure, new Scope());
 
-                    var args = this.GetArgs(procedure.Arguments.Count);
+                    var args = this.GetArgs(procedure.Parameters.Count);
                     for (var i = 0; i < args.Count; i++)
                     {
-                        var argName = procedure.Arguments[i];
+                        var argName = procedure.Parameters[i];
                         this.CurrentFrame.Scope.Set(argName, args[i]);
                     }
                 }

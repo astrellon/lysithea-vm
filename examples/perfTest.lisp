@@ -3,12 +3,20 @@
     (set count 0)
 
     (loop (comp.less count 10)
-        (math.add total (step))
-        (math.add count 1)
+        (if (comp.less count 5)
+            (print "Count less than 5")
+            (print "Count more than 5")
+        )
+
+        (set total (math.add total (step)))
+        (set count (math.add count 1))
     )
+
+    (print total)
 
     (if (comp.less total 10)
         (print "Total less than 10")
+
         (print "Total greatere than 10")
     )
 

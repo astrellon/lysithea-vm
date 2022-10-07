@@ -80,13 +80,20 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
-        public ArrayValue Sublist(int index, int length)
+        public ArrayValue Sublist(int index, int length = -1)
         {
             index = this.GetIndex(index);
-            var diff = (index + length) - this.Value.Count;
-            if (diff > 0)
+            if (length < 0)
             {
-                length -= diff;
+                length = this.Value.Count - index;
+            }
+            else
+            {
+                var diff = (index + length) - this.Value.Count;
+                if (diff > 0)
+                {
+                    length -= diff;
+                }
             }
 
             var result = new IValue[length];

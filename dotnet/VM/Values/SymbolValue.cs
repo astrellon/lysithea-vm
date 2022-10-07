@@ -1,7 +1,5 @@
 #nullable enable
 
-using System.Runtime.CompilerServices;
-
 namespace SimpleStackVM
 {
     public struct SymbolValue : IValue

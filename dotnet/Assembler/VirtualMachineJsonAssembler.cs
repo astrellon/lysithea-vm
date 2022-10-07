@@ -64,7 +64,7 @@ namespace SimpleStackVM
                 }
             }
 
-            var args = Procedure.EmptyArgs;
+            var args = Procedure.EmptyParameters;
             if (input.HasKey("args"))
             {
                 args = input["args"].Children.Select(s => s.Value).ToList();
