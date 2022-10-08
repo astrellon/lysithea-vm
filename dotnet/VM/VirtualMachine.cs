@@ -256,16 +256,7 @@ namespace SimpleStackVM
             {
                 if (foundValue is ProcedureValue foundProc)
                 {
-                    var procedure = foundProc.Value;
-                    this.PushToStackTrace(this.CurrentFrame);
-                    this.CurrentFrame = new ScopeFrame(procedure, new Scope(this.CurrentFrame.Scope));
-
-                    var args = this.GetArgs(procedure.Parameters.Count);
-                    for (var i = 0; i < args.Count; i++)
-                    {
-                        var argName = procedure.Parameters[i];
-                        this.CurrentFrame.Scope.Define(argName, args[i]);
-                    }
+                    this.RunProcedure(foundProc.Value);
                     return;
                 }
                 else if (foundValue is BuiltinProcedureValue foundBuiltin)
@@ -276,6 +267,24 @@ namespace SimpleStackVM
             }
 
             throw new OperatorException(this.CreateStackTrace(), $"Unable to find '{command}' to execute");
+        }
+
+        public void ExecuteProcedure(Procedure procedure)
+        {
+            this.CurrentFrame = new ScopeFrame(procedure, new Scope(this.CurrentFrame.Scope));
+
+            var args = this.GetArgs(procedure.Parameters.Count);
+            for (var i = 0; i < args.Count; i++)
+            {
+                var argName = procedure.Parameters[i];
+                this.CurrentFrame.Scope.Define(argName, args[i]);
+            }
+        }
+
+        public void RunProcedure(Procedure procedure)
+        {
+            this.PushToStackTrace(this.CurrentFrame);
+            this.ExecuteProcedure(procedure);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -345,7 +354,6 @@ namespace SimpleStackVM
         {
             if (!string.IsNullOrEmpty(procName))
             {
-                // this.SetCurrentProcedure(scopeName);
                 if (this.TryGetValue(procName, out var foundValue))
                 {
                     if (foundValue is ProcedureValue foundProc)
