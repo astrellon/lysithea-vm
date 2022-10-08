@@ -1,4 +1,4 @@
-(procedure Main()
+(set Main (procedure ()
     (push 0)
     (:Start)
 
@@ -7,12 +7,12 @@
     (JumpFalse :Start)
 
     (done)
-)
+))
 
-(procedure Step()
+(set Step (procedure ()
     (rand)
     (rand)
     (add)
     (add)
     (return)
-)
+))

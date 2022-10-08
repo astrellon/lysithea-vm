@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 #nullable enable
@@ -15,54 +14,6 @@ namespace SimpleStackVM
 
         private int labelCount = 0;
 
-        public interface ITempCodeLine { }
-
-        [DebuggerDisplay("{Description}")]
-        public class LabelCodeLine : ITempCodeLine
-        {
-            public readonly string Label;
-
-            public string Description => $"Label: {this.Label}";
-
-            public LabelCodeLine(string label) { this.Label = label; }
-        }
-
-        [DebuggerDisplay("{Description}")]
-        public class TempCodeLine : ITempCodeLine
-        {
-            public readonly Operator Operator;
-            public readonly IValue? Argument;
-
-            public string Description
-            {
-                get
-                {
-                    if (this.Argument is StringValue stringInput)
-                    {
-                        return $"{this.Operator} \"{stringInput.Value}\"";
-                    }
-                    if (this.Argument != null)
-                    {
-                        return $"{this.Operator} {this.Argument.ToString()}";
-                    }
-
-                    return $"{this.Operator} <no arg>";
-                }
-            }
-
-            public TempCodeLine(Operator op, IValue? argument)
-            {
-                this.Operator = op;
-                if (argument != null && argument is SymbolValue symbol)
-                {
-                    this.Argument = new StringValue(symbol.Value);
-                }
-                else
-                {
-                    this.Argument = argument;
-                }
-            }
-        }
         #region Methods
         public IEnumerable<ITempCodeLine> ParseSet(ArrayValue input)
         {
@@ -187,7 +138,7 @@ namespace SimpleStackVM
                     }
                     else
                     {
-                        if (IsJumpCall(opCode))
+                        if (VirtualMachineAssembler.IsJumpCall(opCode))
                         {
                             if (!TryParseJumpLabel(arrayValue.Last(), out codeLineInput))
                             {
@@ -204,11 +155,11 @@ namespace SimpleStackVM
                             result.Add(new TempCodeLine(opCode, codeLineInput));
                         }
                     }
-
                 }
                 else
                 {
-                    result.AddRange(arrayValue.SelectMany(Parse));
+                    // result.AddRange(arrayValue.SelectMany(Parse));
+                    result.Add(new TempCodeLine(Operator.Push, input));
                 }
                 return result;
             }
@@ -228,13 +179,6 @@ namespace SimpleStackVM
 
             throw new Exception("Unknown Lisp value");
         }
-
-        private static bool IsJumpCall(Operator input)
-        {
-            return input == Operator.Call || input == Operator.Jump ||
-                input == Operator.JumpTrue || input == Operator.JumpFalse;
-        }
-
 
         public List<Procedure> ParseFromText(string input)
         {
@@ -263,22 +207,7 @@ namespace SimpleStackVM
                 tempCodeLines.AddRange(Parse(input[i]));
             }
 
-            var labels = new Dictionary<string, int>();
-            var code = new List<CodeLine>();
-
-            foreach (var tempLine in tempCodeLines)
-            {
-                if (tempLine is LabelCodeLine labelCodeLine)
-                {
-                    labels.Add(labelCodeLine.Label, code.Count);
-                }
-                else if (tempLine is TempCodeLine tempCodeLine)
-                {
-                    code.Add(new CodeLine(tempCodeLine.Operator, tempCodeLine.Argument));
-                }
-            }
-
-            return new Procedure(procedureName, code, parameters, labels);
+            return VirtualMachineAssembler.ProcessTempProcedure(procedureName, parameters, tempCodeLines);
         }
 
         private static bool TryParseOperator(string input, out Operator result)

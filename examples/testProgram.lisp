@@ -1,4 +1,4 @@
-(procedure main ()
+(set main (procedure ()
     (set total 0)
     (set count 0)
 
@@ -21,8 +21,8 @@
     )
 
     (done)
-)
+))
 
-(procedure step ()
+(set step (procedure ()
     (return (math.add (rand) (rand)))
-)
+))

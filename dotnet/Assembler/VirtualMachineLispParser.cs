@@ -40,7 +40,7 @@ namespace SimpleStackVM
                 throw new ArgumentException("Unexpected end of tokens");
             }
 
-            var token = tokens.PopFront();
+            var token = PopFront(tokens);
             if (token == "(")
             {
                 var list = new List<IValue>();
@@ -48,7 +48,7 @@ namespace SimpleStackVM
                 {
                     list.Add(ReadFromTokens(tokens));
                 }
-                tokens.PopFront();
+                PopFront(tokens);
                 return new ArrayValue(list);
             }
             else if (token == ")")
@@ -84,35 +84,7 @@ namespace SimpleStackVM
             return new SymbolValue(input);
         }
 
-        private static bool TryParseOperator(string input, out Operator result)
-        {
-            if (!Enum.TryParse<Operator>(input, true, out result))
-            {
-                result = Operator.Unknown;
-                return false;
-            }
-
-            return true;
-        }
-        #endregion
-    }
-
-    public static class ListExtensions
-    {
-        #region Methods
-        public static T PopBack<T>(this List<T> input)
-        {
-            if (input.Any())
-            {
-                var result = input.Last();
-                input.RemoveAt(input.Count - 1);
-                return result;
-            }
-
-            throw new ArgumentException("Unable to pop empty list");
-        }
-
-        public static T PopFront<T>(this List<T> input)
+        private static T PopFront<T>(List<T> input)
         {
             if (input.Any())
             {

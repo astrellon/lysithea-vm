@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,11 +17,16 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testDialogue.json"));
-            var scopes = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
+            // var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testDialogue.json"));
+            // var scopes = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
+            var assembler = new VirtualMachineLispAssembler();
+            var sw1 = Stopwatch.StartNew();
+            var procedures = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
+            sw1.Stop();
+            Console.WriteLine($"Time to parse: {sw1.ElapsedMilliseconds}ms");
 
             var vm = new VirtualMachine(64, OnRunCommand);
-            vm.AddProcedures(scopes);
+            vm.AddProcedures(procedures);
 
             try
             {
@@ -48,7 +54,8 @@ namespace SimpleStackVM
             }
             else if (command == "getPlayerName")
             {
-                PlayerName = Console.ReadLine()?.Trim() ?? "<Empty>";
+                // PlayerName = Console.ReadLine()?.Trim() ?? "<Empty>";
+                PlayerName = "Alan";
             }
             else if (command == "randomSay")
             {

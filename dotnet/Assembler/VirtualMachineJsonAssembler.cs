@@ -9,26 +9,6 @@ namespace SimpleStackVM
 {
     public static class VirtualMachineJsonAssembler
     {
-        private interface ITempCodeLine { }
-
-        private class LabelCodeLine : ITempCodeLine
-        {
-            public readonly string Label;
-
-            public LabelCodeLine(string label) { this.Label = label; }
-        }
-
-        private class TempCodeLine : ITempCodeLine
-        {
-            public readonly Operator Operator;
-            public readonly IValue? Argument;
-
-            public TempCodeLine(Operator op, IValue? argument)
-            {
-                this.Operator = op;
-                this.Argument = argument;
-            }
-        }
         #region Methods
         public static List<Procedure> ParseProcedures(JSONArray input)
         {
@@ -64,33 +44,13 @@ namespace SimpleStackVM
                 }
             }
 
-            var args = Procedure.EmptyParameters;
+            var parameters = Procedure.EmptyParameters;
             if (input.HasKey("args"))
             {
-                args = input["args"].Children.Select(s => s.Value).ToList();
+                parameters = input["args"].Children.Select(s => s.Value).ToList();
             }
 
-            return ProcessProcedure(name, args, tempCodeLines);
-        }
-
-        private static Procedure ProcessProcedure(string name, IReadOnlyList<string> args, IReadOnlyList<ITempCodeLine> tempCode)
-        {
-            var labels = new Dictionary<string, int>();
-            var code = new List<CodeLine>();
-
-            foreach (var tempLine in tempCode)
-            {
-                if (tempLine is LabelCodeLine labelCodeLine)
-                {
-                    labels.Add(labelCodeLine.Label, code.Count);
-                }
-                else if (tempLine is TempCodeLine tempCodeLine)
-                {
-                    code.Add(new CodeLine(tempCodeLine.Operator, tempCodeLine.Argument));
-                }
-            }
-
-            return new Procedure(name, code, args, labels);
+            return VirtualMachineAssembler.ProcessTempProcedure(name, parameters, tempCodeLines);
         }
 
         private static IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)
@@ -111,7 +71,7 @@ namespace SimpleStackVM
             var pushChildOffset = 1;
             IValue? codeLineInput = null;
 
-            if (!TryParseOperator(first.Value, out opCode))
+            if (!VirtualMachineAssembler.TryParseOperator(first.Value, out opCode))
             {
                 opCode = Operator.Call;
                 if (!TryParseRunCommand(first, out codeLineInput))
@@ -122,7 +82,7 @@ namespace SimpleStackVM
             }
             else if (input.Count > 1)
             {
-                if (IsJumpCall(opCode))
+                if (VirtualMachineAssembler.IsJumpCall(opCode))
                 {
                     if (!TryParseJumpLabel(input.Last(), out codeLineInput))
                     {
@@ -152,12 +112,6 @@ namespace SimpleStackVM
             }
 
             yield return new TempCodeLine(opCode, codeLineInput);
-        }
-
-        private static bool IsJumpCall(Operator input)
-        {
-            return input == Operator.Call || input == Operator.Jump ||
-                input == Operator.JumpTrue || input == Operator.JumpFalse;
         }
 
         private static bool TryParseJumpLabel(JSONNode input, out IValue result)
@@ -287,18 +241,6 @@ namespace SimpleStackVM
 
             return false;
         }
-
-        private static bool TryParseOperator(string input, out Operator result)
-        {
-            if (!Enum.TryParse<Operator>(input, true, out result))
-            {
-                result = Operator.Unknown;
-                return false;
-            }
-
-            return true;
-        }
-
         #endregion
     }
 }

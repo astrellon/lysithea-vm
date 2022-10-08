@@ -16,7 +16,10 @@ namespace SimpleStackVM
             // var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/perfTest.json"));
             // var procedures = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
             var assembler = new VirtualMachineLispAssembler();
+            var sw1 = Stopwatch.StartNew();
             var procedures = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
+            sw1.Stop();
+            Console.WriteLine($"Time to parse: {sw1.ElapsedMilliseconds}ms");
 
             var vm = new VirtualMachine(64, OnRunCommand);
             vm.AddProcedures(procedures);

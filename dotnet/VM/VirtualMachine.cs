@@ -17,15 +17,16 @@ namespace SimpleStackVM
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-        private readonly Dictionary<string, Procedure> procedures;
+        // private readonly Dictionary<string, Procedure> procedures;
         private readonly Dictionary<string, BuiltinCommandHandler> builtinHandlers;
+        private Scope globalScope = new Scope();
         private BuiltinCommandHandler globalBuiltinHandler;
 
         public ScopeFrame CurrentFrame { get; private set; }
         public bool Running;
         public bool Paused;
 
-        public IReadOnlyDictionary<string, Procedure> Procedures => this.procedures;
+        // public IReadOnlyDictionary<string, Procedure> Procedures => this.procedures;
         public IReadOnlyFixedStack<IValue> Stack => this.stack;
         public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
         #endregion
@@ -35,7 +36,7 @@ namespace SimpleStackVM
         {
             this.builtinHandlers = new Dictionary<string, BuiltinCommandHandler>();
             this.globalBuiltinHandler = globalBuiltinHandler ?? EmptyHandler;
-            this.procedures = new Dictionary<string, Procedure>();
+            // this.procedures = new Dictionary<string, Procedure>();
             this.CurrentFrame = new ScopeFrame();
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
@@ -53,41 +54,42 @@ namespace SimpleStackVM
             this.globalBuiltinHandler = handler;
         }
 
-        public void AddProcedure(Procedure procedure)
-        {
-            this.procedures[procedure.Name] = procedure;
-        }
+        // public void AddProcedure(Procedure procedure)
+        // {
+        //     this.procedures[procedure.Name] = procedure;
+        // }
 
-        public void AddProcedures(IEnumerable<Procedure> procedures)
-        {
-            foreach (var procedure in procedures) { this.AddProcedure(procedure); }
-        }
+        // public void AddProcedures(IEnumerable<Procedure> procedures)
+        // {
+        //     foreach (var procedure in procedures) { this.AddProcedure(procedure); }
+        // }
 
-        public void ClearProcedures()
-        {
-            this.procedures.Clear();
-        }
+        // public void ClearProcedures()
+        // {
+        //     this.procedures.Clear();
+        // }
 
         public void Reset()
         {
             this.CurrentFrame = new ScopeFrame();
             this.stack.Clear();
             this.stackTrace.Clear();
+            this.globalScope = new Scope();
             this.Running = false;
             this.Paused = false;
         }
 
-        public void SetCurrentProcedure(string procedureName)
-        {
-            if (this.procedures.TryGetValue(procedureName, out var procedure))
-            {
-                this.CurrentFrame =  new ScopeFrame(procedure, new Scope());
-            }
-            else
-            {
-                throw new ScopeException(this.CreateStackTrace(), $"Unable to find procedure: {procedureName}");
-            }
-        }
+        // public void SetCurrentProcedure(string procedureName)
+        // {
+        //     if (this.procedures.TryGetValue(procedureName, out var procedure))
+        //     {
+        //         this.CurrentFrame =  new ScopeFrame(procedure, new Scope());
+        //     }
+        //     else
+        //     {
+        //         throw new ScopeException(this.CreateStackTrace(), $"Unable to find procedure: {procedureName}");
+        //     }
+        // }
 
         public void Step()
         {
@@ -268,10 +270,11 @@ namespace SimpleStackVM
             }
             else if (value is StringValue stringValue)
             {
-                if (this.procedures.TryGetValue(stringValue.Value, out var procedure))
+                if (this.CurrentFrame.Scope.TryGet<ProcedureValue>(stringValue.Value, out var procedureValue))
                 {
+                    var procedure = procedureValue.Value;
                     this.PushToStackTrace(this.CurrentFrame);
-                    this.CurrentFrame = new ScopeFrame(procedure, new Scope());
+                    this.CurrentFrame = new ScopeFrame(procedure, new Scope(this.globalScope));
 
                     var args = this.GetArgs(procedure.Parameters.Count);
                     for (var i = 0; i < args.Count; i++)
@@ -352,10 +355,10 @@ namespace SimpleStackVM
 
         public void Jump(string? label, string? scopeName)
         {
-            if (!string.IsNullOrEmpty(scopeName))
-            {
-                this.SetCurrentProcedure(scopeName);
-            }
+            // if (!string.IsNullOrEmpty(scopeName))
+            // {
+            //     this.SetCurrentProcedure(scopeName);
+            // }
 
             if (string.IsNullOrEmpty(label))
             {
