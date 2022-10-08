@@ -32,7 +32,7 @@ namespace SimpleStackVM
         #region Methods
         public override string ToString()
         {
-            return $"{this.Procedure.Name}:{this.LineCounter}";
+            return $"{this.LineCounter}";
         }
 
         public bool TryGetNextCodeLine(out CodeLine result)

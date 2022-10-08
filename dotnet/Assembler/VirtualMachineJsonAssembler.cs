@@ -50,7 +50,7 @@ namespace SimpleStackVM
                 parameters = input["args"].Children.Select(s => s.Value).ToList();
             }
 
-            return VirtualMachineAssembler.ProcessTempProcedure(name, parameters, tempCodeLines);
+            return VirtualMachineAssembler.ProcessTempProcedure(parameters, tempCodeLines);
         }
 
         private static IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)

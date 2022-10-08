@@ -1,4 +1,4 @@
-(set Main (procedure ()
+(define main (procedure ()
     (say "Here is the test dialogue tree")
     (say "What is your name? ")
     (getPlayerName)
@@ -9,17 +9,17 @@
     (if (isShopEnabled)
         (
             (randomSay ("Welcome to my shop" "Come on in! What can I do for you?"))
-            (choice "Open Shop" (procedure () (openShop)))
+            (choice "Open Shop" openShop)
         )
         (randomSay ("Welcome stranger" "Hey, come on in"))
     )
 
-    (choice "Questions" (procedure () (questions)))
-    (choice "Good bye" (procedure () (goodBye)))
+    (choice "Questions" questions)
+    (choice "Good bye" goodBye)
     (waitForChoice)
 ))
 
-(set questions (procedure ()
+(define questions (procedure ()
     (:start)
 
     (say "What do you want to know?")
@@ -41,12 +41,13 @@
     )
 
     (choice "I've asked enough questions" (procedure ()
-        (jump Main:start)
+        (jump main:start)
     ))
     (waitForChoice)
 ))
 
-(set goodBye (procedure ()
+(define goodBye (procedure ()
     (randomSay ("Catch you around!" "See you later {playerName}!"))
 ))
 
+(main)

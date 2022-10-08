@@ -2,12 +2,18 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 #nullable enable
 
 namespace SimpleStackVM
 {
-    public class Scope
+    public interface IReadOnlyScope
+    {
+        bool TryGet(string key, out IValue value);
+    }
+
+    public class Scope : IReadOnlyScope
     {
         #region Fields
         private readonly Dictionary<string, IValue> values = new Dictionary<string, IValue>();
@@ -24,11 +30,33 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public void Set(string key, IValue value)
+        public void Define(string key, IValue value)
         {
             this.values[key] = value;
         }
 
+        public void Define(string key, Action<VirtualMachine> builtinProcedure)
+        {
+            this.values[key] = new BuiltinProcedureValue(builtinProcedure);
+        }
+
+        public bool TrySet(string key, IValue value)
+        {
+            if (this.values.ContainsKey(key))
+            {
+                this.values[key] = value;
+                return true;
+            }
+
+            if (this.parent != null)
+            {
+                return this.parent.TrySet(key, value);
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGet(string key, out IValue value)
         {
             if (this.values.TryGetValue(key, out var foundValue))
@@ -43,21 +71,6 @@ namespace SimpleStackVM
             }
 
             value = NullValue.Value;
-            return false;
-        }
-
-        public bool TryGet<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
-        {
-            if (this.TryGet(key, out var testValue))
-            {
-                if (testValue is T result)
-                {
-                    value = result;
-                    return true;
-                }
-            }
-
-            value = default(T);
             return false;
         }
         #endregion

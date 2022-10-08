@@ -22,6 +22,13 @@ namespace SimpleStackVM
             return result;
         }
 
+        public IEnumerable<ITempCodeLine> ParseDefine(ArrayValue input)
+        {
+            var result = Parse(input[2]).ToList();
+            result.Add(new TempCodeLine(Operator.Define, input[1]));
+            return result;
+        }
+
         public IEnumerable<ITempCodeLine> ParseLoop(ArrayValue input)
         {
             var loopLabelNum = this.labelCount++;
@@ -106,9 +113,19 @@ namespace SimpleStackVM
                         return new[] { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
+                    if (firstSymbolValue.Value == "procedure")
+                    {
+                        var procedure = ParseProcedure(arrayValue);
+                        var procedureValue = new ProcedureValue(procedure);
+                        return new[] { new TempCodeLine(Operator.Push, procedureValue) };
+                    }
                     if (firstSymbolValue.Value == "set")
                     {
                         return ParseSet(arrayValue);
+                    }
+                    if (firstSymbolValue.Value == "define")
+                    {
+                        return ParseDefine(arrayValue);
                     }
                     if (firstSymbolValue.Value == "loop")
                     {
@@ -130,11 +147,7 @@ namespace SimpleStackVM
                     if (!TryParseOperator(firstSymbolValue.Value, out var opCode))
                     {
                         opCode = Operator.Call;
-                        if (!TryParseRunCommand(firstSymbolValue, out codeLineInput))
-                        {
-                            throw new Exception($"Unable to parse call code: {firstSymbolValue.ToString()}");
-                        }
-                        result.Add(new TempCodeLine(Operator.Call, codeLineInput));
+                        result.Add(new TempCodeLine(Operator.Call, firstSymbolValue));
                     }
                     else
                     {
@@ -180,34 +193,25 @@ namespace SimpleStackVM
             throw new Exception("Unknown Lisp value");
         }
 
-        public List<Procedure> ParseFromText(string input)
+        public Procedure ParseFromText(string input)
         {
             var tokens = VirtualMachineLispParser.Tokenize(input);
             var parsed = VirtualMachineLispParser.ReadAllTokens(tokens);
-            return this.ParseProcedures(parsed);
-        }
-
-        public List<Procedure> ParseProcedures(ArrayValue input)
-        {
-            return input.Select(i => ParseProcedure((ArrayValue)i)).ToList();
+            return this.ParseGlobalProcedure(parsed);
         }
 
         public Procedure ParseProcedure(ArrayValue input)
         {
-            if (!(input[0] is SymbolValue firstSymbol) || firstSymbol.Value != ProcedureKeyword)
-            {
-                throw new Exception($"Expected procedure token: {input[0].ToString()}");
-            }
+            var parameters = ((ArrayValue)input[1]).Select(arg => arg.ToString()).ToList();
+            var tempCodeLines = input.Skip(2).SelectMany(Parse).ToList();
 
-            var procedureName = input[1].ToString();
-            var parameters = ((ArrayValue)input[2]).Select(arg => arg.ToString()).ToList();
-            var tempCodeLines = new List<ITempCodeLine>();
-            for (var i = 3; i < input.Count; i++)
-            {
-                tempCodeLines.AddRange(Parse(input[i]));
-            }
+            return VirtualMachineAssembler.ProcessTempProcedure(parameters, tempCodeLines);
+        }
 
-            return VirtualMachineAssembler.ProcessTempProcedure(procedureName, parameters, tempCodeLines);
+        public Procedure ParseGlobalProcedure(ArrayValue input)
+        {
+            var tempCodeLines = input.SelectMany(Parse).ToList();
+            return VirtualMachineAssembler.ProcessTempProcedure(Procedure.EmptyParameters, tempCodeLines);
         }
 
         private static bool TryParseOperator(string input, out Operator result)

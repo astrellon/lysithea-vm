@@ -1,18 +1,20 @@
-(set Main (procedure ()
+(define main (procedure ()
     (push 0)
     (:Start)
 
-    (Step)
+    (step)
     (isDone)
-    (JumpFalse :Start)
+    (jumpFalse :Start)
 
     (done)
 ))
 
-(set Step (procedure ()
+(define step (procedure ()
     (rand)
     (rand)
     (add)
     (add)
     (return)
 ))
+
+(main)

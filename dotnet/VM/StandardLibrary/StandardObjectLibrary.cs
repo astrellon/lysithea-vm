@@ -9,61 +9,54 @@ namespace SimpleStackVM
     public static class StandardObjectLibrary
     {
         #region Fields
-        public const string HandleName = "object";
+        public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            vm.AddBuiltinHandler(HandleName, Handler);
-        }
-
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            var result = new Scope();
+            result.Define("object.set", new BuiltinProcedureValue(vm =>
             {
-                // Object Operators
-                case "set":
-                    {
-                        var value = vm.PopStack();
-                        var key = vm.PopStack<StringValue>();
-                        var obj = vm.PopStack<ObjectValue>();
-                        vm.PushStack(Set(obj, key, value));
-                        break;
-                    }
-                case "get":
-                    {
-                        var key = vm.PopStack<StringValue>();
-                        var obj = vm.PopStack<ObjectValue>();
-                        if (TryGetValue(obj, key, out var value))
-                        {
-                            vm.PushStack(value);
-                        }
-                        else
-                        {
-                            vm.PushStack(NullValue.Value);
-                        }
-                        break;
-                    }
-                case "keys":
-                    {
-                        var top = vm.PopStack<ObjectValue>();
-                        vm.PushStack(Keys(top));
-                        break;
-                    }
-                case "values":
-                    {
-                        var top = vm.PopStack<ObjectValue>();
-                        vm.PushStack(Values(top));
-                        break;
-                    }
-                case "length":
-                    {
-                        var top = vm.PopStack<ObjectValue>();
-                        vm.PushStack(new NumberValue(top.Value.Count));
-                        break;
-                    }
-            }
+                var value = vm.PopStack();
+                var key = vm.PopStack<StringValue>();
+                var obj = vm.PopStack<ObjectValue>();
+                vm.PushStack(Set(obj, key, value));
+            }));
+
+            result.Define("object.get", new BuiltinProcedureValue(vm =>
+            {
+                var key = vm.PopStack<StringValue>();
+                var obj = vm.PopStack<ObjectValue>();
+                if (TryGetValue(obj, key, out var value))
+                {
+                    vm.PushStack(value);
+                }
+                else
+                {
+                    vm.PushStack(NullValue.Value);
+                }
+            }));
+
+            result.Define("object.keys", new BuiltinProcedureValue(vm =>
+            {
+                var top = vm.PopStack<ObjectValue>();
+                vm.PushStack(Keys(top));
+            }));
+
+            result.Define("object.values", new BuiltinProcedureValue(vm =>
+            {
+                var top = vm.PopStack<ObjectValue>();
+                vm.PushStack(Values(top));
+            }));
+
+            result.Define("object.length", new BuiltinProcedureValue(vm =>
+            {
+                var top = vm.PopStack<ObjectValue>();
+                vm.PushStack(new NumberValue(top.Value.Count));
+            }));
+
+            return result;
         }
 
         public static ArrayValue Keys(ObjectValue self)

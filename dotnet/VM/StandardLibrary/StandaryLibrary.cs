@@ -22,27 +22,27 @@ namespace SimpleStackVM
         {
             if (libraries.HasFlag(LibraryType.Comparison))
             {
-                StandardComparisonLibrary.AddHandler(vm);
+                vm.AddBuiltinScope(StandardComparisonLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Math))
             {
-                StandardMathLibrary.AddHandler(vm);
+                vm.AddBuiltinScope(StandardMathLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.String))
             {
-                StandardStringLibrary.AddHandler(vm);
+                vm.AddBuiltinScope(StandardStringLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Array))
             {
-                StandardArrayLibrary.AddHandler(vm);
+                vm.AddBuiltinScope(StandardArrayLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Object))
             {
-                StandardObjectLibrary.AddHandler(vm);
+                vm.AddBuiltinScope(StandardObjectLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Value))
             {
-                StandardValueLibrary.AddHandler(vm);
+                vm.AddBuiltinScope(StandardValueLibrary.Scope);
             }
         }
         #endregion

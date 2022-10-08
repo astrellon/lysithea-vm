@@ -7,76 +7,77 @@ namespace SimpleStackVM
     public static class StandardComparisonLibrary
     {
         #region Fields
-        public const string HandleName = "comp";
+        public static readonly Scope Scope = CreateScope();
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            vm.AddBuiltinHandler(HandleName, Handler);
-        }
+            var result = new Scope();
 
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            var greater = new BuiltinProcedureValue(vm =>
             {
-                // Comparison Operators
-                case ">":
-                case "greater":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new BoolValue(left.CompareTo(right) > 0));
-                        break;
-                    }
-                case ">=":
-                case "greaterEquals":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new BoolValue(left.CompareTo(right) >= 0));
-                        break;
-                    }
-                case "==":
-                case "equals":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new BoolValue(left.CompareTo(right) == 0));
-                        break;
-                    }
-                case "!=":
-                case "notEquals":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new BoolValue(left.CompareTo(right) != 0));
-                        break;
-                    }
-                case "<":
-                case "less":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new BoolValue(left.CompareTo(right) < 0));
-                        break;
-                    }
-                case "<=":
-                case "lessEquals":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new BoolValue(left.CompareTo(right) <= 0));
-                        break;
-                    }
-                case "!":
-                case "not":
-                    {
-                        var top = vm.PopStack<BoolValue>();
-                        vm.PushStack(new BoolValue(!top.Value));
-                        break;
-                    }
-            }
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new BoolValue(left.CompareTo(right) > 0));
+            });
+            result.Define(">", greater);
+            result.Define("comp.greater", greater);
+
+            var greaterEquals = new BuiltinProcedureValue(vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new BoolValue(left.CompareTo(right) >= 0));
+            });
+            result.Define(">=", greaterEquals);
+            result.Define("comp.greaterEquals", greaterEquals);
+
+            var equals = new BuiltinProcedureValue(vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new BoolValue(left.CompareTo(right) == 0));
+            });
+            result.Define("==", equals);
+            result.Define("comp.equals", equals);
+
+            var notEquals = new BuiltinProcedureValue(vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new BoolValue(left.CompareTo(right) != 0));
+            });
+            result.Define("!=", notEquals);
+            result.Define("comp.notEquals", notEquals);
+
+            var less = new BuiltinProcedureValue(vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new BoolValue(left.CompareTo(right) < 0));
+            });
+            result.Define("<", less);
+            result.Define("comp.less", less);
+
+            var lessEquals = new BuiltinProcedureValue(vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new BoolValue(left.CompareTo(right) <= 0));
+            });
+            result.Define("<=", lessEquals);
+            result.Define("comp.lessEquals", lessEquals);
+
+            var not = new BuiltinProcedureValue(vm =>
+            {
+                var top = vm.PopStack<BoolValue>();
+                vm.PushStack(new BoolValue(!top.Value));
+            });
+            result.Define("!", not);
+            result.Define("comp.not", not);
+
+            return result;
         }
         #endregion
     }

@@ -320,7 +320,7 @@ namespace SimpleStackVM
         {
             var codeLine = scope.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{scope.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
+            return $":{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
         }
         #endregion
     }

@@ -6,114 +6,109 @@ namespace SimpleStackVM
     public static partial class StandardArrayLibrary
     {
         #region Fields
-        public const string HandleName = "array";
+        public static readonly Scope Scope = CreateScope();
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            vm.AddBuiltinHandler(HandleName, Handler);
-        }
+            var result = new Scope();
 
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            result.Define("array.append", vm =>
             {
-                case "append":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Append(left, right));
-                        break;
-                    }
-                case "prepend":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Prepend(left, right));
-                        break;
-                    }
-                case "length":
-                    {
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(new NumberValue(top.Value.Count));
-                        break;
-                    }
-                case "set":
-                    {
-                        var value = vm.PopStack();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Set(top, index.IntValue, value));
-                        break;
-                    }
-                case "get":
-                    {
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Get(top, index.IntValue));
-                        break;
-                    }
-                case "insert":
-                    {
-                        var value = vm.PopStack();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Insert(top, index.IntValue, value));
-                        break;
-                    }
-                case "insertFlatten":
-                    {
-                        var value = vm.PopStack<ArrayValue>();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(InsertFlatten(top, index.IntValue, value));
-                        break;
-                    }
-                case "remove":
-                    {
-                        var value = vm.PopStack();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(Remove(top, value));
-                        break;
-                    }
-                case "removeAt":
-                    {
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(RemoveAt(top, index.IntValue));
-                        break;
-                    }
-                case "removeAll":
-                    {
-                        var value = vm.PopStack();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(RemoveAll(top, value));
-                        break;
-                    }
-                case "contains":
-                    {
-                        var value = vm.PopStack();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(new BoolValue(Contains(top, value)));
-                        break;
-                    }
-                case "indexOf":
-                    {
-                        var value = vm.PopStack();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(new NumberValue(IndexOf(top, value)));
-                        break;
-                    }
-                case "sublist":
-                    {
-                        var length = vm.PopStack<NumberValue>();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<ArrayValue>();
-                        vm.PushStack(SubList(top, index.IntValue, length.IntValue));
-                        break;
-                    }
-            }
+                var right = vm.PopStack();
+                var left = vm.PopStack<ArrayValue>();
+                vm.PushStack(Append(left, right));
+            });
+
+            result.Define("array.prepend", vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack<ArrayValue>();
+                vm.PushStack(Prepend(left, right));
+            });
+
+            result.Define("array.length", vm =>
+            {
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(new NumberValue(top.Value.Count));
+            });
+
+            result.Define("array.set", vm =>
+            {
+                var value = vm.PopStack();
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(Set(top, index.IntValue, value));
+            });
+
+            result.Define("array.get", vm =>
+            {
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(Get(top, index.IntValue));
+            });
+
+            result.Define("array.insert", vm =>
+            {
+                var value = vm.PopStack();
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(Insert(top, index.IntValue, value));
+            });
+
+            result.Define("array.insertFlatten", vm =>
+            {
+                var value = vm.PopStack<ArrayValue>();
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(InsertFlatten(top, index.IntValue, value));
+            });
+
+            result.Define("array.remove", vm =>
+            {
+                var value = vm.PopStack();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(Remove(top, value));
+            });
+
+            result.Define("array.removeAt", vm =>
+            {
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(RemoveAt(top, index.IntValue));
+            });
+
+            result.Define("array.removeAll", vm =>
+            {
+                var value = vm.PopStack();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(RemoveAll(top, value));
+            });
+
+            result.Define("array.contains", vm =>
+            {
+                var value = vm.PopStack();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(new BoolValue(Contains(top, value)));
+            });
+
+            result.Define("array.indexOf", vm =>
+            {
+                var value = vm.PopStack();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(new NumberValue(IndexOf(top, value)));
+            });
+
+            result.Define("array.sublist", vm =>
+            {
+                var length = vm.PopStack<NumberValue>();
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<ArrayValue>();
+                vm.PushStack(SubList(top, index.IntValue, length.IntValue));
+            });
+
+            return result;
         }
 
         public static ArrayValue Append(ArrayValue self, IValue input)

@@ -11,9 +11,8 @@ namespace SimpleStackVM
         public static IReadOnlyList<CodeLine> EmptyCode = new CodeLine[0];
         public static IReadOnlyDictionary<string, int> EmptyLabels = new Dictionary<string, int>();
         public static IReadOnlyList<string> EmptyParameters = new string[0];
-        public static readonly Procedure Empty = new Procedure("<<empty>>", EmptyCode, EmptyParameters, EmptyLabels);
+        public static readonly Procedure Empty = new Procedure(EmptyCode, EmptyParameters, EmptyLabels);
 
-        public readonly string Name;
         public readonly IReadOnlyList<CodeLine> Code;
         public readonly IReadOnlyDictionary<string, int> Labels;
         public readonly IReadOnlyList<string> Parameters;
@@ -22,9 +21,8 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructor
-        public Procedure(string name, IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null)
+        public Procedure(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null)
         {
-            this.Name = name;
             this.Code = code;
             this.Parameters = parameters ?? EmptyParameters;
             this.Labels = labels ?? EmptyLabels;

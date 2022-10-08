@@ -5,45 +5,40 @@ namespace SimpleStackVM
     public static class StandardValueLibrary
     {
         #region Fields
-        public const string HandleName = "value";
+        public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            vm.AddBuiltinHandler(HandleName, Handler);
-        }
+            var result = new Scope();
 
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            result.Define("toString", vm =>
             {
-                case "toString":
-                    {
-                        var top = vm.PeekStack();
-                        if (top is StringValue)
-                        {
-                            break;
-                        }
+                var top = vm.PeekStack();
+                if (top is StringValue)
+                {
+                    return;
+                }
 
-                        top = vm.PopStack();
-                        vm.PushStack(new StringValue(top.ToString()));
-                        break;
-                    }
-                case "typeof":
-                    {
-                        var top = vm.PopStack();
-                        vm.PushStack(new StringValue(GetTypeOf(top)));
-                        break;
-                    }
-                case "compareTo":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new NumberValue(left.CompareTo(right)));
-                        break;
-                    }
-            }
+                top = vm.PopStack();
+                vm.PushStack(new StringValue(top.ToString()));
+            });
+
+            result.Define("typeof", vm =>
+            {
+                var top = vm.PopStack();
+                vm.PushStack(new StringValue(GetTypeOf(top)));
+            });
+
+            result.Define("compareTo", vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new NumberValue(left.CompareTo(right)));
+            });
+
+            return result;
         }
 
         public static string GetTypeOf(IValue input)
@@ -75,6 +70,14 @@ namespace SimpleStackVM
             if (input is AnyValue)
             {
                 return "any";
+            }
+            if (input is BuiltinProcedureValue)
+            {
+                return "builtin-proc";
+            }
+            if (input is ProcedureValue)
+            {
+                return "proc";
             }
 
             return "unknown";

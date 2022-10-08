@@ -8,18 +8,20 @@ namespace SimpleStackVM
     public static class TestProgram
     {
         private static readonly Random Rand = new Random();
+        private static readonly Scope CustomScope = CreateScope();
         #region Methods
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineLispAssembler();
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
 
-            var vm = new VirtualMachine(64, OnRunCommand);
+            var vm = new VirtualMachine(64);
             StandardLibrary.AddToVirtualMachine(vm);
-            vm.AddProcedures(code);
+            vm.AddBuiltinScope(CustomScope);
+
+            vm.SetGlobalCode(code);
             try
             {
-                vm.SetCurrentProcedure("main");
                 vm.Running = true;
                 var sw = Stopwatch.StartNew();
                 while (vm.Running && !vm.Paused)
@@ -38,25 +40,27 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(string command, VirtualMachine vm)
+        private static Scope CreateScope()
         {
-            if (command == "print")
+            var result = new Scope();
+
+            result.Define("print", new BuiltinProcedureValue(vm =>
             {
                 var top = vm.PopStack();
                 Console.WriteLine($"Print: {top.ToString()}");
-            }
-            else if (command == "done")
+            }));
+
+            result.Define("done", new BuiltinProcedureValue(vm =>
             {
                 Console.WriteLine("Done!");
-            }
-            else if (command == "rand")
+            }));
+
+            result.Define("rand", new BuiltinProcedureValue(vm =>
             {
                 vm.PushStack((NumberValue)Rand.NextDouble());
-            }
-            else
-            {
-                Console.WriteLine($"Unknown command: {command}");
-            }
+            }));
+
+            return result;
         }
         #endregion
     }

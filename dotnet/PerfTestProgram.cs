@@ -10,24 +10,21 @@ namespace SimpleStackVM
         private static Random Rand = new Random();
         private static int Counter = 0;
 
+        private static readonly Scope CustomScope = CreateScope();
+
         #region Methods
         public static void Main(string[] args)
         {
-            // var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/perfTest.json"));
-            // var procedures = VirtualMachineJsonAssembler.ParseProcedures(json.AsArray);
             var assembler = new VirtualMachineLispAssembler();
-            var sw1 = Stopwatch.StartNew();
-            var procedures = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
-            sw1.Stop();
-            Console.WriteLine($"Time to parse: {sw1.ElapsedMilliseconds}ms");
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 
-            var vm = new VirtualMachine(64, OnRunCommand);
-            vm.AddProcedures(procedures);
+            var vm = new VirtualMachine(64);
+            vm.AddBuiltinScope(CustomScope);
+            vm.SetGlobalCode(code);
 
             try
             {
                 var sw = Stopwatch.StartNew();
-                vm.SetCurrentProcedure("Main");
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
                 {
@@ -45,28 +42,35 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(string command, VirtualMachine vm)
+        private static Scope CreateScope()
         {
-            if (command == "rand")
+            var result = new Scope();
+
+            result.Define("rand", vm =>
             {
                 vm.PushStack((NumberValue)Rand.NextDouble());
-            }
-            else if (command == "add")
+            });
+
+            result.Define("add", vm =>
             {
                 var num1 = vm.PopStack<NumberValue>();
                 var num2 = vm.PopStack<NumberValue>();
                 vm.PushStack((NumberValue)(num1.Value + num2.Value));
-            }
-            else if (command == "isDone")
+            });
+
+            result.Define("isDone", vm =>
             {
                 Counter++;
                 vm.PushStack((BoolValue)(Counter >= 1_000_000));
-            }
-            else if (command == "done")
+            });
+
+            result.Define("done", vm =>
             {
                 var total = vm.PopStack<NumberValue>();
                 Console.WriteLine($"Done: {total.Value}");
-            }
+            });
+
+            return result;
         }
         #endregion
     }

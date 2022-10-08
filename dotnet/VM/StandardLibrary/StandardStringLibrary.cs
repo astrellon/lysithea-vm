@@ -7,85 +7,73 @@ namespace SimpleStackVM
     {
         #region Fields
         public const string HandleName = "string";
+        public static readonly IReadOnlyScope Scope = CreateScope();
+
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            vm.AddBuiltinHandler(HandleName, Handler);
-        }
+            var result = new Scope();
 
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            result.Define("string.append", vm =>
             {
-                // String Operators
-                case "append":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new StringValue(left.ToString() + right.ToString()));
-                        break;
-                    }
-                case "prepend":
-                    {
-                        var right = vm.PopStack();
-                        var left = vm.PopStack();
-                        vm.PushStack(new StringValue(right.ToString() + left.ToString()));
-                        break;
-                    }
-                case "length":
-                    {
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(new NumberValue(top.Value.Length));
-                        break;
-                    }
-                case "get":
-                    {
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(Get(top, index.IntValue));
-                        break;
-                    }
-                case "set":
-                    {
-                        var value = vm.PopStack();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(Set(top, index.IntValue, value.ToString()));
-                        break;
-                    }
-                case "insert":
-                    {
-                        var value = vm.PopStack();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(Insert(top, index.IntValue, value.ToString()));
-                        break;
-                    }
-                case "substring":
-                    {
-                        var length = vm.PopStack<NumberValue>();
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(SubString(top, index.IntValue, length.IntValue));
-                        break;
-                    }
-                case "removeAt":
-                    {
-                        var index = vm.PopStack<NumberValue>();
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(RemoveAt(top, index.IntValue));
-                        break;
-                    }
-                case "removeAll":
-                    {
-                        var values = vm.PopStack<StringValue>();
-                        var top = vm.PopStack<StringValue>();
-                        vm.PushStack(RemoveAll(top, values.Value));
-                        break;
-                    }
-            }
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new StringValue(left.ToString() + right.ToString()));
+            });
+
+            result.Define("string.prepend", vm =>
+            {
+                var right = vm.PopStack();
+                var left = vm.PopStack();
+                vm.PushStack(new StringValue(right.ToString() + left.ToString()));
+            });
+
+            result.Define("string.length", vm =>
+            {
+                var top = vm.PopStack<StringValue>();
+                vm.PushStack(new NumberValue(top.Value.Length));
+            });
+
+            result.Define("string.get", vm =>
+            {
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<StringValue>();
+                vm.PushStack(Get(top, index.IntValue));
+            });
+
+            result.Define("string.insert", vm =>
+            {
+                var value = vm.PopStack();
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<StringValue>();
+                vm.PushStack(Set(top, index.IntValue, value.ToString()));
+            });
+
+            result.Define("string.substring", vm =>
+            {
+                var length = vm.PopStack<NumberValue>();
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<StringValue>();
+                vm.PushStack(SubString(top, index.IntValue, length.IntValue));
+            });
+
+            result.Define("string.removeAt", vm =>
+            {
+                var index = vm.PopStack<NumberValue>();
+                var top = vm.PopStack<StringValue>();
+                vm.PushStack(RemoveAt(top, index.IntValue));
+            });
+
+            result.Define("string.removeAll", vm =>
+            {
+                var values = vm.PopStack<StringValue>();
+                var top = vm.PopStack<StringValue>();
+                vm.PushStack(RemoveAll(top, values.Value));
+            });
+
+            return result;
         }
 
         public static StringValue Set(StringValue self, int index, string value)
