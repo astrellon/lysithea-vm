@@ -1,32 +1,17 @@
+(define name "Global")
 (define main (function ()
-    (define total 0)
-    (define count 0)
+    (print "Started main")
+    (print name)
 
-    (loop (< count 10)
-        (if (< count 5)
-            (print "Count less than 5")
-            (print "Count more than 5")
-        )
+    (set name "Set from scope")
+    (print name)
 
-        (set total (+ total (step)))
-        (set count (+ count 1))
-    )
-
-    (print total)
-
-    (if (< total 10)
-        (print "Total less than 10")
-
-        (print "Total greater than 10")
-    )
-
-    (done)
+    (define name "Created in scope")
+    (print name)
+    (print "End main")
+    (return)
 ))
 
-(define step (function ()
-    (return (+ (rand) (rand)))
-))
-
+(print name)
 (main)
-
-(print "Super done!")
+(print name)
