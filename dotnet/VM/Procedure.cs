@@ -17,6 +17,8 @@ namespace SimpleStackVM
         public readonly IReadOnlyDictionary<string, int> Labels;
         public readonly IReadOnlyList<string> Parameters;
 
+        public string Name = "anonymous";
+
         public bool IsEmpty => this.Code.Count == 0;
         #endregion
 

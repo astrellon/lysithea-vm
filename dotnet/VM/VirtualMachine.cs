@@ -163,7 +163,7 @@ namespace SimpleStackVM
                         var top = this.PopStack();
                         if (top.Equals(BoolValue.False))
                         {
-                            this.Jump(label);
+                            this.Jump(label.ToString());
                         }
                         break;
                     }
@@ -173,14 +173,14 @@ namespace SimpleStackVM
                         var top = this.PopStack();
                         if (top.Equals(BoolValue.True))
                         {
-                            this.Jump(label);
+                            this.Jump(label.ToString());
                         }
                         break;
                     }
                 case Operator.Jump:
                     {
                         var label = codeLine.Input ?? this.PopStack();
-                        this.Jump(label);
+                        this.Jump(label.ToString());
                         break;
                     }
                 case Operator.Return:
@@ -191,7 +191,14 @@ namespace SimpleStackVM
                 case Operator.Call:
                     {
                         var top = codeLine.Input ?? this.PopStack();
-                        this.RunProcedure(top);
+                        if (top is IProcedureValue procTop)
+                        {
+                            this.CallProcedure(procTop);
+                        }
+                        else
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a procedure to run: {top.ToString()}");
+                        }
                         break;
                     }
             }
@@ -249,24 +256,35 @@ namespace SimpleStackVM
             return args;
         }
 
-        public void RunProcedure(IValue value)
+        public void CallProcedure(IProcedureValue value)
         {
-            var command = value.ToString();
-            if (this.TryGetValue(command, out var foundValue))
+            if (value is ProcedureValue foundProc)
             {
-                if (foundValue is ProcedureValue foundProc)
-                {
-                    this.RunProcedure(foundProc.Value);
-                    return;
-                }
-                else if (foundValue is BuiltinProcedureValue foundBuiltin)
-                {
-                    foundBuiltin.Value.Invoke(this);
-                    return;
-                }
+                this.PushToStackTrace(this.CurrentFrame);
+                this.ExecuteProcedure(foundProc.Value);
             }
+            else if (value is BuiltinProcedureValue foundBuiltin)
+            {
+                this.ExecuteProcedure(foundBuiltin);
+            }
+        }
 
-            throw new OperatorException(this.CreateStackTrace(), $"Unable to find '{command}' to execute");
+        public void JumpProcedure(IProcedureValue value)
+        {
+            if (value is ProcedureValue foundProc)
+            {
+                this.ExecuteProcedure(foundProc.Value);
+            }
+            else if (value is BuiltinProcedureValue foundBuiltin)
+            {
+                this.ExecuteProcedure(foundBuiltin);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ExecuteProcedure(BuiltinProcedureValue handler)
+        {
+            handler.Value.Invoke(this);
         }
 
         public void ExecuteProcedure(Procedure procedure)
@@ -279,12 +297,6 @@ namespace SimpleStackVM
                 var argName = procedure.Parameters[i];
                 this.CurrentFrame.Scope.Define(argName, args[i]);
             }
-        }
-
-        public void RunProcedure(Procedure procedure)
-        {
-            this.PushToStackTrace(this.CurrentFrame);
-            this.ExecuteProcedure(procedure);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -307,68 +319,8 @@ namespace SimpleStackVM
             this.CurrentFrame = scopeFrame;
         }
 
-        public void Jump(IValue jumpTo)
+        public void Jump(string label)
         {
-            if (jumpTo is StringValue stringValue)
-            {
-                this.Jump(stringValue.Value);
-            }
-            else if (jumpTo is ArrayValue arrayValue)
-            {
-                if (arrayValue.Value.Count() == 0)
-                {
-                    throw new OperatorException(this.CreateStackTrace(), "Cannot jump to an empty array");
-                }
-
-                string? procName = null;
-                var label = arrayValue.Value[0].ToString();
-                if (arrayValue.Value.Count() > 1)
-                {
-                    procName = arrayValue.Value[1].ToString();
-                }
-
-                this.Jump(label, procName);
-            }
-        }
-
-        public void Jump(string input)
-        {
-            if (!string.IsNullOrEmpty(input))
-            {
-                if (input[0] == ':')
-                {
-                    this.Jump(input, null);
-                }
-                else
-                {
-                    this.Jump(null, input);
-                }
-            }
-            else
-            {
-                this.CurrentFrame.LineCounter = 0;
-            }
-        }
-
-        public void Jump(string? label, string? procName)
-        {
-            if (!string.IsNullOrEmpty(procName))
-            {
-                if (this.TryGetValue(procName, out var foundValue))
-                {
-                    if (foundValue is ProcedureValue foundProc)
-                    {
-                        this.CurrentFrame = new ScopeFrame(foundProc.Value, new Scope(this.CurrentFrame.Scope));
-                    }
-                }
-            }
-
-            if (string.IsNullOrEmpty(label))
-            {
-                this.CurrentFrame.LineCounter = 0;
-                return;
-            }
-
             if (this.CurrentFrame.TryGetLabel(label, out var line))
             {
                 this.CurrentFrame.LineCounter = line;
@@ -378,16 +330,6 @@ namespace SimpleStackVM
                 throw new OperatorException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
             }
         }
-
-        // public void Jump(int line)
-        // {
-        //     if (line < 0 || line >= this.CurrentProc.Code.Count)
-        //     {
-        //         throw new OverflowException("Jumping to a line outside the current scope code.");
-        //     }
-
-        //     this.ProgramCounter = line;
-        // }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IValue PopStack()
@@ -472,16 +414,16 @@ namespace SimpleStackVM
         {
             if (line >= procedure.Code.Count)
             {
-                return $"[:{line - 1}: end of code";
+                return $"[{procedure.Name}:{line - 1}: end of code";
             }
             if (line < 0)
             {
-                return $"[:{line - 1}: before start of code";
+                return $"[{procedure.Name}:{line - 1}: before start of code";
             }
 
             var codeLine = procedure.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
+            return $"[{procedure.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
         }
         #endregion
     }

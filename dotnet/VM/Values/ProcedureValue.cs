@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace SimpleStackVM
 {
-    public class ProcedureValue : IValue
+    public class ProcedureValue : IProcedureValue
     {
         #region Field
         bool IValue.IsNull => false;
@@ -51,7 +51,7 @@ namespace SimpleStackVM
 
         public override string ToString()
         {
-            return "proc";
+            return $"proc:{this.Value.Name}";
         }
 
         public override int GetHashCode()

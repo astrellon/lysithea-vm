@@ -12,7 +12,7 @@ namespace SimpleStackVM
         private static bool IsShopEnabled = false;
         private static string PlayerName = "<Unset>";
 
-        private static List<ProcedureValue> ChoiceBuffer = new List<ProcedureValue>();
+        private static List<IProcedureValue> ChoiceBuffer = new List<IProcedureValue>();
         private static readonly IReadOnlyScope CustomScope = CreateScope();
 
         #region Methods
@@ -70,11 +70,27 @@ namespace SimpleStackVM
                 vm.PushStack((BoolValue)IsShopEnabled);
             });
 
+            result.Define("moveTo", vm =>
+            {
+                var label = vm.PopStack();
+                var proc = vm.PopStack<ProcedureValue>();
+
+                vm.JumpProcedure(proc);
+                vm.Jump(label.ToString());
+            });
+
             result.Define("choice", vm =>
             {
-                var choiceJumpLabel = vm.PopStack<ProcedureValue>();
+                var choiceJumpLabel = vm.PopStack();
                 var choiceText = vm.PopStack();
-                ChoiceBuffer.Add(choiceJumpLabel);
+                if (choiceJumpLabel is IProcedureValue procValue)
+                {
+                    ChoiceBuffer.Add(procValue);
+                }
+                else
+                {
+                    throw new Exception("Choice call must be a procedure!");
+                }
                 SayChoice(choiceText);
             });
 
@@ -133,7 +149,7 @@ namespace SimpleStackVM
 
             var choice = ChoiceBuffer[index];
             ChoiceBuffer.Clear();
-            vm.ExecuteProcedure(choice.Value);
+            vm.JumpProcedure(choice);
             return true;
         }
 

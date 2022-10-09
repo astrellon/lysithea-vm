@@ -23,7 +23,7 @@
             "program": "${workspaceFolder}/bin/Debug/net6.0/dialogueTree.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
+            "console": "integratedTerminal",
             "stopAtEntry": false
         },
         {

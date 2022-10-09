@@ -8,7 +8,7 @@ namespace SimpleStackVM
 {
     using BuiltinCommandHandler = Action<VirtualMachine>;
 
-    public class BuiltinProcedureValue : IValue
+    public class BuiltinProcedureValue : IProcedureValue
     {
         private static readonly BuiltinCommandHandler EmptyHandler = (vm) => { };
 

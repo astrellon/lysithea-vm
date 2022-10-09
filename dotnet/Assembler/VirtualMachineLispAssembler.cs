@@ -11,6 +11,9 @@ namespace SimpleStackVM
         private const string ProcedureKeyword = "procedure";
         private const string LoopKeyword = "loop";
         private const string IfKeyword = "if";
+        private const string UnlessKeyword = "unless";
+        private const string SetKeyword = "set";
+        private const string DefineKeyword = "define";
 
         private int labelCount = 0;
 
@@ -26,6 +29,14 @@ namespace SimpleStackVM
         {
             var result = Parse(input[2]).ToList();
             result.Add(new TempCodeLine(Operator.Define, input[1]));
+
+            if (result[0] is TempCodeLine parsedCodeLine)
+            {
+                if (parsedCodeLine.Argument is ProcedureValue procValue)
+                {
+                    procValue.Value.Name = input[1].ToString();
+                }
+            }
             return result;
         }
 
@@ -51,23 +62,32 @@ namespace SimpleStackVM
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> ParseIf(ArrayValue input)
+        public IEnumerable<ITempCodeLine> ParseCond(ArrayValue input, bool isIfStatement)
         {
             var ifLabelNum = this.labelCount++;
-            var labelElse = $":IfElse{ifLabelNum}";
-            var labelEnd = $":IfEnd{ifLabelNum}";
+            var labelElse = $":CondElse{ifLabelNum}";
+            var labelEnd = $":CondEnd{ifLabelNum}";
 
             var comparisonCall = (ArrayValue)input[1];
             var result = Parse(comparisonCall).ToList();
 
-            var hasElseCall = input.Count == 4;
+            var hasElseCall = input.Count >= 4;
+
+            var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
 
             if (hasElseCall)
             {
-                result.Add(new TempCodeLine(Operator.JumpFalse, new StringValue(labelElse)));
+                result.Add(new TempCodeLine(jumpOperator, new StringValue(labelElse)));
 
                 var ifTrueCall = (ArrayValue)input[2];
-                result.AddRange(Parse(ifTrueCall));
+                if (ifTrueCall.All(i => i is ArrayValue))
+                {
+                    result.AddRange(ifTrueCall.SelectMany(Parse));
+                }
+                else
+                {
+                    result.AddRange(Parse(ifTrueCall));
+                }
                 result.Add(new TempCodeLine(Operator.Jump, new StringValue(labelEnd)));
 
                 result.Add(new LabelCodeLine(labelElse));
@@ -77,7 +97,7 @@ namespace SimpleStackVM
             }
             else
             {
-                result.Add(new TempCodeLine(Operator.JumpFalse, new StringValue(labelEnd)));
+                result.Add(new TempCodeLine(jumpOperator, new StringValue(labelEnd)));
 
                 var ifTrueCall = (ArrayValue)input[2];
                 result.AddRange(Parse(ifTrueCall));
@@ -86,6 +106,11 @@ namespace SimpleStackVM
             }
 
             return result;
+        }
+
+        public IEnumerable<ITempCodeLine> ParseJump(Operator jumpOpCode, ArrayValue input)
+        {
+            return new[] { new TempCodeLine(jumpOpCode, input[1]) };
         }
 
         public IEnumerable<ITempCodeLine> Parse(IValue input)
@@ -113,27 +138,37 @@ namespace SimpleStackVM
                         return new[] { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
-                    if (firstSymbolValue.Value == "procedure")
+                    if (firstSymbolValue.Value == ProcedureKeyword)
                     {
                         var procedure = ParseProcedure(arrayValue);
                         var procedureValue = new ProcedureValue(procedure);
                         return new[] { new TempCodeLine(Operator.Push, procedureValue) };
                     }
-                    if (firstSymbolValue.Value == "set")
+                    if (firstSymbolValue.Value == SetKeyword)
                     {
                         return ParseSet(arrayValue);
                     }
-                    if (firstSymbolValue.Value == "define")
+                    if (firstSymbolValue.Value == DefineKeyword)
                     {
                         return ParseDefine(arrayValue);
                     }
-                    if (firstSymbolValue.Value == "loop")
+                    if (firstSymbolValue.Value == LoopKeyword)
                     {
                         return ParseLoop(arrayValue);
                     }
-                    if (firstSymbolValue.Value == "if")
+                    if (firstSymbolValue.Value == IfKeyword)
                     {
-                        return ParseIf(arrayValue);
+                        return ParseCond(arrayValue, true);
+                    }
+                    if (firstSymbolValue.Value == UnlessKeyword)
+                    {
+                        return ParseCond(arrayValue, false);
+                    }
+
+                    var isOpCode = TryParseOperator(firstSymbolValue.Value, out var opCode);
+                    if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
+                    {
+                        return ParseJump(opCode, arrayValue);
                     }
 
                     // Handle general opcode or procedure call.
@@ -144,24 +179,15 @@ namespace SimpleStackVM
 
                     IValue? codeLineInput = null;
 
-                    if (!TryParseOperator(firstSymbolValue.Value, out var opCode))
+                    if (!isOpCode)
                     {
                         opCode = Operator.Call;
-                        result.Add(new TempCodeLine(Operator.Call, firstSymbolValue));
+                        result.Add(new TempCodeLine(Operator.Get, firstSymbolValue));
+                        result.Add(new TempCodeLine(Operator.Call, null));
                     }
                     else
                     {
-                        if (VirtualMachineAssembler.IsJumpCall(opCode))
-                        {
-                            if (!TryParseJumpLabel(arrayValue.Last(), out codeLineInput))
-                            {
-                                throw new Exception($"Error parsing {opCode} input: {input.ToString()}");
-                            }
-                        }
-                        else
-                        {
-                            codeLineInput = arrayValue.Last();
-                        }
+                        codeLineInput = arrayValue.Last();
 
                         if (opCode != Operator.Push)
                         {
@@ -185,8 +211,7 @@ namespace SimpleStackVM
                 }
                 else
                 {
-                    var empty = new ITempCodeLine[0];
-                    return empty;
+                    return new[] { new TempCodeLine(Operator.Push, input) };
                 }
             }
 
@@ -223,56 +248,6 @@ namespace SimpleStackVM
             }
 
             return true;
-        }
-
-        private static bool TryParseJumpLabel(IValue input, out IValue result)
-        {
-            return TryParseTwoStringInput(input, ':', true, out result);
-        }
-
-        private static bool TryParseRunCommand(IValue input, out IValue result)
-        {
-            return TryParseTwoStringInput(input, '.', false, out result);
-        }
-
-        private static bool TryParseTwoStringInput(IValue input, char delimiter, bool includeDelimiter, out IValue result)
-        {
-            if (input is SymbolValue symbolValue)
-            {
-                var delimiterIndex = symbolValue.Value.IndexOf(delimiter);
-                if (delimiterIndex > 0)
-                {
-                    var array = new List<IValue>(2);
-                    array.Add(new StringValue(symbolValue.Value.Substring(0, delimiterIndex)));
-                    if (includeDelimiter)
-                    {
-                        array.Add(new StringValue(symbolValue.Value.Substring(delimiterIndex)));
-                    }
-                    else
-                    {
-                        array.Add(new StringValue(symbolValue.Value.Substring(delimiterIndex + 1)));
-                    }
-
-                    result = new ArrayValue(array);
-                    return true;
-                }
-
-                result = input;
-                return true;
-            }
-            else if (input is ArrayValue arrayValue)
-            {
-                if (arrayValue.Count == 1)
-                {
-                    return TryParseTwoStringInput(arrayValue[0], delimiter, includeDelimiter, out result);
-                }
-
-                result = input;
-                return true;
-            }
-
-            result = NullValue.Value;
-            return false;
         }
         #endregion
     }

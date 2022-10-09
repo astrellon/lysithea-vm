@@ -1,5 +1,7 @@
 using System.Diagnostics;
 
+#nullable enable
+
 namespace SimpleStackVM
 {
     [DebuggerDisplay("{Description}")]
@@ -9,12 +11,17 @@ namespace SimpleStackVM
         public static readonly CodeLine Empty = new CodeLine(Operator.Unknown, NullValue.Value);
 
         public readonly Operator Operator;
-        public readonly IValue Input;
+        public readonly IValue? Input;
 
         public string Description
         {
             get
             {
+                if (this.Input == null)
+                {
+                    return this.Operator.ToString();
+                }
+
                 if (this.Input is StringValue stringInput)
                 {
                     return $"{this.Operator} \"{stringInput.Value}\"";
@@ -25,7 +32,7 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructors
-        public CodeLine(Operator op, IValue input)
+        public CodeLine(Operator op, IValue? input)
         {
             this.Operator = op;
             this.Input = input;
