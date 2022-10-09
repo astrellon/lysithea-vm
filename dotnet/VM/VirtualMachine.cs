@@ -95,37 +95,6 @@ namespace SimpleStackVM
 
                         break;
                     }
-                case Operator.Pop:
-                    {
-                        this.PopStack();
-                        break;
-                    }
-                case Operator.Swap:
-                    {
-                        var value = codeLine.Input ?? this.PopStack();
-                        if (value is NumberValue number)
-                        {
-                            this.Swap(number.IntValue);
-                        }
-                        else
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"Swap operator needs a number value");
-                        }
-                        break;
-                    }
-                case Operator.Copy:
-                    {
-                        var value = codeLine.Input ?? this.PopStack();
-                        if (value is NumberValue number)
-                        {
-                            this.Copy(number.IntValue);
-                        }
-                        else
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"Swap operator needs a number value");
-                        }
-                        break;
-                    }
                 case Operator.Get:
                     {
                         var value = codeLine.Input ?? this.PopStack();
@@ -193,7 +162,7 @@ namespace SimpleStackVM
                         var top = codeLine.Input ?? this.PopStack();
                         if (top is IProcedureValue procTop)
                         {
-                            this.CallProcedure(procTop);
+                            this.CallProcedure(procTop, true);
                         }
                         else
                         {
@@ -205,23 +174,6 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Swap(int topOffset)
-        {
-            if (!this.stack.TrySwap(topOffset))
-            {
-                throw new StackException(this.CreateStackTrace(), $"Unable to swap stack, out of range: {topOffset}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Copy(int topOffset)
-        {
-            if (!this.stack.TryCopy(topOffset))
-            {
-                throw new StackException(this.CreateStackTrace(), $"Unable to copy stack, out of range: {topOffset}");
-            }
-        }
-
         public bool TryGetValue(string key, out IValue value)
         {
             if (this.CurrentFrame.Scope.TryGet(key, out value))
@@ -256,23 +208,14 @@ namespace SimpleStackVM
             return args;
         }
 
-        public void CallProcedure(IProcedureValue value)
+        public void CallProcedure(IProcedureValue value, bool pushToStackTrace)
         {
             if (value is ProcedureValue foundProc)
             {
-                this.PushToStackTrace(this.CurrentFrame);
-                this.ExecuteProcedure(foundProc.Value);
-            }
-            else if (value is BuiltinProcedureValue foundBuiltin)
-            {
-                this.ExecuteProcedure(foundBuiltin);
-            }
-        }
-
-        public void JumpProcedure(IProcedureValue value)
-        {
-            if (value is ProcedureValue foundProc)
-            {
+                if (pushToStackTrace)
+                {
+                    this.PushToStackTrace(this.CurrentFrame);
+                }
                 this.ExecuteProcedure(foundProc.Value);
             }
             else if (value is BuiltinProcedureValue foundBuiltin)
@@ -287,6 +230,7 @@ namespace SimpleStackVM
             handler.Value.Invoke(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteProcedure(Procedure procedure)
         {
             this.CurrentFrame = new ScopeFrame(procedure, new Scope(this.CurrentFrame.Scope));
@@ -319,6 +263,7 @@ namespace SimpleStackVM
             this.CurrentFrame = scopeFrame;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Jump(string label)
         {
             if (this.CurrentFrame.TryGetLabel(label, out var line))

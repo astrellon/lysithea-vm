@@ -75,7 +75,7 @@ namespace SimpleStackVM
                 var label = vm.PopStack();
                 var proc = vm.PopStack<ProcedureValue>();
 
-                vm.JumpProcedure(proc);
+                vm.CallProcedure(proc, false);
                 vm.Jump(label.ToString());
             });
 
@@ -149,7 +149,7 @@ namespace SimpleStackVM
 
             var choice = ChoiceBuffer[index];
             ChoiceBuffer.Clear();
-            vm.JumpProcedure(choice);
+            vm.CallProcedure(choice, false);
             return true;
         }
 

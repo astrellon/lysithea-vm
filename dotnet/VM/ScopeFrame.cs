@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
@@ -10,7 +11,14 @@ namespace SimpleStackVM
         public readonly Procedure Procedure;
         public readonly Scope Scope;
 
-        public bool HasMoreCode => !this.Procedure.IsEmpty && this.LineCounter < this.Procedure.Code.Count;
+        public bool HasMoreCode
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return !this.Procedure.IsEmpty && this.LineCounter < this.Procedure.Code.Count;
+            }
+        }
         #endregion
 
         #region Constructor
@@ -35,6 +43,7 @@ namespace SimpleStackVM
             return $"{this.LineCounter}";
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetNextCodeLine(out CodeLine result)
         {
             if (this.HasMoreCode)
