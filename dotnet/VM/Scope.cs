@@ -33,9 +33,9 @@ namespace SimpleStackVM
             this.values[key] = value;
         }
 
-        public void Define(string key, Action<VirtualMachine> builtinProcedure)
+        public void Define(string key, Action<VirtualMachine> builtinFunction)
         {
-            this.values[key] = new BuiltinProcedureValue(builtinProcedure);
+            this.values[key] = new BuiltinFunctionValue(builtinFunction);
         }
 
         public bool TrySet(string key, IValue value)

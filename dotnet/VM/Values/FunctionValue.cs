@@ -6,17 +6,17 @@ using System.Linq;
 
 namespace SimpleStackVM
 {
-    public class ProcedureValue : IProcedureValue
+    public class FunctionValue : IFunctionValue
     {
         #region Field
         bool IValue.IsNull => false;
         object IValue.RawValue => this.Value;
 
-        public readonly Procedure Value;
+        public readonly Function Value;
         #endregion
 
         #region Constructor
-        public ProcedureValue(Procedure value)
+        public FunctionValue(Function value)
         {
             this.Value = value;
         }
@@ -26,7 +26,7 @@ namespace SimpleStackVM
         public override bool Equals(object? other)
         {
             if (other == null) return false;
-            if (other is ProcedureValue otherProc)
+            if (other is FunctionValue otherProc)
             {
                 return this.Value == otherProc.Value;
             }
@@ -36,7 +36,7 @@ namespace SimpleStackVM
 
         public int CompareTo(IValue? other)
         {
-            if (other == null || !(other is ProcedureValue otherProcedure))
+            if (other == null || !(other is FunctionValue otherProcedure))
             {
                 return -1;
             }
@@ -51,7 +51,7 @@ namespace SimpleStackVM
 
         public override string ToString()
         {
-            return $"proc:{this.Value.Name}";
+            return $"function:{this.Value.Name}";
         }
 
         public override int GetHashCode()

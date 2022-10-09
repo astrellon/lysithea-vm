@@ -71,11 +71,11 @@ namespace SimpleStackVM
             {
                 return "any";
             }
-            if (input is BuiltinProcedureValue)
+            if (input is BuiltinFunctionValue)
             {
                 return "builtin-proc";
             }
-            if (input is ProcedureValue)
+            if (input is FunctionValue)
             {
                 return "proc";
             }

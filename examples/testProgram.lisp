@@ -1,4 +1,4 @@
-(define main (procedure ()
+(define main (function ()
     (define total 0)
     (define count 0)
 
@@ -23,7 +23,7 @@
     (done)
 ))
 
-(define step (procedure ()
+(define step (function ()
     (return (+ (rand) (rand)))
 ))
 

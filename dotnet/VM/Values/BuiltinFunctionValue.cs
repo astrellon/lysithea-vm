@@ -6,21 +6,21 @@ using System.Linq;
 
 namespace SimpleStackVM
 {
-    using BuiltinCommandHandler = Action<VirtualMachine>;
+    using BuiltinFunctionHandler = Action<VirtualMachine>;
 
-    public class BuiltinProcedureValue : IProcedureValue
+    public class BuiltinFunctionValue : IFunctionValue
     {
-        private static readonly BuiltinCommandHandler EmptyHandler = (vm) => { };
+        private static readonly BuiltinFunctionHandler EmptyHandler = (vm) => { };
 
         #region Field
         bool IValue.IsNull => false;
         object IValue.RawValue => this.Value;
 
-        public readonly BuiltinCommandHandler Value;
+        public readonly BuiltinFunctionHandler Value;
         #endregion
 
         #region Constructor
-        public BuiltinProcedureValue(BuiltinCommandHandler value)
+        public BuiltinFunctionValue(BuiltinFunctionHandler value)
         {
             this.Value = value;
         }
@@ -30,7 +30,7 @@ namespace SimpleStackVM
         public override bool Equals(object? other)
         {
             if (other == null) return false;
-            if (other is BuiltinProcedureValue otherProc)
+            if (other is BuiltinFunctionValue otherProc)
             {
                 return this.Value == otherProc.Value;
             }
@@ -40,12 +40,12 @@ namespace SimpleStackVM
 
         public int CompareTo(IValue? other)
         {
-            if (other == null || !(other is BuiltinProcedureValue otherProcedure))
+            if (other == null || !(other is BuiltinFunctionValue otherFunction))
             {
                 return -1;
             }
 
-            if (this.Value == otherProcedure.Value)
+            if (this.Value == otherFunction.Value)
             {
                 return 0;
             }
@@ -55,7 +55,7 @@ namespace SimpleStackVM
 
         public override string ToString()
         {
-            return "builtin-proc";
+            return "builtin-function";
         }
 
         public override int GetHashCode()
@@ -63,9 +63,9 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
-        public static implicit operator BuiltinProcedureValue(BuiltinCommandHandler handler)
+        public static implicit operator BuiltinFunctionValue(BuiltinFunctionHandler handler)
         {
-            return new BuiltinProcedureValue(handler);
+            return new BuiltinFunctionValue(handler);
         }
         #endregion
     }

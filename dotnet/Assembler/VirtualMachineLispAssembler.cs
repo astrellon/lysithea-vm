@@ -8,7 +8,7 @@ namespace SimpleStackVM
 {
     public class VirtualMachineLispAssembler
     {
-        private const string ProcedureKeyword = "procedure";
+        private const string FunctionKeyword = "function";
         private const string LoopKeyword = "loop";
         private const string IfKeyword = "if";
         private const string UnlessKeyword = "unless";
@@ -32,7 +32,7 @@ namespace SimpleStackVM
 
             if (result[0] is TempCodeLine parsedCodeLine)
             {
-                if (parsedCodeLine.Argument is ProcedureValue procValue)
+                if (parsedCodeLine.Argument is FunctionValue procValue)
                 {
                     procValue.Value.Name = input[1].ToString();
                 }
@@ -138,11 +138,11 @@ namespace SimpleStackVM
                         return new[] { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
-                    if (firstSymbolValue.Value == ProcedureKeyword)
+                    if (firstSymbolValue.Value == FunctionKeyword)
                     {
-                        var procedure = ParseProcedure(arrayValue);
-                        var procedureValue = new ProcedureValue(procedure);
-                        return new[] { new TempCodeLine(Operator.Push, procedureValue) };
+                        var function = ParseFunction(arrayValue);
+                        var functionValue = new FunctionValue(function);
+                        return new[] { new TempCodeLine(Operator.Push, functionValue) };
                     }
                     if (firstSymbolValue.Value == SetKeyword)
                     {
@@ -171,7 +171,7 @@ namespace SimpleStackVM
                         return ParseJump(opCode, arrayValue);
                     }
 
-                    // Handle general opcode or procedure call.
+                    // Handle general opcode or function call.
                     foreach (var item in arrayValue.Skip(1))
                     {
                         result.AddRange(Parse(item));
@@ -218,25 +218,25 @@ namespace SimpleStackVM
             throw new Exception("Unknown Lisp value");
         }
 
-        public Procedure ParseFromText(string input)
+        public Function ParseFromText(string input)
         {
             var tokens = VirtualMachineLispParser.Tokenize(input);
             var parsed = VirtualMachineLispParser.ReadAllTokens(tokens);
-            return this.ParseGlobalProcedure(parsed);
+            return this.ParseGlobalFunction(parsed);
         }
 
-        public Procedure ParseProcedure(ArrayValue input)
+        public Function ParseFunction(ArrayValue input)
         {
             var parameters = ((ArrayValue)input[1]).Select(arg => arg.ToString()).ToList();
             var tempCodeLines = input.Skip(2).SelectMany(Parse).ToList();
 
-            return VirtualMachineAssembler.ProcessTempProcedure(parameters, tempCodeLines);
+            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
         }
 
-        public Procedure ParseGlobalProcedure(ArrayValue input)
+        public Function ParseGlobalFunction(ArrayValue input)
         {
             var tempCodeLines = input.SelectMany(Parse).ToList();
-            return VirtualMachineAssembler.ProcessTempProcedure(Procedure.EmptyParameters, tempCodeLines);
+            return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
         }
 
         private static bool TryParseOperator(string input, out Operator result)

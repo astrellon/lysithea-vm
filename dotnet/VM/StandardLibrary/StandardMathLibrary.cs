@@ -146,7 +146,7 @@ namespace SimpleStackVM
                 vm.PushStack(left.CompareTo(right) < 0 ? left : right);
             });
 
-            var add = new BuiltinProcedureValue(vm =>
+            var add = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
@@ -155,7 +155,7 @@ namespace SimpleStackVM
             result.Define("+", add);
             result.Define("math.add", add);
 
-            var sub = new BuiltinProcedureValue(vm =>
+            var sub = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
@@ -164,7 +164,7 @@ namespace SimpleStackVM
             result.Define("-", sub);
             result.Define("math.sub", sub);
 
-            var mul = new BuiltinProcedureValue(vm =>
+            var mul = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
@@ -173,7 +173,7 @@ namespace SimpleStackVM
             result.Define("*", mul);
             result.Define("math.mul", mul);
 
-            var div = new BuiltinProcedureValue(vm =>
+            var div = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();

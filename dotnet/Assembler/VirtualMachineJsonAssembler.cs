@@ -10,9 +10,9 @@ namespace SimpleStackVM
     public static class VirtualMachineJsonAssembler
     {
         #region Methods
-        public static List<Procedure> ParseProcedures(JSONArray input)
+        public static List<Function> ParseProcedures(JSONArray input)
         {
-            var result = new List<Procedure>();
+            var result = new List<Function>();
             foreach (var child in input.Children)
             {
                 if (child.IsObject)
@@ -25,7 +25,7 @@ namespace SimpleStackVM
             return result;
         }
 
-        public static Procedure ParseProcedure(JSONObject input)
+        public static Function ParseProcedure(JSONObject input)
         {
             var name = input["name"].Value;
             var data = input["data"].AsArray;
@@ -44,13 +44,13 @@ namespace SimpleStackVM
                 }
             }
 
-            var parameters = Procedure.EmptyParameters;
+            var parameters = Function.EmptyParameters;
             if (input.HasKey("args"))
             {
                 parameters = input["args"].Children.Select(s => s.Value).ToList();
             }
 
-            return VirtualMachineAssembler.ProcessTempProcedure(parameters, tempCodeLines);
+            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
         }
 
         private static IEnumerable<ITempCodeLine> ParseCodeLine(IReadOnlyList<JSONNode> input)

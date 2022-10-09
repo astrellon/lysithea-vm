@@ -16,7 +16,7 @@ namespace SimpleStackVM
         public static Scope CreateScope()
         {
             var result = new Scope();
-            result.Define("object.set", new BuiltinProcedureValue(vm =>
+            result.Define("object.set", new BuiltinFunctionValue(vm =>
             {
                 var value = vm.PopStack();
                 var key = vm.PopStack<StringValue>();
@@ -24,7 +24,7 @@ namespace SimpleStackVM
                 vm.PushStack(Set(obj, key, value));
             }));
 
-            result.Define("object.get", new BuiltinProcedureValue(vm =>
+            result.Define("object.get", new BuiltinFunctionValue(vm =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
@@ -38,19 +38,19 @@ namespace SimpleStackVM
                 }
             }));
 
-            result.Define("object.keys", new BuiltinProcedureValue(vm =>
+            result.Define("object.keys", new BuiltinFunctionValue(vm =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Keys(top));
             }));
 
-            result.Define("object.values", new BuiltinProcedureValue(vm =>
+            result.Define("object.values", new BuiltinFunctionValue(vm =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Values(top));
             }));
 
-            result.Define("object.length", new BuiltinProcedureValue(vm =>
+            result.Define("object.length", new BuiltinFunctionValue(vm =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(new NumberValue(top.Value.Count));

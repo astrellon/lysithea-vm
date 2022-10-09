@@ -1,4 +1,4 @@
-(define main (procedure ()
+(define main (function ()
     (push 0)
     (:Start)
 
@@ -9,7 +9,7 @@
     (done)
 ))
 
-(define step (procedure ()
+(define step (function ()
     (rand)
     (rand)
     (add)

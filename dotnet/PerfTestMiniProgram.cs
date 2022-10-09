@@ -13,7 +13,7 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var scope = new Procedure(new []
+            var scope = new Function(new []
             {
                 new CodeLine(Operator.Push, new NumberValue(0)),
                 new CodeLine(Operator.Call, new StringValue(":Step")),

@@ -17,7 +17,7 @@ namespace SimpleStackVM
             return result;
         }
 
-        public static JSONNode Disassemble(Procedure procedure)
+        public static JSONNode Disassemble(Function procedure)
         {
             var result = new JSONObject();
             // result["name"] = new JSONString(procedure.Name);

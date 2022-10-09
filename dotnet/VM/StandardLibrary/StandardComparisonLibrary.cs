@@ -15,7 +15,7 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            var greater = new BuiltinProcedureValue(vm =>
+            var greater = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
@@ -24,7 +24,7 @@ namespace SimpleStackVM
             result.Define(">", greater);
             result.Define("comp.greater", greater);
 
-            var greaterEquals = new BuiltinProcedureValue(vm =>
+            var greaterEquals = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
@@ -33,7 +33,7 @@ namespace SimpleStackVM
             result.Define(">=", greaterEquals);
             result.Define("comp.greaterEquals", greaterEquals);
 
-            var equals = new BuiltinProcedureValue(vm =>
+            var equals = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
@@ -42,7 +42,7 @@ namespace SimpleStackVM
             result.Define("==", equals);
             result.Define("comp.equals", equals);
 
-            var notEquals = new BuiltinProcedureValue(vm =>
+            var notEquals = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
@@ -51,7 +51,7 @@ namespace SimpleStackVM
             result.Define("!=", notEquals);
             result.Define("comp.notEquals", notEquals);
 
-            var less = new BuiltinProcedureValue(vm =>
+            var less = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
@@ -60,7 +60,7 @@ namespace SimpleStackVM
             result.Define("<", less);
             result.Define("comp.less", less);
 
-            var lessEquals = new BuiltinProcedureValue(vm =>
+            var lessEquals = new BuiltinFunctionValue(vm =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
@@ -69,7 +69,7 @@ namespace SimpleStackVM
             result.Define("<=", lessEquals);
             result.Define("comp.lessEquals", lessEquals);
 
-            var not = new BuiltinProcedureValue(vm =>
+            var not = new BuiltinFunctionValue(vm =>
             {
                 var top = vm.PopStack<BoolValue>();
                 vm.PushStack(new BoolValue(!top.Value));

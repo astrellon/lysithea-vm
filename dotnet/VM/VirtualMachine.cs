@@ -29,7 +29,7 @@ namespace SimpleStackVM
         {
             this.builtinScopes = new List<IReadOnlyScope>();
             this.globalScope = new Scope();
-            this.CurrentFrame = new ScopeFrame(Procedure.Empty, this.globalScope);
+            this.CurrentFrame = new ScopeFrame(Function.Empty, this.globalScope);
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
@@ -41,7 +41,7 @@ namespace SimpleStackVM
             this.builtinScopes.Add(scope);
         }
 
-        public void SetGlobalCode(Procedure code)
+        public void SetGlobalCode(Function code)
         {
             this.CurrentFrame = new ScopeFrame(code, this.globalScope);
         }
@@ -49,7 +49,7 @@ namespace SimpleStackVM
         public void Reset()
         {
             this.globalScope = new Scope();
-            this.CurrentFrame = new ScopeFrame(Procedure.Empty, this.globalScope);
+            this.CurrentFrame = new ScopeFrame(Function.Empty, this.globalScope);
             this.stack.Clear();
             this.stackTrace.Clear();
             this.Running = false;
@@ -160,13 +160,13 @@ namespace SimpleStackVM
                 case Operator.Call:
                     {
                         var top = codeLine.Input ?? this.PopStack();
-                        if (top is IProcedureValue procTop)
+                        if (top is IFunctionValue procTop)
                         {
-                            this.CallProcedure(procTop, true);
+                            this.CallFunction(procTop, true);
                         }
                         else
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a procedure to run: {top.ToString()}");
+                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a function to run: {top.ToString()}");
                         }
                         break;
                     }
@@ -208,37 +208,37 @@ namespace SimpleStackVM
             return args;
         }
 
-        public void CallProcedure(IProcedureValue value, bool pushToStackTrace)
+        public void CallFunction(IFunctionValue value, bool pushToStackTrace)
         {
-            if (value is ProcedureValue foundProc)
+            if (value is FunctionValue foundProc)
             {
                 if (pushToStackTrace)
                 {
                     this.PushToStackTrace(this.CurrentFrame);
                 }
-                this.ExecuteProcedure(foundProc.Value);
+                this.ExecuteFunction(foundProc.Value);
             }
-            else if (value is BuiltinProcedureValue foundBuiltin)
+            else if (value is BuiltinFunctionValue foundBuiltin)
             {
-                this.ExecuteProcedure(foundBuiltin);
+                this.ExecuteFunction(foundBuiltin);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteProcedure(BuiltinProcedureValue handler)
+        public void ExecuteFunction(BuiltinFunctionValue handler)
         {
             handler.Value.Invoke(this);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteProcedure(Procedure procedure)
+        public void ExecuteFunction(Function function)
         {
-            this.CurrentFrame = new ScopeFrame(procedure, new Scope(this.CurrentFrame.Scope));
+            this.CurrentFrame = new ScopeFrame(function, new Scope(this.CurrentFrame.Scope));
 
-            var args = this.GetArgs(procedure.Parameters.Count);
+            var args = this.GetArgs(function.Parameters.Count);
             for (var i = 0; i < args.Count; i++)
             {
-                var argName = procedure.Parameters[i];
+                var argName = function.Parameters[i];
                 this.CurrentFrame.Scope.Define(argName, args[i]);
             }
         }
@@ -335,11 +335,11 @@ namespace SimpleStackVM
         {
             var result = new List<string>();
 
-            result.Add(DebugScopeLine(this.CurrentFrame.Procedure, this.CurrentFrame.LineCounter - 1));
+            result.Add(DebugScopeLine(this.CurrentFrame.Function, this.CurrentFrame.LineCounter - 1));
             for (var i = this.stackTrace.Index - 1; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];
-                result.Add(DebugScopeLine(stackFrame.Procedure, stackFrame.LineCounter));
+                result.Add(DebugScopeLine(stackFrame.Function, stackFrame.LineCounter));
             }
 
             return result;
@@ -355,20 +355,20 @@ namespace SimpleStackVM
             }
         }
 
-        private static string DebugScopeLine(Procedure procedure, int line)
+        private static string DebugScopeLine(Function function, int line)
         {
-            if (line >= procedure.Code.Count)
+            if (line >= function.Code.Count)
             {
-                return $"[{procedure.Name}:{line - 1}: end of code";
+                return $"[{function.Name}:{line - 1}: end of code";
             }
             if (line < 0)
             {
-                return $"[{procedure.Name}:{line - 1}: before start of code";
+                return $"[{function.Name}:{line - 1}: before start of code";
             }
 
-            var codeLine = procedure.Code[line];
+            var codeLine = function.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{procedure.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
+            return $"[{function.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
         }
         #endregion
     }

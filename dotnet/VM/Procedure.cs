@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace SimpleStackVM
 {
-    public class Procedure
+    public class Function
     {
         #region Fields
         public static IReadOnlyList<CodeLine> EmptyCode = new CodeLine[0];
         public static IReadOnlyDictionary<string, int> EmptyLabels = new Dictionary<string, int>();
         public static IReadOnlyList<string> EmptyParameters = new string[0];
-        public static readonly Procedure Empty = new Procedure(EmptyCode, EmptyParameters, EmptyLabels);
+        public static readonly Function Empty = new Function(EmptyCode, EmptyParameters, EmptyLabels);
 
         public readonly IReadOnlyList<CodeLine> Code;
         public readonly IReadOnlyDictionary<string, int> Labels;
@@ -23,7 +23,7 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructor
-        public Procedure(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null)
+        public Function(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null)
         {
             this.Code = code;
             this.Parameters = parameters ?? EmptyParameters;

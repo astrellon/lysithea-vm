@@ -8,7 +8,7 @@ namespace SimpleStackVM
 
     public static class VirtualMachineAssembler
     {
-        public static Procedure ProcessTempProcedure(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines)
+        public static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
@@ -25,7 +25,7 @@ namespace SimpleStackVM
                 }
             }
 
-            return new Procedure(code, parameters, labels);
+            return new Function(code, parameters, labels);
         }
 
         public static bool TryParseOperator(string input, out Operator result)

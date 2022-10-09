@@ -8,7 +8,7 @@ namespace SimpleStackVM
     {
         #region Fields
         public int LineCounter;
-        public readonly Procedure Procedure;
+        public readonly Function Function;
         public readonly Scope Scope;
 
         public bool HasMoreCode
@@ -16,7 +16,7 @@ namespace SimpleStackVM
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return !this.Procedure.IsEmpty && this.LineCounter < this.Procedure.Code.Count;
+                return !this.Function.IsEmpty && this.LineCounter < this.Function.Code.Count;
             }
         }
         #endregion
@@ -24,15 +24,15 @@ namespace SimpleStackVM
         #region Constructor
         public ScopeFrame()
         {
-            this.Procedure = Procedure.Empty;
+            this.Function = Function.Empty;
             this.Scope = new Scope();
             this.LineCounter = 0;
         }
 
-        public ScopeFrame(Procedure procedure, Scope scope, int lineCounter = 0)
+        public ScopeFrame(Function function, Scope scope, int lineCounter = 0)
         {
             this.LineCounter = lineCounter;
-            this.Procedure = procedure;
+            this.Function = function;
             this.Scope = scope;
         }
         #endregion
@@ -48,7 +48,7 @@ namespace SimpleStackVM
         {
             if (this.HasMoreCode)
             {
-                result = this.Procedure.Code[this.LineCounter++];
+                result = this.Function.Code[this.LineCounter++];
                 return true;
             }
 
@@ -58,7 +58,7 @@ namespace SimpleStackVM
 
         public bool TryGetLabel(string label, out int line)
         {
-            return this.Procedure.Labels.TryGetValue(label, out line);
+            return this.Function.Labels.TryGetValue(label, out line);
         }
         #endregion
     }

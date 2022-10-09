@@ -18,7 +18,7 @@ namespace SimpleStackVM
         private readonly FixedStack<int> stackTrace;
         private RunCommandHandler globalRunHandler;
 
-        public Procedure CurrentScope { get; private set; } = Procedure.Empty;
+        public Function CurrentScope { get; private set; } = Function.Empty;
         public int ProgramCounter { get; private set; }
         public bool Running;
 
@@ -48,7 +48,7 @@ namespace SimpleStackVM
             this.Running = false;
         }
 
-        public void SetCurrentScope(Procedure scope)
+        public void SetCurrentScope(Function scope)
         {
             this.CurrentScope = scope;
         }
@@ -274,7 +274,7 @@ namespace SimpleStackVM
             }
         }
 
-        private static string DebugScopeLine(Procedure scope, int line)
+        private static string DebugScopeLine(Function scope, int line)
         {
             var codeLine = scope.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";

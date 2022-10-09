@@ -44,18 +44,18 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("print", new BuiltinProcedureValue(vm =>
+            result.Define("print", new BuiltinFunctionValue(vm =>
             {
                 var top = vm.PopStack();
                 Console.WriteLine($"Print: {top.ToString()}");
             }));
 
-            result.Define("done", new BuiltinProcedureValue(vm =>
+            result.Define("done", new BuiltinFunctionValue(vm =>
             {
                 Console.WriteLine("Done!");
             }));
 
-            result.Define("rand", new BuiltinProcedureValue(vm =>
+            result.Define("rand", new BuiltinFunctionValue(vm =>
             {
                 vm.PushStack((NumberValue)Rand.NextDouble());
             }));
