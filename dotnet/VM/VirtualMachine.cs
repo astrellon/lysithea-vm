@@ -60,7 +60,14 @@ namespace SimpleStackVM
         {
             if (!this.CurrentFrame.TryGetNextCodeLine(out var codeLine))
             {
-                this.Running = false;
+                if (this.stackTrace.TryPop(out var scopeFrame))
+                {
+                    this.CurrentFrame = scopeFrame;
+                }
+                else
+                {
+                    this.Running = false;
+                }
                 return;
             }
 

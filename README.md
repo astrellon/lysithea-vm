@@ -95,7 +95,6 @@ Variables can be defined, set and retrieved again. These variables will be scope
     (define name "Created in scope")
     (print name)
     (print "End main")
-    (return)
 ))
 
 (print name)

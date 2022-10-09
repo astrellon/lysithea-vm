@@ -9,7 +9,6 @@
     (define name "Created in scope")
     (print name)
     (print "End main")
-    (return)
 ))
 
 (print name)
