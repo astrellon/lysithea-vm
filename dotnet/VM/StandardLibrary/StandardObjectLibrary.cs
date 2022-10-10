@@ -16,15 +16,15 @@ namespace SimpleStackVM
         public static Scope CreateScope()
         {
             var result = new Scope();
-            result.Define("object.set", new BuiltinFunctionValue(vm =>
+            result.Define("object.set", vm =>
             {
                 var value = vm.PopStack();
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
                 vm.PushStack(Set(obj, key, value));
-            }));
+            });
 
-            result.Define("object.get", new BuiltinFunctionValue(vm =>
+            result.Define("object.get", vm =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
@@ -36,25 +36,39 @@ namespace SimpleStackVM
                 {
                     vm.PushStack(NullValue.Value);
                 }
-            }));
+            });
 
-            result.Define("object.keys", new BuiltinFunctionValue(vm =>
+            result.Define("object.removeKey", vm =>
+            {
+                var key = vm.PopStack<StringValue>();
+                var obj = vm.PopStack<ObjectValue>();
+                vm.PushStack(RemoveKey(obj, key));
+            });
+
+            result.Define("object.removeValues", vm =>
+            {
+                var values = vm.PopStack();
+                var obj = vm.PopStack<ObjectValue>();
+                vm.PushStack(RemoveValues(obj, values));
+            });
+
+            result.Define("object.keys", vm =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Keys(top));
-            }));
+            });
 
-            result.Define("object.values", new BuiltinFunctionValue(vm =>
+            result.Define("object.values", vm =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Values(top));
-            }));
+            });
 
-            result.Define("object.length", new BuiltinFunctionValue(vm =>
+            result.Define("object.length", vm =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(new NumberValue(top.Value.Count));
-            }));
+            });
 
             return result;
         }
@@ -97,6 +111,23 @@ namespace SimpleStackVM
         {
             var result = self.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             result[key] = value;
+            return new ObjectValue(result);
+        }
+
+        public static ObjectValue RemoveKey(ObjectValue self, string key)
+        {
+            if (!self.Value.ContainsKey(key))
+            {
+                return self;
+            }
+
+            var result = self.Value.Where(kvp => kvp.Key != key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            return new ObjectValue(result);
+        }
+
+        public static ObjectValue RemoveValues(ObjectValue self, IValue values)
+        {
+            var result = self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             return new ObjectValue(result);
         }
         #endregion

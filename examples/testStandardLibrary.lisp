@@ -1,0 +1,104 @@
+(define testArray (function ()
+    (print "Running array tests")
+
+    (define arr (0 1 2))
+    (assert.equals (0 1 2) arr)
+
+    (set arr (array.set arr 1 "b"))
+    (assert.equals (0 "b" 2) arr)
+
+    (set arr (array.insertFlatten arr -1 ("c" "d")))
+    (assert.equals (0 "b" "c" "d" 2) arr)
+
+    (set arr (array.insert arr 0 "a"))
+    (assert.equals ("a" 0 "b" "c" "d" 2) arr)
+
+    (set arr (array.removeAt arr 1))
+    (assert.equals ("a" "b" "c" "d" 2) arr)
+
+    (set arr (array.remove arr 2))
+    (assert.notEquals ("a" "b" "c" "e") arr)
+    (assert.equals ("a" "b" "c" "d") arr)
+
+    (assert.equals ("a" "b") (array.sublist arr 0 2))
+    (assert.equals ("a" "b" "c" "d") (array.sublist arr 0 -1))
+    (assert.equals ("d") (array.sublist arr -1 -1))
+    (assert.equals ("c" "d") (array.sublist arr -2 -1))
+    (assert.equals ("b" "c") (array.sublist arr -3 2))
+
+    (print "Array tests passed!")
+))
+
+(define testString (function ()
+    (print "Running string tests")
+
+    (define str "012 hello there")
+    (set str (string.set str 1 "b"))
+    (set str (string.insert str 1 "a"))
+    (set str (string.removeAt str 0))
+    (set str (string.removeAll str "2"))
+    (set str (string.insert str -12 "c"))
+
+    (assert.equals str "abc hello there")
+    (assert.notEquals str "012 hello there")
+
+    (assert.equals "abc" (string.substring str 0 3))
+    (assert.equals "e" (string.substring str -1 1))
+    (assert.equals "hello" (string.substring str -11 5))
+
+    (print "String tests passed!")
+))
+
+(define testObject (function ()
+    (print "Running object tests")
+
+    (define obj { name "Foo" age 30 })
+
+    (set obj (object.set obj "name" "Bar"))
+    (assert.equals {name "Bar" age 30} obj)
+
+    (set obj (object.set obj "age" 31))
+    (assert.equals {name "Bar" age 31} obj)
+
+    (set obj (object.set obj "hasAddress" true))
+    (assert.equals {name "Bar" age 31 hasAddress true} obj)
+
+    (assert.equals 3 (object.length obj))
+
+    (define objKeys (object.keys obj))
+    (assert.equals 3 (array.length objKeys))
+    (assert.true (array.contains objKeys "name"))
+    (assert.true (array.contains objKeys "age"))
+    (assert.true (array.contains objKeys "hasAddress"))
+    (assert.false (array.contains objKeys "unknown"))
+
+    (define objValues (object.values obj))
+    (assert.equals 3 (array.length objValues))
+    (assert.true (array.contains objValues "Bar"))
+    (assert.true (array.contains objValues 31))
+    (assert.true (array.contains objValues true))
+    (assert.false (array.contains objValues false))
+
+    (assert.equals "Bar" (object.get obj "name"))
+    (assert.equals 31 (object.get obj "age"))
+    (assert.equals true (object.get obj "hasAddress"))
+    (assert.equals null (object.get obj "unknown"))
+
+    (assert.equals {age 31 hasAddress true} (object.removeKey obj "name"))
+    (assert.equals obj (object.removeKey obj "unknown"))
+    (assert.equals {name "Bar" hasAddress true} (object.removeValues obj 31))
+    (assert.equals obj (object.removeValues obj false))
+
+    (define i 0)
+    (loop (< i (array.length objValues))
+        (print i)
+        (print (array.get objValues i))
+        (set i (+ i 1))
+    )
+
+    (print "Object tests passed!")
+))
+
+(testArray)
+(testString)
+(testObject)

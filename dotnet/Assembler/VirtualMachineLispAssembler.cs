@@ -118,6 +118,7 @@ namespace SimpleStackVM
             if (input is NumberValue ||
                 input is StringValue ||
                 input is ObjectValue ||
+                input is NullValue ||
                 input is BoolValue)
             {
                 return new[] { new TempCodeLine(Operator.Push, input) };
@@ -139,34 +140,22 @@ namespace SimpleStackVM
                         return new[] { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
-                    if (firstSymbolValue.Value == FunctionKeyword)
+                    switch (firstSymbolValue.Value)
                     {
-                        var function = ParseFunction(arrayValue);
-                        var functionValue = new FunctionValue(function);
-                        return new[] { new TempCodeLine(Operator.Push, functionValue) };
-                    }
-                    if (firstSymbolValue.Value == SetKeyword)
-                    {
-                        return ParseSet(arrayValue);
-                    }
-                    if (firstSymbolValue.Value == DefineKeyword)
-                    {
-                        return ParseDefine(arrayValue);
-                    }
-                    if (firstSymbolValue.Value == LoopKeyword)
-                    {
-                        return ParseLoop(arrayValue);
-                    }
-                    if (firstSymbolValue.Value == IfKeyword)
-                    {
-                        return ParseCond(arrayValue, true);
-                    }
-                    if (firstSymbolValue.Value == UnlessKeyword)
-                    {
-                        return ParseCond(arrayValue, false);
+                        case FunctionKeyword:
+                            {
+                                var function = ParseFunction(arrayValue);
+                                var functionValue = new FunctionValue(function);
+                                return new[] { new TempCodeLine(Operator.Push, functionValue) };
+                            }
+                        case SetKeyword: return ParseSet(arrayValue);
+                        case DefineKeyword: return ParseDefine(arrayValue);
+                        case LoopKeyword: return ParseLoop(arrayValue);
+                        case IfKeyword: return ParseCond(arrayValue, true);
+                        case UnlessKeyword: return ParseCond(arrayValue, false);
                     }
 
-                    var isOpCode = TryParseOperator(firstSymbolValue.Value, out var opCode);
+                    var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
                     if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
                     {
                         return ParseJump(opCode, arrayValue);
@@ -198,7 +187,6 @@ namespace SimpleStackVM
                 }
                 else
                 {
-                    // result.AddRange(arrayValue.SelectMany(Parse));
                     result.Add(new TempCodeLine(Operator.Push, input));
                 }
                 return result;
@@ -238,17 +226,6 @@ namespace SimpleStackVM
         {
             var tempCodeLines = input.SelectMany(Parse).ToList();
             return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
-        }
-
-        private static bool TryParseOperator(string input, out Operator result)
-        {
-            if (!Enum.TryParse<Operator>(input, true, out result))
-            {
-                result = Operator.Unknown;
-                return false;
-            }
-
-            return true;
         }
         #endregion
     }

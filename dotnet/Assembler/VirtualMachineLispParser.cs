@@ -100,6 +100,10 @@ namespace SimpleStackVM
                 return new StringValue(input.Substring(1, input.Length - 2));
             }
 
+            if (input == "null")
+            {
+                return NullValue.Value;
+            }
             return new SymbolValue(input);
         }
 

@@ -38,7 +38,7 @@ namespace SimpleStackVM
             result.Define("assert.equals", vm =>
             {
                 var toCompare = vm.PopStack();
-                var top = vm.PeekStack();
+                var top = vm.PopStack();
                 if (top.CompareTo(toCompare) != 0)
                 {
                     vm.Running = false;
@@ -50,7 +50,7 @@ namespace SimpleStackVM
             result.Define("assert.notEquals", vm =>
             {
                 var toCompare = vm.PopStack();
-                var top = vm.PeekStack();
+                var top = vm.PopStack();
                 if (top.CompareTo(toCompare) == 0)
                 {
                     vm.Running = false;
