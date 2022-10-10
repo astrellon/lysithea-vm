@@ -16,7 +16,7 @@ namespace SimpleStackVM
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineLispAssembler();
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/fib.lisp"));
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 
             var vm = new VirtualMachine(64);
             vm.AddBuiltinScope(CustomScope);

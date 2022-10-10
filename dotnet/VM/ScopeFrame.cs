@@ -11,13 +11,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Constructor
-        public ScopeFrame()
-        {
-            this.Function = Function.Empty;
-            this.Scope = new Scope();
-            this.LineCounter = 0;
-        }
-
         public ScopeFrame(Function function, Scope scope, int lineCounter = 0)
         {
             this.LineCounter = lineCounter;

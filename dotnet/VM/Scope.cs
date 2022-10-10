@@ -28,16 +28,19 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Define(string key, IValue value)
         {
             this.values[key] = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Define(string key, Action<VirtualMachine> builtinFunction)
         {
             this.values[key] = new BuiltinFunctionValue(builtinFunction);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySet(string key, IValue value)
         {
             if (this.values.ContainsKey(key))

@@ -46,6 +46,11 @@ namespace SimpleStackVM
             this.builtinScopes.Add(scope);
         }
 
+        public void RemoveBuiltinScope(IReadOnlyScope scope)
+        {
+            this.builtinScopes.Remove(scope);
+        }
+
         public void SetGlobalCode(Function code)
         {
             this.currentCode = code;
@@ -201,6 +206,20 @@ namespace SimpleStackVM
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Jump(string label)
+        {
+            if (this.currentCode.Labels.TryGetValue(label, out var line))
+            {
+                this.lineCounter = line;
+            }
+            else
+            {
+                throw new OperatorException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
+            }
+        }
+
+        #region Function Methods
         public ArrayValue GetArgs(int numArgs)
         {
             var args = ArrayValue.Empty;
@@ -275,19 +294,9 @@ namespace SimpleStackVM
             this.lineCounter = scopeFrame.LineCounter;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Jump(string label)
-        {
-            if (this.currentCode.Labels.TryGetValue(label, out var line))
-            {
-                this.lineCounter = line;
-            }
-            else
-            {
-                throw new OperatorException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
-            }
-        }
+        #endregion
 
+        #region Stack Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IValue PopStack()
         {
@@ -342,7 +351,9 @@ namespace SimpleStackVM
                 throw new StackException(this.CreateStackTrace(), "Unable to push stack, stack is full");
             }
         }
+        #endregion
 
+        #region Debugging Methods
         public IReadOnlyList<string> CreateStackTrace()
         {
             var result = new List<string>();
@@ -382,6 +393,8 @@ namespace SimpleStackVM
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
             return $"[{function.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
         }
+        #endregion
+
         #endregion
     }
 }
