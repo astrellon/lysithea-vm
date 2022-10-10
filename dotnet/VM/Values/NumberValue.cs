@@ -6,8 +6,6 @@ namespace SimpleStackVM
     {
         #region Fields
         public readonly double Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
 
         public int IntValue => (int)this.Value;
         public float FloatValue => (float)this.Value;

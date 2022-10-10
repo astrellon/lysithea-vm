@@ -14,11 +14,8 @@ namespace SimpleStackVM
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);
 
         public readonly IReadOnlyList<IValue> Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
 
         public int Count => Value.Count;
-
         public IValue this[int index] => Value[this.GetIndex(index)];
         #endregion
 
@@ -77,30 +74,6 @@ namespace SimpleStackVM
         public override int GetHashCode()
         {
             return this.Value.GetHashCode();
-        }
-
-        public ArrayValue Sublist(int index, int length = -1)
-        {
-            index = this.GetIndex(index);
-            if (length < 0)
-            {
-                length = this.Value.Count - index;
-            }
-            else
-            {
-                var diff = (index + length) - this.Value.Count;
-                if (diff > 0)
-                {
-                    length -= diff;
-                }
-            }
-
-            var result = new IValue[length];
-            for (var i = 0; i < length; i++)
-            {
-                result[i] = this.Value[i + index];
-            }
-            return new ArrayValue(result);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -9,8 +9,6 @@ namespace SimpleStackVM
     {
         #region Fields
         public readonly object Value;
-        public object RawValue => this.Value;
-        public bool IsNull => this.Value != null;
         #endregion
 
         #region Constructor
@@ -33,9 +31,9 @@ namespace SimpleStackVM
                 return (other == null || other.Equals(NullValue.Value));
             }
             if (other == null) return false;
-            if (other is IValue otherValue)
+            if (other is AnyValue otherValue)
             {
-                return this.Value.Equals(otherValue.RawValue);
+                return this.Value.Equals(otherValue.Value);
             }
             return false;
         }
@@ -55,7 +53,7 @@ namespace SimpleStackVM
             if (other == null) return 1;
             if (other is AnyValue otherAny)
             {
-                return this.RawValue == otherAny.RawValue ? 0 : 1;
+                return this.Value == otherAny.Value ? 0 : 1;
             }
 
             return 1;

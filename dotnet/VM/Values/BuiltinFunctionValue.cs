@@ -13,9 +13,6 @@ namespace SimpleStackVM
         private static readonly BuiltinFunctionHandler EmptyHandler = (vm) => { };
 
         #region Field
-        bool IValue.IsNull => false;
-        object IValue.RawValue => this.Value;
-
         public readonly BuiltinFunctionHandler Value;
         #endregion
 

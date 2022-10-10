@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 namespace SimpleStackVM
 {
-
     public static class VirtualMachineAssembler
     {
         public static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines)

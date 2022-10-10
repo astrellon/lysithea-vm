@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 #nullable enable
 
@@ -9,9 +7,6 @@ namespace SimpleStackVM
     public class FunctionValue : IFunctionValue
     {
         #region Field
-        bool IValue.IsNull => false;
-        object IValue.RawValue => this.Value;
-
         public readonly Function Value;
         #endregion
 

@@ -188,7 +188,26 @@ namespace SimpleStackVM
 
         public static ArrayValue SubList(ArrayValue self, int index, int length)
         {
-            return self.Sublist(index, length);
+            index = self.GetIndex(index);
+            if (length < 0)
+            {
+                length = self.Value.Count - index;
+            }
+            else
+            {
+                var diff = (index + length) - self.Value.Count;
+                if (diff > 0)
+                {
+                    length -= diff;
+                }
+            }
+
+            var result = new IValue[length];
+            for (var i = 0; i < length; i++)
+            {
+                result[i] = self.Value[i + index];
+            }
+            return new ArrayValue(result);
         }
         #endregion
     }

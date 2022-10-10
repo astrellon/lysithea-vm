@@ -7,8 +7,6 @@ namespace SimpleStackVM
         #region Fields
         public static readonly SymbolValue Empty = new SymbolValue("");
         public readonly string Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
 
         public bool IsLabel => this.Value.Length > 0 && this.Value[0] == ':';
         #endregion
@@ -16,7 +14,7 @@ namespace SimpleStackVM
         #region Constructor
         public SymbolValue(string value)
         {
-            this.Value = string.Intern(value ?? "<<null>>");
+            this.Value = string.Intern(value);
         }
         #endregion
 
