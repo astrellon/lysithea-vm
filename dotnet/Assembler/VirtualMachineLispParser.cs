@@ -9,6 +9,7 @@ namespace SimpleStackVM
     {
         #region Fields
         private static Regex TokenRegex = new Regex("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
+        private static Regex CommentRegex = new Regex("^\\s*;.*$", RegexOptions.Multiline);
         #endregion
 
         #region Methods
@@ -19,6 +20,8 @@ namespace SimpleStackVM
                 .Replace("{", " { ")
                 .Replace("}", " } ")
                 .Trim();
+
+            cleaned = CommentRegex.Replace(cleaned, "");
 
             return TokenRegex.Matches(cleaned).Select(m => m.Value).ToList();
         }

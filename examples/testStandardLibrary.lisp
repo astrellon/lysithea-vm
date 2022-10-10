@@ -89,8 +89,10 @@
     (assert.equals {name "Bar" hasAddress true} (object.removeValues obj 31))
     (assert.equals obj (object.removeValues obj false))
 
+    ; A simple example of a loop
     (define i 0)
-    (loop (< i (array.length objValues))
+    (define objLength (array.length objValues))
+    (loop (< i objLength)
         (print i)
         (print (array.get objValues i))
         (set i (+ i 1))
