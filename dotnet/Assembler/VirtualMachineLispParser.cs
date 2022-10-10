@@ -16,6 +16,8 @@ namespace SimpleStackVM
         {
             var cleaned = input.Replace("(", " ( ")
                 .Replace(")", " ) ")
+                .Replace("{", " { ")
+                .Replace("}", " } ")
                 .Trim();
 
             return TokenRegex.Matches(cleaned).Select(m => m.Value).ToList();
@@ -54,6 +56,23 @@ namespace SimpleStackVM
             else if (token == ")")
             {
                 throw new ArgumentException("Unexpected )");
+            }
+            else if (token == "{")
+            {
+                var map = new Dictionary<string, IValue>();
+                while (tokens.First() != "}")
+                {
+                    var key = ReadFromTokens(tokens).ToString();
+                    var value = ReadFromTokens(tokens);
+                    map[key] = value;
+                }
+                PopFront(tokens);
+
+                return new ObjectValue(map);
+            }
+            else if (token == "}")
+            {
+                throw new ArgumentException("Unexpected }");
             }
             else
             {

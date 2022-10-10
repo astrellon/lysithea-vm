@@ -13,7 +13,7 @@ namespace SimpleStackVM
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineLispAssembler();
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/testObject.lisp"));
 
             var vm = new VirtualMachine(64);
             StandardLibrary.AddToVirtualMachine(vm);

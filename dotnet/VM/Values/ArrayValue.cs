@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Collections;
 
 #nullable enable
 
@@ -102,19 +101,6 @@ namespace SimpleStackVM
                 result[i] = this.Value[i + index];
             }
             return new ArrayValue(result);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T At<T>(int index) where T : IValue
-        {
-            index =  this.GetIndex(index);
-            var obj = this[index];
-            if (obj.GetType() == typeof(T))
-            {
-                return (T)obj;
-            }
-
-            throw new Exception($"Oh no!");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

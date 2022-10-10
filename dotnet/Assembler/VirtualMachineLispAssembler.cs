@@ -117,6 +117,7 @@ namespace SimpleStackVM
         {
             if (input is NumberValue ||
                 input is StringValue ||
+                input is ObjectValue ||
                 input is BoolValue)
             {
                 return new[] { new TempCodeLine(Operator.Push, input) };
