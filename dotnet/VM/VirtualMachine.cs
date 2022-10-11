@@ -13,7 +13,7 @@ namespace SimpleStackVM
         #region Fields
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-        private readonly List<IReadOnlyScope> builtinScopes;
+        private readonly Scope builtinScope;
 
         private Scope globalScope;
         private Function currentCode;
@@ -30,8 +30,9 @@ namespace SimpleStackVM
         #region Constructor
         public VirtualMachine(int stackSize)
         {
-            this.builtinScopes = new List<IReadOnlyScope>();
-            this.globalScope = new Scope();
+            // this.builtinScopes = new List<IReadOnlyScope>();
+            this.builtinScope = new Scope();
+            this.globalScope = new Scope(this.builtinScope);
             this.currentCode = Function.Empty;
             this.currentScope = this.globalScope;
             this.lineCounter = 0;
@@ -43,12 +44,12 @@ namespace SimpleStackVM
         #region Methods
         public void AddBuiltinScope(IReadOnlyScope scope)
         {
-            this.builtinScopes.Add(scope);
+            this.builtinScope.CombineScope(scope);
         }
 
         public void RemoveBuiltinScope(IReadOnlyScope scope)
         {
-            this.builtinScopes.Remove(scope);
+            // this.builtinScopes.Remove(scope);
         }
 
         public void SetGlobalCode(Function code)
@@ -58,7 +59,7 @@ namespace SimpleStackVM
 
         public void Reset()
         {
-            this.globalScope = new Scope();
+            this.globalScope = new Scope(this.builtinScope);
             this.currentCode = Function.Empty;
             this.currentScope = this.globalScope;
             this.lineCounter = 0;
@@ -111,7 +112,7 @@ namespace SimpleStackVM
                 case Operator.Get:
                     {
                         var value = codeLine.Input ?? this.PopStack();
-                        if (this.TryGetValue(value.ToString(), out var foundValue))
+                        if (this.TryGetValue(value, out var foundValue))
                         {
                             this.PushStack(foundValue);
                         }
@@ -192,20 +193,36 @@ namespace SimpleStackVM
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetValue(string key, out IValue value)
+        public bool TryGetValue(IValue key, out IValue value)
         {
-            if (this.currentScope.TryGet(key, out value))
+            if (key is ArrayValue list)
             {
+                this.TryGetValue(list[0], out var current);
+                for (var i = 1; i < list.Count; i++)
+                {
+                    if (current is ObjectValue currentObject)
+                    {
+                        if (!currentObject.TryGetValue(list[i].ToString(), out current))
+                        {
+                            value = NullValue.Value;
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        throw new OperatorException(this.CreateStackTrace(), $"Unable to get property from non object: [{key.ToString()}]: {current.ToString()}");
+                    }
+                }
+
+                value = current;
                 return true;
             }
 
-            foreach (var scope in this.builtinScopes)
+            var strKey = key.ToString();
+
+            if (this.currentScope.TryGet(strKey, out value))
             {
-                if (scope.TryGet(key, out value))
-                {
-                    return true;
-                }
+                return true;
             }
 
             value = NullValue.Value;

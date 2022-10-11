@@ -16,7 +16,8 @@ namespace SimpleStackVM
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testObject.lisp"));
 
             var vm = new VirtualMachine(64);
-            StandardLibrary.AddToVirtualMachine(vm);
+            // StandardLibrary.AddToVirtualMachine(vm);
+            vm.AddBuiltinScope(StandardMathLibrary.Scope);
             vm.AddBuiltinScope(CustomScope);
 
             vm.SetGlobalCode(code);

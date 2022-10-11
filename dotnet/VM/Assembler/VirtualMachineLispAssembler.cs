@@ -172,7 +172,7 @@ namespace SimpleStackVM
                     if (!isOpCode)
                     {
                         opCode = Operator.Call;
-                        result.Add(new TempCodeLine(Operator.Get, firstSymbolValue));
+                        result.Add(GetSymbolValue(firstSymbolValue));
                         result.Add(new TempCodeLine(Operator.Call, (NumberValue)(arrayValue.Count - 1)));
                     }
                     else
@@ -196,7 +196,7 @@ namespace SimpleStackVM
             {
                 if (symbolValue.Value[0] != ':')
                 {
-                    return new[] { new TempCodeLine(Operator.Get, symbolValue) };
+                    return new [] { GetSymbolValue(symbolValue) };
                 }
                 else
                 {
@@ -226,6 +226,19 @@ namespace SimpleStackVM
         {
             var tempCodeLines = input.SelectMany(Parse).ToList();
             return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
+        }
+
+        private static TempCodeLine GetSymbolValue(SymbolValue input)
+        {
+            if (input.Value.Contains('.'))
+            {
+                var split = input.Value.Split('.').Select(c => new SymbolValue(c) as IValue);
+                return new TempCodeLine(Operator.Get, new ArrayValue(split.ToList()));
+            }
+            else
+            {
+                return new TempCodeLine(Operator.Get, input);
+            }
         }
         #endregion
     }

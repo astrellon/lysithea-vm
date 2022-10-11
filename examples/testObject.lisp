@@ -5,7 +5,7 @@
         address ("location 1" "location 2")
     })
 
-    (print person " Hello " 5)
+    (print person.name " Hello " (math.add 5 person.age))
 ))
 
 (main)
