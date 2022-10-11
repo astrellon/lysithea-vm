@@ -16,7 +16,7 @@ namespace SimpleStackVM
         public static Scope CreateScope()
         {
             var result = new Scope();
-            result.Define("object.set", vm =>
+            result.Define("object.set", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var key = vm.PopStack<StringValue>();
@@ -24,7 +24,7 @@ namespace SimpleStackVM
                 vm.PushStack(Set(obj, key, value));
             });
 
-            result.Define("object.get", vm =>
+            result.Define("object.get", (vm, numArgs) =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
@@ -38,33 +38,33 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("object.removeKey", vm =>
+            result.Define("object.removeKey", (vm, numArgs) =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
                 vm.PushStack(RemoveKey(obj, key));
             });
 
-            result.Define("object.removeValues", vm =>
+            result.Define("object.removeValues", (vm, numArgs) =>
             {
                 var values = vm.PopStack();
                 var obj = vm.PopStack<ObjectValue>();
                 vm.PushStack(RemoveValues(obj, values));
             });
 
-            result.Define("object.keys", vm =>
+            result.Define("object.keys", (vm, numArgs) =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Keys(top));
             });
 
-            result.Define("object.values", vm =>
+            result.Define("object.values", (vm, numArgs) =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Values(top));
             });
 
-            result.Define("object.length", vm =>
+            result.Define("object.length", (vm, numArgs) =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(new NumberValue(top.Value.Count));

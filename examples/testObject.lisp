@@ -5,7 +5,7 @@
         address ("location 1" "location 2")
     })
 
-    (print person)
+    (print person " Hello " 5)
 ))
 
 (main)

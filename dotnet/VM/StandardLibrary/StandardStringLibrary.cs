@@ -16,27 +16,27 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("string.append", vm =>
+            result.Define("string.append", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
                 vm.PushStack(new StringValue(left.ToString() + right.ToString()));
             });
 
-            result.Define("string.prepend", vm =>
+            result.Define("string.prepend", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
                 vm.PushStack(new StringValue(right.ToString() + left.ToString()));
             });
 
-            result.Define("string.length", vm =>
+            result.Define("string.length", (vm, numArgs) =>
             {
                 var top = vm.PopStack<StringValue>();
                 vm.PushStack(new NumberValue(top.Value.Length));
             });
 
-            result.Define("string.set", vm =>
+            result.Define("string.set", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var index = vm.PopStack<NumberValue>();
@@ -44,14 +44,14 @@ namespace SimpleStackVM
                 vm.PushStack(Set(top, index.IntValue, value.ToString()));
             });
 
-            result.Define("string.get", vm =>
+            result.Define("string.get", (vm, numArgs) =>
             {
                 var index = vm.PopStack<NumberValue>();
                 var top = vm.PopStack<StringValue>();
                 vm.PushStack(Get(top, index.IntValue));
             });
 
-            result.Define("string.insert", vm =>
+            result.Define("string.insert", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var index = vm.PopStack<NumberValue>();
@@ -59,7 +59,7 @@ namespace SimpleStackVM
                 vm.PushStack(Insert(top, index.IntValue, value.ToString()));
             });
 
-            result.Define("string.substring", vm =>
+            result.Define("string.substring", (vm, numArgs) =>
             {
                 var length = vm.PopStack<NumberValue>();
                 var index = vm.PopStack<NumberValue>();
@@ -67,14 +67,14 @@ namespace SimpleStackVM
                 vm.PushStack(SubString(top, index.IntValue, length.IntValue));
             });
 
-            result.Define("string.removeAt", vm =>
+            result.Define("string.removeAt", (vm, numArgs) =>
             {
                 var index = vm.PopStack<NumberValue>();
                 var top = vm.PopStack<StringValue>();
                 vm.PushStack(RemoveAt(top, index.IntValue));
             });
 
-            result.Define("string.removeAll", vm =>
+            result.Define("string.removeAll", (vm, numArgs) =>
             {
                 var values = vm.PopStack<StringValue>();
                 var top = vm.PopStack<StringValue>();

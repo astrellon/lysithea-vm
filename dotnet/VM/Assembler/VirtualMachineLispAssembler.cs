@@ -173,7 +173,7 @@ namespace SimpleStackVM
                     {
                         opCode = Operator.Call;
                         result.Add(new TempCodeLine(Operator.Get, firstSymbolValue));
-                        result.Add(new TempCodeLine(Operator.Call, null));
+                        result.Add(new TempCodeLine(Operator.Call, (NumberValue)(arrayValue.Count - 1)));
                     }
                     else
                     {

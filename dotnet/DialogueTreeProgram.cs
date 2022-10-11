@@ -49,37 +49,37 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("say", vm =>
+            result.Define("say", (vm, numArgs) =>
             {
                 Say(vm.PopStack());
             });
 
-            result.Define("getPlayerName", vm =>
+            result.Define("getPlayerName", (vm, numArgs) =>
             {
                 PlayerName = Console.ReadLine()?.Trim() ?? "<Empty>";
                 // PlayerName = "Alan";
             });
 
-            result.Define("randomSay", vm =>
+            result.Define("randomSay", (vm, numArgs) =>
             {
                 RandomSay(vm.PopStack<ArrayValue>());
             });
 
-            result.Define("isShopEnabled", vm =>
+            result.Define("isShopEnabled", (vm, numArgs) =>
             {
                 vm.PushStack((BoolValue)IsShopEnabled);
             });
 
-            result.Define("moveTo", vm =>
+            result.Define("moveTo", (vm, numArgs) =>
             {
                 var label = vm.PopStack();
                 var proc = vm.PopStack<FunctionValue>();
 
-                vm.CallFunction(proc, false);
+                vm.CallFunction(proc, 0, false);
                 vm.Jump(label.ToString());
             });
 
-            result.Define("choice", vm =>
+            result.Define("choice", (vm, numArgs) =>
             {
                 var choiceJumpLabel = vm.PopStack();
                 var choiceText = vm.PopStack();
@@ -94,7 +94,7 @@ namespace SimpleStackVM
                 SayChoice(choiceText);
             });
 
-            result.Define("waitForChoice", vm =>
+            result.Define("waitForChoice", (vm, numArgs) =>
             {
                 if (!ChoiceBuffer.Any())
                 {
@@ -125,12 +125,12 @@ namespace SimpleStackVM
                 } while (!choiceValid);
             });
 
-            result.Define("openTheShop", vm =>
+            result.Define("openTheShop", (vm, numArgs) =>
             {
                 IsShopEnabled = true;
             });
 
-            result.Define("openShop", vm =>
+            result.Define("openShop", (vm, numArgs) =>
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
             });
@@ -149,7 +149,7 @@ namespace SimpleStackVM
 
             var choice = ChoiceBuffer[index];
             ChoiceBuffer.Clear();
-            vm.CallFunction(choice, false);
+            vm.CallFunction(choice, 0, false);
             return true;
         }
 

@@ -13,7 +13,7 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("assert.true", vm =>
+            result.Define("assert.true", (vm, numArgs) =>
             {
                 var top = vm.PopStack<BoolValue>();
                 if (!top.Value)
@@ -24,7 +24,7 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("assert.false", vm =>
+            result.Define("assert.false", (vm, numArgs) =>
             {
                 var top = vm.PopStack<BoolValue>();
                 if (top.Value)
@@ -35,7 +35,7 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("assert.equals", vm =>
+            result.Define("assert.equals", (vm, numArgs) =>
             {
                 var toCompare = vm.PopStack();
                 var top = vm.PopStack();
@@ -47,7 +47,7 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("assert.notEquals", vm =>
+            result.Define("assert.notEquals", (vm, numArgs) =>
             {
                 var toCompare = vm.PopStack();
                 var top = vm.PopStack();

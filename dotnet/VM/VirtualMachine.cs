@@ -172,10 +172,16 @@ namespace SimpleStackVM
                     }
                 case Operator.Call:
                     {
-                        var top = codeLine.Input ?? this.PopStack();
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a num args code line input");
+                        }
+
+                        var numArgs = ((NumberValue)codeLine.Input).IntValue;
+                        var top = this.PopStack();
                         if (top is IFunctionValue procTop)
                         {
-                            this.CallFunction(procTop, true);
+                            this.CallFunction(procTop, numArgs, true);
                         }
                         else
                         {
@@ -235,7 +241,7 @@ namespace SimpleStackVM
             return args;
         }
 
-        public void CallFunction(IFunctionValue value, bool pushToStackTrace)
+        public void CallFunction(IFunctionValue value, int numArgs, bool pushToStackTrace)
         {
             if (value is FunctionValue foundProc)
             {
@@ -243,28 +249,28 @@ namespace SimpleStackVM
                 {
                     this.PushToStackTrace(new ScopeFrame(this.currentCode, this.currentScope, this.lineCounter));
                 }
-                this.ExecuteFunction(foundProc.Value);
+                this.ExecuteFunction(foundProc.Value, numArgs);
             }
             else if (value is BuiltinFunctionValue foundBuiltin)
             {
-                this.ExecuteFunction(foundBuiltin);
+                this.ExecuteFunction(foundBuiltin, numArgs);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(BuiltinFunctionValue handler)
+        public void ExecuteFunction(BuiltinFunctionValue handler, int numArgs)
         {
-            handler.Value.Invoke(this);
+            handler.Value.Invoke(this, numArgs);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(Function function)
+        public void ExecuteFunction(Function function, int numArgs = -1)
         {
             this.currentCode = function;
             this.currentScope = new Scope(this.currentScope);
             this.lineCounter = 0;
 
-            var args = this.GetArgs(function.Parameters.Count);
+            var args = this.GetArgs(numArgs >= 0 ? Math.Min(numArgs, function.Parameters.Count) : function.Parameters.Count);
             for (var i = 0; i < args.Count; i++)
             {
                 var argName = function.Parameters[i];

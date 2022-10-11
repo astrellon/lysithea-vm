@@ -46,44 +46,44 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("rand", vm =>
+            result.Define("rand", (vm, numArgs) =>
             {
                 vm.PushStack((NumberValue)Rand.NextDouble());
             });
 
-            result.Define("add", vm =>
+            result.Define("add", (vm, numArgs) =>
             {
                 var num1 = vm.PopStack<NumberValue>();
                 var num2 = vm.PopStack<NumberValue>();
                 vm.PushStack((NumberValue)(num1.Value + num2.Value));
             });
 
-            result.Define("sub", vm =>
+            result.Define("sub", (vm, numArgs) =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
                 vm.PushStack((NumberValue)(left.Value - right.Value));
             });
 
-            result.Define("lessEquals", vm =>
+            result.Define("lessEquals", (vm, numArgs) =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
                 vm.PushStack((BoolValue)(left.Value <= right.Value));
             });
 
-            result.Define("print", vm =>
+            result.Define("print", (vm, numArgs) =>
             {
                 Console.WriteLine(vm.PopStack().ToString());
             });
 
-            result.Define("isDone", vm =>
+            result.Define("isDone", (vm, numArgs) =>
             {
                 Counter++;
                 vm.PushStack((BoolValue)(Counter >= 1_000_000));
             });
 
-            result.Define("done", vm =>
+            result.Define("done", (vm, numArgs) =>
             {
                 var total = vm.PopStack<NumberValue>();
                 Console.WriteLine($"Done: {total.Value}");

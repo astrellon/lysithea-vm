@@ -45,7 +45,7 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("print", new BuiltinFunctionValue(vm =>
+            result.Define("print", new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var top = vm.PopStack();
                 Console.WriteLine($"Print: {top.ToString()}");

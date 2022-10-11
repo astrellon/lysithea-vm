@@ -9,6 +9,8 @@ namespace SimpleStackVM
     public interface IReadOnlyScope
     {
         bool TryGet(string key, out IValue value);
+
+        IReadOnlyDictionary<string, IValue> Values { get; }
     }
 
     public class Scope : IReadOnlyScope
@@ -28,6 +30,14 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public void CombineScope(IReadOnlyScope input)
+        {
+            foreach (var kvp in input.Values)
+            {
+                this.Define(kvp.Key, kvp.Value);
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Define(string key, IValue value)
         {
@@ -35,7 +45,7 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Define(string key, Action<VirtualMachine> builtinFunction)
+        public void Define(string key, Action<VirtualMachine, int> builtinFunction)
         {
             this.values[key] = new BuiltinFunctionValue(builtinFunction);
         }

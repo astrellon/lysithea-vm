@@ -14,27 +14,27 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("array.append", vm =>
+            result.Define("array.append", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack<ArrayValue>();
                 vm.PushStack(Append(left, right));
             });
 
-            result.Define("array.prepend", vm =>
+            result.Define("array.prepend", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack<ArrayValue>();
                 vm.PushStack(Prepend(left, right));
             });
 
-            result.Define("array.length", vm =>
+            result.Define("array.length", (vm, numArgs) =>
             {
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(new NumberValue(top.Value.Count));
             });
 
-            result.Define("array.set", vm =>
+            result.Define("array.set", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var index = vm.PopStack<NumberValue>();
@@ -42,14 +42,14 @@ namespace SimpleStackVM
                 vm.PushStack(Set(top, index.IntValue, value));
             });
 
-            result.Define("array.get", vm =>
+            result.Define("array.get", (vm, numArgs) =>
             {
                 var index = vm.PopStack<NumberValue>();
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(Get(top, index.IntValue));
             });
 
-            result.Define("array.insert", vm =>
+            result.Define("array.insert", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var index = vm.PopStack<NumberValue>();
@@ -57,7 +57,7 @@ namespace SimpleStackVM
                 vm.PushStack(Insert(top, index.IntValue, value));
             });
 
-            result.Define("array.insertFlatten", vm =>
+            result.Define("array.insertFlatten", (vm, numArgs) =>
             {
                 var value = vm.PopStack<ArrayValue>();
                 var index = vm.PopStack<NumberValue>();
@@ -65,42 +65,42 @@ namespace SimpleStackVM
                 vm.PushStack(InsertFlatten(top, index.IntValue, value));
             });
 
-            result.Define("array.remove", vm =>
+            result.Define("array.remove", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(Remove(top, value));
             });
 
-            result.Define("array.removeAt", vm =>
+            result.Define("array.removeAt", (vm, numArgs) =>
             {
                 var index = vm.PopStack<NumberValue>();
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(RemoveAt(top, index.IntValue));
             });
 
-            result.Define("array.removeAll", vm =>
+            result.Define("array.removeAll", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(RemoveAll(top, value));
             });
 
-            result.Define("array.contains", vm =>
+            result.Define("array.contains", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(new BoolValue(Contains(top, value)));
             });
 
-            result.Define("array.indexOf", vm =>
+            result.Define("array.indexOf", (vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var top = vm.PopStack<ArrayValue>();
                 vm.PushStack(new NumberValue(IndexOf(top, value)));
             });
 
-            result.Define("array.sublist", vm =>
+            result.Define("array.sublist", (vm, numArgs) =>
             {
                 var length = vm.PopStack<NumberValue>();
                 var index = vm.PopStack<NumberValue>();

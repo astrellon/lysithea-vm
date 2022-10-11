@@ -13,7 +13,7 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("toString", vm =>
+            result.Define("toString", (vm, numArgs) =>
             {
                 var top = vm.PeekStack();
                 if (top is StringValue)
@@ -25,13 +25,13 @@ namespace SimpleStackVM
                 vm.PushStack(new StringValue(top.ToString()));
             });
 
-            result.Define("typeof", vm =>
+            result.Define("typeof", (vm, numArgs) =>
             {
                 var top = vm.PopStack();
                 vm.PushStack(new StringValue(GetTypeOf(top)));
             });
 
-            result.Define("compareTo", vm =>
+            result.Define("compareTo", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();

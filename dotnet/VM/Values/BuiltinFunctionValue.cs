@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace SimpleStackVM
 {
-    using BuiltinFunctionHandler = Action<VirtualMachine>;
+    using BuiltinFunctionHandler = Action<VirtualMachine, int>;
 
     public class BuiltinFunctionValue : IFunctionValue
     {
-        private static readonly BuiltinFunctionHandler EmptyHandler = (vm) => { };
+        private static readonly BuiltinFunctionHandler EmptyHandler = (vm, i) => { };
 
         #region Field
         public readonly BuiltinFunctionHandler Value;
