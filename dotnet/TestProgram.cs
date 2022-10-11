@@ -16,7 +16,6 @@ namespace SimpleStackVM
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testObject.lisp"));
 
             var vm = new VirtualMachine(64);
-            // StandardLibrary.AddToVirtualMachine(vm);
             vm.AddBuiltinScope(StandardMathLibrary.Scope);
             vm.AddBuiltinScope(CustomScope);
 
@@ -44,12 +43,6 @@ namespace SimpleStackVM
         private static Scope CreateScope()
         {
             var result = new Scope();
-
-            result.Define("print", (vm, numArgs) =>
-            {
-                var args = vm.GetArgs(numArgs);
-                Console.WriteLine($"Print: {string.Join("", args)}");
-            });
 
             result.Define("done", (vm, numArgs) =>
             {

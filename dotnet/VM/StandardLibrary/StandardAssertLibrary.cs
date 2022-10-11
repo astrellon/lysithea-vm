@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SimpleStackVM
 {
@@ -13,7 +14,8 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("assert.true", (vm, numArgs) =>
+            var assertFunctions = new Dictionary<string, IValue>();
+            assertFunctions["true"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var top = vm.PopStack<BoolValue>();
                 if (!top.Value)
@@ -24,7 +26,7 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("assert.false", (vm, numArgs) =>
+            assertFunctions["false"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var top = vm.PopStack<BoolValue>();
                 if (top.Value)
@@ -35,7 +37,7 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("assert.equals", (vm, numArgs) =>
+            assertFunctions["equals"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var toCompare = vm.PopStack();
                 var top = vm.PopStack();
@@ -47,7 +49,7 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("assert.notEquals", (vm, numArgs) =>
+            assertFunctions["notEquals"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var toCompare = vm.PopStack();
                 var top = vm.PopStack();
@@ -58,6 +60,8 @@ namespace SimpleStackVM
                     Console.WriteLine($"Assert expected not equals:\nExpected: {toCompare.ToString()}\nActual: {top.ToString()}");
                 }
             });
+
+            result.Define("assert", new ObjectValue(assertFunctions));
 
             return result;
         }

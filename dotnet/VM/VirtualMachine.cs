@@ -208,9 +208,17 @@ namespace SimpleStackVM
                             return false;
                         }
                     }
+                    else if (current is ArrayValue currentArray)
+                    {
+                        if (!currentArray.TryGet(list[i], out current))
+                        {
+                            value = NullValue.Value;
+                            return false;
+                        }
+                    }
                     else
                     {
-                        throw new OperatorException(this.CreateStackTrace(), $"Unable to get property from non object: [{key.ToString()}]: {current.ToString()}");
+                        throw new OperatorException(this.CreateStackTrace(), $"Unable to get property from non object or array: [{key.ToString()}]: {current.ToString()}");
                     }
                 }
 

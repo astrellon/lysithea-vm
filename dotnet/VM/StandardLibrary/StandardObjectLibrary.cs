@@ -1,5 +1,5 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 using System.Linq;
 
 #nullable enable
@@ -16,7 +16,10 @@ namespace SimpleStackVM
         public static Scope CreateScope()
         {
             var result = new Scope();
-            result.Define("object.set", (vm, numArgs) =>
+
+            var objectFunctions = new Dictionary<string, IValue>();
+
+            objectFunctions["set"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var value = vm.PopStack();
                 var key = vm.PopStack<StringValue>();
@@ -24,11 +27,11 @@ namespace SimpleStackVM
                 vm.PushStack(Set(obj, key, value));
             });
 
-            result.Define("object.get", (vm, numArgs) =>
+            objectFunctions["get"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
-                if (TryGetValue(obj, key, out var value))
+                if (obj.TryGetValue(key, out var value))
                 {
                     vm.PushStack(value);
                 }
@@ -38,37 +41,39 @@ namespace SimpleStackVM
                 }
             });
 
-            result.Define("object.removeKey", (vm, numArgs) =>
+            objectFunctions["removeKey"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
                 vm.PushStack(RemoveKey(obj, key));
             });
 
-            result.Define("object.removeValues", (vm, numArgs) =>
+            objectFunctions["removeValues"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var values = vm.PopStack();
                 var obj = vm.PopStack<ObjectValue>();
                 vm.PushStack(RemoveValues(obj, values));
             });
 
-            result.Define("object.keys", (vm, numArgs) =>
+            objectFunctions["keys"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Keys(top));
             });
 
-            result.Define("object.values", (vm, numArgs) =>
+            objectFunctions["values"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(Values(top));
             });
 
-            result.Define("object.length", (vm, numArgs) =>
+            objectFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var top = vm.PopStack<ObjectValue>();
                 vm.PushStack(new NumberValue(top.Value.Count));
             });
+
+            result.Define("object", new ObjectValue(objectFunctions));
 
             return result;
         }
@@ -82,29 +87,6 @@ namespace SimpleStackVM
         public static ArrayValue Values(ObjectValue self)
         {
             return new ArrayValue(self.Value.Values.ToList());
-        }
-
-        public static bool TryGetValue(ObjectValue self, string key, [NotNullWhen(true)] out IValue? value)
-        {
-            return self.Value.TryGetValue(key, out value);
-        }
-
-        public static bool TryGetValue<T>(ObjectValue self, string key, [NotNullWhen(true)] out T? value) where T : IValue
-        {
-            if (!TryGetValue(self, key, out var result))
-            {
-                value = default(T);
-                return false;
-            }
-
-            if (result is T castedValue)
-            {
-                value = castedValue;
-                return true;
-            }
-
-            value = default(T);
-            return false;
         }
 
         public static ObjectValue Set(ObjectValue self, string key, IValue value)

@@ -2,7 +2,7 @@ using System;
 
 namespace SimpleStackVM
 {
-    public static class StandardValueLibrary
+    public static class StandardMiscLibrary
     {
         #region Fields
         public static readonly IReadOnlyScope Scope = CreateScope();
@@ -16,7 +16,7 @@ namespace SimpleStackVM
             result.Define("toString", (vm, numArgs) =>
             {
                 var top = vm.PeekStack();
-                if (top is StringValue)
+                if (top is StringValue || top is SymbolValue)
                 {
                     return;
                 }
@@ -36,6 +36,18 @@ namespace SimpleStackVM
                 var right = vm.PopStack();
                 var left = vm.PopStack();
                 vm.PushStack(new NumberValue(left.CompareTo(right)));
+            });
+
+            result.Define("print", (vm, numArgs) =>
+            {
+                var args = vm.GetArgs(numArgs);
+                Console.WriteLine(string.Join("", args));
+            });
+
+            result.Define("!", (vm, numArgs) =>
+            {
+                var top = vm.PopStack<BoolValue>();
+                vm.PushStack(new BoolValue(!top.Value));
             });
 
             return result;

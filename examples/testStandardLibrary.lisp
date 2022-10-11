@@ -93,8 +93,7 @@
     (define i 0)
     (define objLength (array.length objValues))
     (loop (< i objLength)
-        (print i)
-        (print (array.get objValues i))
+        (print i " = " (array.get objValues i))
         (set i (+ i 1))
     )
 

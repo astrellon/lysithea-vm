@@ -7,8 +7,6 @@ namespace SimpleStackVM
 {
     public static class StandardLibraryProgram
     {
-        private static readonly Scope CustomScope = CreateScope();
-
         #region Methods
         public static void Main(string[] args)
         {
@@ -18,7 +16,6 @@ namespace SimpleStackVM
             var vm = new VirtualMachine(64);
             StandardLibrary.AddToVirtualMachine(vm);
             vm.AddBuiltinScope(StandardAssertLibrary.Scope);
-            vm.AddBuiltinScope(CustomScope);
 
             vm.SetGlobalCode(code);
             try
@@ -39,19 +36,6 @@ namespace SimpleStackVM
                 Console.WriteLine($"VM Stack: {stackTrace}");
                 Console.WriteLine(exp.StackTrace);
             }
-        }
-
-        private static Scope CreateScope()
-        {
-            var result = new Scope();
-
-            result.Define("print", new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack();
-                Console.WriteLine($"Print: {top.ToString()}");
-            }));
-
-            return result;
         }
         #endregion
     }

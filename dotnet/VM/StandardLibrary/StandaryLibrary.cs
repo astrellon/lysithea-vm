@@ -13,7 +13,7 @@ namespace SimpleStackVM
             String = 1 << 2,
             Array = 1 << 3,
             Object = 1 << 4,
-            Value = 1 << 5,
+            Misc = 1 << 5,
             All = (1 << 6) - 1
         }
 
@@ -40,9 +40,9 @@ namespace SimpleStackVM
             {
                 vm.AddBuiltinScope(StandardObjectLibrary.Scope);
             }
-            if (libraries.HasFlag(LibraryType.Value))
+            if (libraries.HasFlag(LibraryType.Misc))
             {
-                vm.AddBuiltinScope(StandardValueLibrary.Scope);
+                vm.AddBuiltinScope(StandardMiscLibrary.Scope);
             }
         }
         #endregion

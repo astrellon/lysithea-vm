@@ -27,6 +27,28 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public bool TryGet(IValue indexValue, out IValue result)
+        {
+            var index = -1;
+            if (indexValue is NumberValue indexNum)
+            {
+                index = indexNum.IntValue;
+            }
+            else if (indexValue is StringValue || indexValue is SymbolValue)
+            {
+                int.TryParse(indexValue.ToString(), out index);
+            }
+
+            if (index >= 0 && index < this.Value.Count)
+            {
+                result = this.Value[index];
+                return true;
+            }
+
+            result = NullValue.Value;
+            return false;
+        }
+
         public override bool Equals(object? other)
         {
             if (other == null) return false;
