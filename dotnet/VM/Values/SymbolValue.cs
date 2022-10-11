@@ -2,7 +2,7 @@
 
 namespace SimpleStackVM
 {
-    public struct SymbolValue : IValue
+    public class SymbolValue : IValue
     {
         #region Fields
         public static readonly SymbolValue Empty = new SymbolValue("");

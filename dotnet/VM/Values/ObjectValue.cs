@@ -8,7 +8,7 @@ using System.Collections;
 
 namespace SimpleStackVM
 {
-    public struct ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
+    public class ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;

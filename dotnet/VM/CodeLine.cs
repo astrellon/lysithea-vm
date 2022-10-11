@@ -5,7 +5,7 @@ using System.Diagnostics;
 namespace SimpleStackVM
 {
     [DebuggerDisplay("{Description}")]
-    public struct CodeLine
+    public class CodeLine
     {
         #region Fields
         public static readonly CodeLine Empty = new CodeLine(Operator.Unknown, NullValue.Value);

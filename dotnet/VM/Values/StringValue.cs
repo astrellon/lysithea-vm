@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    public struct StringValue : IValue
+    public class StringValue : IValue
     {
         #region Fields
         public static readonly StringValue Empty = new StringValue("");

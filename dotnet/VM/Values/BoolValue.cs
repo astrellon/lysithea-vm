@@ -2,7 +2,7 @@
 
 namespace SimpleStackVM
 {
-    public struct BoolValue : IValue
+    public class BoolValue : IValue
     {
         #region Fields
         public static BoolValue True = new BoolValue(true);

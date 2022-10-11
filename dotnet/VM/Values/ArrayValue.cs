@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -8,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    public struct ArrayValue : IValue, IReadOnlyList<IValue>
+    public class ArrayValue : IValue, IReadOnlyList<IValue>
     {
         #region Fields
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);

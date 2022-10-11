@@ -1,11 +1,10 @@
 using System.Collections.Generic;
-using System.Text;
 
 #nullable enable
 
 namespace SimpleStackVM
 {
-    public struct AnyValue : IValue
+    public class AnyValue : IValue
     {
         #region Fields
         public readonly object Value;
@@ -17,7 +16,7 @@ namespace SimpleStackVM
             this.Value = value;
         }
 
-        public AnyValue(object rawValue) : this()
+        public AnyValue(object rawValue)
         {
             this.Value = rawValue;
         }

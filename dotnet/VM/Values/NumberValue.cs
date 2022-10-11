@@ -2,7 +2,7 @@
 
 namespace SimpleStackVM
 {
-    public struct NumberValue : IValue
+    public class NumberValue : IValue
     {
         #region Fields
         public readonly double Value;
