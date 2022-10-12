@@ -1,23 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 #nullable enable
 
 namespace SimpleStackVM
 {
-    using BuiltinFunctionHandler = Action<VirtualMachine, int>;
-
     public class BuiltinFunctionValue : IFunctionValue
     {
-        private static readonly BuiltinFunctionHandler EmptyHandler = (vm, i) => { };
-
         #region Field
-        public readonly BuiltinFunctionHandler Value;
+        public delegate void BuiltinFunctionDelegate(VirtualMachine vm, int numArgs);
+
+        public readonly BuiltinFunctionDelegate Value;
         #endregion
 
         #region Constructor
-        public BuiltinFunctionValue(BuiltinFunctionHandler value)
+        public BuiltinFunctionValue(BuiltinFunctionDelegate value)
         {
             this.Value = value;
         }
@@ -60,7 +56,7 @@ namespace SimpleStackVM
             return this.Value.GetHashCode();
         }
 
-        public static implicit operator BuiltinFunctionValue(BuiltinFunctionHandler handler)
+        public static implicit operator BuiltinFunctionValue(BuiltinFunctionDelegate handler)
         {
             return new BuiltinFunctionValue(handler);
         }

@@ -285,7 +285,7 @@ namespace SimpleStackVM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteFunction(BuiltinFunctionValue handler, int numArgs)
         {
-            handler.Value.Invoke(this, numArgs);
+            handler.Value(this, numArgs);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

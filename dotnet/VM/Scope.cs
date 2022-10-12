@@ -45,7 +45,7 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Define(string key, Action<VirtualMachine, int> builtinFunction)
+        public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction)
         {
             this.values[key] = new BuiltinFunctionValue(builtinFunction);
         }
