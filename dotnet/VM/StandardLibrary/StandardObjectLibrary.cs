@@ -91,7 +91,7 @@ namespace SimpleStackVM
 
         public static ObjectValue Set(ObjectValue self, string key, IValue value)
         {
-            var result = self.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var result = new Dictionary<string, IValue>(self.Value);
             result[key] = value;
             return new ObjectValue(result);
         }
@@ -103,13 +103,13 @@ namespace SimpleStackVM
                 return self;
             }
 
-            var result = self.Value.Where(kvp => kvp.Key != key).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Key != key));
             return new ObjectValue(result);
         }
 
         public static ObjectValue RemoveValues(ObjectValue self, IValue values)
         {
-            var result = self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
         }
         #endregion
