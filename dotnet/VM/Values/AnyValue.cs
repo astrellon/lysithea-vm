@@ -1,21 +1,14 @@
-using System.Collections.Generic;
-
 #nullable enable
 
 namespace SimpleStackVM
 {
-    public class AnyValue : IValue
+    public struct AnyValue : IValue
     {
         #region Fields
         public readonly object Value;
         #endregion
 
         #region Constructor
-        public AnyValue(IReadOnlyDictionary<string, IValue> value)
-        {
-            this.Value = value;
-        }
-
         public AnyValue(object rawValue)
         {
             this.Value = rawValue;
@@ -39,7 +32,7 @@ namespace SimpleStackVM
 
         public override string? ToString()
         {
-            return this.Value == null ? "<<nullAny>>" : this.Value.ToString();
+            return this.Value == null ? "null" : this.Value.ToString();
         }
 
         public override int GetHashCode()

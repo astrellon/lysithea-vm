@@ -1,14 +1,14 @@
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
-using System.Collections;
 
 #nullable enable
 
 namespace SimpleStackVM
 {
-    public class ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
+    public struct ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;
@@ -67,13 +67,12 @@ namespace SimpleStackVM
             {
                 if (!first)
                 {
-                    result.Append(',');
+                    result.Append(' ');
                 }
                 first = false;
 
-                result.Append('"');
                 result.Append(kvp.Key);
-                result.Append("\":");
+                result.Append(' ');
                 result.Append(kvp.Value.ToString());
             }
             result.Append('}');

@@ -39,25 +39,25 @@ namespace SimpleStackVM
 
             assertFunctions["equals"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
-                var toCompare = vm.PopStack();
-                var top = vm.PopStack();
-                if (top.CompareTo(toCompare) != 0)
+                var actual = vm.PopStack();
+                var expected = vm.PopStack();
+                if (expected.CompareTo(actual) != 0)
                 {
                     vm.Running = false;
                     Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
-                    Console.WriteLine($"Assert expected equals:\nExpected: {toCompare.ToString()}\nActual: {top.ToString()}");
+                    Console.WriteLine($"Assert expected equals:\nExpected: {expected.ToString()}\nActual: {actual.ToString()}");
                 }
             });
 
             assertFunctions["notEquals"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
-                var toCompare = vm.PopStack();
-                var top = vm.PopStack();
-                if (top.CompareTo(toCompare) == 0)
+                var actual = vm.PopStack();
+                var expected = vm.PopStack();
+                if (expected.CompareTo(actual) == 0)
                 {
                     vm.Running = false;
                     Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
-                    Console.WriteLine($"Assert expected not equals:\nExpected: {toCompare.ToString()}\nActual: {top.ToString()}");
+                    Console.WriteLine($"Assert expected not equals:\nExpected: {expected.ToString()}\nActual: {actual.ToString()}");
                 }
             });
 

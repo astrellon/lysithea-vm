@@ -15,9 +15,9 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testStandardLibrary.lisp"));
 
-            var vm = new VirtualMachine(64);
+            var vm = new VirtualMachine(8);
 
-            vm.SetGlobalCode(code);
+            vm.SetCode(code);
             try
             {
                 vm.Running = true;
@@ -30,7 +30,7 @@ namespace SimpleStackVM
                 Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
 
                 vm.Reset();
-                vm.SetGlobalCode(code);
+                vm.SetCode(code);
                 vm.Running = true;
                 sw = Stopwatch.StartNew();
                 while (vm.Running && !vm.Paused)

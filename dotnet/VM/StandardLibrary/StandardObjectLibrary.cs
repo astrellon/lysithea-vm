@@ -24,14 +24,14 @@ namespace SimpleStackVM
                 var value = vm.PopStack();
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
-                vm.PushStack(Set(obj, key, value));
+                vm.PushStack(Set(obj, key.Value, value));
             });
 
             objectFunctions["get"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
-                if (obj.TryGetValue(key, out var value))
+                if (obj.TryGetValue(key.Value, out var value))
                 {
                     vm.PushStack(value);
                 }
@@ -45,7 +45,7 @@ namespace SimpleStackVM
             {
                 var key = vm.PopStack<StringValue>();
                 var obj = vm.PopStack<ObjectValue>();
-                vm.PushStack(RemoveKey(obj, key));
+                vm.PushStack(RemoveKey(obj, key.Value));
             });
 
             objectFunctions["removeValues"] = new BuiltinFunctionValue((vm, numArgs) =>

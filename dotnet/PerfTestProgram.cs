@@ -19,9 +19,8 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(CustomScope);
             var code = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 
-            var vm = new VirtualMachine(64);
-            // vm.AddBuiltinScope(CustomScope);
-            vm.SetGlobalCode(code);
+            var vm = new VirtualMachine(8);
+            vm.SetCode(code);
 
             try
             {
@@ -36,7 +35,7 @@ namespace SimpleStackVM
 
                 vm.Reset();
                 Counter = 0;
-                vm.SetGlobalCode(code);
+                vm.SetCode(code);
                 sw = Stopwatch.StartNew();
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
@@ -69,25 +68,6 @@ namespace SimpleStackVM
                 var num1 = vm.PopStack<NumberValue>();
                 var num2 = vm.PopStack<NumberValue>();
                 vm.PushStack((NumberValue)(num1.Value + num2.Value));
-            });
-
-            result.Define("sub", (vm, numArgs) =>
-            {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack((NumberValue)(left.Value - right.Value));
-            });
-
-            result.Define("lessEquals", (vm, numArgs) =>
-            {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack((BoolValue)(left.Value <= right.Value));
-            });
-
-            result.Define("print", (vm, numArgs) =>
-            {
-                Console.WriteLine(vm.PopStack().ToString());
             });
 
             result.Define("isDone", (vm, numArgs) =>

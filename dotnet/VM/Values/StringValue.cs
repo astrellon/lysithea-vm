@@ -4,10 +4,9 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    public class StringValue : IValue
+    public struct StringValue : IValue
     {
         #region Fields
-        public static readonly StringValue Empty = new StringValue("");
         public readonly string Value;
         #endregion
 
@@ -60,9 +59,6 @@ namespace SimpleStackVM
 
             return index;
         }
-
-        public static explicit operator StringValue(string input) => new StringValue(input);
-        public static implicit operator string (StringValue str) => str.Value;
         #endregion
     }
 }

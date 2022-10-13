@@ -44,12 +44,6 @@ namespace SimpleStackVM
                 Console.WriteLine(string.Join("", args));
             });
 
-            result.Define("!", (vm, numArgs) =>
-            {
-                var top = vm.PopStack<BoolValue>();
-                vm.PushStack(new BoolValue(!top.Value));
-            });
-
             return result;
         }
 

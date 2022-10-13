@@ -2,10 +2,9 @@
 
 namespace SimpleStackVM
 {
-    public class SymbolValue : IValue
+    public struct SymbolValue : IValue
     {
         #region Fields
-        public static readonly SymbolValue Empty = new SymbolValue("");
         public readonly string Value;
 
         public bool IsLabel => this.Value.Length > 0 && this.Value[0] == ':';

@@ -2,7 +2,7 @@
 
 namespace SimpleStackVM
 {
-    public class NullValue : IValue
+    public struct NullValue : IValue
     {
         #region Fields
         public static readonly NullValue Value = new NullValue();

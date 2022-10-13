@@ -8,7 +8,7 @@ namespace SimpleStackVM
         public enum LibraryType
         {
             None = 0,
-            Comparison = 1 << 0,
+            Operators = 1 << 0,
             Math = 1 << 1,
             String = 1 << 2,
             Array = 1 << 3,
@@ -20,9 +20,9 @@ namespace SimpleStackVM
         #region Methods
         public static void AddToScope(Scope scope, LibraryType libraries = LibraryType.All)
         {
-            if (libraries.HasFlag(LibraryType.Comparison))
+            if (libraries.HasFlag(LibraryType.Operators))
             {
-                scope.CombineScope(StandardComparisonLibrary.Scope);
+                scope.CombineScope(StandardOperators.Scope);
             }
             if (libraries.HasFlag(LibraryType.Math))
             {

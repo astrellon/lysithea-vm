@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    public class ArrayValue : IValue, IReadOnlyList<IValue>
+    public struct ArrayValue : IValue, IReadOnlyList<IValue>
     {
         #region Fields
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);
@@ -75,20 +75,20 @@ namespace SimpleStackVM
         public override string ToString()
         {
             var result = new StringBuilder();
-            result.Append('[');
+            result.Append('(');
             var first = true;
             foreach (var value in this.Value)
             {
                 if (!first)
                 {
-                    result.Append(',');
+                    result.Append(' ');
                 }
                 first = false;
 
                 result.Append(value.ToString());
             }
 
-            result.Append(']');
+            result.Append(')');
             return result.ToString();
         }
 

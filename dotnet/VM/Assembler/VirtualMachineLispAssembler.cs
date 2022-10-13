@@ -8,6 +8,7 @@ namespace SimpleStackVM
 {
     public class VirtualMachineLispAssembler
     {
+        #region Fields
         private const string FunctionKeyword = "function";
         private const string LoopKeyword = "loop";
         private const string IfKeyword = "if";
@@ -15,9 +16,9 @@ namespace SimpleStackVM
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
 
-        private int labelCount = 0;
-
         public readonly Scope BuiltinScope = new Scope();
+        private int labelCount = 0;
+        #endregion
 
         #region Methods
         public IEnumerable<ITempCodeLine> ParseSet(ArrayValue input)
@@ -110,12 +111,6 @@ namespace SimpleStackVM
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> ParseJump(Operator jumpOpCode, ArrayValue input)
-        {
-            return new[] { new TempCodeLine(jumpOpCode, input[1]) };
-        }
-
-
         public IEnumerable<ITempCodeLine> Parse(IValue input)
         {
             if (input is NumberValue ||
@@ -136,6 +131,7 @@ namespace SimpleStackVM
                 }
 
                 var first = arrayValue.First();
+                // If the first item in an array is a symbol we assume that it is a function call or a label
                 if (first is SymbolValue firstSymbolValue)
                 {
                     if (firstSymbolValue.IsLabel)
@@ -143,6 +139,7 @@ namespace SimpleStackVM
                         return new[] { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
+                    // Check for keywords
                     switch (firstSymbolValue.Value)
                     {
                         case FunctionKeyword:
@@ -158,10 +155,11 @@ namespace SimpleStackVM
                         case UnlessKeyword: return ParseCond(arrayValue, false);
                     }
 
+                    // Attempt to parse as an op code
                     var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
                     if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
                     {
-                        return ParseJump(opCode, arrayValue);
+                        return new[] { new TempCodeLine(opCode, arrayValue[1]) };
                     }
 
                     // Handle general opcode or function call.
@@ -170,26 +168,19 @@ namespace SimpleStackVM
                         result.AddRange(Parse(item));
                     }
 
-                    IValue? codeLineInput = null;
-
+                    // If it is not an opcode then it must be a function call
                     if (!isOpCode)
                     {
-                        // result.Add(this.OptimiseGetSymbolValue(firstSymbolValue));
-                        // result.Add(new TempCodeLine(Operator.Call, (NumberValue)(arrayValue.Count - 1)));
                         result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Count - 1));
                     }
-                    else
+                    else if (opCode != Operator.Push)
                     {
-                        codeLineInput = arrayValue.Last();
-
-                        if (opCode != Operator.Push)
-                        {
-                            result.Add(new TempCodeLine(opCode, codeLineInput));
-                        }
+                        result.Add(new TempCodeLine(opCode, null));
                     }
                 }
                 else
                 {
+                    // Any array that doesn't start with a symbol we assume it's a data array.
                     result.Add(new TempCodeLine(Operator.Push, input));
                 }
                 return result;

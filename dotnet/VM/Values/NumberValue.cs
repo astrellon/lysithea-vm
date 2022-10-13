@@ -2,7 +2,7 @@
 
 namespace SimpleStackVM
 {
-    public class NumberValue : IValue
+    public struct NumberValue : IValue
     {
         #region Fields
         public readonly double Value;
@@ -51,8 +51,6 @@ namespace SimpleStackVM
         }
 
         public static explicit operator NumberValue(double input) => new NumberValue(input);
-        public static implicit operator double (NumberValue number) => number.Value;
-        public static implicit operator float (NumberValue number) => (float)number.Value;
         #endregion
     }
 }

@@ -4,7 +4,7 @@ using System;
 
 namespace SimpleStackVM
 {
-    public class FunctionValue : IFunctionValue
+    public struct FunctionValue : IFunctionValue
     {
         #region Field
         public readonly Function Value;

@@ -7,7 +7,7 @@ namespace SimpleStackVM
     public static partial class StandardArrayLibrary
     {
         #region Fields
-        public static readonly Scope Scope = CreateScope();
+        public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion
 
         #region Methods
@@ -16,18 +16,10 @@ namespace SimpleStackVM
             var result = new Scope();
 
             var arrayFunctions = new Dictionary<string, IValue>();
-            arrayFunctions["append"] = new BuiltinFunctionValue((vm, numArgs) =>
+            arrayFunctions["join"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack<ArrayValue>();
-                vm.PushStack(Append(left, right));
-            });
-
-            arrayFunctions["prepend"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var right = vm.PopStack();
-                var left = vm.PopStack<ArrayValue>();
-                vm.PushStack(Prepend(left, right));
+                var args = vm.GetArgs(numArgs);
+                vm.PushStack(new ArrayValue(args));
             });
 
             arrayFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>

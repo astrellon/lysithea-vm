@@ -26,6 +26,13 @@
     (assert.equals ("c" "d") (array.sublist arr -2 -1))
     (assert.equals ("b" "c") (array.sublist arr -3 2))
 
+    (define name "Foo")
+    (define age 30)
+    (define address ("location 1" "location 2"))
+
+    (define arr2 (array.join name age address))
+    (assert.equals ("Foo" 30 ("location 1" "location 2")) arr2)
+
     (print "Array tests passed!")
 ))
 
@@ -45,6 +52,9 @@
     (assert.equals "abc" (string.substring str 0 3))
     (assert.equals "e" (string.substring str -1 1))
     (assert.equals "hello" (string.substring str -11 5))
+
+    (assert.equals "hello 123 there" (+ "hello " 123 " there"))
+    (assert.equals "hello,123,there" (string.join "," "hello" 123 "there"))
 
     (print "String tests passed!")
 ))

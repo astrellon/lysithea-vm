@@ -4,7 +4,7 @@ using System;
 
 namespace SimpleStackVM
 {
-    public class BuiltinFunctionValue : IFunctionValue
+    public struct BuiltinFunctionValue : IFunctionValue
     {
         #region Field
         public delegate void BuiltinFunctionDelegate(VirtualMachine vm, int numArgs);

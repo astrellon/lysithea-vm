@@ -13,12 +13,12 @@ namespace SimpleStackVM
         #region Fields
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-        public readonly Scope BuiltinScope;
+        public readonly Scope BuiltinScope = new Scope();
 
+        private Function currentCode = Function.Empty;
         private Scope globalScope;
-        private Function currentCode;
         private Scope currentScope;
-        private int lineCounter;
+        private int lineCounter = 0;
 
         public bool Running;
         public bool Paused;
@@ -30,19 +30,15 @@ namespace SimpleStackVM
         #region Constructor
         public VirtualMachine(int stackSize)
         {
-            // this.builtinScopes = new List<IReadOnlyScope>();
-            this.BuiltinScope = new Scope();
             this.globalScope = new Scope(this.BuiltinScope);
-            this.currentCode = Function.Empty;
             this.currentScope = this.globalScope;
-            this.lineCounter = 0;
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
         #endregion
 
         #region Methods
-        public void SetGlobalCode(Function code)
+        public void SetCode(Function code)
         {
             this.currentCode = code;
         }
@@ -50,7 +46,6 @@ namespace SimpleStackVM
         public void Reset()
         {
             this.globalScope = new Scope(this.BuiltinScope);
-            this.currentCode = Function.Empty;
             this.currentScope = this.globalScope;
             this.lineCounter = 0;
             this.stack.Clear();

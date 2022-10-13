@@ -2,15 +2,13 @@
 
 namespace SimpleStackVM
 {
-    public class BoolValue : IValue
+    public struct BoolValue : IValue
     {
         #region Fields
         public static BoolValue True = new BoolValue(true);
         public static BoolValue False = new BoolValue(false);
 
         public readonly bool Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
         #endregion
 
         #region Constructor

@@ -1,4 +1,4 @@
-using System;
+using System.Linq;
 using System.Collections.Generic;
 
 namespace SimpleStackVM
@@ -6,7 +6,6 @@ namespace SimpleStackVM
     public static class StandardStringLibrary
     {
         #region Fields
-        public const string HandleName = "string";
         public static readonly IReadOnlyScope Scope = CreateScope();
 
         #endregion
@@ -17,20 +16,6 @@ namespace SimpleStackVM
             var result = new Scope();
 
             var stringFunctions = new Dictionary<string, IValue>();
-
-            stringFunctions["append"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(new StringValue(left.ToString() + right.ToString()));
-            });
-
-            stringFunctions["prepend"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(new StringValue(right.ToString() + left.ToString()));
-            });
 
             stringFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
@@ -81,6 +66,14 @@ namespace SimpleStackVM
                 var values = vm.PopStack<StringValue>();
                 var top = vm.PopStack<StringValue>();
                 vm.PushStack(RemoveAll(top, values.Value));
+            });
+
+            stringFunctions["join"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var args = vm.GetArgs(numArgs);
+                var separator = args.First().ToString();
+                var result = string.Join(separator, args.Skip(1));
+                vm.PushStack(new StringValue(result));
             });
 
             result.Define("string", new ObjectValue(stringFunctions));
