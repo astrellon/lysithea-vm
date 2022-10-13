@@ -25,7 +25,7 @@ namespace SimpleStackVM
             Console.WriteLine($"Time to parse: {sw1.ElapsedMilliseconds}ms");
 
             var vm = new VirtualMachine(64);
-            vm.AddBuiltinScope(CustomScope);
+            vm.BuiltinScope.CombineScope(CustomScope);
             vm.SetGlobalCode(code);
 
             try

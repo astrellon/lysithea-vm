@@ -17,6 +17,8 @@ namespace SimpleStackVM
 
         private int labelCount = 0;
 
+        public readonly Scope BuiltinScope = new Scope();
+
         #region Methods
         public IEnumerable<ITempCodeLine> ParseSet(ArrayValue input)
         {
@@ -113,6 +115,7 @@ namespace SimpleStackVM
             return new[] { new TempCodeLine(jumpOpCode, input[1]) };
         }
 
+
         public IEnumerable<ITempCodeLine> Parse(IValue input)
         {
             if (input is NumberValue ||
@@ -171,9 +174,9 @@ namespace SimpleStackVM
 
                     if (!isOpCode)
                     {
-                        opCode = Operator.Call;
-                        result.Add(GetSymbolValue(firstSymbolValue));
-                        result.Add(new TempCodeLine(Operator.Call, (NumberValue)(arrayValue.Count - 1)));
+                        // result.Add(this.OptimiseGetSymbolValue(firstSymbolValue));
+                        // result.Add(new TempCodeLine(Operator.Call, (NumberValue)(arrayValue.Count - 1)));
+                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Count - 1));
                     }
                     else
                     {
@@ -196,7 +199,7 @@ namespace SimpleStackVM
             {
                 if (symbolValue.Value[0] != ':')
                 {
-                    return new [] { GetSymbolValue(symbolValue) };
+                    return new [] { this.OptimiseGetSymbolValue(symbolValue) };
                 }
                 else
                 {
@@ -228,17 +231,50 @@ namespace SimpleStackVM
             return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
         }
 
-        private static TempCodeLine GetSymbolValue(SymbolValue input)
+        private IEnumerable<TempCodeLine> OptimiseCallSymbolValue(SymbolValue input, int numArgs)
+        {
+            var getSymbol = GetSymbolValue(input);
+            if (this.BuiltinScope.TryGet(getSymbol, out var value))
+            {
+                yield return new TempCodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { value, (NumberValue)numArgs }));
+            }
+            else
+            {
+                yield return this.ParseGet(getSymbol);
+                yield return new TempCodeLine(Operator.Call, (NumberValue)(numArgs));
+            }
+        }
+
+        private TempCodeLine OptimiseGetSymbolValue(SymbolValue input)
+        {
+            var getSymbol = GetSymbolValue(input);
+            if (this.BuiltinScope.TryGet(getSymbol, out var value))
+            {
+                return new TempCodeLine(Operator.Push, value);
+            }
+
+            return this.ParseGet(getSymbol);
+        }
+
+        private TempCodeLine ParseGet(IValue input)
+        {
+            var opCode = Operator.Get;
+            if (input is ArrayValue)
+            {
+                opCode = Operator.GetProperty;
+            }
+            return new TempCodeLine(opCode, input);
+        }
+
+        private static IValue GetSymbolValue(SymbolValue input)
         {
             if (input.Value.Contains('.'))
             {
                 var split = input.Value.Split('.').Select(c => new SymbolValue(c) as IValue);
-                return new TempCodeLine(Operator.Get, new ArrayValue(split.ToList()));
+                return new ArrayValue(split.ToList());
             }
-            else
-            {
-                return new TempCodeLine(Operator.Get, input);
-            }
+
+            return input;
         }
         #endregion
     }

@@ -18,31 +18,31 @@ namespace SimpleStackVM
         }
 
         #region Methods
-        public static void AddToVirtualMachine(VirtualMachine vm, LibraryType libraries = LibraryType.All)
+        public static void AddToScope(Scope scope, LibraryType libraries = LibraryType.All)
         {
             if (libraries.HasFlag(LibraryType.Comparison))
             {
-                vm.AddBuiltinScope(StandardComparisonLibrary.Scope);
+                scope.CombineScope(StandardComparisonLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Math))
             {
-                vm.AddBuiltinScope(StandardMathLibrary.Scope);
+                scope.CombineScope(StandardMathLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.String))
             {
-                vm.AddBuiltinScope(StandardStringLibrary.Scope);
+                scope.CombineScope(StandardStringLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Array))
             {
-                vm.AddBuiltinScope(StandardArrayLibrary.Scope);
+                scope.CombineScope(StandardArrayLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Object))
             {
-                vm.AddBuiltinScope(StandardObjectLibrary.Scope);
+                scope.CombineScope(StandardObjectLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Misc))
             {
-                vm.AddBuiltinScope(StandardMiscLibrary.Scope);
+                scope.CombineScope(StandardMiscLibrary.Scope);
             }
         }
         #endregion

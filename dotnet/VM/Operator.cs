@@ -4,8 +4,8 @@ namespace SimpleStackVM
     {
         Unknown,
         Push,
-        Call, Return,
-        Get, Set, Define,
+        Call, CallDirect, Return,
+        GetProperty, Get, Set, Define,
         Jump, JumpTrue, JumpFalse
     }
 }

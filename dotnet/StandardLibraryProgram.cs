@@ -11,11 +11,11 @@ namespace SimpleStackVM
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineLispAssembler();
+            StandardLibrary.AddToScope(assembler.BuiltinScope);
+            assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testStandardLibrary.lisp"));
 
             var vm = new VirtualMachine(64);
-            StandardLibrary.AddToVirtualMachine(vm);
-            vm.AddBuiltinScope(StandardAssertLibrary.Scope);
 
             vm.SetGlobalCode(code);
             try
@@ -27,7 +27,18 @@ namespace SimpleStackVM
                     vm.Step();
                 }
                 sw.Stop();
-                Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
+                Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
+
+                vm.Reset();
+                vm.SetGlobalCode(code);
+                vm.Running = true;
+                sw = Stopwatch.StartNew();
+                while (vm.Running && !vm.Paused)
+                {
+                    vm.Step();
+                }
+                sw.Stop();
+                Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
             }
             catch (VirtualMachineException exp)
             {

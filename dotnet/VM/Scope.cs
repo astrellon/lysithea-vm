@@ -8,7 +8,9 @@ namespace SimpleStackVM
 {
     public interface IReadOnlyScope
     {
-        bool TryGet(string key, out IValue value);
+        bool TryGet(IValue key, out IValue value);
+        bool TryGetKey(string key, out IValue value);
+        bool TryGetProperty(ArrayValue key, out IValue value);
 
         IReadOnlyDictionary<string, IValue> Values { get; }
     }
@@ -67,8 +69,17 @@ namespace SimpleStackVM
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGet(string key, out IValue value)
+        public bool TryGet(IValue key, out IValue value)
+        {
+            if (key is ArrayValue list)
+            {
+                return this.TryGetProperty(list, out value);
+            }
+
+            return this.TryGetKey(key.ToString(), out value);
+        }
+
+        public bool TryGetKey(string key, out IValue value)
         {
             if (this.values.TryGetValue(key, out var foundValue))
             {
@@ -78,11 +89,43 @@ namespace SimpleStackVM
 
             if (this.parent != null)
             {
-                return this.parent.TryGet(key, out value);
+                return this.parent.TryGetKey(key, out value);
             }
 
             value = NullValue.Value;
             return false;
+        }
+
+        public bool TryGetProperty(ArrayValue input, out IValue value)
+        {
+            this.TryGetKey(input[0].ToString(), out var current);
+            for (var i = 1; i < input.Count; i++)
+            {
+                if (current is ObjectValue currentObject)
+                {
+                    if (!currentObject.TryGetValue(input[i].ToString(), out current))
+                    {
+                        value = NullValue.Value;
+                        return false;
+                    }
+                }
+                else if (current is ArrayValue currentArray)
+                {
+                    if (!currentArray.TryGet(input[i], out current))
+                    {
+                        value = NullValue.Value;
+                        return false;
+                    }
+                }
+                else
+                {
+                    value = NullValue.Value;
+                    return false;
+                }
+            }
+
+            value = current;
+            return true;
         }
         #endregion
     }

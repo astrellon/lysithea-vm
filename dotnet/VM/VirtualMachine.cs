@@ -13,7 +13,7 @@ namespace SimpleStackVM
         #region Fields
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-        private readonly Scope builtinScope;
+        public readonly Scope BuiltinScope;
 
         private Scope globalScope;
         private Function currentCode;
@@ -31,8 +31,8 @@ namespace SimpleStackVM
         public VirtualMachine(int stackSize)
         {
             // this.builtinScopes = new List<IReadOnlyScope>();
-            this.builtinScope = new Scope();
-            this.globalScope = new Scope(this.builtinScope);
+            this.BuiltinScope = new Scope();
+            this.globalScope = new Scope(this.BuiltinScope);
             this.currentCode = Function.Empty;
             this.currentScope = this.globalScope;
             this.lineCounter = 0;
@@ -42,16 +42,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public void AddBuiltinScope(IReadOnlyScope scope)
-        {
-            this.builtinScope.CombineScope(scope);
-        }
-
-        public void RemoveBuiltinScope(IReadOnlyScope scope)
-        {
-            // this.builtinScopes.Remove(scope);
-        }
-
         public void SetGlobalCode(Function code)
         {
             this.currentCode = code;
@@ -59,7 +49,7 @@ namespace SimpleStackVM
 
         public void Reset()
         {
-            this.globalScope = new Scope(this.builtinScope);
+            this.globalScope = new Scope(this.BuiltinScope);
             this.currentCode = Function.Empty;
             this.currentScope = this.globalScope;
             this.lineCounter = 0;
@@ -112,7 +102,25 @@ namespace SimpleStackVM
                 case Operator.Get:
                     {
                         var value = codeLine.Input ?? this.PopStack();
-                        if (this.TryGetValue(value, out var foundValue))
+                        if (this.currentScope.TryGetKey(value.ToString(), out var foundValue))
+                        {
+                            this.PushStack(foundValue);
+                        }
+                        else
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable: {value.ToString()}");
+                        }
+                        break;
+                    }
+                case Operator.GetProperty:
+                    {
+                        var value = codeLine.Input ?? this.PopStack();
+                        if (!(value is ArrayValue arrayInput))
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {value.ToString()}");
+                        }
+
+                        if (this.currentScope.TryGetProperty(arrayInput, out var foundValue))
                         {
                             this.PushStack(foundValue);
                         }
@@ -190,51 +198,18 @@ namespace SimpleStackVM
                         }
                         break;
                     }
-            }
-        }
-
-        public bool TryGetValue(IValue key, out IValue value)
-        {
-            if (key is ArrayValue list)
-            {
-                this.TryGetValue(list[0], out var current);
-                for (var i = 1; i < list.Count; i++)
-                {
-                    if (current is ObjectValue currentObject)
+                case Operator.CallDirect:
                     {
-                        if (!currentObject.TryGetValue(list[i].ToString(), out current))
+                        if (codeLine.Input == null || !(codeLine.Input is ArrayValue arrayInput) ||
+                           !(arrayInput[0] is IFunctionValue procTop) || !(arrayInput[1] is NumberValue numArgs))
                         {
-                            value = NullValue.Value;
-                            return false;
+                            throw new OperatorException(this.CreateStackTrace(), $"Call direct needs an array of the function and num args code line input");
                         }
-                    }
-                    else if (current is ArrayValue currentArray)
-                    {
-                        if (!currentArray.TryGet(list[i], out current))
-                        {
-                            value = NullValue.Value;
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        throw new OperatorException(this.CreateStackTrace(), $"Unable to get property from non object or array: [{key.ToString()}]: {current.ToString()}");
-                    }
-                }
 
-                value = current;
-                return true;
+                        this.CallFunction(procTop, numArgs.IntValue, true);
+                        break;
+                    }
             }
-
-            var strKey = key.ToString();
-
-            if (this.currentScope.TryGet(strKey, out value))
-            {
-                return true;
-            }
-
-            value = NullValue.Value;
-            return false;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
