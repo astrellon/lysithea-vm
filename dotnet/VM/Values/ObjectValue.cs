@@ -32,6 +32,21 @@ namespace SimpleStackVM
             return this.Value.TryGetValue(key, out value);
         }
 
+        public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
+        {
+            if (this.TryGetValue(key, out var result))
+            {
+                if (result is T castedValue)
+                {
+                    value = castedValue;
+                    return true;
+                }
+            }
+
+            value = default(T);
+            return false;
+        }
+
         public override bool Equals(object? other)
         {
             if (other == null) return false;
