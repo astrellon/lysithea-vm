@@ -21,16 +21,16 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public IEnumerable<ITempCodeLine> ParseSet(ArrayValue input)
+        public List<ITempCodeLine> ParseSet(ArrayValue input)
         {
-            var result = Parse(input[2]).ToList();
+            var result = Parse(input[2]);
             result.Add(new TempCodeLine(Operator.Set, input[1]));
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> ParseDefine(ArrayValue input)
+        public List<ITempCodeLine> ParseDefine(ArrayValue input)
         {
-            var result = Parse(input[2]).ToList();
+            var result = Parse(input[2]);
             result.Add(new TempCodeLine(Operator.Define, input[1]));
 
             if (result[0] is TempCodeLine parsedCodeLine)
@@ -43,7 +43,7 @@ namespace SimpleStackVM
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> ParseLoop(ArrayValue input)
+        public List<ITempCodeLine> ParseLoop(ArrayValue input)
         {
             var loopLabelNum = this.labelCount++;
             var labelStart = $":LoopStart{loopLabelNum}";
@@ -65,14 +65,14 @@ namespace SimpleStackVM
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> ParseCond(ArrayValue input, bool isIfStatement)
+        public List<ITempCodeLine> ParseCond(ArrayValue input, bool isIfStatement)
         {
             var ifLabelNum = this.labelCount++;
             var labelElse = $":CondElse{ifLabelNum}";
             var labelEnd = $":CondEnd{ifLabelNum}";
 
             var comparisonCall = (ArrayValue)input[1];
-            var result = Parse(comparisonCall).ToList();
+            var result = Parse(comparisonCall);
 
             var hasElseCall = input.Count >= 4;
 
@@ -111,7 +111,27 @@ namespace SimpleStackVM
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> Parse(IValue input)
+        public List<ITempCodeLine> ParseKeyword(SymbolValue firstSymbol, ArrayValue arrayValue)
+        {
+            switch (firstSymbol.Value)
+            {
+                case FunctionKeyword:
+                    {
+                        var function = ParseFunction(arrayValue);
+                        var functionValue = new FunctionValue(function);
+                        return new List<ITempCodeLine>{ new TempCodeLine(Operator.Push, functionValue) };
+                    }
+                case SetKeyword: return ParseSet(arrayValue);
+                case DefineKeyword: return ParseDefine(arrayValue);
+                case LoopKeyword: return ParseLoop(arrayValue);
+                case IfKeyword: return ParseCond(arrayValue, true);
+                case UnlessKeyword: return ParseCond(arrayValue, false);
+            }
+
+            return new List<ITempCodeLine>();
+        }
+
+        public List<ITempCodeLine> Parse(IValue input)
         {
             if (input is NumberValue ||
                 input is StringValue ||
@@ -119,15 +139,14 @@ namespace SimpleStackVM
                 input is NullValue ||
                 input is BoolValue)
             {
-                return new[] { new TempCodeLine(Operator.Push, input) };
+                return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
             }
 
             if (input is ArrayValue arrayValue)
             {
-                var result = new List<ITempCodeLine>();
                 if (!arrayValue.Any())
                 {
-                    return result;
+                    return new List<ITempCodeLine>();
                 }
 
                 var first = arrayValue.First();
@@ -136,32 +155,24 @@ namespace SimpleStackVM
                 {
                     if (firstSymbolValue.IsLabel)
                     {
-                        return new[] { new LabelCodeLine(firstSymbolValue.Value) };
+                        return new List<ITempCodeLine> { new LabelCodeLine(firstSymbolValue.Value) };
                     }
 
                     // Check for keywords
-                    switch (firstSymbolValue.Value)
+                    var keywordParse = ParseKeyword(firstSymbolValue, arrayValue);
+                    if (keywordParse.Any())
                     {
-                        case FunctionKeyword:
-                            {
-                                var function = ParseFunction(arrayValue);
-                                var functionValue = new FunctionValue(function);
-                                return new[] { new TempCodeLine(Operator.Push, functionValue) };
-                            }
-                        case SetKeyword: return ParseSet(arrayValue);
-                        case DefineKeyword: return ParseDefine(arrayValue);
-                        case LoopKeyword: return ParseLoop(arrayValue);
-                        case IfKeyword: return ParseCond(arrayValue, true);
-                        case UnlessKeyword: return ParseCond(arrayValue, false);
+                        return keywordParse;
                     }
 
                     // Attempt to parse as an op code
                     var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
                     if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
                     {
-                        return new[] { new TempCodeLine(opCode, arrayValue[1]) };
+                        return new List<ITempCodeLine> { new TempCodeLine(opCode, arrayValue[1]) };
                     }
 
+                    var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
                     foreach (var item in arrayValue.Skip(1))
                     {
@@ -177,24 +188,23 @@ namespace SimpleStackVM
                     {
                         result.Add(new TempCodeLine(opCode, null));
                     }
+
+                    return result;
                 }
-                else
-                {
-                    // Any array that doesn't start with a symbol we assume it's a data array.
-                    result.Add(new TempCodeLine(Operator.Push, input));
-                }
-                return result;
+
+                // Any array that doesn't start with a symbol we assume it's a data array.
+                return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
             }
 
             if (input is SymbolValue symbolValue)
             {
                 if (symbolValue.Value[0] != ':')
                 {
-                    return new [] { this.OptimiseGetSymbolValue(symbolValue) };
+                    return new List<ITempCodeLine> { this.OptimiseGetSymbolValue(symbolValue) };
                 }
                 else
                 {
-                    return new[] { new TempCodeLine(Operator.Push, input) };
+                    return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
                 }
             }
 
