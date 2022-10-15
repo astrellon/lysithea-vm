@@ -1,6 +1,7 @@
 import { InputScope, parseScopes } from "../src/assembler";
 import VirtualMachine from "../src/virtualMachine";
 import fs from "fs";
+import { tokenize } from "../src/parser";
 
 let counter = 0;
 function runHandler(command: string, vm: VirtualMachine)
@@ -31,19 +32,22 @@ function runHandler(command: string, vm: VirtualMachine)
     }
 }
 
-const inputJson: InputScope[] = JSON.parse(fs.readFileSync('../examples/perfTest.json', 'utf-8'));
-const scopes = parseScopes(inputJson);
+const file = fs.readFileSync('../examples/perfTest.lisp', {encoding: 'utf-8'});
+tokenize(file);
+// console.log(tokenize(file));
+// const inputJson: InputScope[] = JSON.parse(fs.readFileSync('../examples/perfTest.json', 'utf-8'));
+// const scopes = parseScopes(inputJson);
 
-const vm = new VirtualMachine(64, runHandler);
-vm.addScopes(scopes);
+// const vm = new VirtualMachine(64, runHandler);
+// vm.addScopes(scopes);
 
-const before = Date.now();
-vm.setCurrentScope('Main');
-vm.running = true;
-while (vm.running && !vm.paused)
-{
-    vm.step();
-}
-const after = Date.now();
+// const before = Date.now();
+// vm.setCurrentScope('Main');
+// vm.running = true;
+// while (vm.running && !vm.paused)
+// {
+//     vm.step();
+// }
+// const after = Date.now();
 
-console.log('Time taken:', (after - before), 'ms');
+// console.log('Time taken:', (after - before), 'ms');

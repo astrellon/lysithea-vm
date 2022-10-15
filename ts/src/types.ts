@@ -1,6 +1,16 @@
-export type Operator = 'unknown' | 'push' | 'pop' | 'swap' | 'copy' | 'call' | 'return' | 'jump' | 'jumpTrue' | 'jumpFalse' | 'run';
+import Scope from "./scope";
+import VirtualMachine from "./virtualMachine";
 
-export type Value = string | boolean | number | ArrayValue | ObjectValue | null;
+export enum Operator
+{
+    Unknown,
+    Push,
+    Call, CallDirect, Return,
+    GetProperty, Get, Set, Define,
+    Jump, JumpTrue, JumpFalse
+}
+
+export type Value = string | boolean | number | ArrayValue | ObjectValue | FunctionValue | BuiltinFunctionValue | SymbolValue | null;
 export type ArrayValue = ReadonlyArray<Value>;
 export interface ObjectValue
 {
@@ -13,16 +23,42 @@ export interface CodeLine
     readonly value?: Value;
 }
 
-export interface Scope
+export interface SymbolValue
+{
+    readonly symbolValue: string;
+}
+
+export interface Function
 {
     readonly name: string;
     readonly code: ReadonlyArray<CodeLine>;
+    readonly parameters: ReadonlyArray<string>;
     readonly labels: { readonly [label: string]: number };
+}
+export const EmptyFunction: Function =
+{
+    name: '',
+    code: [],
+    labels: {},
+    parameters: []
+}
+export const EmptyArrayValue: ArrayValue = [];
+
+export interface FunctionValue
+{
+    readonly funcValue: Function;
+}
+
+export type BuiltinFunctionCallback = (vm: VirtualMachine, numArgs: number) => void;
+export interface BuiltinFunctionValue
+{
+    readonly builtinValue: BuiltinFunctionCallback;
 }
 
 export interface ScopeFrame
 {
     readonly lineNumber: number;
+    readonly function: Function;
     readonly scope: Scope;
 }
 
@@ -52,7 +88,23 @@ export function isValueArray(value: Value): value is ArrayValue
 }
 export function isValueObject(value: Value): value is ObjectValue
 {
-    return typeof(value) === 'object' && !isValueArray(value);
+    return typeof(value) === 'object' &&
+        !isValueArray(value) &&
+        !isValueFunction(value) &&
+        !isValueBuiltinFunction(value) &&
+        !isValueSymbol(value);
+}
+export function isValueFunction(value: Value): value is FunctionValue
+{
+    return typeof(value) === 'object' && typeof((value as any)['funcValue']) === 'object';
+}
+export function isValueBuiltinFunction(value: Value): value is BuiltinFunctionValue
+{
+    return typeof(value) === 'object' && typeof((value as any)['builtinValue']) === 'function';
+}
+export function isValueSymbol(value: Value): value is SymbolValue
+{
+    return typeof(value) === 'object' && typeof((value as any)['symbolValue']) === 'string';
 }
 export function isValueNull(value: Value)
 {
@@ -76,13 +128,25 @@ export function valueTypeof(value: Value)
 
     if (isValueObject(value))
     {
-        return "object";
+        return 'object';
     }
     if (isValueArray(value))
     {
-        return "array";
+        return 'array';
     }
-    return "unknown";
+    if (isValueFunction(value))
+    {
+        return 'function';
+    }
+    if (isValueBuiltinFunction(value))
+    {
+        return 'builtin-function';
+    }
+    if (isValueSymbol(value))
+    {
+        return 'symbol';
+    }
+    return 'unknown';
 }
 export function valueToString(value?: Value)
 {
@@ -100,6 +164,19 @@ export function valueToString(value?: Value)
         case 'boolean': return value.toString();
         case 'object':
             {
+                if (isValueSymbol(value))
+                {
+                    return value.symbolValue;
+                }
+                if (isValueFunction(value))
+                {
+                    return `function:${value.funcValue.name}`;
+                }
+                if (isValueBuiltinFunction(value))
+                {
+                    return 'builtin-function';
+                }
+
                 let result = '';
                 let first = true;
                 if (isValueArray(value))
@@ -141,7 +218,7 @@ export function valueToString(value?: Value)
             }
     }
 
-    return '<<unknown>>';
+    return 'unknown';
 }
 
 export function numberCompareTo(left: number, right: number)
@@ -258,6 +335,14 @@ export function valueCompareTo(left: Value, right: Value): number
         case 'object':
             {
                 return objectCompareTo(left as ObjectValue, right as ObjectValue);
+            }
+        case 'function':
+            {
+                return (left as FunctionValue).funcValue === (right as FunctionValue).funcValue ? 0 : 1;
+            }
+        case 'builtin-function':
+            {
+                return (left as BuiltinFunctionValue).builtinValue === (right as BuiltinFunctionValue).builtinValue ? 0 : 1;
             }
         case 'null': return 0;
     }

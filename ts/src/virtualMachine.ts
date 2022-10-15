@@ -1,27 +1,20 @@
-import { ArrayValue, isValueArray, isValueBoolean, isValueNumber, isValueObject, isValueString, ObjectValue, Scope, ScopeFrame, Value, valueToString } from "./types";
-
-export type RunHandler = (command: string, vm: VirtualMachine) => void;
-type ScopeMap = { [key: string]: Scope }
-type RunHandlerMap = { [key: string]: RunHandler }
-
-const EmptyScope: Scope = {
-    name: '',
-    code: [],
-    labels: {}
-}
+import Scope from "./scope";
+import { ArrayValue, BuiltinFunctionValue, EmptyArrayValue, EmptyFunction, Function, FunctionValue, isValueArray, isValueBuiltinFunction, isValueFunction, isValueNull, isValueNumber, isValueString, Operator, ScopeFrame, Value, valueToString } from "./types";
 
 export default class VirtualMachine
 {
-    private static readonly EmptyHandler: RunHandler = (command, vm) => { }
+    private readonly _builtinScope: Scope = new Scope();
+    public get builtinScope() { return this._builtinScope; }
 
-    private _currentScope: Scope = EmptyScope;
-    public get currentScope() { return this._currentScope; }
+    private _globalScope: Scope;
+    private _currentScope: Scope;
 
-    private _programCounter: number = 0;
-    public get programCounter() { return this._programCounter; }
+    private _lineCounter: number = 0;
+    public get programCounter() { return this._lineCounter; }
 
     public running: boolean = false;
     public paused: boolean = false;
+    public currentCode: Function = EmptyFunction;
 
     private _stack: Value[] = [];
     public get stack(): ReadonlyArray<Value> { return this._stack; }
@@ -29,82 +22,47 @@ export default class VirtualMachine
     private _stackTrace: ScopeFrame[] = [];
     public get stackTrace(): ReadonlyArray<ScopeFrame> { return this._stackTrace; }
 
-    private _scopes: ScopeMap = {};
-    private _runHandlers: RunHandlerMap = {};
-
-    private _globalRunHandler: RunHandler;
     private readonly _stackSize: number;
 
-    constructor (stackSize: number, runHandler: RunHandler | null = null)
+    constructor (stackSize: number)
     {
         this._stackSize = stackSize;
-        this._globalRunHandler = runHandler ?? VirtualMachine.EmptyHandler;
-    }
-
-    public addScope(scope: Scope)
-    {
-        this._scopes[scope.name] = scope;
-    }
-
-    public addScopes(scopes: Scope[])
-    {
-        for (const scope of scopes)
-        {
-            this.addScope(scope);
-        }
-    }
-
-    public clearScopes()
-    {
-        this._scopes = {};
+        this._globalScope = new Scope(this._builtinScope);
+        this._currentScope = this._globalScope;
     }
 
     public reset()
     {
-        this._programCounter = 0;
+        this._globalScope = new Scope(this._builtinScope);
+        this._currentScope = this._globalScope;
+        this._lineCounter = 0;
         this._stack = [];
         this._stackTrace = [];
         this.running = false;
         this.paused = false;
     }
 
-    public setCurrentScope(scopeName: string)
-    {
-        const startScope = this._scopes[scopeName];
-        if (startScope == null)
-        {
-            throw new Error(`Unable to find scope: ${scopeName}`);
-        }
-
-        this._currentScope = startScope;
-    }
-
-    public addRunHandler(handlerName: string, handler: RunHandler)
-    {
-        this._runHandlers[handlerName] = handler;
-    }
-
-    public setGlobalRunHandler(handler: RunHandler | null)
-    {
-        this._globalRunHandler = handler ?? VirtualMachine.EmptyHandler;
-    }
-
     public step()
     {
-        if (this._programCounter >= this._currentScope.code.length)
+        if (this._lineCounter >= this.currentCode.code.length)
         {
-            console.log('VM hits end!');
-            this.running = false;
+            if (!this.tryCallReturn())
+            {
+                this.running = false;
+            }
+
             return;
         }
 
-        // this.printStackDebug();
-
-        const codeLine = this._currentScope.code[this._programCounter++];
+        const codeLine = this.currentCode.code[this._lineCounter++];
 
         switch (codeLine.operator)
         {
-            case 'push':
+            default:
+                {
+                    throw new Error(`Unknown operator: ${codeLine.operator}`);
+                }
+            case Operator.Push:
                 {
                     if (codeLine.value != null)
                     {
@@ -112,191 +70,240 @@ export default class VirtualMachine
                     }
                     else
                     {
-                        this.pushStack(this.peekStack());
+                        throw new Error(`${this.getScopeLine()}: Push needs an input`);
                     }
                     break;
                 }
-            case 'pop':
+            case Operator.Get:
                 {
-                    this._stack.pop();
-                    break;
-                }
-            case 'swap':
-                {
-                    const value = codeLine.value ?? this.popStack();
-                    if (typeof(value) !== 'number')
+                    const key = codeLine.value ?? this.popStack();
+                    if (!isValueString(key))
                     {
-                        throw new Error(`${this.getScopeLine()}: Swap needs value to swap`);
+                        throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${valueToString(key)}`);
                     }
 
-                    if (!this.swapStack(value))
+                    const foundValue = this._currentScope.getKey(key);
+                    if (foundValue != null)
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to swap, index out of range: ${value}`);
+                        this.pushStack(foundValue);
                     }
-                    break;
-                }
-            case 'copy':
-                {
-                    const value = codeLine.value ?? this.popStack();
-                    if (typeof(value) !== 'number')
+                    else
                     {
-                        throw new Error(`${this.getScopeLine()}: Copy needs value to swap`);
+                        throw new Error(`${this.getScopeLine()}: Unable to get variable: ${key}`);
+                    }
+                }
+            case Operator.GetProperty:
+                {
+                    const key = codeLine.value ?? this.popStack();
+                    if (!isValueArray(key))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Unable to get property, input needs to be an array: ${valueToString(key)}`)
                     }
 
-                    if (!this.copyStack(value))
+                    const foundValue = this._currentScope.getProperty(key);
+                    if (foundValue != null)
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to copy, index out of range: ${value}`);
+                        this.pushStack(foundValue);
                     }
-                }
-            case 'jump':
-                {
-                    const label = codeLine.value ?? this.popStack();
-                    this.jumpValue(label);
-                    break;
-                }
-            case 'jumpTrue':
-                {
-                    const label = codeLine.value ?? this.popStack();
-                    const top = this.popStack();
-                    if (top == true)
+                    else
                     {
-                        this.jumpValue(label);
+                        throw new Error(`${this.getScopeLine()}: Unable to get property: ${valueToString(key)}`);
                     }
                     break;
                 }
-            case 'jumpFalse':
+            case Operator.Define:
+                {
+                    const key = codeLine.value ?? this.popStack();
+                    const value = this.popStack();
+                    this._currentScope.define(valueToString(key), value);
+                    break;
+                }
+            case Operator.Set:
+                {
+                    const key = codeLine.value ?? this.popStack();
+                    const value = this.popStack();
+                    if (!this._currentScope.set(valueToString(key), value))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Unable to set variable that has not been defined: ${valueToString(key)} = ${valueToString(value)}`);
+                    }
+                    break;
+                }
+            case Operator.JumpFalse:
                 {
                     const label = codeLine.value ?? this.popStack();
                     const top = this.popStack();
                     if (top == false)
                     {
-                        this.jumpValue(label);
+                        this.jump(valueToString(label));
                     }
                     break;
                 }
-            case 'call':
+            case Operator.JumpTrue:
                 {
                     const label = codeLine.value ?? this.popStack();
-                    this.call(label);
+                    const top = this.popStack();
+                    if (top == true)
+                    {
+                        this.jump(valueToString(label));
+                    }
                     break;
                 }
-            case 'return':
+            case Operator.Jump:
+                {
+                    const label = codeLine.value ?? this.popStack();
+                    this.jump(valueToString(label));
+                    break;
+                }
+            case Operator.Return:
                 {
                     this.callReturn();
                     break;
                 }
-            case 'run':
+            case Operator.Call:
                 {
-                    const top = codeLine.value ?? this.popStack();
-                    this.runCommand(top);
+                    if (codeLine.value == null || !isValueNumber(codeLine.value))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Call needs a num args code line input`);
+                    }
+
+                    const numArgs = codeLine.value;
+                    const top = this.popStack();
+                    if (isValueFunction(top) || isValueBuiltinFunction(top))
+                    {
+                        this.callFunction(top, numArgs, true);
+                    }
+                    else
+                    {
+                        throw new Error(`${this.getScopeLine()}: Call needs a function to run: ${valueToString(top)}`);
+                    }
                     break;
                 }
-            default:
+            case Operator.CallDirect:
                 {
-                    throw new Error(`${this.getScopeLine()}: Unknown operator: ${codeLine.operator}`);
+                    const funcCall = codeLine.value;
+                    if (funcCall == null || !isValueArray(funcCall) ||
+                        !(isValueFunction(funcCall[0]) || isValueBuiltinFunction(funcCall[0])) ||
+                        !isValueNumber(funcCall[1]))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Call direct needs an array of the function and num args code line input`);
+                    }
+
+                    this.callFunction(funcCall[0], funcCall[1], true);
+                    break;
                 }
         }
     }
 
-    public runCommand(value: Value)
-    {
-        if (isValueArray(value))
-        {
-            const handler = this._runHandlers[valueToString(value[0])];
-            if (handler != null)
-            {
-                handler(valueToString(value[1]), this);
-            }
-            else
-            {
-                throw new Error(`Unable to find run command namespace: ${valueToString(value)}`);
-            }
-        }
-        else
-        {
-            this._globalRunHandler(valueToString(value), this);
-        }
-    }
-
-    public call(value: Value)
-    {
-        if (this._stackTrace.length >= this._stackSize)
-        {
-            throw new Error(`${this.getScopeLine()}: Unable to call, stack trace full`);
-        }
-        this._stackTrace.push({ lineNumber: this._programCounter, scope: this._currentScope });
-        this.jumpValue(value);
-    }
-
-    public callReturn()
+    public tryCallReturn(): boolean
     {
         const scopeFrame = this._stackTrace.pop();
         if (scopeFrame == undefined)
         {
-            throw new Error(`${this.getScopeLine()}: Unable to return, call stack empty`);
+            return false;
         }
 
         this._currentScope = scopeFrame.scope;
-        this._programCounter = scopeFrame.lineNumber;
+        this._lineCounter = scopeFrame.lineNumber;
+        this.currentCode = scopeFrame.function;
+        return true;
     }
 
-    public jumpValue(value: Value)
+    public callReturn()
     {
-        if (typeof(value) === 'string')
+        if (!this.tryCallReturn())
         {
-            this.jumpLabel(value);
+            throw new Error(`${this.getScopeLine()}: Unable to return, call stack empty`);
         }
-        else if (Array.isArray(value))
+    }
+
+    public getArgs(numArgs: number): ArrayValue
+    {
+        if (numArgs === 0)
         {
-            if (value.length == 0)
+            return EmptyArrayValue;
+        }
+
+        const args: Value[] = new Array(numArgs);
+        for (let i = 0; i < numArgs; i++)
+        {
+            args[numArgs - i - 1] = this.popStack();
+        }
+        return args as ArrayValue;
+    }
+
+    public jump(label: string)
+    {
+        const line = this.currentCode.labels[label];
+        if (line == null)
+        {
+            throw new Error(`${this.getScopeLine()}: Unable to jump to label: ${label}`);
+        }
+
+        this._lineCounter = line;
+    }
+
+    public callFunction(value: FunctionValue | BuiltinFunctionValue, numArgs: number, pushToStackTrace: boolean)
+    {
+        if (isValueFunction(value))
+        {
+            if (pushToStackTrace)
             {
-                throw new Error(`${this.getScopeLine()}: Cannot jump to an empty array`);
+                this.pushCurrentToStackTrace();
             }
-
-            const scopeName = value.length > 1 ? value[1] as string : undefined;
-            this.jump(value[0], scopeName);
-        }
-    }
-
-    public jumpLabel(input: string)
-    {
-        if (input == null || input.length === 0)
-        {
-            this._programCounter = 0;
+            this.executeFunction(value, numArgs);
         }
         else
         {
-            if (input[0] == ':')
-            {
-                this.jump(input, undefined);
-            }
-            else
-            {
-                this.jump(undefined, input);
-            }
+            this.executeBuiltinFunction(value, numArgs);
         }
     }
 
-    public jump(label?: string, scopeName?: string)
+    public executeFunction(value: FunctionValue, numArgs: number = -1)
     {
-        if (scopeName != null)
+        this.currentCode = value.funcValue;
+        this._currentScope = new Scope(this._currentScope);
+        this._lineCounter = 0;
+
+        const params = value.funcValue.parameters;
+
+        const args = this.getArgs(numArgs >= 0 ? Math.min(numArgs, params.length) : params.length);
+        for (let i = 0; i < args.length; i++)
         {
-            this.setCurrentScope(scopeName);
+            this._currentScope.define(params[i], args[i]);
+        }
+    }
+
+    public executeBuiltinFunction(value: BuiltinFunctionValue, numArgs: number)
+    {
+        value.builtinValue(this, numArgs);
+    }
+
+    public pushCurrentToStackTrace()
+    {
+        this.pushToStackTrace({
+            lineNumber: this._lineCounter,
+            scope: this._currentScope,
+            function: this.currentCode
+        });
+    }
+
+    public pushToStackTrace(scopeFrame: ScopeFrame)
+    {
+        if (this._stackTrace.length >= this._stackSize)
+        {
+            throw new Error(`${this.getScopeLine()}: Unable to push to stack trace, stack is full`);
         }
 
-        if (label == null || label.length == 0)
-        {
-            this._programCounter = 0;
-            return;
-        }
+        this._stackTrace.push(scopeFrame);
+    }
 
-        const line = this._currentScope.labels[label];
-        if (line == null)
+    public pushStack(value: Value)
+    {
+        if (this._stack.length >= this._stackSize)
         {
-            throw new Error(`Unable to jump to label: ${label}`);
+            throw new Error(`${this.getScopeLine()}: Unable to push, stack full`);
         }
-
-        this._programCounter = line;
+        this._stack.push(value);
     }
 
     public popStack(): Value
@@ -309,146 +316,8 @@ export default class VirtualMachine
         return result;
     }
 
-    public popStackBool(): boolean
-    {
-        const result = this.popStack();
-        if (!isValueBoolean(result))
-        {
-            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not a boolean: ${valueToString(result)}`);
-        }
-        return result;
-    }
-
-    public popStackString(): string
-    {
-        const result = this.popStack();
-        if (!isValueString(result))
-        {
-            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not a string: ${valueToString(result)}`);
-        }
-        return result;
-    }
-
-    public popStackNumber(): number
-    {
-        const result = this.popStack();
-        if (!isValueNumber(result))
-        {
-            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not a number: ${valueToString(result)}`);
-        }
-        return result;
-    }
-
-    public popStackArray(): ArrayValue
-    {
-        const result = this.popStack();
-        if (!isValueArray(result))
-        {
-            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not an array: ${valueToString(result)}`);
-        }
-        return result;
-    }
-
-    public popStackObject(): ObjectValue
-    {
-        const result = this.popStack();
-        if (!isValueObject(result))
-        {
-            throw new Error(`${this.getScopeLine()}: Stack cast fail, top not an object: ${valueToString(result)}`);
-        }
-        return result;
-    }
-
-    public peekStack(): Value
-    {
-        if (this._stack.length === 0)
-        {
-            throw new Error(`${this.getScopeLine()}: Unable to peek, stack empty`);
-        }
-        return this._stack[this._stack.length - 1];
-    }
-
-    public pushStack(value: Value)
-    {
-        if (this._stack.length >= this._stackSize)
-        {
-            throw new Error(`${this.getScopeLine()}: Unable to push, stack full`);
-        }
-        this._stack.push(value);
-    }
-
-    public copyStack(topOffset: number)
-    {
-        const newIndex = this._stack.length - topOffset;
-        if (newIndex < 0 || newIndex >= this._stack.length)
-        {
-            return false;
-        }
-
-        this._stack.push(this._stack[newIndex]);
-
-        return true;
-    }
-
-    public swapStack(topOffset: number)
-    {
-        const newIndex = this._stack.length - topOffset;
-        if (newIndex < 0 || newIndex >= this._stack.length)
-        {
-            return false;
-        }
-
-        const topIndex = this._stack.length - 1;
-        const top = this._stack[topIndex];
-        const other = this._stack[newIndex];
-
-        this._stack[topIndex] = other;
-        this._stack[newIndex] = top;
-
-        return true;
-    }
-
-    public printStackDebug()
-    {
-        console.log('Stack size:', this._stack.length);
-        for (const stack of this._stack)
-        {
-            console.log('- ', stack);
-        }
-    }
-
-    public createStackTrace()
-    {
-        const result: string[] = [];
-
-        result.push(this.debugScopeLine(this.currentScope, this.programCounter - 1));
-        for (let i = this._stackTrace.length - 1; i >= 0; i--)
-        {
-            const scopeFrame = this._stackTrace[i];
-            result.push(this.debugScopeLine(scopeFrame.scope, scopeFrame.lineNumber));
-        }
-        return result;
-    }
-
-    private debugScopeLine(scope: Scope, line: number)
-    {
-        if (line >= scope.code.length)
-        {
-            return `[${scope.name}]:${line - 1}: end of code`;
-        }
-        else if (line < 0)
-        {
-            return `[${scope.name}]:${line - 1}: before start of code`;
-        }
-
-        const codeLine = scope.code[line];
-        const codeLineInput = valueToString(codeLine.value);
-        return `[${scope.name}]:${line - 1}:${codeLine.operator}: [${codeLineInput}]`;
-
-    }
-
     private getScopeLine()
     {
-        return `${this._currentScope.name}:${this._programCounter}`;
+        return `${this.currentCode.name}:${this._lineCounter}`;
     }
 }
