@@ -20,8 +20,8 @@ namespace SimpleStackVM
             var code = assembler.ParseFromText(File.ReadAllText("../examples/fib.lisp"));
 
             var vm = new VirtualMachine(16);
+            vm.CurrentCode = code;
 
-            vm.SetCode(code);
             try
             {
                 vm.Running = true;

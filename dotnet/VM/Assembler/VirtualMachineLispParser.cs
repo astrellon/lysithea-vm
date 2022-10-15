@@ -9,7 +9,7 @@ namespace SimpleStackVM
     {
         #region Fields
         private static Regex TokenRegex = new Regex("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
-        private static Regex CommentRegex = new Regex("^\\s*;.*$", RegexOptions.Multiline);
+        private static Regex CommentRegex = new Regex("^\\s*(;|\\/\\/).*$", RegexOptions.Multiline);
         #endregion
 
         #region Methods

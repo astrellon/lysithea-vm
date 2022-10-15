@@ -15,13 +15,13 @@ namespace SimpleStackVM
         private readonly FixedStack<ScopeFrame> stackTrace;
         public readonly Scope BuiltinScope = new Scope();
 
-        private Function currentCode = Function.Empty;
         private Scope globalScope;
         private Scope currentScope;
         private int lineCounter = 0;
 
         public bool Running;
         public bool Paused;
+        public Function CurrentCode = Function.Empty;
 
         public IReadOnlyFixedStack<IValue> Stack => this.stack;
         public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
@@ -38,11 +38,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public void SetCode(Function code)
-        {
-            this.currentCode = code;
-        }
-
         public void Reset()
         {
             this.globalScope = new Scope(this.BuiltinScope);
@@ -56,22 +51,16 @@ namespace SimpleStackVM
 
         public void Step()
         {
-            if (this.lineCounter >= this.currentCode.Code.Count)
+            if (this.lineCounter >= this.CurrentCode.Code.Count)
             {
-                if (this.stackTrace.TryPop(out var scopeFrame))
-                {
-                    this.currentCode = scopeFrame.Function;
-                    this.currentScope = scopeFrame.Scope;
-                    this.lineCounter = scopeFrame.LineCounter;
-                }
-                else
+                if (!this.TryReturn())
                 {
                     this.Running = false;
                 }
                 return;
             }
 
-            var codeLine = this.currentCode.Code[this.lineCounter++];
+            var codeLine = this.CurrentCode.Code[this.lineCounter++];
 
             // this.PrintStackDebug();
 
@@ -210,7 +199,7 @@ namespace SimpleStackVM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Jump(string label)
         {
-            if (this.currentCode.Labels.TryGetValue(label, out var line))
+            if (this.CurrentCode.Labels.TryGetValue(label, out var line))
             {
                 this.lineCounter = line;
             }
@@ -242,7 +231,7 @@ namespace SimpleStackVM
             {
                 if (pushToStackTrace)
                 {
-                    this.PushToStackTrace(new ScopeFrame(this.currentCode, this.currentScope, this.lineCounter));
+                    this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.currentScope, this.lineCounter));
                 }
                 this.ExecuteFunction(foundProc.Value, numArgs);
             }
@@ -261,7 +250,7 @@ namespace SimpleStackVM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteFunction(Function function, int numArgs = -1)
         {
-            this.currentCode = function;
+            this.CurrentCode = function;
             this.currentScope = new Scope(this.currentScope);
             this.lineCounter = 0;
 
@@ -282,17 +271,26 @@ namespace SimpleStackVM
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Return()
+        public bool TryReturn()
         {
             if (!this.stackTrace.TryPop(out var scopeFrame))
             {
-                throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
+                return false;
             }
 
-            this.currentCode = scopeFrame.Function;
+            this.CurrentCode = scopeFrame.Function;
             this.currentScope = scopeFrame.Scope;
             this.lineCounter = scopeFrame.LineCounter;
+            return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Return()
+        {
+            if (!this.TryReturn())
+            {
+                throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
+            }
         }
 
         #endregion
@@ -359,7 +357,7 @@ namespace SimpleStackVM
         {
             var result = new List<string>();
 
-            result.Add(DebugScopeLine(this.currentCode, this.lineCounter - 1));
+            result.Add(DebugScopeLine(this.CurrentCode, this.lineCounter - 1));
             for (var i = this.stackTrace.Index - 1; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];

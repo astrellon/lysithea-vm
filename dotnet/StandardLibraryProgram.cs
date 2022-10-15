@@ -17,7 +17,7 @@ namespace SimpleStackVM
 
             var vm = new VirtualMachine(8);
 
-            vm.SetCode(code);
+            vm.CurrentCode = code;
             try
             {
                 vm.Running = true;
@@ -30,7 +30,6 @@ namespace SimpleStackVM
                 Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
 
                 vm.Reset();
-                vm.SetCode(code);
                 vm.Running = true;
                 sw = Stopwatch.StartNew();
                 while (vm.Running && !vm.Paused)

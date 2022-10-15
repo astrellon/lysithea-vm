@@ -26,7 +26,7 @@ namespace SimpleStackVM
 
             var vm = new VirtualMachine(8);
             vm.BuiltinScope.CombineScope(CustomScope);
-            vm.SetCode(code);
+            vm.CurrentCode = code;
 
             try
             {

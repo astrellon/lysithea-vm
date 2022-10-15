@@ -20,7 +20,7 @@ namespace SimpleStackVM
             var code = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 
             var vm = new VirtualMachine(8);
-            vm.SetCode(code);
+            vm.CurrentCode = code;
 
             try
             {
@@ -35,7 +35,6 @@ namespace SimpleStackVM
 
                 vm.Reset();
                 Counter = 0;
-                vm.SetCode(code);
                 sw = Stopwatch.StartNew();
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
