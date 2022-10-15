@@ -78,30 +78,35 @@ namespace SimpleStackVM
                         }
                         else
                         {
-                            throw new StackException(this.CreateStackTrace(), "Unable to copy top of an empty stack");
+                            throw new StackException(this.CreateStackTrace(), "Push needs an input");
                         }
 
                         break;
                     }
                 case Operator.Get:
                     {
-                        var value = codeLine.Input ?? this.PopStack();
-                        if (this.currentScope.TryGetKey(value.ToString(), out var foundValue))
+                        var key = codeLine.Input ?? this.PopStack();
+                        if (!(key is StringValue stringInput))
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable, input needs to be a string: {key.ToString()}");
+                        }
+
+                        if (this.currentScope.TryGetKey(key.ToString(), out var foundValue))
                         {
                             this.PushStack(foundValue);
                         }
                         else
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable: {value.ToString()}");
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable: {key.ToString()}");
                         }
                         break;
                     }
                 case Operator.GetProperty:
                     {
-                        var value = codeLine.Input ?? this.PopStack();
-                        if (!(value is ArrayValue arrayInput))
+                        var key = codeLine.Input ?? this.PopStack();
+                        if (!(key is ArrayValue arrayInput))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {value.ToString()}");
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {key.ToString()}");
                         }
 
                         if (this.currentScope.TryGetProperty(arrayInput, out var foundValue))
@@ -110,7 +115,7 @@ namespace SimpleStackVM
                         }
                         else
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable: {value.ToString()}");
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get property: {key.ToString()}");
                         }
                         break;
                     }
@@ -165,16 +170,15 @@ namespace SimpleStackVM
                     }
                 case Operator.Call:
                     {
-                        if (codeLine.Input == null)
+                        if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
                         {
                             throw new OperatorException(this.CreateStackTrace(), $"Call needs a num args code line input");
                         }
 
-                        var numArgs = ((NumberValue)codeLine.Input).IntValue;
                         var top = this.PopStack();
                         if (top is IFunctionValue procTop)
                         {
-                            this.CallFunction(procTop, numArgs, true);
+                            this.CallFunction(procTop, numArgs.IntValue, true);
                         }
                         else
                         {

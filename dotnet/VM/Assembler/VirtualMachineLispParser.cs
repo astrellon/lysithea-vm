@@ -98,14 +98,17 @@ namespace SimpleStackVM
             {
                 return new BoolValue(boolean);
             }
-            if (input.First() == '"' && input.Last() == '"')
-            {
-                return new StringValue(input.Substring(1, input.Length - 2));
-            }
-
             if (input == "null")
             {
                 return NullValue.Value;
+            }
+
+            var first = input.First();
+            var last = input.Last();
+            if ((first == '"'  && last == '"') ||
+                (first == '\'' && last == '\''))
+            {
+                return new StringValue(input.Substring(1, input.Length - 2));
             }
             return new SymbolValue(input);
         }
