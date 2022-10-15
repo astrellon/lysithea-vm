@@ -7,116 +7,97 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    using RunCommandHandler = Action<string, VirtualMachine>;
+    using BuiltinCommandHandler = Action<string, VirtualMachine>;
 
     public class VirtualMachine
     {
-        public struct ScopeFrame
-        {
-            public readonly int LineCounter;
-            public readonly Scope Scope;
-
-            public ScopeFrame(int lineCounter, Scope scope)
-            {
-                this.LineCounter = lineCounter;
-                this.Scope = scope;
-            }
-
-            public override string ToString()
-            {
-                return $"{this.Scope.ScopeName}:{this.LineCounter}";
-            }
-        }
 
         #region Fields
-        private static readonly RunCommandHandler EmptyHandler = (i, vm) => { };
+        private static readonly BuiltinCommandHandler EmptyHandler = (i, vm) => { };
 
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-        private readonly Dictionary<string, Scope> scopes;
-        private readonly Dictionary<string, RunCommandHandler> runHandlers;
-        private RunCommandHandler globalRunHandler;
+        private readonly Dictionary<string, Procedure> procedures;
+        private readonly Dictionary<string, BuiltinCommandHandler> builtinHandlers;
+        private BuiltinCommandHandler globalBuiltinHandler;
 
-        public Scope CurrentScope { get; private set; } = Scope.Empty;
-        public int ProgramCounter { get; private set; }
+        public ScopeFrame CurrentFrame { get; private set; }
         public bool Running;
         public bool Paused;
 
-        public IReadOnlyDictionary<string, Scope> Scopes => this.scopes;
+        public IReadOnlyDictionary<string, Procedure> Procedures => this.procedures;
         public IReadOnlyFixedStack<IValue> Stack => this.stack;
         public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
         #endregion
 
         #region Constructor
-        public VirtualMachine(int stackSize, RunCommandHandler? globalRunHandler = null)
+        public VirtualMachine(int stackSize, BuiltinCommandHandler? globalBuiltinHandler = null)
         {
-            this.runHandlers = new Dictionary<string, RunCommandHandler>();
-            this.globalRunHandler = globalRunHandler ?? EmptyHandler;
-            this.scopes = new Dictionary<string, Scope>();
-            this.ProgramCounter = 0;
+            this.builtinHandlers = new Dictionary<string, BuiltinCommandHandler>();
+            this.globalBuiltinHandler = globalBuiltinHandler ?? EmptyHandler;
+            this.procedures = new Dictionary<string, Procedure>();
+            this.CurrentFrame = new ScopeFrame();
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
         #endregion
 
         #region Methods
-        public void AddRunHandler(string commandNameSpace, RunCommandHandler runCommandHandler)
+        public void AddBuiltinHandler(string nameSpace, BuiltinCommandHandler builtinCollection)
         {
-            this.runHandlers[commandNameSpace] = runCommandHandler;
+            this.builtinHandlers[nameSpace] = builtinCollection;
         }
 
-        public void SetGlobalRunHandler(RunCommandHandler runCommandHandler)
+        public void SetGlobalBuiltinHandler(BuiltinCommandHandler handler)
         {
-            this.globalRunHandler = runCommandHandler;
+            this.globalBuiltinHandler = handler;
         }
 
-        public void AddScope(Scope scope)
+        public void AddProcedure(Procedure procedure)
         {
-            this.scopes[scope.ScopeName] = scope;
+            this.procedures[procedure.Name] = procedure;
         }
 
-        public void AddScopes(IEnumerable<Scope> scopes)
+        public void AddProcedures(IEnumerable<Procedure> procedures)
         {
-            foreach (var scope in scopes) { this.AddScope(scope); }
+            foreach (var procedure in procedures) { this.AddProcedure(procedure); }
         }
 
-        public void ClearScopes()
+        public void ClearProcedures()
         {
-            this.scopes.Clear();
+            this.procedures.Clear();
         }
 
         public void Reset()
         {
-            this.ProgramCounter = 0;
+            this.CurrentFrame = new ScopeFrame();
             this.stack.Clear();
             this.stackTrace.Clear();
             this.Running = false;
             this.Paused = false;
         }
 
-        public void SetCurrentScope(string scopeName)
+        public void SetCurrentProcedure(string procedureName)
         {
-            if (this.scopes.TryGetValue(scopeName, out var scope))
+            if (this.procedures.TryGetValue(procedureName, out var procedure))
             {
-                this.CurrentScope = scope;
+                this.CurrentFrame =  new ScopeFrame(procedure, new Scope());
             }
             else
             {
-                throw new ScopeException(this.CreateStackTrace(), $"Unable to find scope: {scopeName} for jump.");
+                throw new ScopeException(this.CreateStackTrace(), $"Unable to find procedure: {procedureName}");
             }
         }
 
         public void Step()
         {
-            if (this.CurrentScope.IsEmpty || this.ProgramCounter >= this.CurrentScope.Code.Count)
+            if (!this.CurrentFrame.TryGetNextCodeLine(out var codeLine))
             {
                 this.Running = false;
                 return;
             }
 
             // this.PrintStackDebug();
-
-            var codeLine = this.CurrentScope.Code[this.ProgramCounter++];
 
             switch (codeLine.Operator)
             {
@@ -178,6 +159,26 @@ namespace SimpleStackVM
                         }
                         break;
                     }
+                case Operator.Get:
+                    {
+                        var value = codeLine.Input ?? this.PopStack();
+                        if (this.CurrentFrame.Scope.TryGet(value.ToString(), out var foundValue))
+                        {
+                            this.PushStack(foundValue);
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to get variable: {value.ToString()}");
+                        }
+                        break;
+                    }
+                case Operator.Set:
+                    {
+                        var key = codeLine.Input ?? this.PopStack();
+                        var value = this.PopStack();
+                        this.CurrentFrame.Scope.Set(key.ToString(), value);
+                        break;
+                    }
                 case Operator.JumpFalse:
                     {
                         var label = codeLine.Input ?? this.PopStack();
@@ -205,18 +206,12 @@ namespace SimpleStackVM
                         this.Jump(label);
                         break;
                     }
-                case Operator.Call:
-                    {
-                        var label = codeLine.Input ?? this.PopStack();
-                        this.CallToLabel(label);
-                        break;
-                    }
                 case Operator.Return:
                     {
                         this.Return();
                         break;
                     }
-                case Operator.Run:
+                case Operator.Call:
                     {
                         var top = codeLine.Input ?? this.PopStack();
                         this.RunCommand(top);
@@ -225,6 +220,7 @@ namespace SimpleStackVM
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Swap(int topOffset)
         {
             if (!this.stack.TrySwap(topOffset))
@@ -233,6 +229,7 @@ namespace SimpleStackVM
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Copy(int topOffset)
         {
             if (!this.stack.TryCopy(topOffset))
@@ -241,12 +238,26 @@ namespace SimpleStackVM
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ArrayValue GetArgs(int numArgs)
+        {
+            var args = ArrayValue.Empty;
+            if (numArgs > 0)
+            {
+                var temp = new IValue[numArgs];
+                for (var i = 0; i < numArgs; i++)
+                {
+                    temp[numArgs - i - 1] = this.PopStack();
+                }
+                args = new ArrayValue(temp);
+            }
+            return args;
+        }
+
         public void RunCommand(IValue value)
         {
             if (value is ArrayValue arrayValue)
             {
-                if (this.runHandlers.TryGetValue(arrayValue.Value[0].ToString(), out var handler))
+                if (this.builtinHandlers.TryGetValue(arrayValue.Value[0].ToString(), out var handler))
                 {
                     handler.Invoke(arrayValue.Value[1].ToString(), this);
                 }
@@ -255,27 +266,37 @@ namespace SimpleStackVM
                     throw new OperatorException(this.CreateStackTrace(), $"Unable to find run command namespace: {value.ToString()}");
                 }
             }
-            else
+            else if (value is StringValue stringValue)
             {
-                this.globalRunHandler.Invoke(value.ToString(), this);
+                if (this.procedures.TryGetValue(stringValue.Value, out var procedure))
+                {
+                    this.PushToStackTrace(this.CurrentFrame);
+                    this.CurrentFrame = new ScopeFrame(procedure, new Scope());
+
+                    var args = this.GetArgs(procedure.Arguments.Count);
+                    for (var i = 0; i < args.Count; i++)
+                    {
+                        var argName = procedure.Arguments[i];
+                        this.CurrentFrame.Scope.Set(argName, args[i]);
+                    }
+                }
+                else
+                {
+                    this.globalBuiltinHandler.Invoke(value.ToString(), this);
+                }
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CallToLabel(IValue label)
+        public void PushToStackTrace(ScopeFrame scopeFrame)
         {
-            this.PushToStackTrace(this.ProgramCounter, this.CurrentScope);
-            this.Jump(label);
-        }
-
-        public void PushToStackTrace(int line, Scope scope)
-        {
-            if (!this.stackTrace.TryPush(new ScopeFrame(line, scope)))
+            if (!this.stackTrace.TryPush(scopeFrame))
             {
                 throw new StackException(this.CreateStackTrace(), "Unable to call, call stack full");
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Return()
         {
             if (!this.stackTrace.TryPop(out var scopeFrame))
@@ -283,8 +304,7 @@ namespace SimpleStackVM
                 throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
             }
 
-            this.CurrentScope = scopeFrame.Scope;
-            this.ProgramCounter = scopeFrame.LineCounter;
+            this.CurrentFrame = scopeFrame;
         }
 
         public void Jump(IValue jumpTo)
@@ -299,6 +319,7 @@ namespace SimpleStackVM
                 {
                     throw new OperatorException(this.CreateStackTrace(), "Cannot jump to an empty array");
                 }
+
                 string? scopeName = null;
                 var label = arrayValue.Value[0].ToString();
                 if (arrayValue.Value.Count() > 1)
@@ -325,7 +346,7 @@ namespace SimpleStackVM
             }
             else
             {
-                this.ProgramCounter = 0;
+                this.CurrentFrame.LineCounter = 0;
             }
         }
 
@@ -333,18 +354,18 @@ namespace SimpleStackVM
         {
             if (!string.IsNullOrEmpty(scopeName))
             {
-                this.SetCurrentScope(scopeName);
+                this.SetCurrentProcedure(scopeName);
             }
 
             if (string.IsNullOrEmpty(label))
             {
-                this.ProgramCounter = 0;
+                this.CurrentFrame.LineCounter = 0;
                 return;
             }
 
-            if (this.CurrentScope.Labels.TryGetValue(label, out var line))
+            if (this.CurrentFrame.TryGetLabel(label, out var line))
             {
-                this.ProgramCounter = line;
+                this.CurrentFrame.LineCounter = line;
             }
             else
             {
@@ -352,15 +373,15 @@ namespace SimpleStackVM
             }
         }
 
-        public void Jump(int line)
-        {
-            if (line < 0 || line >= this.CurrentScope.Code.Count)
-            {
-                throw new OverflowException("Jumping to a line outside the current scope code.");
-            }
+        // public void Jump(int line)
+        // {
+        //     if (line < 0 || line >= this.CurrentProc.Code.Count)
+        //     {
+        //         throw new OverflowException("Jumping to a line outside the current scope code.");
+        //     }
 
-            this.ProgramCounter = line;
-        }
+        //     this.ProgramCounter = line;
+        // }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IValue PopStack()
@@ -421,11 +442,11 @@ namespace SimpleStackVM
         {
             var result = new List<string>();
 
-            result.Add(DebugScopeLine(this.CurrentScope, this.ProgramCounter - 1));
+            result.Add(DebugScopeLine(this.CurrentFrame.Procedure, this.CurrentFrame.LineCounter - 1));
             for (var i = this.stackTrace.Index - 1; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];
-                result.Add(DebugScopeLine(stackFrame.Scope, stackFrame.LineCounter));
+                result.Add(DebugScopeLine(stackFrame.Procedure, stackFrame.LineCounter));
             }
 
             return result;
@@ -441,20 +462,20 @@ namespace SimpleStackVM
             }
         }
 
-        private static string DebugScopeLine(Scope scope, int line)
+        private static string DebugScopeLine(Procedure procedure, int line)
         {
-            if (line >= scope.Code.Count)
+            if (line >= procedure.Code.Count)
             {
-                return $"[{scope.ScopeName}:{line - 1}: end of code";
+                return $"[{procedure.Name}:{line - 1}: end of code";
             }
             if (line < 0)
             {
-                return $"[{scope.ScopeName}:{line - 1}: before start of code";
+                return $"[{procedure.Name}:{line - 1}: before start of code";
             }
 
-            var codeLine = scope.Code[line];
+            var codeLine = procedure.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{scope.ScopeName}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
+            return $"[{procedure.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
         }
         #endregion
     }

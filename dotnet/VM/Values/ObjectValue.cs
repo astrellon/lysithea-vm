@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
@@ -7,12 +8,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace SimpleStackVM
 {
-    public struct ObjectValue : IValue
+    public struct ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
+
+        public IEnumerable<string> Keys => Value.Keys;
+        public IEnumerable<IValue> Values => Value.Values;
+        public int Count => Value.Count;
+        public IValue this[string key] => Value[key];
         #endregion
 
         #region Constructor
@@ -30,16 +34,13 @@ namespace SimpleStackVM
 
         public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
         {
-            if (!this.TryGetValue(key, out var result))
+            if (this.TryGetValue(key, out var result))
             {
-                value = default(T);
-                return false;
-            }
-
-            if (result is T castedValue)
-            {
-                value = castedValue;
-                return true;
+                if (result is T castedValue)
+                {
+                    value = castedValue;
+                    return true;
+                }
             }
 
             value = default(T);
@@ -60,7 +61,7 @@ namespace SimpleStackVM
                 {
                     if (otherObject.Value.TryGetValue(kvp.Key, out var otherKvp))
                     {
-                        if (!kvp.Value.Equals(otherKvp.RawValue))
+                        if (kvp.Value.CompareTo(otherKvp) != 0)
                         {
                             return false;
                         }
@@ -81,13 +82,12 @@ namespace SimpleStackVM
             {
                 if (!first)
                 {
-                    result.Append(',');
+                    result.Append(' ');
                 }
                 first = false;
 
-                result.Append('"');
                 result.Append(kvp.Key);
-                result.Append("\":");
+                result.Append(' ');
                 result.Append(kvp.Value.ToString());
             }
             result.Append('}');
@@ -130,6 +130,21 @@ namespace SimpleStackVM
             }
 
             return 1;
+        }
+
+        public bool ContainsKey(string key)
+        {
+            return Value.ContainsKey(key);
+        }
+
+        public IEnumerator<KeyValuePair<string, IValue>> GetEnumerator()
+        {
+            return Value.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)Value).GetEnumerator();
         }
         #endregion
     }

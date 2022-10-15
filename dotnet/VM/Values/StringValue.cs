@@ -7,16 +7,13 @@ namespace SimpleStackVM
     public struct StringValue : IValue
     {
         #region Fields
-        public static readonly StringValue Empty = new StringValue("");
         public readonly string Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
         #endregion
 
         #region Constructor
         public StringValue(string value)
         {
-            this.Value = string.Intern(value ?? "<<null>>");
+            this.Value = string.Intern(value);
         }
         #endregion
 
@@ -62,9 +59,6 @@ namespace SimpleStackVM
 
             return index;
         }
-
-        public static explicit operator StringValue(string input) => new StringValue(input);
-        public static implicit operator string (StringValue str) => str.Value;
         #endregion
     }
 }

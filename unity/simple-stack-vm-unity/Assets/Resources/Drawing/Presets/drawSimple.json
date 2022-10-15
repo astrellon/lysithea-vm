@@ -6,10 +6,10 @@
       [ "Push", 100 ],
 
       // MakeGround is found in the common file
-      [ "Call", "MakeGround" ],
+      [ "MakeGround" ],
 
       ":Start",
-      [ "Call", "DrawSimple" ],
+      [ "DrawSimple" ],
       [ "math.sub", 1 ],
       [ "Push" ],
       [ "comp.equals", 0 ],

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,20 +12,24 @@ namespace SimpleStackVM
         private static bool IsShopEnabled = false;
         private static string PlayerName = "<Unset>";
 
-        private static List<IValue> ChoiceBuffer = new List<IValue>();
+        private static List<IFunctionValue> ChoiceBuffer = new List<IFunctionValue>();
+        private static readonly IReadOnlyScope CustomScope = CreateScope();
 
         #region Methods
         public static void Main(string[] args)
         {
-            var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testDialogue.json"));
-            var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
+            var assembler = new VirtualMachineLispAssembler();
+            var sw1 = Stopwatch.StartNew();
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
+            sw1.Stop();
+            Console.WriteLine($"Time to parse: {sw1.ElapsedMilliseconds}ms");
 
-            var vm = new VirtualMachine(64, OnRunCommand);
-            vm.AddScopes(scopes);
+            var vm = new VirtualMachine(8);
+            vm.BuiltinScope.CombineScope(CustomScope);
+            vm.SetCode(code);
 
             try
             {
-                vm.SetCurrentScope("Main");
                 vm.Running = true;
                 while (vm.Running && !vm.Paused)
                 {
@@ -40,32 +45,56 @@ namespace SimpleStackVM
             }
         }
 
-        private static void OnRunCommand(string command, VirtualMachine vm)
+        private static Scope CreateScope()
         {
-            if (command == "say")
+            var result = new Scope();
+
+            result.Define("say", (vm, numArgs) =>
             {
                 Say(vm.PopStack());
-            }
-            else if (command == "getPlayerName")
+            });
+
+            result.Define("getPlayerName", (vm, numArgs) =>
             {
                 PlayerName = Console.ReadLine()?.Trim() ?? "<Empty>";
-            }
-            else if (command == "randomSay")
+                // PlayerName = "Alan";
+            });
+
+            result.Define("randomSay", (vm, numArgs) =>
             {
                 RandomSay(vm.PopStack<ArrayValue>());
-            }
-            else if (command == "isShopEnabled")
+            });
+
+            result.Define("isShopEnabled", (vm, numArgs) =>
             {
                 vm.PushStack((BoolValue)IsShopEnabled);
-            }
-            else if (command == "choice")
+            });
+
+            result.Define("moveTo", (vm, numArgs) =>
+            {
+                var label = vm.PopStack();
+                var proc = vm.PopStack<FunctionValue>();
+
+                vm.CallFunction(proc, 0, false);
+                vm.Jump(label.ToString());
+            });
+
+            result.Define("choice", (vm, numArgs) =>
             {
                 var choiceJumpLabel = vm.PopStack();
                 var choiceText = vm.PopStack();
-                ChoiceBuffer.Add(choiceJumpLabel);
+                if (choiceJumpLabel is IFunctionValue procValue)
+                {
+                    ChoiceBuffer.Add(procValue);
+                }
+                else
+                {
+                    throw new Exception("Choice call must be a function!");
+                }
                 SayChoice(choiceText);
-            }
-            else if (command == "waitForChoice")
+            });
+
+            result.Define("waitForChoice", (vm, numArgs) =>
             {
                 if (!ChoiceBuffer.Any())
                 {
@@ -94,15 +123,19 @@ namespace SimpleStackVM
                     }
 
                 } while (!choiceValid);
-            }
-            else if (command == "openTheShop")
+            });
+
+            result.Define("openTheShop", (vm, numArgs) =>
             {
                 IsShopEnabled = true;
-            }
-            else if (command == "openShop")
+            });
+
+            result.Define("openShop", (vm, numArgs) =>
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
-            }
+            });
+
+            return result;
         }
 
         private static bool DoChoice(int index, VirtualMachine vm)
@@ -116,7 +149,7 @@ namespace SimpleStackVM
 
             var choice = ChoiceBuffer[index];
             ChoiceBuffer.Clear();
-            vm.Jump(choice);
+            vm.CallFunction(choice, 0, false);
             return true;
         }
 

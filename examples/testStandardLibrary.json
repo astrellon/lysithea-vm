@@ -1,13 +1,41 @@
 [
     {
+        "name": "Test1",
+        "data": [
+            ["push", 12],
+            ["TestAdd5"],
+
+            ["call", "print"],
+
+            ["Set", 10, "y"],
+
+            // Add something extra to the stack
+            ["Push", "oh no!"],
+
+            ["Get", "y"],
+            ["print"]
+        ]
+    },
+    {
+        "name": "TestAdd5",
+        "args": ["x"],
+        "data": [
+            ["Push", 5],
+            ["Get", "x"],
+            ["math.add"],
+            ["Return"]
+        ]
+    },
+    {
         "name": "SmallTest",
         "data": [
-            ["Push", 0],
 
-            "Push",
-            "value.typeof",
-            ["Swap", "The number is a: ", 1],
-            "string.append",
+            ["set", 0, "x"],
+            ["get", "x"],
+
+            ["value.typeof"],
+            ["get", "x"],
+            ["string.append", 2],
             "print",
 
             ":Start",

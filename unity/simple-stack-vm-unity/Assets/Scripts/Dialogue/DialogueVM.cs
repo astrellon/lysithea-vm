@@ -52,13 +52,13 @@ namespace SimpleStackVM.Unity
             };
         }
 
-        public void StartDialogue(DialogueScript dialogue, string startScope, DialogueActor selfActor)
+        public void StartDialogue(DialogueScript dialogue, string startProcedure, DialogueActor selfActor)
         {
             dialogue.Awake();
             this.selfActor = selfActor;
-            this.vm.ClearScopes();
-            this.vm.AddScopes(dialogue.Scopes);
-            this.vm.SetCurrentScope(startScope);
+            this.vm.ClearProcedures();
+            this.vm.AddProcedures(dialogue.Procedures);
+            this.vm.SetCurrentProcedure(startProcedure);
             this.vm.Reset();
             this.vm.Running = true;
             this.VMRunner.Running = true;
@@ -94,7 +94,7 @@ namespace SimpleStackVM.Unity
                 }
                 else if (firstArg == "return")
                 {
-                    this.vm.PushToStackTrace(0, this.vm.CurrentScope);
+                    this.vm.PushToStackTrace(new ScopeFrame(this.vm.CurrentFrame.Procedure, this.vm.CurrentFrame.Scope, 0));
                     var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
                     this.vm.Jump(jumpScope);
                 }
@@ -102,8 +102,8 @@ namespace SimpleStackVM.Unity
                 {
                     var returnLabel =  arrayValue.Value[1];
                     var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[2] });
-                    var returnLine = this.vm.CurrentScope.Labels[returnLabel.ToString()];
-                    this.vm.PushToStackTrace(returnLine, this.vm.CurrentScope);
+                    var returnLine = this.vm.CurrentFrame.Procedure.Labels[returnLabel.ToString()];
+                    this.vm.PushToStackTrace(new ScopeFrame(this.vm.CurrentFrame.Procedure, this.vm.CurrentFrame.Scope, returnLine));
                     this.vm.Jump(jumpScope);
                 }
             }

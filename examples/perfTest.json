@@ -4,10 +4,12 @@
         "data": [
             ["Push", 0],
             ":Start",
-            ["Call", "Step"],
+
+            ["Step"],
             ["isDone"],
             ["JumpFalse", ":Start"],
-            "done"
+
+            ["done"]
         ]
     },
     {

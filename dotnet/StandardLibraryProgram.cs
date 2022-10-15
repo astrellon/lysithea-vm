@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -9,22 +10,35 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var json = SimpleJSON.JSON.Parse(File.ReadAllText("../examples/testStandardLibrary.json"));
-            var scopes = VirtualMachineAssembler.ParseScopes(json.AsArray);
+            var assembler = new VirtualMachineLispAssembler();
+            StandardLibrary.AddToScope(assembler.BuiltinScope);
+            assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/testStandardLibrary.lisp"));
 
-            var vm = new VirtualMachine(64, OnRunCommand);
-            StandardLibrary.AddToVirtualMachine(vm, StandardLibrary.LibraryType.All);
-            StandardAssertLibrary.AddHandler(vm);
-            vm.AddScopes(scopes);
+            var vm = new VirtualMachine(8);
 
+            vm.SetCode(code);
             try
             {
-                vm.SetCurrentScope("Main");
                 vm.Running = true;
+                var sw = Stopwatch.StartNew();
                 while (vm.Running && !vm.Paused)
                 {
                     vm.Step();
                 }
+                sw.Stop();
+                Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
+
+                vm.Reset();
+                vm.SetCode(code);
+                vm.Running = true;
+                sw = Stopwatch.StartNew();
+                while (vm.Running && !vm.Paused)
+                {
+                    vm.Step();
+                }
+                sw.Stop();
+                Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
             }
             catch (VirtualMachineException exp)
             {
@@ -32,15 +46,6 @@ namespace SimpleStackVM
                 var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
                 Console.WriteLine($"VM Stack: {stackTrace}");
                 Console.WriteLine(exp.StackTrace);
-            }
-        }
-
-        private static void OnRunCommand(string command, VirtualMachine vm)
-        {
-            if (command == "print")
-            {
-                var top = vm.PopStack();
-                Console.WriteLine($"Print: {top.ToString()}");
             }
         }
         #endregion

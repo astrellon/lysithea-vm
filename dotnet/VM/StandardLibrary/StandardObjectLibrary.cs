@@ -1,5 +1,5 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 using System.Linq;
 
 #nullable enable
@@ -9,61 +9,73 @@ namespace SimpleStackVM
     public static class StandardObjectLibrary
     {
         #region Fields
-        public const string HandleName = "object";
+        public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            vm.AddRunHandler(HandleName, Handler);
-        }
+            var result = new Scope();
 
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            var objectFunctions = new Dictionary<string, IValue>();
+
+            objectFunctions["set"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
-                // Object Operators
-                case "set":
-                    {
-                        var value = vm.PopStack();
-                        var key = vm.PopStack<StringValue>();
-                        var obj = vm.PopStack<ObjectValue>();
-                        vm.PushStack(Set(obj, key, value));
-                        break;
-                    }
-                case "get":
-                    {
-                        var key = vm.PopStack<StringValue>();
-                        var obj = vm.PopStack<ObjectValue>();
-                        if (TryGetValue(obj, key, out var value))
-                        {
-                            vm.PushStack(value);
-                        }
-                        else
-                        {
-                            vm.PushStack(NullValue.Value);
-                        }
-                        break;
-                    }
-                case "keys":
-                    {
-                        var top = vm.PopStack<ObjectValue>();
-                        vm.PushStack(Keys(top));
-                        break;
-                    }
-                case "values":
-                    {
-                        var top = vm.PopStack<ObjectValue>();
-                        vm.PushStack(Values(top));
-                        break;
-                    }
-                case "length":
-                    {
-                        var top = vm.PopStack<ObjectValue>();
-                        vm.PushStack(new NumberValue(top.Value.Count));
-                        break;
-                    }
-            }
+                var value = vm.PopStack();
+                var key = vm.PopStack<StringValue>();
+                var obj = vm.PopStack<ObjectValue>();
+                vm.PushStack(Set(obj, key.Value, value));
+            });
+
+            objectFunctions["get"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var key = vm.PopStack<StringValue>();
+                var obj = vm.PopStack<ObjectValue>();
+                if (obj.TryGetValue(key.Value, out var value))
+                {
+                    vm.PushStack(value);
+                }
+                else
+                {
+                    vm.PushStack(NullValue.Value);
+                }
+            });
+
+            objectFunctions["removeKey"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var key = vm.PopStack<StringValue>();
+                var obj = vm.PopStack<ObjectValue>();
+                vm.PushStack(RemoveKey(obj, key.Value));
+            });
+
+            objectFunctions["removeValues"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var values = vm.PopStack();
+                var obj = vm.PopStack<ObjectValue>();
+                vm.PushStack(RemoveValues(obj, values));
+            });
+
+            objectFunctions["keys"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var top = vm.PopStack<ObjectValue>();
+                vm.PushStack(Keys(top));
+            });
+
+            objectFunctions["values"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var top = vm.PopStack<ObjectValue>();
+                vm.PushStack(Values(top));
+            });
+
+            objectFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>
+            {
+                var top = vm.PopStack<ObjectValue>();
+                vm.PushStack(new NumberValue(top.Value.Count));
+            });
+
+            result.Define("object", new ObjectValue(objectFunctions));
+
+            return result;
         }
 
         public static ArrayValue Keys(ObjectValue self)
@@ -77,33 +89,27 @@ namespace SimpleStackVM
             return new ArrayValue(self.Value.Values.ToList());
         }
 
-        public static bool TryGetValue(ObjectValue self, string key, [NotNullWhen(true)] out IValue? value)
-        {
-            return self.Value.TryGetValue(key, out value);
-        }
-
-        public static bool TryGetValue<T>(ObjectValue self, string key, [NotNullWhen(true)] out T? value) where T : IValue
-        {
-            if (!TryGetValue(self, key, out var result))
-            {
-                value = default(T);
-                return false;
-            }
-
-            if (result is T castedValue)
-            {
-                value = castedValue;
-                return true;
-            }
-
-            value = default(T);
-            return false;
-        }
-
         public static ObjectValue Set(ObjectValue self, string key, IValue value)
         {
-            var result = self.Value.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            var result = new Dictionary<string, IValue>(self.Value);
             result[key] = value;
+            return new ObjectValue(result);
+        }
+
+        public static ObjectValue RemoveKey(ObjectValue self, string key)
+        {
+            if (!self.Value.ContainsKey(key))
+            {
+                return self;
+            }
+
+            var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Key != key));
+            return new ObjectValue(result);
+        }
+
+        public static ObjectValue RemoveValues(ObjectValue self, IValue values)
+        {
+            var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
         }
         #endregion

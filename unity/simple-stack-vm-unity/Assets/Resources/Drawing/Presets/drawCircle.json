@@ -7,7 +7,8 @@
 
       ":Start",
 
-      [ "Call", "DrawBox" ],
+      [ "Push" ],
+      [ "DrawBox" ],
       [ "math.sub", 1 ],
       [ "Push" ],
       [ "comp.equals", 0 ],
@@ -16,36 +17,41 @@
   },
   {
     "name": "DrawBox",
+    "args": [ "index" ],
     "data": [
 
-      [ "Call", "GetPosition" ],
       [ "Push", "Box" ],
-      [ "Swap", 1 ],
-      [ "Push", "#ff0000", 1 ],
-      [ "drawSimple" ],
+      [ "Get", "index" ],
+      [ "GetPosition" ],
+
+      [ "Get", "index" ],
+      [ "math.div", 100 ],
+      [ "getHsv" ],
+      [ "drawSimple", 1 ],
 
       [ "Return" ]
     ]
   },
   {
     "name": "GetPosition",
+    "args": [ "index" ],
     "data": [
 
       [ "Push", {} ],
 
-      [ "Copy", 1 ],
+      [ "Get", "index" ],
       [ "math.mul", 5.0 ],
       [ "math.cosDeg" ],
       [ "math.mul", 20 ],
       [ "object.set", "x" ],
 
-      [ "Copy", 1 ],
+      [ "Get", "index" ],
       [ "math.mul", 5.0 ],
       [ "math.sinDeg" ],
       [ "math.mul", 20 ],
       [ "object.set", "z" ],
 
-      [ "Copy", 1 ],
+      [ "Get", "index" ],
       [ "math.mul", 0.15 ],
       [ "object.set", "y" ],
 

@@ -26,14 +26,15 @@ namespace SimpleStackVM.Unity
 
         public void StartDrawing(IEnumerable<IDrawingScript> drawingScripts, string startScope)
         {
-            this.vm.ClearScopes();
+            this.vm.ClearProcedures();
             foreach (var drawingScript in drawingScripts)
             {
                 drawingScript.Awake();
-                this.vm.AddScopes(drawingScript.Scopes);
+                this.vm.AddProcedures(drawingScript.Procedures);
             }
-            this.vm.SetCurrentScope(startScope);
+
             this.vm.Reset();
+            this.vm.SetCurrentProcedure(startScope);
             this.vm.Running = true;
             this.VMRunner.Running = true;
         }
@@ -86,6 +87,11 @@ namespace SimpleStackVM.Unity
                 var children = new List<GameObject>();
                 foreach (Transform child in this.ElementParent) children.Add(child.gameObject);
                 children.ForEach(child => Destroy(child));
+            }
+            else if (command == "getHsv")
+            {
+                var hue = vm.PopStack<NumberValue>();
+                vm.PushStack(new AnyValue(Color.HSVToRGB(hue, 0.8f, 0.75f)));
             }
         }
 

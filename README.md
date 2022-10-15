@@ -10,47 +10,45 @@ This is built it contains no math functions, string manipulation or anything, bu
 - Number: 64 bit double.
 - Object/Dictionary/Map: Key value pair with string keys and the value being another valid VM value.
 - List/Array: A list of VM values.
+- Function: A collection of code put into a value.
+- BuiltinFunction: A reference to a builtin function that can be passed around like a value.
 - Any: This is somewhat implementation dependant, but an extra value that lets you push any kind of value onto the stack, however if a valid bool, string, or number is pushed as a number it is not expected that comparing
 
 Code:
 -
 
-Currently the code is written in JSON. This skips the need for specialised grammar or lexer, plus it gives the ability to load complex objects and arrays 'for free'.
+Currently the code is written with a Lisp like syntax. It should not be assumed that it is Lisp or that it supports all the things that Lisp would support. Lisp was chosen for it's ease of parsing and tokenising.
 
-```jsonc
-[
-    {
-        "name": "Main",
-        "data": [
-            ["Push", 5],
-            ["Push", 12],
-            ["Push", "add"],
-            "Run",
-            ["Push", "print"],
-            "Run"
-        ]
-    }
-]
+```lisp
+(define main (function ()
+    (print (add 5 12))
+))
+
+(main)
 ```
 
 This will push the `5`, `12` and `"add"` to the stack, run the command at the top of the stack (`"add"`), then push `"print"` to the stack and call run again. As for what `"add"` and `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console the number `17`.
 
 Here is an example of a run command handler for the above program in C#:
 ```csharp
-private static void OnRunCommand(IValue command, VirtualMachine vm)
+private static Scope CreateScope()
 {
-    var commandName = command.ToString();
-    if (commandName == "add")
+    var result = new Scope();
+
+    result.Set("add", vm =>
     {
         var num1 = vm.PopStack<NumberValue>();
         var num2 = vm.PopStack<NumberValue>();
         vm.PushStack((NumberValue)(num1.Value + num2.Value));
-    }
-    else if (commandName == "print")
+    });
+
+    result.Set("print", vm =>
     {
-        var total = vm.PopStack();
-        Console.WriteLine($"Print: {total.ToString()}");
-    }
+        var top = vm.PopStack();
+        Console.WriteLine($"Print: {top.ToString()}");
+    });
+
+    return result;
 }
 ```
 
@@ -65,118 +63,46 @@ Labels:
 
 Labels are used to let you jump around the code, optionally based on some condition.
 
-```jsonc
-[
-    {
-        "name": "Main",
-        "data": [
-            ["Push", 0],
+```lisp
+(define main (function ()
+    (push 0)
+    (:start)
 
-            ":Start",
+    (inc)
+    (isDone)
 
-            ["Push", "inc"],
-            "Run",
-            ["Push", "isDone"],
-            "Run",
+    (jumpFalse :start)
+    (done)
+))
 
-            ["JumpFalse", ":Start"],
-
-            ["Push", "done"],
-            "Run"
-        ]
-    }
-]
-```
-Or using the run command shorthand (see below)
-```jsonc
-[
-    {
-        "name": "Main",
-        "data": [
-            ["Push", 0],
-
-            ":Start",
-
-            "inc",
-            "isDone",
-
-            ["JumpFalse", ":Start"],
-
-            "done"
-        ]
-    }
-]
+(main)
 ```
 
-Push Command Shorthand:
+Variables:
 -
 
-Since pushing is a very common thing to do each command technically allows you to push to the stack. The intended use is with either the `Push` command directly or in use with the `Run` command.
-```jsonc
-[
-    {
-        "name": "Main",
-        "data": [
-            ["Push", 1],
-            ["Push", 2],
-            ["Push", 3],            // Push each value
+Variables can be defined, set and retrieved again. These variables will be scoped to the function that they are created in.
 
-            ["Push", 1, 2, 3],      // Equivalent, this gets turned into 3 pushes by the assembler.
+```lisp
+(define name "Global")
+(define main (function ()
+    (print "Started main")
+    (print name)
 
-            ...
+    (set name "Set from scope")
+    (print name)
 
-            ["Push", 5],
-            ["Jump", ":Label"],     // The current stack will have 5 and the ":Label" will be tied to the Jump code line.
-            ["Jump", 5, ":Label"]   // This line will push 5 onto the stack leaving the ":Label" as apart of the Jump code line.
-        ]
-    }
-]
+    (define name "Created in scope")
+    (print name)
+    (print "End main")
+))
+
+(print name)
+(main)
+(print name)
 ```
 
 Internally the assembler sees only the last argument as the code line argument except in the case of the `Run` command which has it's own runs (see below). So all other arguments in between are turned into `Push` commands.
-
-Run Command Shorthand:
--
-
-The previous examples show that calling the run command is a bit cumbersome, along with pushing values that are likely to be used by a run command.
-
-So any first argument in a line that isn't an operator (`"Push"`, `"Run"`, `"Jump"`, `"JumpTrue"`, `"JumpFalse"`, `"Call"`, `"Return"`) or a label (must start with a colon :) will assume to be a run command.
-
-Additionally extra lines after any command are assumed to be pushed to the stack except with the final argument being tied to the command line itself.
-
-For example, each add and then print section are equivalent:
-
-```jsonc
-[
-    {
-        "name": "Main",
-        "data": [
-            ["Push", 5],
-            ["Push", 12],
-            ["Push", "add"],
-            "Run",              // Takes the command to run from the stop of the stack,
-                                // which means it could be any kind of value (not just a string).
-            ["Push", "print"],
-            "Run",              // Prints the top: 17
-
-
-            ["Push", 5],
-            ["Push", 12],
-            ["Run", "add"],     // Same as above but the value is tied to the code line itself (not just a string).
-            ["Run", "print"],   // Prints the top: 17
-
-
-            ["Push", 5, 12],
-            "add",              // Takes the top two stack items and pushes the added result back to the stack
-            "print",            // Prints the top: 17
-
-
-            ["add", 5, 12],     // As add is not a known operator it is assumed that it should be a run command with the code line value "add"
-            "print"             // Prints the top: 17
-        ]
-    }
-]
-```
 
 Ports
 -

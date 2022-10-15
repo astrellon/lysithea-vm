@@ -12,7 +12,7 @@ namespace SimpleStackVM
         #region Methods
         public static void AddHandler(VirtualMachine vm)
         {
-            vm.AddRunHandler(HandleName, Handler);
+            vm.AddBuiltinHandler(HandleName, Handler);
         }
 
         public static void Handler(string command, VirtualMachine vm)
@@ -41,8 +41,8 @@ namespace SimpleStackVM
                     }
                 case "set":
                     {
-                        var index = vm.PopStack<NumberValue>();
                         var value = vm.PopStack();
+                        var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(Set(top, index.IntValue, value));
                         break;
@@ -56,16 +56,16 @@ namespace SimpleStackVM
                     }
                 case "insert":
                     {
-                        var index = vm.PopStack<NumberValue>();
                         var value = vm.PopStack();
+                        var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(Insert(top, index.IntValue, value));
                         break;
                     }
                 case "insertFlatten":
                     {
-                        var index = vm.PopStack<NumberValue>();
                         var value = vm.PopStack<ArrayValue>();
+                        var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(InsertFlatten(top, index.IntValue, value));
                         break;
@@ -107,8 +107,8 @@ namespace SimpleStackVM
                     }
                 case "sublist":
                     {
-                        var index = vm.PopStack<NumberValue>();
                         var length = vm.PopStack<NumberValue>();
+                        var index = vm.PopStack<NumberValue>();
                         var top = vm.PopStack<ArrayValue>();
                         vm.PushStack(SubList(top, index.IntValue, length.IntValue));
                         break;
@@ -193,7 +193,7 @@ namespace SimpleStackVM
 
         public static ArrayValue SubList(ArrayValue self, int index, int length)
         {
-            return new ArrayValue(self.Value.Skip(self.GetIndex(index)).Take(length).ToList());
+            return self.Sublist(index, length);
         }
         #endregion
     }

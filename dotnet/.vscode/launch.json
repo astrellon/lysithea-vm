@@ -23,7 +23,7 @@
             "program": "${workspaceFolder}/bin/Debug/net6.0/dialogueTree.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
+            "console": "integratedTerminal",
             "stopAtEntry": false
         },
         {
@@ -43,6 +43,17 @@
             "request": "launch",
             "preLaunchTask": "build-standard-library",
             "program": "${workspaceFolder}/bin/Debug/net6.0/standardLibrary.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run Test Program",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-test-program",
+            "program": "${workspaceFolder}/bin/Debug/net6.0/testProgram.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",

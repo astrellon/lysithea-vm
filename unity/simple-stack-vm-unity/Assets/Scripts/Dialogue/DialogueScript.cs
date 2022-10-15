@@ -9,13 +9,13 @@ namespace SimpleStackVM.Unity
         #region Fields
         public TextAsset JsonText;
 
-        public List<Scope> Scopes;
+        public List<Procedure> Procedures;
         #endregion
 
         #region Methods
         public void Awake()
         {
-            if (this.Scopes != null && this.Scopes.Count > 0)
+            if (this.Procedures != null && this.Procedures.Count > 0)
             {
                 return;
             }
@@ -23,7 +23,7 @@ namespace SimpleStackVM.Unity
             var jsonStr = this.JsonText.text;
             var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
 
-            this.Scopes = VirtualMachineAssembler.ParseScopes(json);
+            this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
         }
         #endregion
 

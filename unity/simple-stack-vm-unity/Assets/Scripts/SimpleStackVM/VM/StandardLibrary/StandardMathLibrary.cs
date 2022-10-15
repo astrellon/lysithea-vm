@@ -14,7 +14,7 @@ namespace SimpleStackVM
         #region Methods
         public static void AddHandler(VirtualMachine vm)
         {
-            vm.AddRunHandler(HandleName, Handler);
+            vm.AddBuiltinHandler(HandleName, Handler);
         }
 
         public static void Handler(string command, VirtualMachine vm)
@@ -130,12 +130,12 @@ namespace SimpleStackVM
                         vm.PushStack(new NumberValue(System.Math.Log(top.Value)));
                         break;
                     }
-                case "log2":
-                    {
-                        var top = vm.PopStack<NumberValue>();
-                        // vm.PushStack(new NumberValue(System.Math.Log2(top.Value)));
-                        break;
-                    }
+                // case "log2":
+                //     {
+                //         var top = vm.PopStack<NumberValue>();
+                //         vm.PushStack(new NumberValue(System.Math.Log2(top.Value)));
+                //         break;
+                //     }
                 case "log10":
                     {
                         var top = vm.PopStack<NumberValue>();

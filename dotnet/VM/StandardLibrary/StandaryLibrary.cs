@@ -8,41 +8,41 @@ namespace SimpleStackVM
         public enum LibraryType
         {
             None = 0,
-            Comparison = 1 << 0,
+            Operators = 1 << 0,
             Math = 1 << 1,
             String = 1 << 2,
             Array = 1 << 3,
             Object = 1 << 4,
-            Value = 1 << 5,
+            Misc = 1 << 5,
             All = (1 << 6) - 1
         }
 
         #region Methods
-        public static void AddToVirtualMachine(VirtualMachine vm, LibraryType libraries = LibraryType.All)
+        public static void AddToScope(Scope scope, LibraryType libraries = LibraryType.All)
         {
-            if (libraries.HasFlag(LibraryType.Comparison))
+            if (libraries.HasFlag(LibraryType.Operators))
             {
-                StandardComparisonLibrary.AddHandler(vm);
+                scope.CombineScope(StandardOperators.Scope);
             }
             if (libraries.HasFlag(LibraryType.Math))
             {
-                StandardMathLibrary.AddHandler(vm);
+                scope.CombineScope(StandardMathLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.String))
             {
-                StandardStringLibrary.AddHandler(vm);
+                scope.CombineScope(StandardStringLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Array))
             {
-                StandardArrayLibrary.AddHandler(vm);
+                scope.CombineScope(StandardArrayLibrary.Scope);
             }
             if (libraries.HasFlag(LibraryType.Object))
             {
-                StandardObjectLibrary.AddHandler(vm);
+                scope.CombineScope(StandardObjectLibrary.Scope);
             }
-            if (libraries.HasFlag(LibraryType.Value))
+            if (libraries.HasFlag(LibraryType.Misc))
             {
-                StandardValueLibrary.AddHandler(vm);
+                scope.CombineScope(StandardMiscLibrary.Scope);
             }
         }
         #endregion

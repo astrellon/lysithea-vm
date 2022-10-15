@@ -6,10 +6,9 @@ namespace SimpleStackVM
     {
         #region Fields
         public readonly double Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
 
         public int IntValue => (int)this.Value;
+        public float FloatValue => (float)this.Value;
         #endregion
 
         #region Constructor
@@ -52,8 +51,6 @@ namespace SimpleStackVM
         }
 
         public static explicit operator NumberValue(double input) => new NumberValue(input);
-        public static implicit operator double (NumberValue number) => number.Value;
-        public static implicit operator float (NumberValue number) => (float)number.Value;
         #endregion
     }
 }

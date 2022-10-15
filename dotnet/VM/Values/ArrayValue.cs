@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -8,12 +7,15 @@ using System.Runtime.CompilerServices;
 
 namespace SimpleStackVM
 {
-    public struct ArrayValue : IValue
+    public struct ArrayValue : IValue, IReadOnlyList<IValue>
     {
         #region Fields
+        public static ArrayValue Empty = new ArrayValue(new IValue[0]);
+
         public readonly IReadOnlyList<IValue> Value;
-        public object RawValue => this.Value;
-        public bool IsNull => false;
+
+        public int Count => Value.Count;
+        public IValue this[int index] => Value[this.GetIndex(index)];
         #endregion
 
         #region Constructor
@@ -24,6 +26,28 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public bool TryGet(IValue indexValue, out IValue result)
+        {
+            var index = -1;
+            if (indexValue is NumberValue indexNum)
+            {
+                index = indexNum.IntValue;
+            }
+            else if (indexValue is StringValue || indexValue is SymbolValue)
+            {
+                int.TryParse(indexValue.ToString(), out index);
+            }
+
+            if (index >= 0 && index < this.Value.Count)
+            {
+                result = this.Value[index];
+                return true;
+            }
+
+            result = NullValue.Value;
+            return false;
+        }
+
         public override bool Equals(object? other)
         {
             if (other == null) return false;
@@ -51,20 +75,20 @@ namespace SimpleStackVM
         public override string ToString()
         {
             var result = new StringBuilder();
-            result.Append('[');
+            result.Append('(');
             var first = true;
             foreach (var value in this.Value)
             {
                 if (!first)
                 {
-                    result.Append(',');
+                    result.Append(' ');
                 }
                 first = false;
 
                 result.Append(value.ToString());
             }
 
-            result.Append(']');
+            result.Append(')');
             return result.ToString();
         }
 
@@ -108,6 +132,16 @@ namespace SimpleStackVM
             }
 
             return 1;
+        }
+
+        public IEnumerator<IValue> GetEnumerator()
+        {
+            return Value.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return ((System.Collections.IEnumerable)Value).GetEnumerator();
         }
         #endregion
     }

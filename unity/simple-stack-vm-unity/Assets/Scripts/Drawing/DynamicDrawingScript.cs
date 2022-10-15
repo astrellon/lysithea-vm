@@ -7,18 +7,18 @@ namespace SimpleStackVM.Unity
     public class DynamicDrawingScript : IDrawingScript
     {
         #region Fields
-        public readonly IReadOnlyList<Scope> Scopes;
+        public readonly IReadOnlyList<Procedure> Scopes;
 
-        IEnumerable<Scope> IDrawingScript.Scopes => this.Scopes;
+        IEnumerable<Procedure> IDrawingScript.Procedures => this.Scopes;
         #endregion
 
         #region Constructor
-        public DynamicDrawingScript(IReadOnlyList<Scope> scopes)
+        public DynamicDrawingScript(IReadOnlyList<Procedure> scopes)
         {
             this.Scopes = scopes;
         }
 
-        public DynamicDrawingScript(Scope scope)
+        public DynamicDrawingScript(Procedure scope)
         {
             this.Scopes = new[] { scope };
         }
