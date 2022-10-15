@@ -15,27 +15,17 @@ namespace SimpleStackVM
             var assembler = new VirtualMachineLispAssembler();
             assembler.BuiltinScope.CombineScope(StandardMathLibrary.Scope);
             assembler.BuiltinScope.CombineScope(StandardMiscLibrary.Scope);
+            assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(CustomScope);
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/testObject.lisp"));
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram2.lisp"));
 
-            var vm = new VirtualMachine(8);
+            var vm = new VirtualMachine(16);
 
             vm.SetCode(code);
             try
             {
                 vm.Running = true;
                 var sw = Stopwatch.StartNew();
-                while (vm.Running && !vm.Paused)
-                {
-                    vm.Step();
-                }
-                sw.Stop();
-                Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds}ms");
-
-                vm.Reset();
-                vm.SetCode(code);
-                vm.Running = true;
-                sw = Stopwatch.StartNew();
                 while (vm.Running && !vm.Paused)
                 {
                     vm.Step();

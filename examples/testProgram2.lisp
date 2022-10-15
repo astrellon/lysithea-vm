@@ -3,16 +3,24 @@
     (define count 0)
 
     (loop (< count 10)
-        (if (< count 5)
-            (print "Count less than 5")
-            (print "Count more than 5")
-        )
-
         (set total (+ total (step)))
         (set count (+ count 1))
+
+        (if (< count 5)
+        (
+            (print "Count less than 5")
+            (continue)
+            (print "Should not print!")
+        )
+        (
+            (print "Count more than 5")
+            (break)
+        )
+        )
+
     )
 
-    (print total)
+    (print "Total: " total ", Count: " count)
 
     (if (< total 10)
         (print "Total less than 10")

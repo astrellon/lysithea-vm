@@ -8,9 +8,23 @@ namespace SimpleStackVM
 {
     public class VirtualMachineLispAssembler
     {
+        private class LoopLabels
+        {
+            public readonly StringValue Start;
+            public readonly StringValue End;
+
+            public LoopLabels(StringValue start, StringValue end)
+            {
+                this.Start = start;
+                this.End = end;
+            }
+        }
+
         #region Fields
         private const string FunctionKeyword = "function";
         private const string LoopKeyword = "loop";
+        private const string ContinueKeyword = "continue";
+        private const string BreakKeyword = "break";
         private const string IfKeyword = "if";
         private const string UnlessKeyword = "unless";
         private const string SetKeyword = "set";
@@ -18,6 +32,7 @@ namespace SimpleStackVM
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
+        private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
 
         #region Methods
@@ -45,28 +60,45 @@ namespace SimpleStackVM
 
         public List<ITempCodeLine> ParseLoop(ArrayValue input)
         {
-            var loopLabelNum = this.labelCount++;
-            var labelStart = $":LoopStart{loopLabelNum}";
-            var labelEnd = $":LoopEnd{loopLabelNum}";
+            if (input.Count < 3)
+            {
+                throw new Exception("Loop input has too few inputs");
+            }
 
-            var result = new List<ITempCodeLine> { new LabelCodeLine(labelStart) };
+            var loopLabelNum = this.labelCount++;
+            var labelStart = new StringValue($":LoopStart{loopLabelNum}");
+            var labelEnd = new StringValue($":LoopEnd{loopLabelNum}");
+
+            this.loopStack.Push(new LoopLabels(labelStart, labelEnd));
+
+            var result = new List<ITempCodeLine> { new LabelCodeLine(labelStart.Value) };
             var comparisonCall = (ArrayValue)input[1];
             result.AddRange(Parse(comparisonCall));
 
-            result.Add(new TempCodeLine(Operator.JumpFalse, new StringValue(labelEnd)));
-
+            result.Add(new TempCodeLine(Operator.JumpFalse, labelEnd));
             for (var i = 2; i < input.Count; i++)
             {
                 result.AddRange(Parse(input[i]));
             }
-            result.Add(new TempCodeLine(Operator.Jump, new StringValue(labelStart)));
-            result.Add(new LabelCodeLine(labelEnd));
+            result.Add(new TempCodeLine(Operator.Jump, labelStart));
+            result.Add(new LabelCodeLine(labelEnd.Value));
+
+            this.loopStack.Pop();
 
             return result;
         }
 
         public List<ITempCodeLine> ParseCond(ArrayValue input, bool isIfStatement)
         {
+            if (input.Count < 3)
+            {
+                throw new Exception("Condition input has too few inputs");
+            }
+            if (input.Count > 4)
+            {
+                throw new Exception("Condition input has too many inputs!");
+            }
+
             var ifLabelNum = this.labelCount++;
             var labelElse = $":CondElse{ifLabelNum}";
             var labelEnd = $":CondEnd{ifLabelNum}";
@@ -74,7 +106,7 @@ namespace SimpleStackVM
             var comparisonCall = (ArrayValue)input[1];
             var result = Parse(comparisonCall);
 
-            var hasElseCall = input.Count >= 4;
+            var hasElseCall = input.Count == 4;
 
             var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
 
@@ -83,19 +115,12 @@ namespace SimpleStackVM
                 result.Add(new TempCodeLine(jumpOperator, new StringValue(labelElse)));
 
                 var ifTrueCall = (ArrayValue)input[2];
-                if (ifTrueCall.All(i => i is ArrayValue))
-                {
-                    result.AddRange(ifTrueCall.SelectMany(Parse));
-                }
-                else
-                {
-                    result.AddRange(Parse(ifTrueCall));
-                }
+                result.AddRange(this.ParseFlatten(ifTrueCall));
                 result.Add(new TempCodeLine(Operator.Jump, new StringValue(labelEnd)));
 
                 result.Add(new LabelCodeLine(labelElse));
                 var ifFalseCall = (ArrayValue)input[3];
-                result.AddRange(Parse(ifFalseCall));
+                result.AddRange(this.ParseFlatten(ifFalseCall));
                 result.Add(new LabelCodeLine(labelEnd));
             }
             else
@@ -103,12 +128,34 @@ namespace SimpleStackVM
                 result.Add(new TempCodeLine(jumpOperator, new StringValue(labelEnd)));
 
                 var ifTrueCall = (ArrayValue)input[2];
-                result.AddRange(Parse(ifTrueCall));
+                result.AddRange(ParseFlatten(ifTrueCall));
 
                 result.Add(new LabelCodeLine(labelEnd));
             }
 
             return result;
+        }
+
+        public IEnumerable<ITempCodeLine> ParseFlatten(ArrayValue input)
+        {
+            var ifFalseCall = (ArrayValue)input[3];
+            if (ifFalseCall.All(i => i is ArrayValue))
+            {
+                return ifFalseCall.SelectMany(Parse);
+            }
+
+            return Parse(ifFalseCall);
+        }
+
+        public List<ITempCodeLine> ParseLoopJump(string keyword, bool jumpToStart)
+        {
+            if (!this.loopStack.Any())
+            {
+                throw new Exception($"Unexpected {keyword} outside of loop");
+            }
+
+            var loopLabel = this.loopStack.Last();
+            return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, jumpToStart ? loopLabel.Start : loopLabel.End) };
         }
 
         public List<ITempCodeLine> ParseKeyword(SymbolValue firstSymbol, ArrayValue arrayValue)
@@ -121,6 +168,8 @@ namespace SimpleStackVM
                         var functionValue = new FunctionValue(function);
                         return new List<ITempCodeLine>{ new TempCodeLine(Operator.Push, functionValue) };
                     }
+                case ContinueKeyword: return this.ParseLoopJump(ContinueKeyword, true);
+                case BreakKeyword: return this.ParseLoopJump(BreakKeyword, false);
                 case SetKeyword: return ParseSet(arrayValue);
                 case DefineKeyword: return ParseDefine(arrayValue);
                 case LoopKeyword: return ParseLoop(arrayValue);
