@@ -1,4 +1,5 @@
-import { CodeLine, isValueArray, isValueString, Operator, Scope, Value } from "./types";
+import Scope from "./scope";
+import { ArrayValue, CodeLine, isValueArray, isValueFunction, isValueString, Operator, Value, valueToString } from "./types";
 
 export type InputArrayValue = ReadonlyArray<InputDataArg>;
 export interface InputObjectValue
@@ -20,244 +21,157 @@ interface TempCodeLine
     readonly value?: Value;
 }
 
-export function parseScopes(input: ReadonlyArray<InputScope>)
+interface LoopLabels
 {
-    return input.map(parseScope);
+    readonly start: string;
+    readonly end: string;
 }
 
-export function parseScope(input: InputScope)
+const FunctionKeyword = 'function';
+const LoopKeyword = 'loop';
+const ContinueKeyword = 'continue';
+const BreakKeyword = 'break';
+const IfKeyword = 'if';
+const UnlessKeyword = 'unless';
+const SetKeyword = 'set';
+const DefineKeyword = 'define';
+
+function codeLine(operator: Operator, value?: Value): TempCodeLine
 {
-    const tempCodeLines: TempCodeLine[] = [];
-    for (let inputLine of input.data)
-    {
-        if (!isArray(inputLine))
-        {
-            inputLine = [inputLine];
-        }
-
-        for (const tempCodeLine of parseCodeLine(inputLine))
-        {
-            tempCodeLines.push(tempCodeLine);
-        }
-    }
-
-    return processScope(input.name, tempCodeLines);
+    return { operator, value };
 }
 
-export function processScope(name: string, tempCode: ReadonlyArray<TempCodeLine>): Scope
+function labelLine(label: string): TempCodeLine
 {
-    const labels: { [label: string]: number } = {}
-    const code: CodeLine[] = [];
-
-    for (const tempLine of tempCode)
-    {
-        if (tempLine.label != null)
-        {
-            labels[tempLine.label] = code.length;
-        }
-        else if (tempLine.operator != null)
-        {
-            code.push({ operator: tempLine.operator, value: tempLine.value });
-        }
-    }
-
-    return { name, code, labels }
+    return { label };
 }
 
-export function *parseCodeLine(input: InputDataLine): IterableIterator<TempCodeLine>
+export default class VirtualMachineAssembler
 {
-    if (input.length === 0)
-    {
-        return;
-    }
+    public builtinScope: Scope = new Scope();
 
-    const first = input[0];
-    if (typeof(first) === 'string' && first[0] === ':')
-    {
-        return yield { label: first }
-    }
+    private labelCount: number = 0;
+    private loopStack: LoopLabels[] = [];
 
-    let opCode = parseOperator(first);
-    let codeLineInput: Value = null;
-    let pushChildOffset = 1;
-    if (opCode === 'unknown')
+    public parse(input: Value): TempCodeLine[]
     {
-        opCode = 'run';
-        codeLineInput = parseRunCommand(first);
-        if (codeLineInput == null)
+        if (isValueArray(input))
         {
-            throw new Error(`Error parsing run command: ${JSON.stringify(input)}`);
+
         }
-        pushChildOffset = 0;
+
+
     }
-    else if (input.length > 1)
+
+    public parseSet(input: ArrayValue)
     {
-        const last = input[input.length - 1];
-        if (isJumpCall(opCode))
+        let result = this.parse(input[2]);
+        result.push(codeLine(Operator.Set, input[1]));
+        return result;
+    }
+
+    public parseDefine(input: ArrayValue)
+    {
+        let result = this.parse(input[2]);
+        result.push(codeLine(Operator.Define, input[1]));
+
+        if (result[0].value != null && isValueFunction(result[0].value))
         {
-            codeLineInput = parseJumpLabel(last)
-            if (codeLineInput == null)
-            {
-                throw new Error(`Error parsing ${opCode} input: ${JSON.stringify(input)}`);
-            }
+            result[0].value.funcValue.name = valueToString(input[1] as Value);
+        }
+
+        return result;
+    }
+
+    public parseLoop(input: ArrayValue)
+    {
+        if (input.length < 3)
+        {
+            throw new Error('Loop input has too few arguments');
+        }
+
+        const loopLabelNum = this.labelCount++;
+        const labelStart = `:LoopStart${loopLabelNum}`;
+        const labelEnd = `:LoopEnd${loopLabelNum}`;
+
+        this.loopStack.push({ start: labelStart, end: labelEnd });
+
+        const comparisonCall = input[1];
+        let result = [ labelLine(labelStart), ...this.parse(comparisonCall) ];
+        result.push(codeLine(Operator.JumpFalse, labelEnd));
+        for (let i = 2; i < input.length; i++)
+        {
+            result = result.concat(this.parse(input[2]));
+        }
+
+        result.push(codeLine(Operator.Jump, labelStart));
+        result.push(labelLine(labelEnd));
+
+        this.loopStack.pop();
+
+        return result;
+    }
+
+    public parseCond(input: ArrayValue, isIfStatement: boolean)
+    {
+        if (input.length < 3)
+        {
+            throw new Error('Condition input has too few inputs');
+        }
+        if (input.length > 4)
+        {
+            throw new Error('Condition input has too many inputs!');
+        }
+
+        const ifLabelNum = this.labelCount++;
+        const labelElse = `:CondElse${ifLabelNum}`;
+        const labelEnd = `:CondEnd${ifLabelNum}`;
+
+        const hasElseCall = input.length === 4;
+        const jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
+
+        const comparisonCall = input[1];
+        const firstBlock = input[2] as ArrayValue;
+
+        let result = this.parse(comparisonCall);
+
+        if (hasElseCall)
+        {
+            // Jump to else if the condition doesn't match
+            result.push(codeLine(jumpOperator, labelElse));
+
+            // First block of code
+            result = result.concat(this.parseFlatten(firstBlock));
+            // Jump after the condition, skipping second block of code.
+            result.push(codeLine(Operator.Jump, labelEnd));
+
+            // Jump target for else
+            result.push(labelLine(labelElse));
+
+            // Second 'else' block of code
+            const secondBlock = input[3] as ArrayValue;
+            result = result.concat(this.parseFlatten(secondBlock));
         }
         else
         {
-            codeLineInput = parseValue(last);
-            if (codeLineInput == null)
-            {
-                throw new Error(`Error parsing input for line: ${JSON.stringify(input)}`);
-            }
-        }
-    }
+            // We only have one block, so jump to the end of the block if the condition doesn't matchc
+            result.push(codeLine(jumpOperator, labelEnd));
 
-    for (let i = 1; i < input.length - pushChildOffset; i++)
-    {
-        const parsedValue = parseValue(input[i]);
-        if (parsedValue == null)
-        {
-            throw new Error(`Error parsing child for value`);
+            result = result.concat(this.parseFlatten(firstBlock));
         }
 
-        yield { operator: 'push', value: parsedValue }
-    }
+        result.push(labelLine(labelEnd));
 
-    yield { operator: opCode, value: codeLineInput }
-}
-
-function isJumpCall(input: Operator): boolean
-{
-    return input === 'call' || input === 'jump' ||
-        input === 'jumpFalse' || input === 'jumpTrue';
-}
-
-function isArray(input: InputDataArg): input is InputArrayValue
-{
-    return Array.isArray(input);
-}
-
-function isObject(input: InputDataArg): input is InputObjectValue
-{
-    return typeof(input) === 'object' && !isArray(input);
-}
-
-function parseJumpLabel(input: InputDataArg)
-{
-    return parseTwoStringInput(input, ':', true);
-}
-function parseRunCommand(input: InputDataArg)
-{
-    return parseTwoStringInput(input, '.', false);
-}
-
-function parseTwoStringInput(input: InputDataArg, delimiter: string, includeDelimiter: boolean): Value
-{
-    if (typeof(input) === 'string')
-    {
-        const delimiterIndex = input.indexOf(delimiter);
-        if (delimiterIndex > 0)
-        {
-            const array: Value[] = [input.substr(0, delimiterIndex)];
-            if (includeDelimiter)
-            {
-                array.push(input.substring(delimiterIndex));
-            }
-            else
-            {
-                array.push(input.substring(delimiterIndex + 1));
-            }
-
-            return array;
-        }
-
-        return input;
-    }
-    else if (isArray(input))
-    {
-        if (input.length === 1)
-        {
-            return parseTwoStringInput(input[0], delimiter, includeDelimiter);
-        }
-
-        const parsed = parseValue(input);
-        if (isValueArray(parsed))
-        {
-            if (parsed.length === 2 && isValueString(parsed[0]) && isValueString(parsed[1]))
-            {
-                return parsed;
-            }
-        }
-    }
-
-    return null;
-}
-
-function parseValue(input: InputDataArg) : Value
-{
-    if (input == null)
-    {
-        return null;
-    }
-
-    const type = typeof(input)
-    if (type === 'number' || type === 'boolean' || type === 'string')
-    {
-        return input;
-    }
-
-    if (isArray(input))
-    {
-        const result: Value[] = [];
-        for (const child of input)
-        {
-            const value = parseValue(child);
-            if (value == null)
-            {
-                throw new Error(`Unable to parse value`);
-            }
-            result.push(value);
-        }
         return result;
     }
 
-    if (isObject(input))
+    public parseFlatten(input: ArrayValue)
     {
-        const result: { [key: string]: Value } = {};
-        for (const prop in input)
+        if (input.every(isValueArray))
         {
-            const value = parseValue(input[prop]);
-            if (value == null)
-            {
-                throw new Error(`Unable to parse value`);
-            }
-            result[prop] = value;
+            return input.map(this.parse).flat(1);
         }
-        return result;
-    }
 
-    return null;
-}
-
-function parseOperator(input: InputDataArg) : Operator
-{
-    if (typeof(input) !== 'string')
-    {
-        return 'unknown';
-    }
-
-    const lower = input.toLowerCase();
-    switch (lower)
-    {
-        case 'push':
-        case 'pop':
-        case 'copy':
-        case 'swap':
-        case 'call':
-        case 'return':
-        case 'jump':
-        case 'run': return lower as Operator;
-        case 'jumptrue': return 'jumpTrue';
-        case 'jumpfalse': return 'jumpFalse';
-        default: return 'unknown';
+        return this.parse(input);
     }
 }

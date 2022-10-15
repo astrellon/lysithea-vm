@@ -1,4 +1,4 @@
-import { InputScope, parseScopes } from "../src/assembler";
+import { InputScope, parseScopes } from "../src/assemblerOld";
 import { ArrayValue, Value } from "../src/types";
 import VirtualMachine from "../src/virtualMachine";
 import VirtualMachineRunner from "../src/virtualMachineRunner";

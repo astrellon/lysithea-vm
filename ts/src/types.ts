@@ -30,7 +30,7 @@ export interface SymbolValue
 
 export interface Function
 {
-    readonly name: string;
+    name: string;
     readonly code: ReadonlyArray<CodeLine>;
     readonly parameters: ReadonlyArray<string>;
     readonly labels: { readonly [label: string]: number };

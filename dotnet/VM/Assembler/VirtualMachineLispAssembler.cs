@@ -38,14 +38,14 @@ namespace SimpleStackVM
         #region Methods
         public List<ITempCodeLine> ParseSet(ArrayValue input)
         {
-            var result = Parse(input[2]);
+            var result = this.Parse(input[2]);
             result.Add(new TempCodeLine(Operator.Set, input[1]));
             return result;
         }
 
         public List<ITempCodeLine> ParseDefine(ArrayValue input)
         {
-            var result = Parse(input[2]);
+            var result = this.Parse(input[2]);
             result.Add(new TempCodeLine(Operator.Define, input[1]));
 
             if (result[0] is TempCodeLine parsedCodeLine)
@@ -103,35 +103,41 @@ namespace SimpleStackVM
             var labelElse = $":CondElse{ifLabelNum}";
             var labelEnd = $":CondEnd{ifLabelNum}";
 
-            var comparisonCall = (ArrayValue)input[1];
-            var result = Parse(comparisonCall);
-
             var hasElseCall = input.Count == 4;
-
             var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
+
+            var comparisonCall = (ArrayValue)input[1];
+            var firstBlock = (ArrayValue)input[2];
+
+            var result = Parse(comparisonCall);
 
             if (hasElseCall)
             {
+                // Jump to else if the condition doesn't match
                 result.Add(new TempCodeLine(jumpOperator, new StringValue(labelElse)));
 
-                var ifTrueCall = (ArrayValue)input[2];
-                result.AddRange(this.ParseFlatten(ifTrueCall));
+                // First block of code
+                result.AddRange(this.ParseFlatten(firstBlock));
+                // Jump after the condition, skipping second block of code.
                 result.Add(new TempCodeLine(Operator.Jump, new StringValue(labelEnd)));
 
+                // Jump target for else
                 result.Add(new LabelCodeLine(labelElse));
-                var ifFalseCall = (ArrayValue)input[3];
-                result.AddRange(this.ParseFlatten(ifFalseCall));
-                result.Add(new LabelCodeLine(labelEnd));
+
+                // Second 'else' block of code
+                var secondBlock = (ArrayValue)input[3];
+                result.AddRange(this.ParseFlatten(secondBlock));
             }
             else
             {
+                // We only have one block, so jump to the end of the block if the condition doesn't matchc
                 result.Add(new TempCodeLine(jumpOperator, new StringValue(labelEnd)));
 
-                var ifTrueCall = (ArrayValue)input[2];
-                result.AddRange(ParseFlatten(ifTrueCall));
-
-                result.Add(new LabelCodeLine(labelEnd));
+                result.AddRange(ParseFlatten(firstBlock));
             }
+
+            // Jump target after the condition
+            result.Add(new LabelCodeLine(labelEnd));
 
             return result;
         }
@@ -181,15 +187,6 @@ namespace SimpleStackVM
 
         public List<ITempCodeLine> Parse(IValue input)
         {
-            if (input is NumberValue ||
-                input is StringValue ||
-                input is ObjectValue ||
-                input is NullValue ||
-                input is BoolValue)
-            {
-                return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
-            }
-
             if (input is ArrayValue arrayValue)
             {
                 if (!arrayValue.Any())
@@ -244,19 +241,12 @@ namespace SimpleStackVM
                 return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
             }
 
-            if (input is SymbolValue symbolValue)
+            if (input is SymbolValue symbolValue && symbolValue.Value[0] != ':')
             {
-                if (symbolValue.Value[0] != ':')
-                {
-                    return new List<ITempCodeLine> { this.OptimiseGetSymbolValue(symbolValue) };
-                }
-                else
-                {
-                    return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
-                }
+                return new List<ITempCodeLine> { this.OptimiseGetSymbolValue(symbolValue) };
             }
 
-            throw new Exception("Unknown Lisp value");
+            return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input) };
         }
 
         public Function ParseFromText(string input)
