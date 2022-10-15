@@ -138,13 +138,12 @@ namespace SimpleStackVM
 
         public IEnumerable<ITempCodeLine> ParseFlatten(ArrayValue input)
         {
-            var ifFalseCall = (ArrayValue)input[3];
-            if (ifFalseCall.All(i => i is ArrayValue))
+            if (input.All(i => i is ArrayValue))
             {
-                return ifFalseCall.SelectMany(Parse);
+                return input.SelectMany(Parse);
             }
 
-            return Parse(ifFalseCall);
+            return Parse(input);
         }
 
         public List<ITempCodeLine> ParseLoopJump(string keyword, bool jumpToStart)

@@ -17,7 +17,7 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(StandardMiscLibrary.Scope);
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(CustomScope);
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram2.lisp"));
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/fib.lisp"));
 
             var vm = new VirtualMachine(16);
 
