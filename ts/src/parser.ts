@@ -12,6 +12,18 @@ export function tokenize(input: string)
     return [...cleaned.matchAll(tokenRegex)].map(c => c[0]);
 }
 
+export function readAllTokens(tokens: string[]): ArrayValue
+{
+    const result: Value[] = [];
+
+    while (tokens.length > 0)
+    {
+        result.push(readFromTokens(tokens));
+    }
+
+    return result;
+}
+
 export function readFromTokens(tokens: string[]): Value
 {
     if (tokens.length === 0)
@@ -27,6 +39,7 @@ export function readFromTokens(tokens: string[]): Value
         {
             list.push(readFromTokens(tokens));
         }
+        popFront(tokens);
         return list as ArrayValue;
     }
     else if (token === ')')
@@ -42,6 +55,7 @@ export function readFromTokens(tokens: string[]): Value
             const value = readFromTokens(tokens);
             map[key] = value;
         }
+        popFront(tokens);
         return map as ObjectValue;
     }
     else if (token === '}')
@@ -82,7 +96,7 @@ function atom(input: string): Value
         return input.substring(1, input.length - 2);
     }
 
-    return { 'symbolValue': input };
+    return Symbol(input);
 }
 
 function popFront<T>(input: T[])

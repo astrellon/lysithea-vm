@@ -10,7 +10,7 @@ export enum Operator
     Jump, JumpTrue, JumpFalse
 }
 
-export type Value = string | boolean | number | ArrayValue | ObjectValue | FunctionValue | BuiltinFunctionValue | SymbolValue | null;
+export type Value = string | boolean | number | ArrayValue | ObjectValue | FunctionValue | BuiltinFunctionValue | Symbol | null;
 export type ArrayValue = ReadonlyArray<Value>;
 export interface ObjectValue
 {
@@ -23,19 +23,14 @@ export interface CodeLine
     readonly value?: Value;
 }
 
-export interface SymbolValue
-{
-    readonly symbolValue: string;
-}
-
-export interface Function
+export interface VMFunction
 {
     name: string;
     readonly code: ReadonlyArray<CodeLine>;
     readonly parameters: ReadonlyArray<string>;
     readonly labels: { readonly [label: string]: number };
 }
-export const EmptyFunction: Function =
+export const EmptyFunction: VMFunction =
 {
     name: '',
     code: [],
@@ -46,19 +41,15 @@ export const EmptyArrayValue: ArrayValue = [];
 
 export interface FunctionValue
 {
-    readonly funcValue: Function;
+    readonly funcValue: VMFunction;
 }
 
-export type BuiltinFunctionCallback = (vm: VirtualMachine, numArgs: number) => void;
-export interface BuiltinFunctionValue
-{
-    readonly builtinValue: BuiltinFunctionCallback;
-}
+export type BuiltinFunctionValue = (vm: VirtualMachine, numArgs: number) => void;
 
 export interface ScopeFrame
 {
     readonly lineNumber: number;
-    readonly function: Function;
+    readonly function: VMFunction;
     readonly scope: Scope;
 }
 
@@ -90,9 +81,7 @@ export function isValueObject(value: Value): value is ObjectValue
 {
     return typeof(value) === 'object' &&
         !isValueArray(value) &&
-        !isValueFunction(value) &&
-        !isValueBuiltinFunction(value) &&
-        !isValueSymbol(value);
+        !isValueFunction(value);
 }
 export function isValueFunction(value: Value): value is FunctionValue
 {
@@ -100,11 +89,11 @@ export function isValueFunction(value: Value): value is FunctionValue
 }
 export function isValueBuiltinFunction(value: Value): value is BuiltinFunctionValue
 {
-    return typeof(value) === 'object' && typeof((value as any)['builtinValue']) === 'function';
+    return typeof(value) === 'function';
 }
-export function isValueSymbol(value: Value): value is SymbolValue
+export function isValueSymbol(value: Value): value is Symbol
 {
-    return typeof(value) === 'object' && typeof((value as any)['symbolValue']) === 'string';
+    return typeof(value) === 'symbol';
 }
 export function isValueNull(value: Value)
 {
@@ -121,6 +110,7 @@ export function valueTypeof(value: Value)
     {
         case 'string':
         case 'number':
+        case 'symbol':
             return type;
         case 'boolean':
             return 'bool';
@@ -142,39 +132,31 @@ export function valueTypeof(value: Value)
     {
         return 'builtin-function';
     }
-    if (isValueSymbol(value))
-    {
-        return 'symbol';
-    }
     return 'unknown';
 }
-export function valueToString(value?: Value)
+export function valueToString(value?: Value): string
 {
     if (value == null)
     {
         return 'null';
     }
 
-    const type = typeof(value);
-    switch (type)
+    switch (typeof(value))
     {
-        case 'string':
-            return value as string;
+        case 'string': return value;
+
         case 'number':
         case 'boolean': return value.toString();
+
+        case 'symbol': return value.description || '';
+
+        case 'function': return 'builtin-function';
+
         case 'object':
             {
-                if (isValueSymbol(value))
-                {
-                    return value.symbolValue;
-                }
                 if (isValueFunction(value))
                 {
                     return `function:${value.funcValue.name}`;
-                }
-                if (isValueBuiltinFunction(value))
-                {
-                    return 'builtin-function';
                 }
 
                 let result = '';
@@ -305,6 +287,11 @@ export function objectCompareTo(left: ObjectValue, right: ObjectValue)
     return 0;
 }
 
+export function symbolCompareTo(left: Symbol, right: Symbol): number
+{
+    return stringCompareTo(left.description || '', right.description || '');
+}
+
 export function valueCompareTo(left: Value, right: Value): number
 {
     const leftType = valueTypeof(left);
@@ -342,7 +329,11 @@ export function valueCompareTo(left: Value, right: Value): number
             }
         case 'builtin-function':
             {
-                return (left as BuiltinFunctionValue).builtinValue === (right as BuiltinFunctionValue).builtinValue ? 0 : 1;
+                return (left as BuiltinFunctionValue) === (right as BuiltinFunctionValue) ? 0 : 1;
+            }
+        case 'symbol':
+            {
+                return symbolCompareTo(left as Symbol, right as Symbol);
             }
         case 'null': return 0;
     }

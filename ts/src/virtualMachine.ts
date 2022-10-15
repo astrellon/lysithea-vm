@@ -1,5 +1,5 @@
 import Scope from "./scope";
-import { ArrayValue, BuiltinFunctionValue, EmptyArrayValue, EmptyFunction, Function, FunctionValue, isValueArray, isValueBuiltinFunction, isValueFunction, isValueNull, isValueNumber, isValueString, Operator, ScopeFrame, Value, valueToString } from "./types";
+import { ArrayValue, BuiltinFunctionValue, EmptyArrayValue, EmptyFunction, VMFunction, FunctionValue, isValueArray, isValueBuiltinFunction, isValueFunction, isValueNull, isValueNumber, isValueString, Operator, ScopeFrame, Value, valueToString } from "./types";
 
 export default class VirtualMachine
 {
@@ -14,7 +14,7 @@ export default class VirtualMachine
 
     public running: boolean = false;
     public paused: boolean = false;
-    public currentCode: Function = EmptyFunction;
+    public currentCode: VMFunction = EmptyFunction;
 
     private _stack: Value[] = [];
     public get stack(): ReadonlyArray<Value> { return this._stack; }
@@ -77,20 +77,22 @@ export default class VirtualMachine
             case Operator.Get:
                 {
                     const key = codeLine.value ?? this.popStack();
-                    if (!isValueString(key))
-                    {
-                        throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${valueToString(key)}`);
-                    }
+                    // if (!isValueString(key))
+                    // {
+                    //     throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${valueToString(key)}`);
+                    // }
+                    const keyString = valueToString(key);
 
-                    const foundValue = this._currentScope.getKey(key);
+                    const foundValue = this._currentScope.getKey(keyString);
                     if (foundValue != null)
                     {
                         this.pushStack(foundValue);
                     }
                     else
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to get variable: ${key}`);
+                        throw new Error(`${this.getScopeLine()}: Unable to get variable: ${keyString}`);
                     }
+                    break;
                 }
             case Operator.GetProperty:
                 {
@@ -275,7 +277,7 @@ export default class VirtualMachine
 
     public executeBuiltinFunction(value: BuiltinFunctionValue, numArgs: number)
     {
-        value.builtinValue(this, numArgs);
+        value(this, numArgs);
     }
 
     public pushCurrentToStackTrace()

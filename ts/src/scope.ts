@@ -20,7 +20,7 @@ export default class Scope implements IReadOnlyScope
 
     public get values(): Readonly<ScopeData>
     {
-        return this.values;
+        return this._values;
     }
 
     constructor(parent: Scope | null = null)
@@ -68,7 +68,7 @@ export default class Scope implements IReadOnlyScope
             return this.getProperty(key);
         }
 
-        throw new Error('Unable to get using a value of ' + valueToString(key));
+        return null;
     }
 
     public getKey(key: string): Value
@@ -81,7 +81,7 @@ export default class Scope implements IReadOnlyScope
 
         if (this._parent != null)
         {
-            this._parent.getKey(key);
+            return this._parent.getKey(key);
         }
 
         return null;

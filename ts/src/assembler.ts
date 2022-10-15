@@ -1,18 +1,6 @@
+import { readAllTokens, tokenize } from "./parser";
 import Scope from "./scope";
-import { ArrayValue, CodeLine, isValueArray, isValueFunction, isValueString, Operator, Value, valueToString } from "./types";
-
-export type InputArrayValue = ReadonlyArray<InputDataArg>;
-export interface InputObjectValue
-{
-    readonly [key: string]: InputDataArg;
-}
-export type InputDataArg = string | boolean | number | InputArrayValue | InputObjectValue;
-export type InputDataLine = InputDataArg[];
-export interface InputScope
-{
-    readonly name: string;
-    readonly data: ReadonlyArray<InputDataLine>;
-}
+import { ArrayValue, CodeLine, FunctionValue, isValueArray, isValueFunction, isValueSymbol, Operator, Value, valueToString, VMFunction } from "./types";
 
 interface TempCodeLine
 {
@@ -46,6 +34,12 @@ function labelLine(label: string): TempCodeLine
     return { label };
 }
 
+function isLabel(input: Symbol)
+{
+    const str = valueToString(input);
+    return str.length > 0 ? str[0] === ':' : false;
+}
+
 export default class VirtualMachineAssembler
 {
     public builtinScope: Scope = new Scope();
@@ -53,14 +47,72 @@ export default class VirtualMachineAssembler
     private labelCount: number = 0;
     private loopStack: LoopLabels[] = [];
 
+    public parseFromText(input: string)
+    {
+        const tokens = tokenize(input);
+        const parsed = readAllTokens(tokens);
+        return this.parseGlobalFunction(parsed);
+    }
+
     public parse(input: Value): TempCodeLine[]
     {
         if (isValueArray(input))
         {
+            if (input.length === 0)
+            {
+                return [];
+            }
 
+            const first = input[0];
+            // If the first item in an array is a symbol we assume that it is a function call or a label
+            if (isValueSymbol(first))
+            {
+                const firstString = valueToString(first);
+                if (isLabel(first))
+                {
+                    return [ labelLine(firstString) ];
+                }
+
+                // Check for keywords
+                const keywordParse = this.parseKeyword(firstString, input);
+                if (keywordParse.length > 0)
+                {
+                    return keywordParse;
+                }
+
+                // Attempt to parse as an op code
+                const opCode = this.parseOperator(firstString);
+                const isOpCode = opCode !== Operator.Unknown;
+                if (isOpCode && this.isJumpCall(opCode))
+                {
+                    return [ codeLine(opCode, input[1]) ];
+                }
+
+                // Handle general opcode or function call.
+                let result = input.slice(1).map(v => this.parse(v)).flat(1);
+
+                // If it is not an opcode then it must be a function call
+                if (!isOpCode)
+                {
+                    result = result.concat(this.optimiseCallSymbolValue(first, input.length - 1));
+                }
+                else if (opCode !== Operator.Push)
+                {
+                    result.push(codeLine(opCode));
+                }
+
+                return result;
+            }
+
+            // Any array that doesn't start with a symbol we assume it's a data array.
         }
 
+        if (isValueSymbol(input) && isLabel(input))
+        {
+            return [ this.optimiseGetSymbolValue(input) ];
+        }
 
+        return [ codeLine(Operator.Push, input) ];
     }
 
     public parseSet(input: ArrayValue)
@@ -154,7 +206,7 @@ export default class VirtualMachineAssembler
         }
         else
         {
-            // We only have one block, so jump to the end of the block if the condition doesn't matchc
+            // We only have one block, so jump to the end of the block if the condition doesn't match
             result.push(codeLine(jumpOperator, labelEnd));
 
             result = result.concat(this.parseFlatten(firstBlock));
@@ -169,9 +221,152 @@ export default class VirtualMachineAssembler
     {
         if (input.every(isValueArray))
         {
-            return input.map(this.parse).flat(1);
+            return input.map(v => this.parse(v)).flat(1);
         }
 
         return this.parse(input);
+    }
+
+    public parseLoopJump(keyword: string, jumpToStart: boolean)
+    {
+        if (this.loopStack.length === 0)
+        {
+            throw new Error(`Unexpected ${keyword} outside of loop`);
+        }
+
+        const loopLabel = this.loopStack[this.loopStack.length - 1];
+        return [codeLine(Operator.Jump, jumpToStart ? loopLabel.start : loopLabel.end)];
+    }
+
+    public parseFunction(input: ArrayValue)
+    {
+        if (!isValueArray(input[1]))
+        {
+            throw new Error('Function needs parameter array');
+        }
+
+        const parameters = input[1].map(e => valueToString(e));
+        const tempCodeLines = input.slice(2).map(v => this.parse(v)).flat(1);
+
+        return this.processTempFunction(parameters, tempCodeLines);
+    }
+
+    public parseGlobalFunction(input: ArrayValue)
+    {
+        const tempCodeLines = input.map(v => this.parse(v)).flat(1);
+        return this.processTempFunction([], tempCodeLines);
+    }
+
+    public processTempFunction(parameters: string[], tempCodeLines: TempCodeLine[]) : VMFunction
+    {
+        const labels: { [label: string]: number } = {}
+        const code: CodeLine[] = [];
+
+        for (const tempLine of tempCodeLines)
+        {
+            if (tempLine.label != null && tempLine.label != '')
+            {
+                labels[tempLine.label] = code.length;
+            }
+            else if (tempLine.operator != null)
+            {
+                code.push({ operator: tempLine.operator, value: tempLine.value });
+            }
+        }
+
+        return { code, parameters, labels, name: 'anonymous' };
+    }
+
+    public parseKeyword(input: string, arrayValue: ArrayValue): TempCodeLine[]
+    {
+        switch (input)
+        {
+            case FunctionKeyword:
+                {
+                    const func = this.parseFunction(arrayValue);
+                    const funcValue: FunctionValue = { funcValue: func };
+                    return [codeLine(Operator.Push, funcValue)];
+                }
+            case ContinueKeyword: return this.parseLoopJump(ContinueKeyword, true);
+            case BreakKeyword: return this.parseLoopJump(BreakKeyword, false);
+            case SetKeyword: return this.parseSet(arrayValue);
+            case DefineKeyword: return this.parseDefine(arrayValue);
+            case LoopKeyword: return this.parseLoop(arrayValue);
+            case IfKeyword: return this.parseCond(arrayValue, true);
+            case UnlessKeyword: return this.parseCond(arrayValue, false);
+        }
+
+        return [];
+    }
+
+    public optimiseCallSymbolValue(input: Symbol, numArgs: number)
+    {
+        const getSymbol = this.getSymbolValue(input);
+        const foundValue = this.builtinScope.get(getSymbol);
+        if (foundValue != null)
+        {
+            const callArgs: ArrayValue = [ foundValue, numArgs ];
+            return [ codeLine(Operator.CallDirect, callArgs) ];
+        }
+
+        return [
+            this.parseGet(getSymbol),
+            codeLine(Operator.Call, numArgs)
+        ];
+    }
+
+    public optimiseGetSymbolValue(input: Symbol)
+    {
+        const foundValue = this.builtinScope.get(input);
+        if (foundValue != null)
+        {
+            return codeLine(Operator.Push, foundValue);
+        }
+
+        return this.parseGet(input);
+    }
+
+    public parseGet(input: Value)
+    {
+        const opCode = isValueArray(input) ? Operator.GetProperty : Operator.Get;
+        return codeLine(opCode, input);
+    }
+
+    public getSymbolValue(input: Symbol): Value
+    {
+        const str = input.description || '';
+        if (str.includes('.'))
+        {
+            return str.split('.').map(Symbol);
+        }
+
+        return str;
+    }
+
+    public parseOperator(input: string): Operator
+    {
+        input = input.toLowerCase();
+        switch (input)
+        {
+            case 'push': return Operator.Push;
+            case 'call': return Operator.Call;
+            case 'calldirect': return Operator.CallDirect;
+            case 'return': return Operator.Return;
+            case 'getproperty': return Operator.GetProperty;
+            case 'get': return Operator.Get;
+            case 'set': return Operator.Set;
+            case 'define': return Operator.Define;
+            case 'jump': return Operator.Jump;
+            case 'jumptrue': return Operator.JumpTrue;
+            case 'jumpfalse': return Operator.JumpFalse;
+        }
+
+        return Operator.Unknown;
+    }
+
+    public isJumpCall(input: Operator)
+    {
+        return input === Operator.Call || input === Operator.Jump ||
+            input === Operator.JumpTrue || input === Operator.JumpFalse;
     }
 }
