@@ -6,6 +6,8 @@ namespace SimpleStackVM
     {
         #region Fields
         public readonly object Value;
+
+        public string TypeName => "any";
         #endregion
 
         #region Constructor

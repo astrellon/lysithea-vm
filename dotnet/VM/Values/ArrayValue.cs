@@ -16,6 +16,8 @@ namespace SimpleStackVM
 
         public int Count => Value.Count;
         public IValue this[int index] => Value[this.GetIndex(index)];
+
+        public string TypeName => "array";
         #endregion
 
         #region Constructor
@@ -33,7 +35,7 @@ namespace SimpleStackVM
             {
                 index = indexNum.IntValue;
             }
-            else if (indexValue is StringValue || indexValue is SymbolValue)
+            else if (indexValue is StringValue || indexValue is VariableValue)
             {
                 int.TryParse(indexValue.ToString(), out index);
             }

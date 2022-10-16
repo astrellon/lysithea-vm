@@ -10,6 +10,8 @@ namespace SimpleStackVM
         public delegate void BuiltinFunctionDelegate(VirtualMachine vm, int numArgs);
 
         public readonly BuiltinFunctionDelegate Value;
+
+        public string TypeName => "builtin-function";
         #endregion
 
         #region Constructor

@@ -7,6 +7,9 @@ namespace SimpleStackVM
         #region Fields
         public static readonly NullValue Value = new NullValue();
         public const string RawValueString = "null";
+
+        public string TypeName => "null";
+
         #endregion
 
         #region Methods

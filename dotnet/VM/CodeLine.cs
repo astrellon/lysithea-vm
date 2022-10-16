@@ -4,8 +4,20 @@ using System.Diagnostics;
 
 namespace SimpleStackVM
 {
+    public interface ITempCodeLine { }
+
     [DebuggerDisplay("{Description}")]
-    public class CodeLine
+    public class LabelCodeLine : ITempCodeLine
+    {
+        public readonly string Label;
+
+        public string Description => $"Label: {this.Label}";
+
+        public LabelCodeLine(string label) { this.Label = label; }
+    }
+
+    [DebuggerDisplay("{Description}")]
+    public class CodeLine : ITempCodeLine
     {
         #region Fields
         public static readonly CodeLine Empty = new CodeLine(Operator.Unknown, NullValue.Value);

@@ -16,7 +16,7 @@ namespace SimpleStackVM
             result.Define("toString", (vm, numArgs) =>
             {
                 var top = vm.PeekStack();
-                if (top is StringValue || top is SymbolValue)
+                if (top is StringValue || top is VariableValue)
                 {
                     return;
                 }
@@ -28,7 +28,7 @@ namespace SimpleStackVM
             result.Define("typeof", (vm, numArgs) =>
             {
                 var top = vm.PopStack();
-                vm.PushStack(new StringValue(GetTypeOf(top)));
+                vm.PushStack(new StringValue(top.TypeName));
             });
 
             result.Define("compareTo", (vm, numArgs) =>
@@ -45,48 +45,6 @@ namespace SimpleStackVM
             });
 
             return result;
-        }
-
-        public static string GetTypeOf(IValue input)
-        {
-            if (input is StringValue)
-            {
-                return "string";
-            }
-            if (input is NumberValue)
-            {
-                return "number";
-            }
-            if (input is BoolValue)
-            {
-                return "bool";
-            }
-            if (input is ArrayValue)
-            {
-                return "array";
-            }
-            if (input is ObjectValue)
-            {
-                return "object";
-            }
-            if (input is NullValue)
-            {
-                return "null";
-            }
-            if (input is AnyValue)
-            {
-                return "any";
-            }
-            if (input is BuiltinFunctionValue)
-            {
-                return "builtin-proc";
-            }
-            if (input is FunctionValue)
-            {
-                return "proc";
-            }
-
-            return "unknown";
         }
         #endregion
     }

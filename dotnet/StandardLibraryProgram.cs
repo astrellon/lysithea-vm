@@ -10,7 +10,7 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineLispAssembler();
+            var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testStandardLibrary.lisp"));

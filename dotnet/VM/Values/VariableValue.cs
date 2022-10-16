@@ -2,16 +2,18 @@
 
 namespace SimpleStackVM
 {
-    public struct SymbolValue : IValue
+    public struct VariableValue : IValue
     {
         #region Fields
         public readonly string Value;
 
-        public bool IsLabel => this.Value.Length > 0 && this.Value[0] == ':';
+        public bool IsLabel => this.Value.Length > 1 && this.Value[0] == ':';
+
+        public string TypeName => "variable";
         #endregion
 
         #region Constructor
-        public SymbolValue(string value)
+        public VariableValue(string value)
         {
             this.Value = string.Intern(value);
         }
@@ -21,7 +23,7 @@ namespace SimpleStackVM
         public override bool Equals(object? other)
         {
             if (other == null) return false;
-            if (other is SymbolValue otherString)
+            if (other is VariableValue otherString)
             {
                 return otherString.Value == this.Value;
             }
@@ -41,7 +43,7 @@ namespace SimpleStackVM
         public int CompareTo(IValue? other)
         {
             if (other == null) return 1;
-            if (other is SymbolValue otherString)
+            if (other is VariableValue otherString)
             {
                 return this.Value.CompareTo(otherString.Value);
             }

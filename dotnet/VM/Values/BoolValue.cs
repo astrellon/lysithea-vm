@@ -9,6 +9,8 @@ namespace SimpleStackVM
         public static BoolValue False = new BoolValue(false);
 
         public readonly bool Value;
+
+        public string TypeName => "bool";
         #endregion
 
         #region Constructor

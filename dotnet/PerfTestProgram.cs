@@ -15,7 +15,7 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineLispAssembler();
+            var assembler = new VirtualMachineAssembler();
             assembler.BuiltinScope.CombineScope(CustomScope);
             var code = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 

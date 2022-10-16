@@ -9,6 +9,8 @@ namespace SimpleStackVM
 
         public int IntValue => (int)this.Value;
         public float FloatValue => (float)this.Value;
+
+        public string TypeName => "number";
         #endregion
 
         #region Constructor

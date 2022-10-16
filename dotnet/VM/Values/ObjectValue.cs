@@ -17,6 +17,8 @@ namespace SimpleStackVM
         public IEnumerable<IValue> Values => Value.Values;
         public int Count => Value.Count;
         public IValue this[string key] => Value[key];
+
+        public string TypeName => "object";
         #endregion
 
         #region Constructor

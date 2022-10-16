@@ -5,23 +5,19 @@ using System.Text.RegularExpressions;
 
 namespace SimpleStackVM
 {
-    public static class VirtualMachineLispParser
+    public static class VirtualMachineParser
     {
         #region Fields
         private static Regex TokenRegex = new Regex("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
-        private static Regex CommentRegex = new Regex("^\\s*(;|\\/\\/).*$", RegexOptions.Multiline);
+        private static Regex CommentRegex = new Regex(@"^\s*(;|\/\/).*$", RegexOptions.Multiline);
+        private static Regex BracketRegex = new Regex(@"[\(\)\{\}]");
         #endregion
 
         #region Methods
         public static List<string> Tokenize(string input)
         {
-            var cleaned = input.Replace("(", " ( ")
-                .Replace(")", " ) ")
-                .Replace("{", " { ")
-                .Replace("}", " } ")
-                .Trim();
-
-            cleaned = CommentRegex.Replace(cleaned, "");
+            var cleaned = CommentRegex.Replace(input, "");
+            cleaned = BracketRegex.Replace(cleaned, " $& ");
 
             return TokenRegex.Matches(cleaned).Select(m => m.Value).ToList();
         }
@@ -110,7 +106,8 @@ namespace SimpleStackVM
             {
                 return new StringValue(input.Substring(1, input.Length - 2));
             }
-            return new SymbolValue(input);
+
+            return new VariableValue(input);
         }
 
         private static T PopFront<T>(List<T> input)

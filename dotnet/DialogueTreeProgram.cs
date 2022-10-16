@@ -18,7 +18,7 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineLispAssembler();
+            var assembler = new VirtualMachineAssembler();
             var sw1 = Stopwatch.StartNew();
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
             sw1.Stop();

@@ -8,6 +8,8 @@ namespace SimpleStackVM
     {
         #region Fields
         public readonly string Value;
+
+        public string TypeName => "string";
         #endregion
 
         #region Constructor

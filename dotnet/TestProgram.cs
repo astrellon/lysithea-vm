@@ -12,12 +12,12 @@ namespace SimpleStackVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineLispAssembler();
+            var assembler = new VirtualMachineAssembler();
             assembler.BuiltinScope.CombineScope(StandardMathLibrary.Scope);
             assembler.BuiltinScope.CombineScope(StandardMiscLibrary.Scope);
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(CustomScope);
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/fib.lisp"));
+            var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
 
             var vm = new VirtualMachine(16);
             vm.CurrentCode = code;
