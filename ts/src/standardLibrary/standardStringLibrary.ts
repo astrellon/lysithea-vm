@@ -1,83 +1,82 @@
-import { Value, valueToString } from "../types";
+import Scope, { IReadOnlyScope } from "../scope";
+import { isValueNumber, isValueString, ObjectValue, Value, valueToString } from "../types";
 import VirtualMachine from "../virtualMachine";
 
-export const stringHandleName = 'string';
+export const stringScope: IReadOnlyScope = createStringScope();
 
-export function addStringHandler(vm: VirtualMachine)
+export function createStringScope()
 {
-    vm.addRunHandler(stringHandleName, stringHandler)
-}
+    const result = new Scope();
 
-export function stringHandler(command: string, vm: VirtualMachine)
-{
-    switch (command)
+    const stringFunctions: ObjectValue =
     {
-        case 'append':
+        'join': (vm, numArgs) =>
+        {
+            if (numArgs < 2)
             {
-                const right = vm.popStack();
-                const left = vm.popStack();
-                vm.pushStack(append(left, right));
-                break;
+                throw new Error('Not enough arguments for string join');
             }
-        case 'prepend':
-            {
-                const right = vm.popStack();
-                const left = vm.popStack();
-                vm.pushStack(prepend(left, right));
-                break;
-            }
-        case 'length':
-            {
-                const top = vm.popStackString();
-                vm.pushStack(top.length);
-                break;
-            }
-        case 'get':
-            {
-                const index = vm.popStackNumber();
-                const top = vm.popStackString();
-                vm.pushStack(top[index]);
-                break;
-            }
-        case 'set':
-            {
-                const value = vm.popStack();
-                const index = vm.popStackNumber();
-                const top = vm.popStackString();
-                vm.pushStack(set(top, index, valueToString(value)));
-                break;
-            }
-        case 'insert':
-            {
-                const value = vm.popStack();
-                const index = vm.popStackNumber();
-                const top = vm.popStackString();
-                vm.pushStack(insert(top, index, valueToString(value)));
-                break;
-            }
-        case 'substring':
-            {
-                const length = vm.popStackNumber();
-                const index = vm.popStackNumber();
-                const top = vm.popStackString();
-                vm.pushStack(substring(top, index, length));
-                break;
-            }
-        case 'removeAt':
-            {
-                const index = vm.popStackNumber();
-                const top = vm.popStackString();
-                vm.pushStack(removeAt(top, index));
-                break;
-            }
-        case 'removeAll':
-            {
-                const values = vm.popStackString();
-                const top = vm.popStackString();
-                vm.pushStack(removeAll(top, values));
-                break;
-            }
+            const args = vm.getArgs(numArgs);
+            const separator = args[0];
+            const result = args.slice(1).join(valueToString(separator));
+            vm.pushStack(result);
+        },
+
+        'length': (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(top.length);
+        },
+
+        'get': (vm, numArgs) =>
+        {
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(top[index]);
+        },
+
+        'set': (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(set(top, index, valueToString(value)));
+        },
+
+        'insert': (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(insert(top, index, valueToString(value)));
+        },
+
+        'substring': (vm, numArgs) =>
+        {
+            const length = vm.popStackCast(isValueNumber);
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(substring(top, index, length));
+        },
+
+        'removeAt': (vm, numArgs) =>
+        {
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(removeAt(top, index));
+        },
+
+        'removeAll': (vm, numArgs) =>
+        {
+            const values = vm.popStackCast(isValueString);
+            const top = vm.popStackCast(isValueString);
+            vm.pushStack(removeAll(top, values));
+        }
     }
+
+    result.define('string', stringFunctions);
+
+    return result;
 }
 
 export function getIndex(input: string, index: number): number

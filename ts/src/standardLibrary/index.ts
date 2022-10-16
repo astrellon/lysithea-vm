@@ -1,45 +1,45 @@
-import VirtualMachine from "../virtualMachine";
-import { addComparisonHandler } from "./standardComparisonLibrary";
-import { addMathHandler } from "./standardMathLibrary";
-import { addStringHandler } from "./standardStringLibrary";
-import { addArrayHandler } from "./standardArrayLibrary";
-import { addObjectHandler } from "./standardObjectLibrary";
-import { addValueHandler } from "./standardValueLibrary";
+import Scope from "../scope";
+import { operatorScope } from "./standardOperators";
+import { mathScope } from "./standardMathLibrary";
+import { stringScope } from "./standardStringLibrary";
+import { arrayScope } from "./standardArrayLibrary";
+import { objectScope } from "./standardObjectLibrary";
+import { miscScope } from "./standardValueLibrary";
 
 export enum LibraryType {
-    comparison = 1 << 0,
+    operator = 1 << 0,
     math = 1 << 1,
     string = 1 << 2,
     array = 1 << 3,
     object = 1 << 4,
-    value = 1 << 5,
+    misc = 1 << 5,
     all = (1 << 6) - 1
 }
 
-export function addToVirtualMachine(vm: VirtualMachine, libraries: LibraryType)
+export function addToScope(scope: Scope, libraries: LibraryType)
 {
-    if (libraries & LibraryType.comparison)
+    if (libraries & LibraryType.operator)
     {
-        addComparisonHandler(vm);
+        scope.combineScope(operatorScope);
     }
     if (libraries & LibraryType.math)
     {
-        addMathHandler(vm);
+        scope.combineScope(mathScope);
     }
     if (libraries & LibraryType.string)
     {
-        addStringHandler(vm);
+        scope.combineScope(stringScope);
     }
     if (libraries & LibraryType.array)
     {
-        addArrayHandler(vm);
+        scope.combineScope(arrayScope);
     }
     if (libraries & LibraryType.object)
     {
-        addObjectHandler(vm);
+        scope.combineScope(objectScope);
     }
-    if (libraries & LibraryType.value)
+    if (libraries & LibraryType.misc)
     {
-        addValueHandler(vm);
+        scope.combineScope(miscScope);
     }
 }

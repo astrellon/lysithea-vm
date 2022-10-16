@@ -1,112 +1,105 @@
-import { ArrayValue, Value, valueCompareTo } from "../types";
-import VirtualMachine from "../virtualMachine";
+import Scope, { IReadOnlyScope } from "../scope";
+import { ArrayValue, isValueArray, isValueNumber, ObjectValue, Value, valueCompareTo } from "../types";
 
-export const arrayHandleName = 'array';
+export const arrayScope: IReadOnlyScope = createArrayScope();
 
-export function addArrayHandler(vm: VirtualMachine)
+export function createArrayScope()
 {
-    vm.addRunHandler(arrayHandleName, arrayHandler)
-}
+    const result = new Scope();
 
-export function arrayHandler(command: string, vm: VirtualMachine)
-{
-    switch (command)
+    const arrayFunctions: ObjectValue =
     {
-        case "append":
-            {
-                const right = vm.popStack();
-                const left = vm.popStackArray();
-                vm.pushStack(append(left, right));
-                break;
-            }
-        case "prepend":
-            {
-                const right = vm.popStack();
-                const left = vm.popStackArray();
-                vm.pushStack(prepend(left, right));
-                break;
-            }
-        case "length":
-            {
-                const top = vm.popStackArray();
-                vm.pushStack(top.length);
-                break;
-            }
-        case "get":
-            {
-                const index = vm.popStackNumber();
-                const top = vm.popStackArray();
-                vm.pushStack(get(top, index));
-                break;
-            }
-        case "set":
-            {
-                const value = vm.popStack();
-                const index = vm.popStackNumber();
-                const top = vm.popStackArray();
-                vm.pushStack(set(top, index, value));
-                break;
-            }
-        case "insert":
-            {
-                const value = vm.popStack();
-                const index = vm.popStackNumber();
-                const top = vm.popStackArray();
-                vm.pushStack(insert(top, index, value));
-                break;
-            }
-        case "insertFlatten":
-            {
-                const value = vm.popStackArray();
-                const index = vm.popStackNumber();
-                const top = vm.popStackArray();
-                vm.pushStack(insertFlatten(top, index, value));
-                break;
-            }
-        case "remove":
-            {
-                const value = vm.popStack();
-                const top = vm.popStackArray();
-                vm.pushStack(remove(top, value));
-                break;
-            }
-        case "removeAt":
-            {
-                const index = vm.popStackNumber();
-                const top = vm.popStackArray();
-                vm.pushStack(removeAt(top, index));
-                break;
-            }
-        case "removeAll":
-            {
-                const value = vm.popStack();
-                const top = vm.popStackArray();
-                vm.pushStack(removeAll(top, value));
-                break;
-            }
-        case "contains":
-            {
-                const value = vm.popStack();
-                const top = vm.popStackArray();
-                vm.pushStack(contains(top, value));
-                break;
-            }
-        case "indexOf":
-            {
-                const value = vm.popStack();
-                const top = vm.popStackArray();
-                vm.pushStack(indexOf(top, value));
-                break;
-            }
-        case "sublist":
-            {
-                const length = vm.popStackNumber();
-                const index = vm.popStackNumber();
-                const top = vm.popStackArray();
-                vm.pushStack(sublist(top, index, length));
-                break;
-            }
+        join: (vm, numArgs) =>
+        {
+            const args = vm.getArgs(numArgs);
+            vm.pushStack(args);
+        },
+
+        length: (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(top.length);
+        },
+
+        get: (vm, numArgs) =>
+        {
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(get(top, index));
+        },
+
+        set: (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(set(top, index, value));
+
+        },
+
+        insert: (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(insert(top, index, value));
+        },
+
+        insertFlatten: (vm, numArgs) =>
+        {
+            const value = vm.popStackCast(isValueArray);
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(insertFlatten(top, index, value));
+        },
+
+        remove: (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(remove(top, value));
+        },
+
+        removeAt: (vm, numArgs) =>
+        {
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(removeAt(top, index));
+        },
+
+        removeAll: (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(removeAll(top, value));
+        },
+
+        contains: (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(contains(top, value));
+        },
+
+        indexOf: (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(indexOf(top, value));
+        },
+
+        sublist: (vm, numArgs) =>
+        {
+            const length = vm.popStackCast(isValueNumber);
+            const index = vm.popStackCast(isValueNumber);
+            const top = vm.popStackCast(isValueArray);
+            vm.pushStack(sublist(top, index, length));
+        },
     }
+
+    result.define('array', arrayFunctions);
+
+    return result;
 }
 
 export function getIndex(target: ArrayValue, index: number): number

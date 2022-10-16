@@ -10,7 +10,12 @@ export enum Operator
     Jump, JumpTrue, JumpFalse
 }
 
-export type Value = string | boolean | number | ArrayValue | ObjectValue | FunctionValue | BuiltinFunctionValue | Symbol | null;
+export type Editable<T> = {
+    -readonly [P in keyof T]: T[P];
+};
+
+export type VariableValue = Symbol;
+export type Value = string | boolean | number | ArrayValue | ObjectValue | FunctionValue | BuiltinFunctionValue | VariableValue | null;
 export type ArrayValue = ReadonlyArray<Value>;
 export interface ObjectValue
 {
@@ -91,7 +96,7 @@ export function isValueBuiltinFunction(value: Value): value is BuiltinFunctionVa
 {
     return typeof(value) === 'function';
 }
-export function isValueSymbol(value: Value): value is Symbol
+export function isValueVariable(value: Value): value is VariableValue
 {
     return typeof(value) === 'symbol';
 }
@@ -110,10 +115,11 @@ export function valueTypeof(value: Value)
     {
         case 'string':
         case 'number':
-        case 'symbol':
             return type;
         case 'boolean':
             return 'bool';
+        case 'symbol':
+            return 'variable';
     }
 
     if (isValueObject(value))
@@ -287,7 +293,7 @@ export function objectCompareTo(left: ObjectValue, right: ObjectValue)
     return 0;
 }
 
-export function symbolCompareTo(left: Symbol, right: Symbol): number
+export function variableCompareTo(left: VariableValue, right: VariableValue): number
 {
     return stringCompareTo(left.description || '', right.description || '');
 }
@@ -331,9 +337,9 @@ export function valueCompareTo(left: Value, right: Value): number
             {
                 return (left as BuiltinFunctionValue) === (right as BuiltinFunctionValue) ? 0 : 1;
             }
-        case 'symbol':
+        case 'variable':
             {
-                return symbolCompareTo(left as Symbol, right as Symbol);
+                return variableCompareTo(left as VariableValue, right as VariableValue);
             }
         case 'null': return 0;
     }

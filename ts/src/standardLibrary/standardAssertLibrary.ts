@@ -1,62 +1,62 @@
-import { ArrayValue, Value, valueCompareTo, valueToString } from "../types";
-import VirtualMachine from "../virtualMachine";
+import Scope, { IReadOnlyScope } from "../scope";
+import { isValueBoolean, ObjectValue, valueCompareTo, valueToString } from "../types";
 
-export const assertHandleName = 'assert';
+export const assertScope: IReadOnlyScope = createAssertScope();
 
-export function addAssertHandler(vm: VirtualMachine)
+export function createAssertScope()
 {
-    vm.addRunHandler(assertHandleName, assertHandler)
-}
+    const result: Scope = new Scope();
 
-export function assertHandler(command: string, vm: VirtualMachine)
-{
-    switch (command)
+    const assertFunctions: ObjectValue =
     {
-        case 'true':
+        true: (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueBoolean);
+            if (!top)
             {
-                const top = vm.popStackBool();
-                if (!top)
-                {
-                    vm.running = false;
-                    console.error(vm.createStackTrace().join('\n'));
-                    console.error('Assert expected true');
-                }
-                break;
+                vm.running = false;
+                console.error(vm.createStackTrace().join('\n'));
+                console.error('Assert expected true');
             }
-        case 'false':
+        },
+
+        false: (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueBoolean);
+            if (top)
             {
-                const top = vm.popStackBool();
-                if (top)
-                {
-                    vm.running = false;
-                    console.error(vm.createStackTrace().join('\n'));
-                    console.error('Assert expected false');
-                }
-                break;
+                vm.running = false;
+                console.error(vm.createStackTrace().join('\n'));
+                console.error('Assert expected false');
             }
-        case 'equals':
+        },
+
+        equals: (vm, numArgs) =>
+        {
+            const actual = vm.popStack();
+            const expected = vm.popStack();
+            if (valueCompareTo(expected, actual) != 0)
             {
-                const toCompare = vm.popStack();
-                const top = vm.peekStack();
-                if (valueCompareTo(top, toCompare) != 0)
-                {
-                    vm.running = false;
-                    console.error(vm.createStackTrace().join('\n'));
-                    console.error(`Assert expected equals:\nExpected: ${valueToString(toCompare)}\nActual: ${valueToString(top)}`);
-                }
-                break;
+                vm.running = false;
+                console.error(vm.createStackTrace().join('\n'));
+                console.error(`Assert expected equals:\nExpected: ${valueToString(expected)}\nActual: ${valueToString(actual)}`);
             }
-        case 'notEquals':
+        },
+
+        notEquals: (vm, numArgs) =>
+        {
+            const actual = vm.popStack();
+            const expected = vm.popStack();
+            if (valueCompareTo(expected, actual) == 0)
             {
-                const toCompare = vm.popStack();
-                const top = vm.peekStack();
-                if (valueCompareTo(top, toCompare) == 0)
-                {
-                    vm.running = false;
-                    console.error(vm.createStackTrace().join('\n'));
-                    console.error(`Assert expected not equals:\nExpected: ${valueToString(toCompare)}\nActual: ${valueToString(top)}`);
-                }
-                break;
+                vm.running = false;
+                console.error(vm.createStackTrace().join('\n'));
+                console.error(`Assert expected not equals:\nActual: ${valueToString(actual)}`);
             }
-    }
+        }
+    };
+
+    result.define('assert', assertFunctions);
+
+    return result;
 }

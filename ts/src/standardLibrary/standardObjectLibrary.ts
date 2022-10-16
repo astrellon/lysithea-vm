@@ -1,51 +1,51 @@
-import { ArrayValue, ObjectValue, Value } from "../types";
-import VirtualMachine from "../virtualMachine";
+import Scope, { IReadOnlyScope } from "../scope";
+import { ArrayValue, isValueObject, isValueString, ObjectValue, Value } from "../types";
 
-export const objectHandleName = 'object';
+export const objectScope: IReadOnlyScope = createObjectScope();
 
-export function addObjectHandler(vm: VirtualMachine)
+export function createObjectScope()
 {
-    vm.addRunHandler(objectHandleName, objectHandler)
-}
+    const result = new Scope();
 
-export function objectHandler(command: string, vm: VirtualMachine)
-{
-    switch (command)
+    const objectFunctions: ObjectValue =
     {
-        case 'set':
-            {
-                const value = vm.popStack();
-                const key = vm.popStackString();
-                const top = vm.popStackObject();
-                vm.pushStack(set(top, key, value));
-                break;
-            }
-        case 'get':
-            {
-                const key = vm.popStackString();
-                const top = vm.popStackObject();
-                vm.pushStack(get(top, key));
-                break;
-            }
-        case 'keys':
-            {
-                const top = vm.popStackObject();
-                vm.pushStack(keys(top));
-                break;
-            }
-        case 'values':
-            {
-                const top = vm.popStackObject();
-                vm.pushStack(values(top));
-                break;
-            }
-        case 'length':
-            {
-                const top = vm.popStackObject();
-                vm.pushStack(length(top));
-                break;
-            }
+        'set': (vm, numArgs) =>
+        {
+            const value = vm.popStack();
+            const key = vm.popStackCast(isValueString);
+            const top = vm.popStackCast(isValueObject);
+            vm.pushStack(set(top, key, value));
+        },
+
+        'get': (vm, numArgs) =>
+        {
+            const key = vm.popStackCast(isValueString);
+            const top = vm.popStackCast(isValueObject);
+            vm.pushStack(get(top, key));
+        },
+
+        'keys': (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueObject);
+            vm.pushStack(keys(top));
+        },
+
+        'values': (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueObject);
+            vm.pushStack(values(top));
+        },
+
+        'length': (vm, numArgs) =>
+        {
+            const top = vm.popStackCast(isValueObject);
+            vm.pushStack(length(top));
+        }
     }
+
+    result.define('object', objectFunctions);
+
+    return result;
 }
 
 export function set(target: ObjectValue, key: string, value: Value)

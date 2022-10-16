@@ -1,6 +1,6 @@
 import { readAllTokens, tokenize } from "./parser";
 import Scope from "./scope";
-import { ArrayValue, CodeLine, FunctionValue, isValueArray, isValueFunction, isValueSymbol, Operator, Value, valueToString, VMFunction } from "./types";
+import { ArrayValue, CodeLine, FunctionValue, isValueArray, isValueFunction, isValueVariable, Operator, Value, valueToString, VariableValue, VMFunction } from "./types";
 
 interface TempCodeLine
 {
@@ -34,10 +34,57 @@ function labelLine(label: string): TempCodeLine
     return { label };
 }
 
-function isLabel(input: Symbol)
+function isLabel(input: VariableValue)
 {
     const str = valueToString(input);
     return str.length > 0 ? str[0] === ':' : false;
+}
+
+export function parseOperator(input: string): Operator
+{
+    input = input.toLowerCase();
+    switch (input)
+    {
+        case 'push': return Operator.Push;
+        case 'call': return Operator.Call;
+        case 'calldirect': return Operator.CallDirect;
+        case 'return': return Operator.Return;
+        case 'getproperty': return Operator.GetProperty;
+        case 'get': return Operator.Get;
+        case 'set': return Operator.Set;
+        case 'define': return Operator.Define;
+        case 'jump': return Operator.Jump;
+        case 'jumptrue': return Operator.JumpTrue;
+        case 'jumpfalse': return Operator.JumpFalse;
+    }
+
+    return Operator.Unknown;
+}
+
+export function operatorToString(input: Operator): string
+{
+    switch (input)
+    {
+        case Operator.Call: return 'call';
+        case Operator.CallDirect: return 'callDirect';
+        case Operator.Define: return 'define';
+        case Operator.Get: return 'get';
+        case Operator.GetProperty: return 'getProperty';
+        case Operator.Jump: return 'jump';
+        case Operator.JumpFalse: return 'jumpFalse';
+        case Operator.JumpTrue: return 'jumpTrue';
+        case Operator.Push: return 'push';
+        case Operator.Return: return 'return';
+        case Operator.Set: return 'set';
+    }
+
+    return 'unknown';
+}
+
+export function isJumpCall(input: Operator)
+{
+    return input === Operator.Call || input === Operator.Jump ||
+        input === Operator.JumpTrue || input === Operator.JumpFalse;
 }
 
 export default class VirtualMachineAssembler
@@ -64,8 +111,8 @@ export default class VirtualMachineAssembler
             }
 
             const first = input[0];
-            // If the first item in an array is a symbol we assume that it is a function call or a label
-            if (isValueSymbol(first))
+            // If the first item in an array is a variable we assume that it is a function call or a label
+            if (isValueVariable(first))
             {
                 const firstString = valueToString(first);
                 if (isLabel(first))
@@ -81,9 +128,9 @@ export default class VirtualMachineAssembler
                 }
 
                 // Attempt to parse as an op code
-                const opCode = this.parseOperator(firstString);
+                const opCode = parseOperator(firstString);
                 const isOpCode = opCode !== Operator.Unknown;
-                if (isOpCode && this.isJumpCall(opCode))
+                if (isOpCode && isJumpCall(opCode))
                 {
                     return [ codeLine(opCode, input[1]) ];
                 }
@@ -94,7 +141,7 @@ export default class VirtualMachineAssembler
                 // If it is not an opcode then it must be a function call
                 if (!isOpCode)
                 {
-                    result = result.concat(this.optimiseCallSymbolValue(first, input.length - 1));
+                    result = result.concat(this.optimiseCallVariableValue(first, input.length - 1));
                 }
                 else if (opCode !== Operator.Push)
                 {
@@ -104,12 +151,12 @@ export default class VirtualMachineAssembler
                 return result;
             }
 
-            // Any array that doesn't start with a symbol we assume it's a data array.
+            // Any array that doesn't start with a variable we assume it's a data array.
         }
 
-        if (isValueSymbol(input) && isLabel(input))
+        if (isValueVariable(input) && isLabel(input))
         {
-            return [ this.optimiseGetSymbolValue(input) ];
+            return [ this.optimiseGetVariableValue(input) ];
         }
 
         return [ codeLine(Operator.Push, input) ];
@@ -299,10 +346,10 @@ export default class VirtualMachineAssembler
         return [];
     }
 
-    public optimiseCallSymbolValue(input: Symbol, numArgs: number)
+    public optimiseCallVariableValue(input: VariableValue, numArgs: number)
     {
-        const getSymbol = this.getSymbolValue(input);
-        const foundValue = this.builtinScope.get(getSymbol);
+        const getVariable = this.getVariableValue(input);
+        const foundValue = this.builtinScope.get(getVariable);
         if (foundValue != null)
         {
             const callArgs: ArrayValue = [ foundValue, numArgs ];
@@ -310,12 +357,12 @@ export default class VirtualMachineAssembler
         }
 
         return [
-            this.parseGet(getSymbol),
+            this.parseGet(getVariable),
             codeLine(Operator.Call, numArgs)
         ];
     }
 
-    public optimiseGetSymbolValue(input: Symbol)
+    public optimiseGetVariableValue(input: VariableValue)
     {
         const foundValue = this.builtinScope.get(input);
         if (foundValue != null)
@@ -332,7 +379,7 @@ export default class VirtualMachineAssembler
         return codeLine(opCode, input);
     }
 
-    public getSymbolValue(input: Symbol): Value
+    public getVariableValue(input: VariableValue): Value
     {
         const str = input.description || '';
         if (str.includes('.'))
@@ -343,30 +390,4 @@ export default class VirtualMachineAssembler
         return str;
     }
 
-    public parseOperator(input: string): Operator
-    {
-        input = input.toLowerCase();
-        switch (input)
-        {
-            case 'push': return Operator.Push;
-            case 'call': return Operator.Call;
-            case 'calldirect': return Operator.CallDirect;
-            case 'return': return Operator.Return;
-            case 'getproperty': return Operator.GetProperty;
-            case 'get': return Operator.Get;
-            case 'set': return Operator.Set;
-            case 'define': return Operator.Define;
-            case 'jump': return Operator.Jump;
-            case 'jumptrue': return Operator.JumpTrue;
-            case 'jumpfalse': return Operator.JumpFalse;
-        }
-
-        return Operator.Unknown;
-    }
-
-    public isJumpCall(input: Operator)
-    {
-        return input === Operator.Call || input === Operator.Jump ||
-            input === Operator.JumpTrue || input === Operator.JumpFalse;
-    }
 }

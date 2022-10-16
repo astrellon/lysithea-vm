@@ -1,34 +1,23 @@
-import { InputScope, parseScopes } from "../src/assemblerOld";
 import VirtualMachine from "../src/virtualMachine";
-import { valueToString } from "../src/types";
 import fs from "fs";
-import { addToVirtualMachine, LibraryType } from "../src/standardLibrary/index";
-import { addAssertHandler } from "../src/standardLibrary/standardAssertLibrary";
+import { addToScope, LibraryType } from "../src/standardLibrary/index";
+import VirtualMachineAssembler from "../src/assembler";
 
-function runHandler(command: string, vm: VirtualMachine)
-{
-    if (command === 'print')
-    {
-        const top = vm.popStack();
-        console.log('Print:', valueToString(top));
-    }
-    else
-    {
-        console.warn('Unknown command', command);
-    }
-}
+const file = fs.readFileSync('../examples/testStandardLibrary.json', {encoding: 'utf-8'});
 
-const inputJson: InputScope[] = JSON.parse(fs.readFileSync('../examples/testStandardLibrary.json', 'utf-8'));
-const scopes = parseScopes(inputJson);
+const assembler = new VirtualMachineAssembler();
+addToScope(assembler.builtinScope, LibraryType.all);
+const code = assembler.parseFromText(file);
 
-const vm = new VirtualMachine(64, runHandler);
-addToVirtualMachine(vm, LibraryType.all);
-addAssertHandler(vm);
-vm.addScopes(scopes);
-
-vm.setCurrentScope('Main');
+const vm = new VirtualMachine(16);
+vm.currentCode = code;
 vm.running = true;
+
+const before = Date.now();
 while (vm.running && !vm.paused)
 {
     vm.step();
 }
+
+const after = Date.now();
+console.log('Time taken:', (after - before), 'ms');

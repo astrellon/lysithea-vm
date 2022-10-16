@@ -1,5 +1,6 @@
+import { operatorToString } from "./assembler";
 import Scope from "./scope";
-import { ArrayValue, BuiltinFunctionValue, EmptyArrayValue, EmptyFunction, VMFunction, FunctionValue, isValueArray, isValueBuiltinFunction, isValueFunction, isValueNull, isValueNumber, isValueString, Operator, ScopeFrame, Value, valueToString } from "./types";
+import { ArrayValue, BuiltinFunctionValue, EmptyArrayValue, EmptyFunction, VMFunction, FunctionValue, isValueArray, isValueBuiltinFunction, isValueFunction, isValueNumber, Operator, ScopeFrame, Value, valueToString, isValueString } from "./types";
 
 export default class VirtualMachine
 {
@@ -77,20 +78,19 @@ export default class VirtualMachine
             case Operator.Get:
                 {
                     const key = codeLine.value ?? this.popStack();
-                    // if (!isValueString(key))
-                    // {
-                    //     throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${valueToString(key)}`);
-                    // }
-                    const keyString = valueToString(key);
+                    if (!isValueString(key))
+                    {
+                        throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${valueToString(key)}`);
+                    }
 
-                    const foundValue = this._currentScope.getKey(keyString);
+                    const foundValue = this._currentScope.getKey(key);
                     if (foundValue != null)
                     {
                         this.pushStack(foundValue);
                     }
                     else
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to get variable: ${keyString}`);
+                        throw new Error(`${this.getScopeLine()}: Unable to get variable: ${valueToString(key)}`);
                     }
                     break;
                 }
@@ -316,6 +316,68 @@ export default class VirtualMachine
             throw new Error(`${this.getScopeLine()}: Popped empty stack`);
         }
         return result;
+    }
+
+    public popStackCast<T>(guardCheck: (v: any) => v is T): T
+    {
+        const top = this.popStack();
+        if (guardCheck(top))
+        {
+            return top as T;
+        }
+
+        throw new Error(`${this.getScopeLine()}: Pop stack cast error`);
+    }
+
+    public peekStack(): Value
+    {
+        if (this._stack.length === 0)
+        {
+            throw new Error(`${this.getScopeLine()}: Peek empty stack`);
+        }
+
+        return this._stack[this._stack.length - 1];
+    }
+
+    public peekStackCast<T>(guardCheck: (v: any) => v is T): T
+    {
+        const top = this.peekStack();
+        if (guardCheck(top))
+        {
+            return top as T;
+        }
+
+        throw new Error(`${this.getScopeLine()}: Peek stack cast error`);
+    }
+
+    public createStackTrace(): string[]
+    {
+        const result = [ this.debugScopeLine(this.currentCode, this._lineCounter - 1) ];
+
+        for (let i = this.stackTrace.length - 1; i >= 0; i--)
+        {
+            const stackFrame = this._stackTrace[i];
+            result.push(this.debugScopeLine(stackFrame.function, stackFrame.lineNumber));
+        }
+
+        return result;
+    }
+
+    public debugScopeLine(func: VMFunction, line: number)
+    {
+        if (line >= func.code.length)
+        {
+            return `[${func.name}]:${line - 1}: end of code`;
+        }
+        if (line < 0)
+        {
+            return `[${func.name}]:${line - 1}: before start of code`;
+        }
+
+        const codeLine = func.code[line];
+        const codeLineInput = codeLine.value != null ? valueToString(codeLine.value) : '<empty>';
+        const opString = operatorToString(codeLine.operator);
+        return `[${func.name}]:${line - 1}:${opString}}: [${codeLineInput}]`;
     }
 
     private getScopeLine()
