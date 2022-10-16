@@ -243,6 +243,10 @@ namespace SimpleStackVM
             {
                 this.ExecuteFunction(foundBuiltin, numArgs);
             }
+            else
+            {
+                throw new OperatorException(this.CreateStackTrace(), $"Unknown function call type");
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

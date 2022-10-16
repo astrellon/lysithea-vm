@@ -21,6 +21,7 @@ namespace SimpleStackVM
 
             mathFunctions["E"] = new NumberValue(System.Math.E);
             mathFunctions["PI"] = new NumberValue(System.Math.PI);
+            mathFunctions["DegToRad"] = new NumberValue(DegToRad);
 
             mathFunctions["sin"] = new BuiltinFunctionValue((vm, numArgs) =>
             {
@@ -36,22 +37,6 @@ namespace SimpleStackVM
             {
                 var top = vm.PopStack<NumberValue>();
                 vm.PushStack(new NumberValue(System.Math.Tan(top.Value)));
-            });
-
-            mathFunctions["sinDeg"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(System.Math.Sin(DegToRad * top.Value)));
-            });
-            mathFunctions["cosDeg"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(System.Math.Cos(DegToRad * top.Value)));
-            });
-            mathFunctions["tanDeg"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(System.Math.Tan(DegToRad * top.Value)));
             });
 
             mathFunctions["pow"] = new BuiltinFunctionValue((vm, numArgs) =>
@@ -114,18 +99,6 @@ namespace SimpleStackVM
             {
                 var top = vm.PopStack<NumberValue>();
                 vm.PushStack(new NumberValue(System.Math.Log(top.Value)));
-            });
-
-            mathFunctions["log2"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(System.Math.Log2(top.Value)));
-            });
-
-            mathFunctions["log10"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(System.Math.Log10(top.Value)));
             });
 
             mathFunctions["abs"] = new BuiltinFunctionValue((vm, numArgs) =>
