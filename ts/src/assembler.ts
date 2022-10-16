@@ -154,9 +154,12 @@ export default class VirtualMachineAssembler
             // Any array that doesn't start with a variable we assume it's a data array.
         }
 
-        if (isValueVariable(input) && isLabel(input))
+        if (isValueVariable(input))
         {
-            return [ this.optimiseGetVariableValue(input) ];
+            if (!isLabel(input))
+            {
+                return [ this.optimiseGetVariableValue(input) ];
+            }
         }
 
         return [ codeLine(Operator.Push, input) ];
@@ -174,7 +177,7 @@ export default class VirtualMachineAssembler
         let result = this.parse(input[2]);
         result.push(codeLine(Operator.Define, input[1]));
 
-        if (result[0].value != null && isValueFunction(result[0].value))
+        if (result[0].value !== undefined && isValueFunction(result[0].value))
         {
             result[0].value.funcValue.name = valueToString(input[1] as Value);
         }
@@ -200,7 +203,7 @@ export default class VirtualMachineAssembler
         result.push(codeLine(Operator.JumpFalse, labelEnd));
         for (let i = 2; i < input.length; i++)
         {
-            result = result.concat(this.parse(input[2]));
+            result = result.concat(this.parse(input[i]));
         }
 
         result.push(codeLine(Operator.Jump, labelStart));
@@ -311,11 +314,11 @@ export default class VirtualMachineAssembler
 
         for (const tempLine of tempCodeLines)
         {
-            if (tempLine.label != null && tempLine.label != '')
+            if (tempLine.label !== undefined && tempLine.label != '')
             {
                 labels[tempLine.label] = code.length;
             }
-            else if (tempLine.operator != null)
+            else if (tempLine.operator !== undefined)
             {
                 code.push({ operator: tempLine.operator, value: tempLine.value });
             }
@@ -350,7 +353,7 @@ export default class VirtualMachineAssembler
     {
         const getVariable = this.getVariableValue(input);
         const foundValue = this.builtinScope.get(getVariable);
-        if (foundValue != null)
+        if (foundValue !== undefined)
         {
             const callArgs: ArrayValue = [ foundValue, numArgs ];
             return [ codeLine(Operator.CallDirect, callArgs) ];
@@ -365,7 +368,7 @@ export default class VirtualMachineAssembler
     public optimiseGetVariableValue(input: VariableValue)
     {
         const foundValue = this.builtinScope.get(input);
-        if (foundValue != null)
+        if (foundValue !== undefined)
         {
             return codeLine(Operator.Push, foundValue);
         }
@@ -375,8 +378,11 @@ export default class VirtualMachineAssembler
 
     public parseGet(input: Value)
     {
-        const opCode = isValueArray(input) ? Operator.GetProperty : Operator.Get;
-        return codeLine(opCode, input);
+        if (isValueArray(input))
+        {
+            return codeLine(Operator.GetProperty, input);
+        }
+        return codeLine(Operator.Get, valueToString(input));
     }
 
     public getVariableValue(input: VariableValue): Value

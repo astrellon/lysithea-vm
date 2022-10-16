@@ -2,9 +2,9 @@ import { ArrayValue, isValueArray, isValueNumber, isValueObject, isValueString, 
 
 export interface IReadOnlyScope
 {
-    get: (key: Value) => Value;
-    getKey: (key: string) => Value;
-    getProperty: (key: ArrayValue) => Value;
+    get: (key: Value) => Value | undefined;
+    getKey: (key: string) => Value | undefined;
+    getProperty: (key: ArrayValue) => Value | undefined;
     get values(): Readonly<ScopeData>;
 }
 
@@ -16,14 +16,14 @@ export interface ScopeData
 export default class Scope implements IReadOnlyScope
 {
     private readonly _values: ScopeData = {};
-    private readonly _parent: Scope | null;
+    private readonly _parent: Scope | undefined;
 
     public get values(): Readonly<ScopeData>
     {
         return this._values;
     }
 
-    constructor(parent: Scope | null = null)
+    constructor(parent: Scope | undefined = undefined)
     {
         this._parent = parent;
     }
@@ -57,7 +57,7 @@ export default class Scope implements IReadOnlyScope
         return false;
     }
 
-    public get(key: Value): Value
+    public get(key: Value): Value | undefined
     {
         if (isValueString(key))
         {
@@ -68,10 +68,10 @@ export default class Scope implements IReadOnlyScope
             return this.getProperty(key);
         }
 
-        return null;
+        return undefined;
     }
 
-    public getKey(key: string): Value
+    public getKey(key: string): Value | undefined
     {
         const result = this._values[key];
         if (result != null)
@@ -79,22 +79,27 @@ export default class Scope implements IReadOnlyScope
             return result;
         }
 
-        if (this._parent != null)
+        if (this._parent !== undefined)
         {
             return this._parent.getKey(key);
         }
 
-        return null;
+        return undefined;
     }
 
-    public getProperty(key: ArrayValue): Value
+    public getProperty(key: ArrayValue): Value | undefined
     {
-        let current = this.getKey(key[0] as string);
+        let current = this.getKey(valueToString(key[0]));
+        if (current === undefined)
+        {
+            return current;
+        }
+
         for (let i = 1; i < key.length; i++)
         {
             if (isValueObject(current))
             {
-                current = current[key[i] as string];
+                current = current[valueToString(key[i])];
             }
             else if (isValueArray(current))
             {
@@ -110,7 +115,7 @@ export default class Scope implements IReadOnlyScope
             }
             else
             {
-                return null;
+                return undefined;
             }
         }
 

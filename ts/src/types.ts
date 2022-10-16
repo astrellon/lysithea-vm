@@ -58,55 +58,59 @@ export interface ScopeFrame
     readonly scope: Scope;
 }
 
-export function isValueString(value: Value): value is string
+export function isValueString(value: Value | undefined): value is string
 {
     return typeof(value) === 'string';
 }
-export function isValueBoolean(value: Value): value is boolean
+export function isValueBoolean(value: Value | undefined): value is boolean
 {
     return typeof(value) === 'boolean';
 }
-export function isValueNumber(value: Value): value is number
+export function isValueNumber(value: Value | undefined): value is number
 {
     return typeof(value) === 'number';
 }
-export function isValueTrue(value: Value): value is true
+export function isValueTrue(value: Value | undefined): value is true
 {
     return value === true;
 }
-export function isValueFalse(value: Value): value is false
+export function isValueFalse(value: Value | undefined): value is false
 {
     return value === false;
 }
-export function isValueArray(value: Value): value is ArrayValue
+export function isValueArray(value: Value | undefined): value is ArrayValue
 {
     return Array.isArray(value);
 }
-export function isValueObject(value: Value): value is ObjectValue
+export function isValueObject(value: Value | undefined): value is ObjectValue
 {
-    return typeof(value) === 'object' &&
+    return value != null && typeof(value) === 'object' &&
         !isValueArray(value) &&
         !isValueFunction(value);
 }
-export function isValueFunction(value: Value): value is FunctionValue
+export function isValueFunction(value: Value | undefined): value is FunctionValue
 {
-    return typeof(value) === 'object' && typeof((value as any)['funcValue']) === 'object';
+    return value != null && typeof(value) === 'object' && typeof((value as any)['funcValue']) === 'object';
 }
-export function isValueBuiltinFunction(value: Value): value is BuiltinFunctionValue
+export function isValueBuiltinFunction(value: Value | undefined): value is BuiltinFunctionValue
 {
     return typeof(value) === 'function';
 }
-export function isValueVariable(value: Value): value is VariableValue
+export function isValueAnyFunction(value: Value | undefined): value is FunctionValue | BuiltinFunctionValue
+{
+    return isValueBuiltinFunction(value) || isValueFunction(value);
+}
+export function isValueVariable(value: Value | undefined): value is VariableValue
 {
     return typeof(value) === 'symbol';
 }
-export function isValueNull(value: Value)
+export function isValueNull(value: Value | undefined)
 {
-    return value == null;
+    return value === null;
 }
-export function valueTypeof(value: Value)
+export function valueTypeof(value: Value | undefined)
 {
-    if (value == null)
+    if (value === null)
     {
         return 'null';
     }
@@ -142,9 +146,13 @@ export function valueTypeof(value: Value)
 }
 export function valueToString(value?: Value): string
 {
-    if (value == null)
+    if (value === null)
     {
         return 'null';
+    }
+    if (value === undefined)
+    {
+        return 'unknown';
     }
 
     switch (typeof(value))

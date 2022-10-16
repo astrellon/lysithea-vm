@@ -1,4 +1,4 @@
-import VirtualMachine from "./virtualMachineOld";
+import VirtualMachine from "./virtualMachine";
 
 export default class VirtualMachineRunner
 {

@@ -1,5 +1,5 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { ArrayValue, isValueObject, isValueString, ObjectValue, Value } from "../types";
+import { ArrayValue, Editable, isValueNull, isValueNumber, isValueObject, isValueString, ObjectValue, Value, valueCompareTo } from "../types";
 
 export const objectScope: IReadOnlyScope = createObjectScope();
 
@@ -22,6 +22,20 @@ export function createObjectScope()
             const key = vm.popStackCast(isValueString);
             const top = vm.popStackCast(isValueObject);
             vm.pushStack(get(top, key));
+        },
+
+        'removeKey': (vm, numArgs) =>
+        {
+            const key = vm.popStackCast(isValueString);
+            const obj = vm.popStackCast(isValueObject);
+            vm.pushStack(removeKey(obj, key));
+        },
+
+        'removeValues': (vm, numArgs) =>
+        {
+            const values = vm.popStack();
+            const obj = vm.popStackCast(isValueObject);
+            vm.pushStack(removeValues(obj, values));
         },
 
         'keys': (vm, numArgs) =>
@@ -62,6 +76,32 @@ export function get(target: ObjectValue, key: string)
 export function keys(target: ObjectValue): ArrayValue
 {
     return Object.keys(target);
+}
+
+export function removeKey(target: ObjectValue, key: string): ObjectValue
+{
+    if (!target.hasOwnProperty(key))
+    {
+        return target;
+    }
+
+    const result = { ...target };
+    delete result[key];
+    return result;
+}
+
+export function removeValues(target: ObjectValue, values: Value): ObjectValue
+{
+    const result: Editable<ObjectValue> = {};
+    for (const key in target)
+    {
+        if (valueCompareTo(target[key], values) !== 0)
+        {
+            result[key] = target[key];
+        }
+    }
+
+    return result;
 }
 
 export function values(target: ObjectValue): ArrayValue

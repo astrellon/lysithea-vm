@@ -93,7 +93,7 @@ function atom(input: string): Value
     if ((first === '"' && last === '"') ||
         (first === "'" && last === "'"))
     {
-        return input.substring(1, input.length - 2);
+        return input.substring(1, input.length - 1);
     }
 
     return Symbol(input);

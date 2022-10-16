@@ -36,11 +36,11 @@ const vm = new VirtualMachine(16);
 vm.currentCode = code;
 vm.running = true;
 
-const before = Date.now();
+let before = Date.now();
 while (vm.running && !vm.paused)
 {
     vm.step();
 }
 
-const after = Date.now();
+let after = Date.now();
 console.log('Time taken:', (after - before), 'ms');

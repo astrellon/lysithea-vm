@@ -23,6 +23,27 @@
             "cwd": "${workspaceRoot}",
             "protocol": "inspector",
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Launch stdLib",
+            "type": "node",
+            "request": "launch",
+            "args": ["${workspaceFolder}/examples/standardLibraryIndex.ts"],
+            "runtimeArgs": ["-r", "ts-node/register"],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Launch diagTree",
+            "type": "node",
+            "request": "launch",
+            "args": ["${workspaceFolder}/examples/dialogueTreeIndex.ts"],
+            "runtimeArgs": ["-r", "ts-node/register"],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector",
+            "console": "externalTerminal",
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

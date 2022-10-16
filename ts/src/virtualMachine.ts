@@ -65,7 +65,7 @@ export default class VirtualMachine
                 }
             case Operator.Push:
                 {
-                    if (codeLine.value != null)
+                    if (codeLine.value !== undefined)
                     {
                         this.pushStack(codeLine.value);
                     }
@@ -84,7 +84,7 @@ export default class VirtualMachine
                     }
 
                     const foundValue = this._currentScope.getKey(key);
-                    if (foundValue != null)
+                    if (foundValue !== undefined)
                     {
                         this.pushStack(foundValue);
                     }
@@ -103,7 +103,7 @@ export default class VirtualMachine
                     }
 
                     const foundValue = this._currentScope.getProperty(key);
-                    if (foundValue != null)
+                    if (foundValue !== undefined)
                     {
                         this.pushStack(foundValue);
                     }
@@ -163,7 +163,7 @@ export default class VirtualMachine
                 }
             case Operator.Call:
                 {
-                    if (codeLine.value == null || !isValueNumber(codeLine.value))
+                    if (!isValueNumber(codeLine.value))
                     {
                         throw new Error(`${this.getScopeLine()}: Call needs a num args code line input`);
                     }
@@ -311,7 +311,7 @@ export default class VirtualMachine
     public popStack(): Value
     {
         const result = this._stack.pop();
-        if (result == undefined)
+        if (result === undefined)
         {
             throw new Error(`${this.getScopeLine()}: Popped empty stack`);
         }
@@ -377,7 +377,7 @@ export default class VirtualMachine
         const codeLine = func.code[line];
         const codeLineInput = codeLine.value != null ? valueToString(codeLine.value) : '<empty>';
         const opString = operatorToString(codeLine.operator);
-        return `[${func.name}]:${line - 1}:${opString}}: [${codeLineInput}]`;
+        return `[${func.name}]:${line - 1}:${opString}: [${codeLineInput}]`;
     }
 
     private getScopeLine()

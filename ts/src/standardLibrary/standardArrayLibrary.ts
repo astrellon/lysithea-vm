@@ -189,5 +189,9 @@ export function indexOf(target: ArrayValue, value: Value): number
 export function sublist(target: ArrayValue, index: number, length: number): ArrayValue
 {
     index = getIndex(target, index);
+    if (length < 0)
+    {
+        return target.slice(index);
+    }
     return target.slice(index, index + length);
 }
