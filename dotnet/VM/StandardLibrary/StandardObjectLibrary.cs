@@ -17,61 +17,62 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            var objectFunctions = new Dictionary<string, IValue>();
-
-            objectFunctions["set"] = new BuiltinFunctionValue((vm, numArgs) =>
+            var objectFunctions = new Dictionary<string, IValue>
             {
-                var value = vm.PopStack();
-                var key = vm.PopStack<StringValue>();
-                var obj = vm.PopStack<ObjectValue>();
-                vm.PushStack(Set(obj, key.Value, value));
-            });
-
-            objectFunctions["get"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var key = vm.PopStack<StringValue>();
-                var obj = vm.PopStack<ObjectValue>();
-                if (obj.TryGetValue(key.Value, out var value))
+                {"set", new BuiltinFunctionValue((vm, numArgs) =>
                 {
-                    vm.PushStack(value);
-                }
-                else
+                    var value = vm.PopStack();
+                    var key = vm.PopStack<StringValue>();
+                    var obj = vm.PopStack<ObjectValue>();
+                    vm.PushStack(Set(obj, key.Value, value));
+                })},
+
+                {"get", new BuiltinFunctionValue((vm, numArgs) =>
                 {
-                    vm.PushStack(NullValue.Value);
-                }
-            });
+                    var key = vm.PopStack<StringValue>();
+                    var obj = vm.PopStack<ObjectValue>();
+                    if (obj.TryGetValue(key.Value, out var value))
+                    {
+                        vm.PushStack(value);
+                    }
+                    else
+                    {
+                        vm.PushStack(NullValue.Value);
+                    }
+                })},
 
-            objectFunctions["removeKey"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var key = vm.PopStack<StringValue>();
-                var obj = vm.PopStack<ObjectValue>();
-                vm.PushStack(RemoveKey(obj, key.Value));
-            });
+                {"removeKey", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var key = vm.PopStack<StringValue>();
+                    var obj = vm.PopStack<ObjectValue>();
+                    vm.PushStack(RemoveKey(obj, key.Value));
+                })},
 
-            objectFunctions["removeValues"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var values = vm.PopStack();
-                var obj = vm.PopStack<ObjectValue>();
-                vm.PushStack(RemoveValues(obj, values));
-            });
+                {"removeValues", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var values = vm.PopStack();
+                    var obj = vm.PopStack<ObjectValue>();
+                    vm.PushStack(RemoveValues(obj, values));
+                })},
 
-            objectFunctions["keys"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<ObjectValue>();
-                vm.PushStack(Keys(top));
-            });
+                {"keys", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var top = vm.PopStack<ObjectValue>();
+                    vm.PushStack(Keys(top));
+                })},
 
-            objectFunctions["values"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<ObjectValue>();
-                vm.PushStack(Values(top));
-            });
+                {"values", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var top = vm.PopStack<ObjectValue>();
+                    vm.PushStack(Values(top));
+                })},
 
-            objectFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<ObjectValue>();
-                vm.PushStack(new NumberValue(top.Value.Count));
-            });
+                {"length", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var top = vm.PopStack<ObjectValue>();
+                    vm.PushStack(new NumberValue(top.Value.Count));
+                })}
+            };
 
             result.Define("object", new ObjectValue(objectFunctions));
 

@@ -15,66 +15,67 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            var stringFunctions = new Dictionary<string, IValue>();
-
-            stringFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>
+            var stringFunctions = new Dictionary<string, IValue>
             {
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(new NumberValue(top.Value.Length));
-            });
+                {"length", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(new NumberValue(top.Value.Length));
+                })},
 
-            stringFunctions["set"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(Set(top, index.IntValue, value.ToString()));
-            });
+                {"set", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(Set(top, index.IntValue, value.ToString()));
+                })},
 
-            stringFunctions["get"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(Get(top, index.IntValue));
-            });
+                {"get", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(Get(top, index.IntValue));
+                })},
 
-            stringFunctions["insert"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(Insert(top, index.IntValue, value.ToString()));
-            });
+                {"insert", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(Insert(top, index.IntValue, value.ToString()));
+                })},
 
-            stringFunctions["substring"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var length = vm.PopStack<NumberValue>();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(SubString(top, index.IntValue, length.IntValue));
-            });
+                {"substring", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var length = vm.PopStack<NumberValue>();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(SubString(top, index.IntValue, length.IntValue));
+                })},
 
-            stringFunctions["removeAt"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(RemoveAt(top, index.IntValue));
-            });
+                {"removeAt", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(RemoveAt(top, index.IntValue));
+                })},
 
-            stringFunctions["removeAll"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var values = vm.PopStack<StringValue>();
-                var top = vm.PopStack<StringValue>();
-                vm.PushStack(RemoveAll(top, values.Value));
-            });
+                {"removeAll", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var values = vm.PopStack<StringValue>();
+                    var top = vm.PopStack<StringValue>();
+                    vm.PushStack(RemoveAll(top, values.Value));
+                })},
 
-            stringFunctions["join"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var args = vm.GetArgs(numArgs);
-                var separator = args.First().ToString();
-                var result = string.Join(separator, args.Skip(1));
-                vm.PushStack(new StringValue(result));
-            });
+                {"join", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var args = vm.GetArgs(numArgs);
+                    var separator = args.First().ToString();
+                    var result = string.Join(separator, args.Skip(1));
+                    vm.PushStack(new StringValue(result));
+                })}
+            };
 
             result.Define("string", new ObjectValue(stringFunctions));
 

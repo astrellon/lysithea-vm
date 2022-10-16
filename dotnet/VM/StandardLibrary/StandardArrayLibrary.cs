@@ -15,93 +15,95 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            var arrayFunctions = new Dictionary<string, IValue>();
-            arrayFunctions["join"] = new BuiltinFunctionValue((vm, numArgs) =>
+            var arrayFunctions = new Dictionary<string, IValue>
             {
-                var args = vm.GetArgs(numArgs);
-                vm.PushStack(new ArrayValue(args));
-            });
+                {"join", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var args = vm.GetArgs(numArgs);
+                    vm.PushStack(new ArrayValue(args));
+                })},
 
-            arrayFunctions["length"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(new NumberValue(top.Value.Count));
-            });
+                {"length", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(new NumberValue(top.Value.Count));
+                })},
 
-            arrayFunctions["set"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(Set(top, index.IntValue, value));
-            });
+                {"set", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(Set(top, index.IntValue, value));
+                })},
 
-            arrayFunctions["get"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<ArrayValue>();
-                top.TryGet(index, out var value);
-                vm.PushStack(value);
-            });
+                {"get", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<ArrayValue>();
+                    top.TryGet(index, out var value);
+                    vm.PushStack(value);
+                })},
 
-            arrayFunctions["insert"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(Insert(top, index.IntValue, value));
-            });
+                {"insert", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(Insert(top, index.IntValue, value));
+                })},
 
-            arrayFunctions["insertFlatten"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack<ArrayValue>();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(InsertFlatten(top, index.IntValue, value));
-            });
+                {"insertFlatten", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack<ArrayValue>();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(InsertFlatten(top, index.IntValue, value));
+                })},
 
-            arrayFunctions["remove"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(Remove(top, value));
-            });
+                {"remove", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(Remove(top, value));
+                })},
 
-            arrayFunctions["removeAt"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(RemoveAt(top, index.IntValue));
-            });
+                {"removeAt", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(RemoveAt(top, index.IntValue));
+                })},
 
-            arrayFunctions["removeAll"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(RemoveAll(top, value));
-            });
+                {"removeAll", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(RemoveAll(top, value));
+                })},
 
-            arrayFunctions["contains"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(new BoolValue(Contains(top, value)));
-            });
+                {"contains", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(new BoolValue(Contains(top, value)));
+                })},
 
-            arrayFunctions["indexOf"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var value = vm.PopStack();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(new NumberValue(IndexOf(top, value)));
-            });
+                {"indexOf", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var value = vm.PopStack();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(new NumberValue(IndexOf(top, value)));
+                })},
 
-            arrayFunctions["sublist"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var length = vm.PopStack<NumberValue>();
-                var index = vm.PopStack<NumberValue>();
-                var top = vm.PopStack<ArrayValue>();
-                vm.PushStack(SubList(top, index.IntValue, length.IntValue));
-            });
+                {"sublist", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var length = vm.PopStack<NumberValue>();
+                    var index = vm.PopStack<NumberValue>();
+                    var top = vm.PopStack<ArrayValue>();
+                    vm.PushStack(SubList(top, index.IntValue, length.IntValue));
+                })}
+            };
 
             result.Define("array", new ObjectValue(arrayFunctions));
 

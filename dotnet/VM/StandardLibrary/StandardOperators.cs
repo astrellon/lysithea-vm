@@ -78,7 +78,18 @@ namespace SimpleStackVM
                 }
                 else
                 {
-                    var result = args.Select(c => ((NumberValue)c).Value).Sum();
+                    var result = 0.0;
+                    for (var i = 0; i < args.Count; i++)
+                    {
+                        if (args[i] is NumberValue argNum)
+                        {
+                            result += argNum.Value;
+                        }
+                        else
+                        {
+                            throw new Exception("Add only works on numbers and strings");
+                        }
+                    }
                     vm.PushStack(new NumberValue(result));
                 }
             });
@@ -102,6 +113,13 @@ namespace SimpleStackVM
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
                 vm.PushStack(new NumberValue(left.Value / right.Value));
+            });
+
+            result.Define("%", (vm, numArgs) =>
+            {
+                var right = vm.PopStack<NumberValue>();
+                var left = vm.PopStack<NumberValue>();
+                vm.PushStack(new NumberValue(left.Value % right.Value));
             });
 
             return result;

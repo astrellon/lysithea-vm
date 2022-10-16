@@ -14,52 +14,54 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            var assertFunctions = new Dictionary<string, IValue>();
-            assertFunctions["true"] = new BuiltinFunctionValue((vm, numArgs) =>
+            var assertFunctions = new Dictionary<string, IValue>
             {
-                var top = vm.PopStack<BoolValue>();
-                if (!top.Value)
+                {"true", new BuiltinFunctionValue((vm, numArgs) =>
                 {
-                    vm.Running = false;
-                    Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
-                    Console.WriteLine($"Assert expected true");
-                }
-            });
+                    var top = vm.PopStack<BoolValue>();
+                    if (!top.Value)
+                    {
+                        vm.Running = false;
+                        Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
+                        Console.WriteLine($"Assert expected true");
+                    }
+                })},
 
-            assertFunctions["false"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var top = vm.PopStack<BoolValue>();
-                if (top.Value)
+                {"false", new BuiltinFunctionValue((vm, numArgs) =>
                 {
-                    vm.Running = false;
-                    Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
-                    Console.WriteLine($"Assert expected false");
-                }
-            });
+                    var top = vm.PopStack<BoolValue>();
+                    if (top.Value)
+                    {
+                        vm.Running = false;
+                        Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
+                        Console.WriteLine($"Assert expected false");
+                    }
+                })},
 
-            assertFunctions["equals"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var actual = vm.PopStack();
-                var expected = vm.PopStack();
-                if (expected.CompareTo(actual) != 0)
+                {"equals", new BuiltinFunctionValue((vm, numArgs) =>
                 {
-                    vm.Running = false;
-                    Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
-                    Console.WriteLine($"Assert expected equals:\nExpected: {expected.ToString()}\nActual: {actual.ToString()}");
-                }
-            });
+                    var actual = vm.PopStack();
+                    var expected = vm.PopStack();
+                    if (expected.CompareTo(actual) != 0)
+                    {
+                        vm.Running = false;
+                        Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
+                        Console.WriteLine($"Assert expected equals:\nExpected: {expected.ToString()}\nActual: {actual.ToString()}");
+                    }
+                })},
 
-            assertFunctions["notEquals"] = new BuiltinFunctionValue((vm, numArgs) =>
-            {
-                var actual = vm.PopStack();
-                var expected = vm.PopStack();
-                if (expected.CompareTo(actual) == 0)
+                {"notEquals", new BuiltinFunctionValue((vm, numArgs) =>
                 {
-                    vm.Running = false;
-                    Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
-                    Console.WriteLine($"Assert expected not equals:\nExpected: {expected.ToString()}\nActual: {actual.ToString()}");
-                }
-            });
+                    var actual = vm.PopStack();
+                    var expected = vm.PopStack();
+                    if (expected.CompareTo(actual) == 0)
+                    {
+                        vm.Running = false;
+                        Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
+                        Console.WriteLine($"Assert expected not equals:\nActual: {actual.ToString()}");
+                    }
+                })}
+            };
 
             result.Define("assert", new ObjectValue(assertFunctions));
 
