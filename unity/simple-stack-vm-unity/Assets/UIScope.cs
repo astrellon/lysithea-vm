@@ -10,10 +10,11 @@ namespace SimpleStackVM.Unity
         public TMP_InputField StartScopeName;
         public TMP_InputField ScopeData;
 
-        public List<Procedure> CreateScopes()
+        public List<Function> CreateScopes()
         {
-            var json = SimpleJSON.JSON.Parse(this.ScopeData.text);
-            return VirtualMachineAssembler.ParseProcedures(json.AsArray);
+            // var json = SimpleJSON.JSON.Parse(this.ScopeData.text);
+            // return VirtualMachineAssembler.ParseProcedures(json.AsArray);
+            return null;
         }
     }
 }

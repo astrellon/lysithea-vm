@@ -73,7 +73,7 @@ namespace SimpleStackVM.Unity
         #region Methods
         public void Init(int stackSize, Action<string, VirtualMachine> runHandler)
         {
-            this.VM = new VirtualMachine(stackSize, runHandler);
+            this.VM = new VirtualMachine(stackSize);
         }
 
         public void Wait(TimeSpan timespan)

@@ -56,9 +56,9 @@ namespace SimpleStackVM.Unity
         {
             dialogue.Awake();
             this.selfActor = selfActor;
-            this.vm.ClearProcedures();
-            this.vm.AddProcedures(dialogue.Procedures);
-            this.vm.SetCurrentProcedure(startProcedure);
+            // this.vm.ClearProcedures();
+            // this.vm.AddProcedures(dialogue.Procedures);
+            // this.vm.SetCurrentProcedure(startProcedure);
             this.vm.Reset();
             this.vm.Running = true;
             this.VMRunner.Running = true;
@@ -84,33 +84,33 @@ namespace SimpleStackVM.Unity
 
             var choiceLabel = this.choiceBuffer[index];
             Debug.Log($"Selecting choice: {index}, {choiceLabel.ToString()}");
-            if (choiceLabel is ArrayValue arrayValue)
-            {
-                var firstArg = arrayValue.Value[0].ToString();
-                if (firstArg == "scopeJump")
-                {
-                    var scopeLabel = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
-                    this.vm.Jump(scopeLabel);
-                }
-                else if (firstArg == "return")
-                {
-                    this.vm.PushToStackTrace(new ScopeFrame(this.vm.CurrentFrame.Procedure, this.vm.CurrentFrame.Scope, 0));
-                    var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
-                    this.vm.Jump(jumpScope);
-                }
-                else if (firstArg == "returnLabel")
-                {
-                    var returnLabel =  arrayValue.Value[1];
-                    var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[2] });
-                    var returnLine = this.vm.CurrentFrame.Procedure.Labels[returnLabel.ToString()];
-                    this.vm.PushToStackTrace(new ScopeFrame(this.vm.CurrentFrame.Procedure, this.vm.CurrentFrame.Scope, returnLine));
-                    this.vm.Jump(jumpScope);
-                }
-            }
-            else
-            {
-                this.vm.Jump(choiceLabel);
-            }
+            // if (choiceLabel is ArrayValue arrayValue)
+            // {
+            //     var firstArg = arrayValue.Value[0].ToString();
+            //     if (firstArg == "scopeJump")
+            //     {
+            //         var scopeLabel = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
+            //         this.vm.Jump(scopeLabel);
+            //     }
+            //     else if (firstArg == "return")
+            //     {
+            //         this.vm.PushToStackTrace(new ScopeFrame(this.vm.CurrentFrame.Procedure, this.vm.CurrentFrame.Scope, 0));
+            //         var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[1] });
+            //         this.vm.Jump(jumpScope);
+            //     }
+            //     else if (firstArg == "returnLabel")
+            //     {
+            //         var returnLabel =  arrayValue.Value[1];
+            //         var jumpScope = new ArrayValue(new[] { StringValue.Empty, arrayValue.Value[2] });
+            //         var returnLine = this.vm.CurrentFrame.Procedure.Labels[returnLabel.ToString()];
+            //         this.vm.PushToStackTrace(new ScopeFrame(this.vm.CurrentFrame.Procedure, this.vm.CurrentFrame.Scope, returnLine));
+            //         this.vm.Jump(jumpScope);
+            //     }
+            // }
+            // else
+            // {
+            //     this.vm.Jump(choiceLabel);
+            // }
             this.vm.Paused = false;
         }
 

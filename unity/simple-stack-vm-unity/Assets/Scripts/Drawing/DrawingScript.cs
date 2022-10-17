@@ -7,25 +7,23 @@ namespace SimpleStackVM.Unity
     public class DrawingScript : ScriptableObject, IDrawingScript
     {
         #region Fields
-        public TextAsset JsonText;
+        public TextAsset CodeText;
 
-        public List<Procedure> Procedures;
-
-        IEnumerable<Procedure> IDrawingScript.Procedures => this.Procedures;
+        public Script Script { get; private set; } = Script.Empty;
         #endregion
 
         #region Methods
         public void Awake()
         {
-            if (this.Procedures != null && this.Procedures.Count > 0)
+            if (this.Script.Code.IsEmpty)
             {
                 return;
             }
 
-            var jsonStr = this.JsonText.text;
-            var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
+            // var jsonStr = this.JsonText.text;
+            // var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
 
-            this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
+            // this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
         }
         #endregion
 

@@ -15,7 +15,7 @@ namespace SimpleStackVM.Unity
         #region Methods
         public static void AddHandler(VirtualMachine vm)
         {
-            vm.AddBuiltinHandler(HandleName, Handler);
+            // vm.AddBuiltinHandler(HandleName, Handler);
         }
 
         public static void Handler(string command, VirtualMachine vm)
@@ -32,7 +32,7 @@ namespace SimpleStackVM.Unity
                 case "bool":
                     {
                         var isTrue = Random.value >= 0.5;
-                        vm.PushStack((BoolValue)isTrue);
+                        vm.PushStack(isTrue);
                         break;
                     }
                 case "color":
@@ -46,8 +46,8 @@ namespace SimpleStackVM.Unity
                     {
                         var upper = vm.PopStack<NumberValue>();
                         var lower = vm.PopStack<NumberValue>();
-                        var newValue = Random.Range(lower, upper);
-                        vm.PushStack(new NumberValue(newValue));
+                        var newValue = Random.Range(lower.FloatValue, upper.FloatValue);
+                        vm.PushStack(newValue);
                         break;
                     }
                 case "vector":

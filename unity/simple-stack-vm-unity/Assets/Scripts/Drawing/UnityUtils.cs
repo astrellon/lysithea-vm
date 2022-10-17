@@ -41,15 +41,15 @@ namespace SimpleStackVM.Unity
                 result = Vector3.zero;
                 if (objectValue.TryGetValue<NumberValue>("x", out var x))
                 {
-                    result.x = x;
+                    result.x = x.FloatValue;
                 }
                 if (objectValue.TryGetValue<NumberValue>("y", out var y))
                 {
-                    result.y = y;
+                    result.y = y.FloatValue;
                 }
                 if (objectValue.TryGetValue<NumberValue>("z", out var z))
                 {
-                    result.z = z;
+                    result.z = z.FloatValue;
                 }
 
                 return true;

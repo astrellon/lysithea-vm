@@ -10,15 +10,15 @@ namespace SimpleStackVM.Unity
 
         public void PullCode()
         {
-            var scopeName = this.UIScope.StartScopeName.text;
-            if (!DrawingVM.Instance.VMRunner.VM.Procedures.TryGetValue(scopeName, out var scope))
-            {
-                Debug.LogWarning($"No scope in VM that has the name: {scopeName}");
-                return;
-            }
+            // var scopeName = this.UIScope.StartScopeName.text;
+            // if (!DrawingVM.Instance.VMRunner.VM.Procedures.TryGetValue(scopeName, out var scope))
+            // {
+            //     Debug.LogWarning($"No scope in VM that has the name: {scopeName}");
+            //     return;
+            // }
 
-            var scopeJson = VirtualMachineDisassembler.Disassemble(scope);
-            this.UIScope.ScopeData.text = scopeJson.ToString(2);
+            // var scopeJson = VirtualMachineDisassembler.Disassemble(scope);
+            // this.UIScope.ScopeData.text = scopeJson.ToString(2);
         }
     }
 }

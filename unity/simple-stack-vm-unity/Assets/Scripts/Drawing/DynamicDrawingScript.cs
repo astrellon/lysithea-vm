@@ -1,26 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SimpleStackVM.Unity
 {
     public class DynamicDrawingScript : IDrawingScript
     {
         #region Fields
-        public readonly IReadOnlyList<Procedure> Scopes;
+        public readonly Script Script;
 
-        IEnumerable<Procedure> IDrawingScript.Procedures => this.Scopes;
+        Script IDrawingScript.Script => this.Script;
         #endregion
 
         #region Constructor
-        public DynamicDrawingScript(IReadOnlyList<Procedure> scopes)
+        public DynamicDrawingScript(Script script)
         {
-            this.Scopes = scopes;
-        }
-
-        public DynamicDrawingScript(Procedure scope)
-        {
-            this.Scopes = new[] { scope };
+            this.Script = script;
         }
         #endregion
 

@@ -9,7 +9,7 @@ namespace SimpleStackVM.Unity
         #region Fields
         public TextAsset JsonText;
 
-        public List<Procedure> Procedures;
+        public List<Function> Procedures;
         #endregion
 
         #region Methods
@@ -20,10 +20,10 @@ namespace SimpleStackVM.Unity
                 return;
             }
 
-            var jsonStr = this.JsonText.text;
-            var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
+            // var jsonStr = this.JsonText.text;
+            // var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
 
-            this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
+            // this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
         }
         #endregion
 

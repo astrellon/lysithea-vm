@@ -20,21 +20,21 @@ namespace SimpleStackVM.Unity
         {
             Instance = this;
             this.VMRunner.Init(32, this.OnRunHandler);
-            StandardLibrary.AddToVirtualMachine(this.vm);
+            // StandardLibrary.AddToVirtualMachine(this.vm);
             RandomLibrary.AddHandler(this.vm);
         }
 
         public void StartDrawing(IEnumerable<IDrawingScript> drawingScripts, string startScope)
         {
-            this.vm.ClearProcedures();
+            // this.vm.ClearProcedures();
             foreach (var drawingScript in drawingScripts)
             {
                 drawingScript.Awake();
-                this.vm.AddProcedures(drawingScript.Procedures);
+                // this.vm.AddProcedures(drawingScript.Procedures);
             }
 
             this.vm.Reset();
-            this.vm.SetCurrentProcedure(startScope);
+            // this.vm.SetCurrentProcedure(startScope);
             this.vm.Running = true;
             this.VMRunner.Running = true;
         }
@@ -91,7 +91,7 @@ namespace SimpleStackVM.Unity
             else if (command == "getHsv")
             {
                 var hue = vm.PopStack<NumberValue>();
-                vm.PushStack(new AnyValue(Color.HSVToRGB(hue, 0.8f, 0.75f)));
+                vm.PushStack(new AnyValue(Color.HSVToRGB(hue.FloatValue, 0.8f, 0.75f)));
             }
         }
 
@@ -187,21 +187,21 @@ namespace SimpleStackVM.Unity
             var scale = Vector3.one;
             if (scaleValue is NumberValue numberValue)
             {
-                scale *= numberValue;
+                scale *= numberValue.FloatValue;
             }
             else if (scaleValue is ObjectValue objectValue)
             {
                 if (objectValue.TryGetValue<NumberValue>("width", out var width))
                 {
-                    scale.x = width;
+                    scale.x = width.FloatValue;
                 }
                 if (objectValue.TryGetValue<NumberValue>("length", out var length))
                 {
-                    scale.z = length;
+                    scale.z = length.FloatValue;
                 }
                 if (objectValue.TryGetValue<NumberValue>("height", out var height))
                 {
-                    scale.y = height;
+                    scale.y = height.FloatValue;
                 }
             }
 
