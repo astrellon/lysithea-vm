@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -13,10 +12,10 @@ namespace SimpleStackVM
         #region Fields
         private readonly FixedStack<IValue> stack;
         private readonly FixedStack<ScopeFrame> stackTrace;
-        public readonly Scope BuiltinScope = new Scope();
 
+        public IReadOnlyScope? BuiltinScope = null;
         public Scope GlobalScope { get; private set; }
-        private Scope currentScope;
+        public Scope CurrentScope { get; private set; }
         private int lineCounter = 0;
 
         public bool Running;
@@ -30,8 +29,8 @@ namespace SimpleStackVM
         #region Constructor
         public VirtualMachine(int stackSize)
         {
-            this.GlobalScope = new Scope(this.BuiltinScope);
-            this.currentScope = this.GlobalScope;
+            this.GlobalScope = new Scope();
+            this.CurrentScope = this.GlobalScope;
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
@@ -40,13 +39,25 @@ namespace SimpleStackVM
         #region Methods
         public void Reset()
         {
-            this.GlobalScope = new Scope(this.BuiltinScope);
-            this.currentScope = this.GlobalScope;
+            this.GlobalScope = new Scope();
+            this.CurrentScope = this.GlobalScope;
             this.lineCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
             this.Running = false;
             this.Paused = false;
+        }
+
+        public void Execute(Script script)
+        {
+            this.BuiltinScope = script.BuiltinScope;
+            this.CurrentCode = script.Code;
+            this.Running = true;
+            this.Paused = false;
+            while (this.Running && !this.Paused)
+            {
+                this.Step();
+            }
         }
 
         public void Step()
@@ -91,7 +102,9 @@ namespace SimpleStackVM
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable, input needs to be a string: {key.ToString()}");
                         }
 
-                        if (this.currentScope.TryGetKey(key.ToString(), out var foundValue))
+                        var keyString = key.ToString();
+                        if (this.CurrentScope.TryGetKey(keyString, out var foundValue) ||
+                            (this.BuiltinScope != null && this.BuiltinScope.TryGetKey(keyString, out foundValue)))
                         {
                             this.PushStack(foundValue);
                         }
@@ -109,7 +122,8 @@ namespace SimpleStackVM
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {key.ToString()}");
                         }
 
-                        if (this.currentScope.TryGetProperty(arrayInput, out var foundValue))
+                        if (this.CurrentScope.TryGetProperty(arrayInput, out var foundValue) ||
+                            (this.BuiltinScope != null && this.BuiltinScope.TryGetProperty(arrayInput, out foundValue)))
                         {
                             this.PushStack(foundValue);
                         }
@@ -123,14 +137,14 @@ namespace SimpleStackVM
                     {
                         var key = codeLine.Input ?? this.PopStack();
                         var value = this.PopStack();
-                        this.currentScope.Define(key.ToString(), value);
+                        this.CurrentScope.Define(key.ToString(), value);
                         break;
                     }
                 case Operator.Set:
                     {
                         var key = codeLine.Input ?? this.PopStack();
                         var value = this.PopStack();
-                        if (!this.currentScope.TrySet(key.ToString(), value))
+                        if (!this.CurrentScope.TrySet(key.ToString(), value))
                         {
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to set variable that has not been defined: {key.ToString()} = {value.ToString()}");
                         }
@@ -235,7 +249,7 @@ namespace SimpleStackVM
             {
                 if (pushToStackTrace)
                 {
-                    this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.currentScope, this.lineCounter));
+                    this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
                 }
                 this.ExecuteFunction(foundProc.Value, numArgs);
             }
@@ -259,14 +273,14 @@ namespace SimpleStackVM
         public void ExecuteFunction(Function function, int numArgs = -1)
         {
             this.CurrentCode = function;
-            this.currentScope = new Scope(this.currentScope);
+            this.CurrentScope = new Scope(this.CurrentScope);
             this.lineCounter = 0;
 
             var args = this.GetArgs(numArgs >= 0 ? Math.Min(numArgs, function.Parameters.Count) : function.Parameters.Count);
             for (var i = 0; i < args.Count; i++)
             {
                 var argName = function.Parameters[i];
-                this.currentScope.Define(argName, args[i]);
+                this.CurrentScope.Define(argName, args[i]);
             }
         }
 
@@ -287,7 +301,7 @@ namespace SimpleStackVM
             }
 
             this.CurrentCode = scopeFrame.Function;
-            this.currentScope = scopeFrame.Scope;
+            this.CurrentScope = scopeFrame.Scope;
             this.lineCounter = scopeFrame.LineCounter;
             return true;
         }

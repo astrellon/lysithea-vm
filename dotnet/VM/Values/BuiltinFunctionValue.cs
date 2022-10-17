@@ -1,5 +1,3 @@
-using System;
-
 #nullable enable
 
 namespace SimpleStackVM
@@ -48,20 +46,8 @@ namespace SimpleStackVM
             return 1;
         }
 
-        public override string ToString()
-        {
-            return "builtin-function";
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
-
-        public static implicit operator BuiltinFunctionValue(BuiltinFunctionDelegate handler)
-        {
-            return new BuiltinFunctionValue(handler);
-        }
+        public override string ToString() => "builtin-function";
+        public override int GetHashCode() => this.Value.GetHashCode();
         #endregion
     }
 }

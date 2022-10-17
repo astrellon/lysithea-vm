@@ -22,19 +22,20 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(StandardArrayLibrary.Scope);
 
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
 
             var vm = new VirtualMachine(8);
-            vm.BuiltinScope.CombineScope(CustomScope);
-            vm.CurrentCode = code;
+            // vm.BuiltinScope.CombineScope(CustomScope);
+            // vm.CurrentCode = code;
 
             try
             {
-                vm.Running = true;
-                while (vm.Running && !vm.Paused)
-                {
-                    vm.Step();
-                }
+                // vm.Running = true;
+                // while (vm.Running && !vm.Paused)
+                // {
+                //     vm.Step();
+                // }
+                vm.Execute(script);
             }
             catch (VirtualMachineException exp)
             {
@@ -67,7 +68,7 @@ namespace SimpleStackVM
 
             result.Define("isShopEnabled", (vm, numArgs) =>
             {
-                vm.PushStack((BoolValue)IsShopEnabled);
+                vm.PushStack(IsShopEnabled);
             });
 
             result.Define("moveTo", (vm, numArgs) =>

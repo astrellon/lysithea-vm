@@ -10,37 +10,29 @@ namespace SimpleStackVM
         private static Random Rand = new Random();
         private static int Counter = 0;
 
-        private static readonly Scope CustomScope = CreateScope();
+        private static readonly Scope PerfTestScope = CreateScope();
 
         #region Methods
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineAssembler();
-            assembler.BuiltinScope.CombineScope(CustomScope);
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
+            assembler.BuiltinScope.CombineScope(PerfTestScope);
+            var script = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
 
             var vm = new VirtualMachine(8);
-            vm.CurrentCode = code;
 
             try
             {
                 var sw = Stopwatch.StartNew();
-                vm.Running = true;
-                while (vm.Running && !vm.Paused)
-                {
-                    vm.Step();
-                }
+                vm.Execute(script);
                 sw.Stop();
                 Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
 
                 vm.Reset();
                 Counter = 0;
                 sw = Stopwatch.StartNew();
-                vm.Running = true;
-                while (vm.Running && !vm.Paused)
-                {
-                    vm.Step();
-                }
+
+                vm.Execute(script);
                 sw.Stop();
                 Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
             }
@@ -59,20 +51,20 @@ namespace SimpleStackVM
 
             result.Define("rand", (vm, numArgs) =>
             {
-                vm.PushStack((NumberValue)Rand.NextDouble());
+                vm.PushStack(Rand.NextDouble());
             });
 
             result.Define("add", (vm, numArgs) =>
             {
                 var num1 = vm.PopStack<NumberValue>();
                 var num2 = vm.PopStack<NumberValue>();
-                vm.PushStack((NumberValue)(num1.Value + num2.Value));
+                vm.PushStack((num1.Value + num2.Value));
             });
 
             result.Define("isDone", (vm, numArgs) =>
             {
                 Counter++;
-                vm.PushStack((BoolValue)(Counter >= 1_000_000));
+                vm.PushStack((Counter >= 1_000_000));
             });
 
             result.Define("done", (vm, numArgs) =>

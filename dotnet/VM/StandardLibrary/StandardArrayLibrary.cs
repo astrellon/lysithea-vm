@@ -20,13 +20,13 @@ namespace SimpleStackVM
                 {"join", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var args = vm.GetArgs(numArgs);
-                    vm.PushStack(new ArrayValue(args));
+                    vm.PushStack(args);
                 })},
 
                 {"length", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<ArrayValue>();
-                    vm.PushStack(new NumberValue(top.Value.Count));
+                    vm.PushStack(top.Value.Count);
                 })},
 
                 {"set", new BuiltinFunctionValue((vm, numArgs) =>
@@ -86,14 +86,14 @@ namespace SimpleStackVM
                 {
                     var value = vm.PopStack();
                     var top = vm.PopStack<ArrayValue>();
-                    vm.PushStack(new BoolValue(Contains(top, value)));
+                    vm.PushStack(Contains(top, value));
                 })},
 
                 {"indexOf", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var value = vm.PopStack();
                     var top = vm.PopStack<ArrayValue>();
-                    vm.PushStack(new NumberValue(IndexOf(top, value)));
+                    vm.PushStack(IndexOf(top, value));
                 })},
 
                 {"sublist", new BuiltinFunctionValue((vm, numArgs) =>
@@ -105,7 +105,7 @@ namespace SimpleStackVM
                 })}
             };
 
-            result.Define("array", new ObjectValue(arrayFunctions));
+            result.Define("array", arrayFunctions);
 
             return result;
         }

@@ -36,6 +36,93 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+
+        #region Parse From Input
+        public Script ParseFromText(string input)
+        {
+            var tokens = VirtualMachineParser.Tokenize(input);
+            var parsed = VirtualMachineParser.ReadAllTokens(tokens);
+
+            var code = this.ParseGlobalFunction(parsed);
+            var scriptScope = new Scope();
+            scriptScope.CombineScope(this.BuiltinScope);
+
+            return new Script(scriptScope, code);
+        }
+
+        public Function ParseGlobalFunction(ArrayValue input)
+        {
+            var tempCodeLines = input.SelectMany(Parse).ToList();
+            return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
+        }
+
+        public List<ITempCodeLine> Parse(IValue input)
+        {
+            if (input is ArrayValue arrayValue)
+            {
+                if (!arrayValue.Any())
+                {
+                    return new List<ITempCodeLine>();
+                }
+
+                var first = arrayValue.First();
+                // If the first item in an array is a symbol we assume that it is a function call or a label
+                if (first is VariableValue firstSymbolValue)
+                {
+                    if (firstSymbolValue.IsLabel)
+                    {
+                        return new List<ITempCodeLine> { new LabelCodeLine(firstSymbolValue.Value) };
+                    }
+
+                    // Check for keywords
+                    var keywordParse = ParseKeyword(firstSymbolValue, arrayValue);
+                    if (keywordParse.Any())
+                    {
+                        return keywordParse;
+                    }
+
+                    // Attempt to parse as an op code
+                    var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
+                    if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
+                    {
+                        return new List<ITempCodeLine> { new CodeLine(opCode, arrayValue[1]) };
+                    }
+
+                    var result = new List<ITempCodeLine>();
+                    // Handle general opcode or function call.
+                    foreach (var item in arrayValue.Skip(1))
+                    {
+                        result.AddRange(Parse(item));
+                    }
+
+                    // If it is not an opcode then it must be a function call
+                    if (!isOpCode)
+                    {
+                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Count - 1));
+                    }
+                    else if (opCode != Operator.Push)
+                    {
+                        result.Add(new CodeLine(opCode, null));
+                    }
+
+                    return result;
+                }
+
+                // Any array that doesn't start with a symbol we assume it's a data array.
+            }
+            else if (input is VariableValue symbolValue)
+            {
+                if (!symbolValue.IsLabel)
+                {
+                    return new List<ITempCodeLine> { this.OptimiseGetSymbolValue(symbolValue) };
+                }
+            }
+
+            return new List<ITempCodeLine> { new CodeLine(Operator.Push, input) };
+        }
+        #endregion
+
+        #region Keyword Parsing
         public List<ITempCodeLine> ParseSet(ArrayValue input)
         {
             var result = this.Parse(input[2]);
@@ -163,6 +250,14 @@ namespace SimpleStackVM
             return new List<ITempCodeLine> { new CodeLine(Operator.Jump, jumpToStart ? loopLabel.Start : loopLabel.End) };
         }
 
+        public Function ParseFunction(ArrayValue input)
+        {
+            var parameters = ((ArrayValue)input[1]).Select(arg => arg.ToString()).ToList();
+            var tempCodeLines = input.Skip(2).SelectMany(Parse).ToList();
+
+            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
+        }
+
         public List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
@@ -184,104 +279,23 @@ namespace SimpleStackVM
 
             return new List<ITempCodeLine>();
         }
+        #endregion
 
-        public List<ITempCodeLine> Parse(IValue input)
-        {
-            if (input is ArrayValue arrayValue)
-            {
-                if (!arrayValue.Any())
-                {
-                    return new List<ITempCodeLine>();
-                }
-
-                var first = arrayValue.First();
-                // If the first item in an array is a symbol we assume that it is a function call or a label
-                if (first is VariableValue firstSymbolValue)
-                {
-                    if (firstSymbolValue.IsLabel)
-                    {
-                        return new List<ITempCodeLine> { new LabelCodeLine(firstSymbolValue.Value) };
-                    }
-
-                    // Check for keywords
-                    var keywordParse = ParseKeyword(firstSymbolValue, arrayValue);
-                    if (keywordParse.Any())
-                    {
-                        return keywordParse;
-                    }
-
-                    // Attempt to parse as an op code
-                    var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
-                    if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
-                    {
-                        return new List<ITempCodeLine> { new CodeLine(opCode, arrayValue[1]) };
-                    }
-
-                    var result = new List<ITempCodeLine>();
-                    // Handle general opcode or function call.
-                    foreach (var item in arrayValue.Skip(1))
-                    {
-                        result.AddRange(Parse(item));
-                    }
-
-                    // If it is not an opcode then it must be a function call
-                    if (!isOpCode)
-                    {
-                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Count - 1));
-                    }
-                    else if (opCode != Operator.Push)
-                    {
-                        result.Add(new CodeLine(opCode, null));
-                    }
-
-                    return result;
-                }
-
-                // Any array that doesn't start with a symbol we assume it's a data array.
-            }
-            else if (input is VariableValue symbolValue)
-            {
-                if (!symbolValue.IsLabel)
-                {
-                    return new List<ITempCodeLine> { this.OptimiseGetSymbolValue(symbolValue) };
-                }
-            }
-
-            return new List<ITempCodeLine> { new CodeLine(Operator.Push, input) };
-        }
-
-        public Function ParseFromText(string input)
-        {
-            var tokens = VirtualMachineParser.Tokenize(input);
-            var parsed = VirtualMachineParser.ReadAllTokens(tokens);
-            return this.ParseGlobalFunction(parsed);
-        }
-
-        public Function ParseFunction(ArrayValue input)
-        {
-            var parameters = ((ArrayValue)input[1]).Select(arg => arg.ToString()).ToList();
-            var tempCodeLines = input.Skip(2).SelectMany(Parse).ToList();
-
-            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
-        }
-
-        public Function ParseGlobalFunction(ArrayValue input)
-        {
-            var tempCodeLines = input.SelectMany(Parse).ToList();
-            return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
-        }
-
+        #region Helper Methods
         private IEnumerable<ITempCodeLine> OptimiseCallSymbolValue(VariableValue input, int numArgs)
         {
+            var numArgsValue = new NumberValue(numArgs);
+
             var getSymbol = GetSymbolValue(input);
             if (this.BuiltinScope.TryGet(getSymbol, out var value))
             {
-                yield return new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { value, (NumberValue)numArgs }));
+                yield return new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { value, numArgsValue }));
+
             }
             else
             {
                 yield return this.ParseGet(getSymbol);
-                yield return new CodeLine(Operator.Call, (NumberValue)(numArgs));
+                yield return new CodeLine(Operator.Call, numArgsValue);
             }
         }
 
@@ -352,6 +366,8 @@ namespace SimpleStackVM
             return input == Operator.Call || input == Operator.Jump ||
                 input == Operator.JumpTrue || input == Operator.JumpFalse;
         }
+        #endregion
+
         #endregion
     }
 }

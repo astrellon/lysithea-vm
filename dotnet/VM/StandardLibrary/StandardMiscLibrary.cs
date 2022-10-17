@@ -22,20 +22,20 @@ namespace SimpleStackVM
                 }
 
                 top = vm.PopStack();
-                vm.PushStack(new StringValue(top.ToString()));
+                vm.PushStack(top.ToString());
             });
 
             result.Define("typeof", (vm, numArgs) =>
             {
                 var top = vm.PopStack();
-                vm.PushStack(new StringValue(top.TypeName));
+                vm.PushStack(top.TypeName);
             });
 
             result.Define("compareTo", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new NumberValue(left.CompareTo(right)));
+                vm.PushStack(left.CompareTo(right));
             });
 
             result.Define("print", (vm, numArgs) =>

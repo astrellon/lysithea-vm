@@ -30,16 +30,6 @@ namespace SimpleStackVM
             return false;
         }
 
-        public override string ToString()
-        {
-            return this.Value;
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null) return 1;
@@ -50,6 +40,9 @@ namespace SimpleStackVM
 
             return 1;
         }
+
+        public override string ToString() => this.Value;
+        public override int GetHashCode() => this.Value.GetHashCode();
         #endregion
     }
 }

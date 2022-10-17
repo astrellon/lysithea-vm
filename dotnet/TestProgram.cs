@@ -17,19 +17,14 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(StandardMiscLibrary.Scope);
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(CustomScope);
-            var code = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
 
             var vm = new VirtualMachine(16);
-            vm.CurrentCode = code;
 
             try
             {
-                vm.Running = true;
                 var sw = Stopwatch.StartNew();
-                while (vm.Running && !vm.Paused)
-                {
-                    vm.Step();
-                }
+                vm.Execute(script);
                 sw.Stop();
                 Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds}ms");
             }
@@ -53,7 +48,7 @@ namespace SimpleStackVM
 
             result.Define("rand", (vm, numArgs) =>
             {
-                vm.PushStack((NumberValue)Rand.NextDouble());
+                vm.PushStack(Rand.NextDouble());
             });
 
             return result;

@@ -63,7 +63,7 @@ namespace SimpleStackVM
                 })}
             };
 
-            result.Define("assert", new ObjectValue(assertFunctions));
+            result.Define("assert", assertFunctions);
 
             return result;
         }

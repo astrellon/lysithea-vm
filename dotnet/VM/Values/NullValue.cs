@@ -9,7 +9,6 @@ namespace SimpleStackVM
         public const string RawValueString = "null";
 
         public string TypeName => "null";
-
         #endregion
 
         #region Methods
@@ -31,22 +30,15 @@ namespace SimpleStackVM
             return false;
         }
 
-        public override string ToString()
-        {
-            return RawValueString;
-        }
-
-        public override int GetHashCode()
-        {
-            return -1;
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null || other is NullValue) return 0;
 
             return 1;
         }
+
+        public override string ToString() => RawValueString;
+        public override int GetHashCode() => -1;
         #endregion
     }
 }

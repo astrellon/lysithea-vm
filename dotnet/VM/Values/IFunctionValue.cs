@@ -1,6 +1,4 @@
 namespace SimpleStackVM
 {
-    public interface IFunctionValue : IValue
-    {
-    }
+    public interface IFunctionValue : IValue { }
 }

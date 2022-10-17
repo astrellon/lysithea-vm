@@ -28,22 +28,11 @@ namespace SimpleStackVM
             {
                 return otherBoolValue.Value == this.Value;
             }
-            if (other is NullValue)
-            {
-                return this.Value == false;
-            }
             return false;
         }
 
-        public override string ToString()
-        {
-            return this.Value ? "true" : "false";
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
+        public override string ToString() => this.Value ? "true" : "false";
+        public override int GetHashCode() => this.Value.GetHashCode();
 
         public int CompareTo(IValue? other)
         {
@@ -55,8 +44,6 @@ namespace SimpleStackVM
 
             return 1;
         }
-
-        public static explicit operator BoolValue(bool input) => new BoolValue(input);
         #endregion
     }
 }

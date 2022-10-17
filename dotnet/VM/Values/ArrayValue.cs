@@ -1,5 +1,5 @@
-using System;
 using System.Text;
+using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -94,10 +94,7 @@ namespace SimpleStackVM
             return result.ToString();
         }
 
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
+        public override int GetHashCode() => this.Value.GetHashCode();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetIndex(int index)
@@ -136,15 +133,8 @@ namespace SimpleStackVM
             return 1;
         }
 
-        public IEnumerator<IValue> GetEnumerator()
-        {
-            return Value.GetEnumerator();
-        }
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return ((System.Collections.IEnumerable)Value).GetEnumerator();
-        }
+        public IEnumerator<IValue> GetEnumerator() => Value.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Value).GetEnumerator();
         #endregion
     }
 }

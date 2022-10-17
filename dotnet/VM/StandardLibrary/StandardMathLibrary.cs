@@ -19,67 +19,67 @@ namespace SimpleStackVM
 
             var mathFunctions = new Dictionary<string, IValue>
             {
-                {"E", new NumberValue(System.Math.E)},
-                {"PI", new NumberValue(System.Math.PI)},
+                {"E", new NumberValue(Math.E)},
+                {"PI", new NumberValue(Math.PI)},
                 {"DegToRad", new NumberValue(DegToRad)},
 
                 {"sin", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Sin(top.Value)));
+                    vm.PushStack(Math.Sin(top.Value));
                 })},
                 {"cos", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Cos(top.Value)));
+                    vm.PushStack(Math.Cos(top.Value));
                 })},
                 {"tan", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Tan(top.Value)));
+                    vm.PushStack(Math.Tan(top.Value));
                 })},
 
                 {"pow", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var y = vm.PopStack<NumberValue>();
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Pow(x.Value, y.Value)));
+                    vm.PushStack(Math.Pow(x.Value, y.Value));
                 })},
 
                 {"exp", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Exp(x.Value)));
+                    vm.PushStack(Math.Exp(x.Value));
                 })},
 
                 {"floor", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Floor(x.Value)));
+                    vm.PushStack(Math.Floor(x.Value));
                 })},
 
                 {"ceil", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Ceiling(x.Value)));
+                    vm.PushStack(Math.Ceiling(x.Value));
                 })},
 
                 {"round", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Round(x.Value)));
+                    vm.PushStack(Math.Round(x.Value));
                 })},
 
                 {"isFinite", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new BoolValue(double.IsFinite(x.Value)));
+                    vm.PushStack(double.IsFinite(x.Value));
                 })},
 
                 {"isNaN", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var x = vm.PopStack<NumberValue>();
-                    vm.PushStack(new BoolValue(double.IsNaN(x.Value)));
+                    vm.PushStack(double.IsNaN(x.Value));
                 })},
 
                 {"parse", new BuiltinFunctionValue((vm, numArgs) =>
@@ -91,20 +91,19 @@ namespace SimpleStackVM
                     }
 
                     top = vm.PopStack();
-                    var num = double.Parse(top.ToString());
-                    vm.PushStack(new NumberValue(num));
+                    vm.PushStack(double.Parse(top.ToString()));
                 })},
 
                 {"log", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Log(top.Value)));
+                    vm.PushStack(Math.Log(top.Value));
                 })},
 
                 {"abs", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
-                    vm.PushStack(new NumberValue(System.Math.Abs(top.Value)));
+                    vm.PushStack(Math.Abs(top.Value));
                 })},
 
                 {"max", new BuiltinFunctionValue((vm, numArgs) =>
@@ -122,7 +121,7 @@ namespace SimpleStackVM
                 })},
             };
 
-            result.Define("math", new ObjectValue(mathFunctions));
+            result.Define("math", mathFunctions);
 
             return result;
         }

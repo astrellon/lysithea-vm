@@ -96,11 +96,6 @@ namespace SimpleStackVM
             return result.ToString();
         }
 
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null) return 1;
@@ -134,20 +129,10 @@ namespace SimpleStackVM
             return 1;
         }
 
-        public bool ContainsKey(string key)
-        {
-            return Value.ContainsKey(key);
-        }
-
-        public IEnumerator<KeyValuePair<string, IValue>> GetEnumerator()
-        {
-            return Value.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return ((IEnumerable)Value).GetEnumerator();
-        }
+        public override int GetHashCode() => this.Value.GetHashCode();
+        public bool ContainsKey(string key) => Value.ContainsKey(key);
+        public IEnumerator<KeyValuePair<string, IValue>> GetEnumerator() => Value.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Value).GetEnumerator();
         #endregion
     }
 }

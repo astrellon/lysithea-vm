@@ -70,11 +70,11 @@ namespace SimpleStackVM
                 {"length", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<ObjectValue>();
-                    vm.PushStack(new NumberValue(top.Value.Count));
+                    vm.PushStack(top.Value.Count);
                 })}
             };
 
-            result.Define("object", new ObjectValue(objectFunctions));
+            result.Define("object", objectFunctions);
 
             return result;
         }

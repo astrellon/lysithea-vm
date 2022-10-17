@@ -19,48 +19,48 @@ namespace SimpleStackVM
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new BoolValue(left.CompareTo(right) > 0));
+                vm.PushStack(left.CompareTo(right) > 0);
             });
 
             result.Define(">=", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new BoolValue(left.CompareTo(right) >= 0));
+                vm.PushStack(left.CompareTo(right) >= 0);
             });
 
             result.Define("==", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new BoolValue(left.CompareTo(right) == 0));
+                vm.PushStack(left.CompareTo(right) == 0);
             });
 
             result.Define("!=", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new BoolValue(left.CompareTo(right) != 0));
+                vm.PushStack(left.CompareTo(right) != 0);
             });
 
             result.Define("<", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new BoolValue(left.CompareTo(right) < 0));
+                vm.PushStack(left.CompareTo(right) < 0);
             });
 
             result.Define("<=", (vm, numArgs) =>
             {
                 var right = vm.PopStack();
                 var left = vm.PopStack();
-                vm.PushStack(new BoolValue(left.CompareTo(right) <= 0));
+                vm.PushStack(left.CompareTo(right) <= 0);
             });
 
             result.Define("!", (vm, numArgs) =>
             {
                 var top = vm.PopStack<BoolValue>();
-                vm.PushStack(new BoolValue(!top.Value));
+                vm.PushStack(!top.Value);
             });
 
             result.Define("+", (vm, numArgs) =>
@@ -74,7 +74,7 @@ namespace SimpleStackVM
                 if (args[0] is StringValue)
                 {
                     var result = string.Join("", args);
-                    vm.PushStack(new StringValue(result));
+                    vm.PushStack(result);
                 }
                 else
                 {
@@ -90,7 +90,7 @@ namespace SimpleStackVM
                             throw new Exception("Add only works on numbers and strings");
                         }
                     }
-                    vm.PushStack(new NumberValue(result));
+                    vm.PushStack(result);
                 }
             });
 
@@ -98,28 +98,28 @@ namespace SimpleStackVM
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(left.Value - right.Value));
+                vm.PushStack(left.Value - right.Value);
             });
 
             result.Define("*", (vm, numArgs) =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(left.Value * right.Value));
+                vm.PushStack(left.Value * right.Value);
             });
 
             result.Define("/", (vm, numArgs) =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(left.Value / right.Value));
+                vm.PushStack(left.Value / right.Value);
             });
 
             result.Define("%", (vm, numArgs) =>
             {
                 var right = vm.PopStack<NumberValue>();
                 var left = vm.PopStack<NumberValue>();
-                vm.PushStack(new NumberValue(left.Value % right.Value));
+                vm.PushStack(left.Value % right.Value);
             });
 
             return result;

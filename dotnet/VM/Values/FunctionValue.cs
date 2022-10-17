@@ -1,5 +1,3 @@
-using System;
-
 #nullable enable
 
 namespace SimpleStackVM
@@ -46,15 +44,8 @@ namespace SimpleStackVM
             return 1;
         }
 
-        public override string ToString()
-        {
-            return $"function:{this.Value.Name}";
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
+        public override string ToString() => $"function:{this.Value.Name}";
+        public override int GetHashCode() => this.Value.GetHashCode();
         #endregion
     }
 }

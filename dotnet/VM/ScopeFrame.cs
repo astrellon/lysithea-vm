@@ -1,5 +1,3 @@
-using System;
-
 namespace SimpleStackVM
 {
     public class ScopeFrame

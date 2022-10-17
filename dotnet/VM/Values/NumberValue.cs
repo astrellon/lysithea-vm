@@ -31,16 +31,6 @@ namespace SimpleStackVM
             return false;
         }
 
-        public override string ToString()
-        {
-            return this.Value.ToString();
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Value.GetHashCode();
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null) return 1;
@@ -52,7 +42,8 @@ namespace SimpleStackVM
             return 1;
         }
 
-        public static explicit operator NumberValue(double input) => new NumberValue(input);
+        public override string ToString() => this.Value.ToString();
+        public override int GetHashCode() => this.Value.GetHashCode();
         #endregion
     }
 }

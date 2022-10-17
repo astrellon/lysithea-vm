@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 #nullable enable
 
@@ -21,13 +19,13 @@ namespace SimpleStackVM
         private readonly Dictionary<string, IValue> values = new Dictionary<string, IValue>();
         public IReadOnlyDictionary<string, IValue> Values => this.values;
 
-        private readonly Scope? parent;
+        public Scope? Parent;
         #endregion
 
         #region Constructor
         public Scope(Scope? parent = null)
         {
-            this.parent = parent;
+            this.Parent = parent;
         }
         #endregion
 
@@ -40,19 +38,16 @@ namespace SimpleStackVM
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Define(string key, IValue value)
         {
             this.values[key] = value;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction)
         {
             this.values[key] = new BuiltinFunctionValue(builtinFunction);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TrySet(string key, IValue value)
         {
             if (this.values.ContainsKey(key))
@@ -61,9 +56,9 @@ namespace SimpleStackVM
                 return true;
             }
 
-            if (this.parent != null)
+            if (this.Parent != null)
             {
-                return this.parent.TrySet(key, value);
+                return this.Parent.TrySet(key, value);
             }
 
             return false;
@@ -87,9 +82,9 @@ namespace SimpleStackVM
                 return true;
             }
 
-            if (this.parent != null)
+            if (this.Parent != null)
             {
-                return this.parent.TryGetKey(key, out value);
+                return this.Parent.TryGetKey(key, out value);
             }
 
             value = NullValue.Value;
