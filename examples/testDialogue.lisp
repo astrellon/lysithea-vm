@@ -1,14 +1,15 @@
+(define playerName "Unset")
 (define main (function ()
     (say "Here is the test dialogue tree")
-    (say "What is your name? ")
+    (say "What is your name?")
     (getPlayerName)
-    (say "Hello {playerName}, hope you are well.")
+    (say (+ "Hello " playerName ", hope you are well."))
 
     (:start)
 
     (if (isShopEnabled)
         (
-            (randomSay ("Welcome to my shop {playerName}" "Come on in! What can I do for you {playerName}?"))
+            (randomSay (array.join (+ "Welcome to my shop " playerName) (+ "Come on in! What can I do for you " playerName "?")))
             (choice "Open Shop" openShop)
         )
         (randomSay ("Welcome stranger" "Hey, come on in"))
@@ -47,7 +48,7 @@
 ))
 
 (define goodBye (function ()
-    (randomSay ("Catch you around!" "See you later {playerName}!"))
+    (randomSay (array.join "Catch you around!" (+ "See you later " playerName "!")))
 ))
 
 (main)

@@ -10,7 +10,6 @@ namespace SimpleStackVM
     {
         private static Random Rand = new Random();
         private static bool IsShopEnabled = false;
-        private static string PlayerName = "<Unset>";
 
         private static List<IFunctionValue> ChoiceBuffer = new List<IFunctionValue>();
         private static readonly IReadOnlyScope CustomScope = CreateScope();
@@ -19,10 +18,11 @@ namespace SimpleStackVM
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineAssembler();
-            var sw1 = Stopwatch.StartNew();
+            assembler.BuiltinScope.CombineScope(CustomScope);
+            assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
+            assembler.BuiltinScope.CombineScope(StandardArrayLibrary.Scope);
+
             var code = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
-            sw1.Stop();
-            Console.WriteLine($"Time to parse: {sw1.ElapsedMilliseconds}ms");
 
             var vm = new VirtualMachine(8);
             vm.BuiltinScope.CombineScope(CustomScope);
@@ -56,8 +56,8 @@ namespace SimpleStackVM
 
             result.Define("getPlayerName", (vm, numArgs) =>
             {
-                PlayerName = Console.ReadLine()?.Trim() ?? "<Empty>";
-                // PlayerName = "Alan";
+                var name = Console.ReadLine()?.Trim() ?? "<Empty>";
+                vm.GlobalScope.Define("playerName", new StringValue(name));
             });
 
             result.Define("randomSay", (vm, numArgs) =>
@@ -155,9 +155,7 @@ namespace SimpleStackVM
 
         private static void Say(IValue input)
         {
-            var text = input.ToString();
-            text = text.Replace("{playerName}", PlayerName);
-            Console.WriteLine($"Say: {text}");
+            Console.WriteLine($"Say: {input.ToString()}");
         }
 
         private static void RandomSay(ArrayValue input)

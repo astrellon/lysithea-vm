@@ -5,6 +5,8 @@ import fs from "fs";
 import readline from "readline";
 import Scope from "../src/scope";
 import VirtualMachineAssembler from "../src/assembler";
+import { operatorScope } from "../src/standardLibrary/standardOperators";
+import { arrayScope } from "../src/standardLibrary/standardArrayLibrary";
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -12,7 +14,6 @@ const rl = readline.createInterface({
 });
 
 let isShopEnabled = false;
-let playerName = '<Unset>';
 let choiceBuffer: (FunctionValue | BuiltinFunctionValue)[] = [];
 
 const dialogueScope = new Scope();
@@ -25,7 +26,7 @@ dialogueScope.define('getPlayerName', (vm, numArgs) =>
     vm.paused = true;
     rl.question('', (name) =>
     {
-        playerName = name;
+        vm.globalScope.define('playerName', name);
         vm.paused = false;
     });
 });
@@ -49,7 +50,7 @@ dialogueScope.define('waitForChoice', (vm, numArgs) =>
 
     vm.paused = true;
     let choiceIndexStr = '-1';
-    rl.question('Enter choice:', (choice) =>
+    rl.question('Enter choice: ', (choice) =>
     {
         choiceIndexStr = choice;
         let choiceIndex = Number.parseInt(choiceIndexStr);
@@ -85,7 +86,7 @@ dialogueScope.define('moveTo', (vm, numArgs) =>
 
 function say(value: Value)
 {
-    const text = value?.toString().replace('{playerName}', playerName);
+    const text = valueToString(value);
     console.log('Say:', text);
 }
 
@@ -119,6 +120,8 @@ const file = fs.readFileSync('../examples/testDialogue.lisp', { encoding: 'utf-8
 
 const assembler = new VirtualMachineAssembler();
 assembler.builtinScope.combineScope(dialogueScope);
+assembler.builtinScope.combineScope(operatorScope);
+assembler.builtinScope.combineScope(arrayScope);
 const code = assembler.parseFromText(file);
 
 const vm = new VirtualMachine(64);
@@ -128,4 +131,9 @@ vm.currentCode = code;
 vm.running = true;
 
 const runner = new VirtualMachineRunner(vm);
-runner.start();
+runner.start()
+    .then(() =>
+    {
+        console.log('Program done!');
+        process.exit(1);
+    });

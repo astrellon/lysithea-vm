@@ -8,6 +8,7 @@ export default class VirtualMachine
     public get builtinScope() { return this._builtinScope; }
 
     private _globalScope: Scope;
+    public get globalScope() { return this._globalScope; }
     private _currentScope: Scope;
 
     private _lineCounter: number = 0;

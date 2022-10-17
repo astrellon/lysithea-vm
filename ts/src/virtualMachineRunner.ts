@@ -11,6 +11,7 @@ export default class VirtualMachineRunner
 
     public isWaiting: boolean = false;
     private interval: number = -1;
+    private onComplete: (value: any) => void = () => {}
 
     constructor (vm: VirtualMachine)
     {
@@ -52,14 +53,20 @@ export default class VirtualMachineRunner
         if (!this._vm.running)
         {
             this.running = false;
+            this.onComplete(null);
             clearInterval(this.interval);
         }
     }
 
-    public start()
+    public start(): Promise<any>
     {
         this.running = true;
         this._vm.running = true;
         this.interval = setInterval(this.step, 1);
+
+        return new Promise((resolve, reject) =>
+        {
+            this.onComplete = resolve;
+        });
     }
 }

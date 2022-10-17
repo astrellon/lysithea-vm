@@ -15,7 +15,7 @@ namespace SimpleStackVM
         private readonly FixedStack<ScopeFrame> stackTrace;
         public readonly Scope BuiltinScope = new Scope();
 
-        private Scope globalScope;
+        public Scope GlobalScope { get; private set; }
         private Scope currentScope;
         private int lineCounter = 0;
 
@@ -30,8 +30,8 @@ namespace SimpleStackVM
         #region Constructor
         public VirtualMachine(int stackSize)
         {
-            this.globalScope = new Scope(this.BuiltinScope);
-            this.currentScope = this.globalScope;
+            this.GlobalScope = new Scope(this.BuiltinScope);
+            this.currentScope = this.GlobalScope;
             this.stack = new FixedStack<IValue>(stackSize);
             this.stackTrace = new FixedStack<ScopeFrame>(stackSize);
         }
@@ -40,8 +40,8 @@ namespace SimpleStackVM
         #region Methods
         public void Reset()
         {
-            this.globalScope = new Scope(this.BuiltinScope);
-            this.currentScope = this.globalScope;
+            this.GlobalScope = new Scope(this.BuiltinScope);
+            this.currentScope = this.GlobalScope;
             this.lineCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
