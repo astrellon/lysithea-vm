@@ -155,7 +155,7 @@ namespace SimpleStackVM
                         var label = codeLine.Input ?? this.PopStack();
 
                         var top = this.PopStack();
-                        if (top.Equals(BoolValue.False))
+                        if (top.CompareTo(BoolValue.False) == 0)
                         {
                             this.Jump(label.ToString());
                         }
@@ -165,7 +165,7 @@ namespace SimpleStackVM
                     {
                         var label = codeLine.Input ?? this.PopStack();
                         var top = this.PopStack();
-                        if (top.Equals(BoolValue.True))
+                        if (top.CompareTo(BoolValue.True) == 0)
                         {
                             this.Jump(label.ToString());
                         }
@@ -277,7 +277,7 @@ namespace SimpleStackVM
             this.lineCounter = 0;
 
             var args = this.GetArgs(numArgs >= 0 ? Math.Min(numArgs, function.Parameters.Count) : function.Parameters.Count);
-            for (var i = 0; i < args.Count; i++)
+            for (var i = 0; i < args.ArrayLength; i++)
             {
                 var argName = function.Parameters[i];
                 this.CurrentScope.Define(argName, args[i]);

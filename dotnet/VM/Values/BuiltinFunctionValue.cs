@@ -20,17 +20,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public override bool Equals(object? other)
-        {
-            if (other == null) return false;
-            if (other is BuiltinFunctionValue otherProc)
-            {
-                return this.Value == otherProc.Value;
-            }
-
-            return false;
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null || !(other is BuiltinFunctionValue otherFunction))
@@ -47,7 +36,6 @@ namespace SimpleStackVM
         }
 
         public override string ToString() => "builtin-function";
-        public override int GetHashCode() => this.Value.GetHashCode();
         #endregion
     }
 }

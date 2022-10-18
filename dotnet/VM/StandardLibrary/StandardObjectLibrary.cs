@@ -74,7 +74,7 @@ namespace SimpleStackVM
                 })}
             };
 
-            result.Define("object", objectFunctions);
+            result.Define("object", new ObjectValue(objectFunctions));
 
             return result;
         }

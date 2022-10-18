@@ -12,24 +12,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public override bool Equals(object? other)
-        {
-            if (other == null) return true;
-            if (other is string str)
-            {
-                return str == RawValueString;
-            }
-            if (other is NullValue otherNull)
-            {
-                return true;
-            }
-            if (other is BoolValue boolValue)
-            {
-                return boolValue.Value == false;
-            }
-            return false;
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null || other is NullValue) return 0;
@@ -38,7 +20,6 @@ namespace SimpleStackVM
         }
 
         public override string ToString() => RawValueString;
-        public override int GetHashCode() => -1;
         #endregion
     }
 }

@@ -8,17 +8,14 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace SimpleStackVM
 {
-    public struct ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
+    public struct ObjectValue : IObjectValue
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;
-
-        public IEnumerable<string> Keys => Value.Keys;
-        public IEnumerable<IValue> Values => Value.Values;
-        public int Count => Value.Count;
-        public IValue this[string key] => Value[key];
-
         public string TypeName => "object";
+
+        public IEnumerable<KeyValuePair<string, IValue>> ObjectValues => this.Value;
+        public int ObjectLength => this.Value.Count;
         #endregion
 
         #region Constructor
@@ -46,32 +43,6 @@ namespace SimpleStackVM
             }
 
             value = default(T);
-            return false;
-        }
-
-        public override bool Equals(object? other)
-        {
-            if (other == null) return false;
-            if (other is ObjectValue otherObject)
-            {
-                if (this.Value.Count != otherObject.Value.Count)
-                {
-                    return false;
-                }
-
-                foreach (var kvp in this.Value)
-                {
-                    if (otherObject.Value.TryGetValue(kvp.Key, out var otherKvp))
-                    {
-                        if (kvp.Value.CompareTo(otherKvp) != 0)
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            }
             return false;
         }
 
@@ -128,11 +99,6 @@ namespace SimpleStackVM
 
             return 1;
         }
-
-        public override int GetHashCode() => this.Value.GetHashCode();
-        public bool ContainsKey(string key) => Value.ContainsKey(key);
-        public IEnumerator<KeyValuePair<string, IValue>> GetEnumerator() => Value.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Value).GetEnumerator();
         #endregion
     }
 }

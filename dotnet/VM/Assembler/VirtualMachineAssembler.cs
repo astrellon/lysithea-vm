@@ -52,7 +52,7 @@ namespace SimpleStackVM
 
         public Function ParseGlobalFunction(ArrayValue input)
         {
-            var tempCodeLines = input.SelectMany(Parse).ToList();
+            var tempCodeLines = input.Value.SelectMany(Parse).ToList();
             return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
         }
 
@@ -60,12 +60,12 @@ namespace SimpleStackVM
         {
             if (input is ArrayValue arrayValue)
             {
-                if (!arrayValue.Any())
+                if (!arrayValue.Value.Any())
                 {
                     return new List<ITempCodeLine>();
                 }
 
-                var first = arrayValue.First();
+                var first = arrayValue.Value.First();
                 // If the first item in an array is a symbol we assume that it is a function call or a label
                 if (first is VariableValue firstSymbolValue)
                 {
@@ -90,7 +90,7 @@ namespace SimpleStackVM
 
                     var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
-                    foreach (var item in arrayValue.Skip(1))
+                    foreach (var item in arrayValue.Value.Skip(1))
                     {
                         result.AddRange(Parse(item));
                     }
@@ -98,7 +98,7 @@ namespace SimpleStackVM
                     // If it is not an opcode then it must be a function call
                     if (!isOpCode)
                     {
-                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Count - 1));
+                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.ArrayLength - 1));
                     }
                     else if (opCode != Operator.Push)
                     {
@@ -147,7 +147,7 @@ namespace SimpleStackVM
 
         public List<ITempCodeLine> ParseLoop(ArrayValue input)
         {
-            if (input.Count < 3)
+            if (input.ArrayLength < 3)
             {
                 throw new Exception("Loop input has too few inputs");
             }
@@ -163,7 +163,7 @@ namespace SimpleStackVM
             result.AddRange(Parse(comparisonCall));
 
             result.Add(new CodeLine(Operator.JumpFalse, labelEnd));
-            for (var i = 2; i < input.Count; i++)
+            for (var i = 2; i < input.ArrayLength; i++)
             {
                 result.AddRange(Parse(input[i]));
             }
@@ -177,11 +177,11 @@ namespace SimpleStackVM
 
         public List<ITempCodeLine> ParseCond(ArrayValue input, bool isIfStatement)
         {
-            if (input.Count < 3)
+            if (input.ArrayLength < 3)
             {
                 throw new Exception("Condition input has too few inputs");
             }
-            if (input.Count > 4)
+            if (input.ArrayLength > 4)
             {
                 throw new Exception("Condition input has too many inputs!");
             }
@@ -190,7 +190,7 @@ namespace SimpleStackVM
             var labelElse = $":CondElse{ifLabelNum}";
             var labelEnd = $":CondEnd{ifLabelNum}";
 
-            var hasElseCall = input.Count == 4;
+            var hasElseCall = input.ArrayLength == 4;
             var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
 
             var comparisonCall = (ArrayValue)input[1];
@@ -231,9 +231,9 @@ namespace SimpleStackVM
 
         public IEnumerable<ITempCodeLine> ParseFlatten(ArrayValue input)
         {
-            if (input.All(i => i is ArrayValue))
+            if (input.Value.All(i => i is ArrayValue))
             {
-                return input.SelectMany(Parse);
+                return input.Value.SelectMany(Parse);
             }
 
             return Parse(input);
@@ -252,13 +252,13 @@ namespace SimpleStackVM
 
         public Function ParseFunction(ArrayValue input)
         {
-            var parameters = ((ArrayValue)input[1]).Select(arg => arg.ToString()).ToList();
-            var tempCodeLines = input.Skip(2).SelectMany(Parse).ToList();
+            var parameters = ((ArrayValue)input[1]).Value.Select(arg => arg.ToString()).ToList();
+            var tempCodeLines = input.Value.Skip(2).SelectMany(Parse).ToList();
 
             return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
         }
 
-        public List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
+        public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
             {

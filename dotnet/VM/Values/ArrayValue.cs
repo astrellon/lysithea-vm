@@ -1,23 +1,25 @@
 using System.Text;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
 namespace SimpleStackVM
 {
-    public struct ArrayValue : IValue, IReadOnlyList<IValue>
+    public struct ArrayValue : IArrayValue
     {
         #region Fields
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);
 
         public readonly IReadOnlyList<IValue> Value;
 
-        public int Count => Value.Count;
+        public string TypeName => "array";
+
+        public IEnumerable<IValue> ArrayValues => this.Value;
+        public int ArrayLength => this.Value.Count;
         public IValue this[int index] => Value[this.GetIndex(index)];
 
-        public string TypeName => "array";
         #endregion
 
         #region Constructor
@@ -28,18 +30,20 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public bool TryGet(IValue indexValue, out IValue result)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetIndex(int index)
         {
-            var index = -1;
-            if (indexValue is NumberValue indexNum)
+            if (index < 0)
             {
-                index = indexNum.IntValue;
-            }
-            else if (indexValue is StringValue || indexValue is VariableValue)
-            {
-                int.TryParse(indexValue.ToString(), out index);
+                return this.Value.Count + index;
             }
 
+            return index;
+        }
+
+        public bool TryGet(int index, [NotNullWhen(true)] out IValue result)
+        {
+            index = this.GetIndex(index);
             if (index >= 0 && index < this.Value.Count)
             {
                 result = this.Value[index];
@@ -47,30 +51,6 @@ namespace SimpleStackVM
             }
 
             result = NullValue.Value;
-            return false;
-        }
-
-        public override bool Equals(object? other)
-        {
-            if (other == null) return false;
-            if (other is ArrayValue otherArray)
-            {
-                if (this.Value.Count != otherArray.Value.Count)
-                {
-                    return false;
-                }
-
-                for (var i = 0; i < this.Value.Count; i++)
-                {
-                    if (!this.Value[i].Equals(otherArray.Value[i]))
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-
             return false;
         }
 
@@ -92,19 +72,6 @@ namespace SimpleStackVM
 
             result.Append(')');
             return result.ToString();
-        }
-
-        public override int GetHashCode() => this.Value.GetHashCode();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetIndex(int index)
-        {
-            if (index < 0)
-            {
-                return this.Value.Count + index;
-            }
-
-            return index;
         }
 
         public int CompareTo(IValue? other)
@@ -132,9 +99,6 @@ namespace SimpleStackVM
 
             return 1;
         }
-
-        public IEnumerator<IValue> GetEnumerator() => Value.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Value).GetEnumerator();
         #endregion
     }
 }

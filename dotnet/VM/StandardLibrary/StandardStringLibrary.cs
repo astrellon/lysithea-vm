@@ -71,13 +71,13 @@ namespace SimpleStackVM
                 {"join", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var args = vm.GetArgs(numArgs);
-                    var separator = args.First().ToString();
-                    var result = string.Join(separator, args.Skip(1));
+                    var separator = args.Value.First().ToString();
+                    var result = string.Join(separator, args.Value.Skip(1));
                     vm.PushStack(result);
                 })}
             };
 
-            result.Define("string", stringFunctions);
+            result.Define("string", new ObjectValue(stringFunctions));
 
             return result;
         }

@@ -96,9 +96,9 @@ namespace SimpleStackVM
         public bool TryGetProperty(ArrayValue input, out IValue value)
         {
             this.TryGetKey(input[0].ToString(), out var current);
-            for (var i = 1; i < input.Count; i++)
+            for (var i = 1; i < input.ArrayLength; i++)
             {
-                if (current is ObjectValue currentObject)
+                if (current is IObjectValue currentObject)
                 {
                     if (!currentObject.TryGetValue(input[i].ToString(), out current))
                     {
@@ -106,12 +106,15 @@ namespace SimpleStackVM
                         return false;
                     }
                 }
-                else if (current is ArrayValue currentArray)
+                else if (current is IArrayValue currentArray)
                 {
-                    if (!currentArray.TryGet(input[i], out current))
+                    if (TryParseIndex(input[i], out var index))
                     {
-                        value = NullValue.Value;
-                        return false;
+                        if (!currentArray.TryGet(index, out current))
+                        {
+                            value = NullValue.Value;
+                            return false;
+                        }
                     }
                 }
                 else
@@ -123,6 +126,22 @@ namespace SimpleStackVM
 
             value = current;
             return true;
+        }
+
+        public static bool TryParseIndex(IValue input, out int result)
+        {
+            if (input is NumberValue numberValue)
+            {
+                result = numberValue.IntValue;
+                return result >= 0;
+            }
+            else if (input is StringValue stringValue && int.TryParse(stringValue.Value, out result))
+            {
+                return true;
+            }
+
+            result = -1;
+            return false;
         }
         #endregion
     }
