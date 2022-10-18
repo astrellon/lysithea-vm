@@ -1,4 +1,3 @@
-#if BENCHMARK
 using System;
 using System.IO;
 using System.Linq;
@@ -142,4 +141,3 @@ namespace SimpleStackVM
         #endregion
     }
 }
-#endif
