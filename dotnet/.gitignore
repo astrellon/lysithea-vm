@@ -1,3 +1,4 @@
-/[Bb]in/
-/[Oo]bj/
-/[Rr]elease/
+/**/[Bb]in/
+/**/[Oo]bj/
+/**/[Rr]elease/
+/**/BenchmarkDotNet.Artifacts

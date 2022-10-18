@@ -22,19 +22,12 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(StandardArrayLibrary.Scope);
 
-            var script = assembler.ParseFromText(File.ReadAllText("../examples/testDialogue.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testDialogue.lisp"));
 
             var vm = new VirtualMachine(8);
-            // vm.BuiltinScope.CombineScope(CustomScope);
-            // vm.CurrentCode = code;
 
             try
             {
-                // vm.Running = true;
-                // while (vm.Running && !vm.Paused)
-                // {
-                //     vm.Step();
-                // }
                 vm.Execute(script);
             }
             catch (VirtualMachineException exp)

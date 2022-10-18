@@ -139,6 +139,10 @@ namespace SimpleStackVM
             {
                 return true;
             }
+            else if (input is VariableValue variableValue && int.TryParse(variableValue.Value, out result))
+            {
+                return true;
+            }
 
             result = -1;
             return false;

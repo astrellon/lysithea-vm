@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/perfTest.csproj",
+                "${workspaceFolder}/Examples/PerfTest/perfTest.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,19 +19,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/dialogueTree.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build-run-commands",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/runCommands.csproj",
+                "${workspaceFolder}/Examples/DialogueTree/dialogueTree.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -43,7 +31,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/standardLibrary.csproj",
+                "${workspaceFolder}/Examples/StandardLibraryTest/standardLibrary.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -55,7 +43,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/testProgram.csproj",
+                "${workspaceFolder}/Examples/TestProgram/testProgram.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

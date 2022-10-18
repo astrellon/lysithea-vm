@@ -113,6 +113,43 @@ namespace SimpleStackVM
             var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
         }
+
+        public static int GeneralCompareTo(IObjectValue left, IValue? right)
+        {
+            if (left == right)
+            {
+                return 0;
+            }
+
+            if (left == null || !(right is IObjectValue rightObject))
+            {
+                return 1;
+            }
+
+            var compareLength = left.ObjectLength.CompareTo(rightObject.ObjectLength);
+            if (compareLength != 0)
+            {
+                return compareLength;
+            }
+
+            foreach (var kvp in left.ObjectValues)
+            {
+                if (rightObject.TryGetValue(kvp.Key, out var otherValue))
+                {
+                    var compare = kvp.Value.CompareTo(otherValue);
+                    if (compare != 0)
+                    {
+                        return compare;
+                    }
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+
+            return 1;
+        }
         #endregion
     }
 }

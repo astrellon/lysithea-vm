@@ -17,7 +17,7 @@ namespace SimpleStackVM
         {
             var assembler = new VirtualMachineAssembler();
             assembler.BuiltinScope.CombineScope(PerfTestScope);
-            var script = assembler.ParseFromText(File.ReadAllText("../examples/perfTest.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/perfTest.lisp"));
 
             var vm = new VirtualMachine(8);
 

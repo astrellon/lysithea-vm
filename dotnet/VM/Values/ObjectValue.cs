@@ -69,35 +69,7 @@ namespace SimpleStackVM
 
         public int CompareTo(IValue? other)
         {
-            if (other == null) return 1;
-            if (other is ObjectValue otherObject)
-            {
-                var compareLength = this.Value.Count.CompareTo(otherObject.Value.Count);
-                if (compareLength != 0)
-                {
-                    return compareLength;
-                }
-
-                foreach (var kvp in this.Value)
-                {
-                    if (otherObject.Value.TryGetValue(kvp.Key, out var otherValue))
-                    {
-                        var compare = kvp.Value.CompareTo(otherValue);
-                        if (compare != 0)
-                        {
-                            return compare;
-                        }
-                    }
-                    else
-                    {
-                        return 1;
-                    }
-                }
-
-                return 0;
-            }
-
-            return 1;
+            return StandardObjectLibrary.GeneralCompareTo(this, other);
         }
         #endregion
     }

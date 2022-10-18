@@ -3,7 +3,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Linq;
 
-namespace SimpleStackVM
+namespace SimpleStackVM.Example
 {
     public static class TestProgram
     {
@@ -17,7 +17,7 @@ namespace SimpleStackVM
             assembler.BuiltinScope.CombineScope(StandardMiscLibrary.Scope);
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(CustomScope);
-            var script = assembler.ParseFromText(File.ReadAllText("../examples/testProgram.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testObject.lisp"));
 
             var vm = new VirtualMachine(16);
 
@@ -49,6 +49,26 @@ namespace SimpleStackVM
             result.Define("rand", (vm, numArgs) =>
             {
                 vm.PushStack(Rand.NextDouble());
+            });
+
+            result.Define("newPerson", (vm, numArgs) =>
+            {
+                var location = vm.PopStack<ArrayValue>();
+                var age = vm.PopStack<NumberValue>();
+                var name = vm.PopStack<StringValue>();
+                vm.PushStack(new PersonValue(name, age, location));
+            });
+
+            result.Define("combinePerson", (vm, numArgs) =>
+            {
+                var right = vm.PopStack<PersonValue>();
+                var left = vm.PopStack<PersonValue>();
+
+                var name = new StringValue($"{left.Name} - {right.Name}");
+                var age = new NumberValue(left.Age.Value + right.Age.Value);
+                var location = new ArrayValue(left.Address.Value.Concat(right.Address.Value).ToList());
+
+                vm.PushStack(new PersonValue(name, age, location));
             });
 
             return result;
