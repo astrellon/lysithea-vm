@@ -9,6 +9,8 @@ namespace SimpleStackVM.Example
         #region Fields
         private readonly object self;
         private readonly MethodInfo method;
+
+        public string TypeName => "class-builtin-function";
         #endregion
 
         #region Constructor
@@ -17,9 +19,13 @@ namespace SimpleStackVM.Example
             this.self = self;
             this.method = method;
         }
+        #endregion
 
-        public string TypeName => "class-builtin-function";
-
+        #region Methods
+        public override string ToString()
+        {
+            return "class-builtin-function:" + this.method.ToString();
+        }
         public int CompareTo(IValue other)
         {
             return 1;
@@ -27,12 +33,9 @@ namespace SimpleStackVM.Example
 
         public void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace)
         {
-            var args = new object[] { vm.GetArgs(numArgs) };
+            var args = new object[] { vm, numArgs };
             this.method.Invoke(this.self, args);
         }
-        #endregion
-
-        #region Methods
         #endregion
     }
 }

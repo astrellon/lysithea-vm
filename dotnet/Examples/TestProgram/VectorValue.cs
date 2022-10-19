@@ -66,20 +66,24 @@ namespace SimpleStackVM.Example
                     value = new NumberValue(this.Z);
                     return true;
                 }
-                // case "add":
-                // {
-                //     // value = new ClassBuiltinFunctionValue(this, CreateDelegate this.Add);
-                //     return true;
-                // }
+                case "add":
+                {
+                    value = new ClassBuiltinFunctionValue(this, ((Action<VirtualMachine, int>)this.Add).Method);
+                    return true;
+                }
             }
 
             value = null;
             return false;
         }
 
-        public void Add(VectorValue other)
+        public void Add(VirtualMachine vm, int numArgs)
         {
-
+            var other = vm.PopStack<VectorValue>();
+            var x = this.X + other.X;
+            var y = this.Y + other.Y;
+            var z = this.Z + other.Z;
+            vm.PushStack(new VectorValue(x, y, z));
         }
         #endregion
     }

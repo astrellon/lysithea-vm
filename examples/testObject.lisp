@@ -1,4 +1,4 @@
-(define main (function ()
+(define testPerson (function ()
     (define personObj {
         name "Alan"
         age 33
@@ -18,6 +18,20 @@
 
     (print person3.name " HelloComb " (+ 5 person3.age) " at " person3.address.2)
     (print (toString person3))
+))
+
+(define main (function()
+    (define pos (newVector 1 2 3))
+    (define offset (newVector 5 10 15))
+
+    (define result (pos.add offset))
+    (define result2 (result.add offset))
+
+    (print "Add Name: " (toString pos.add))
+    (print "Pos: " pos)
+    (print "Offset: " offset)
+    (print "Result: " result)
+    (print "Result2: " result2)
 ))
 
 (main)

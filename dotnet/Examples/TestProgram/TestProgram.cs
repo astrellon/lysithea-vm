@@ -59,6 +59,14 @@ namespace SimpleStackVM.Example
                 vm.PushStack(new PersonValue(name, age, location));
             });
 
+            result.Define("newVector", (vm, numArgs) =>
+            {
+                var z = vm.PopStack<NumberValue>();
+                var y = vm.PopStack<NumberValue>();
+                var x = vm.PopStack<NumberValue>();
+                vm.PushStack(new VectorValue(x.FloatValue, y.FloatValue, z.FloatValue));
+            });
+
             result.Define("combinePerson", (vm, numArgs) =>
             {
                 var right = vm.PopStack<PersonValue>();
