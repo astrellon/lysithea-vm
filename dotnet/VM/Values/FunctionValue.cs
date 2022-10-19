@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Runtime.CompilerServices;
+
 namespace SimpleStackVM
 {
     public struct FunctionValue : IFunctionValue
@@ -34,6 +36,12 @@ namespace SimpleStackVM
         }
 
         public override string ToString() => $"function:{this.Value.Name}";
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace)
+        {
+            vm.ExecuteFunction(this.Value, numArgs, pushToStackTrace);
+        }
         #endregion
     }
 }

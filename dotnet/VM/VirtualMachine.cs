@@ -243,35 +243,20 @@ namespace SimpleStackVM
             return args;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CallFunction(IFunctionValue value, int numArgs, bool pushToStackTrace)
         {
-            if (value is FunctionValue foundProc)
-            {
-                if (pushToStackTrace)
-                {
-                    this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
-                }
-                this.ExecuteFunction(foundProc.Value, numArgs);
-            }
-            else if (value is BuiltinFunctionValue foundBuiltin)
-            {
-                this.ExecuteFunction(foundBuiltin, numArgs);
-            }
-            else
-            {
-                throw new OperatorException(this.CreateStackTrace(), $"Unknown function call type");
-            }
+            value.Invoke(this, numArgs, pushToStackTrace);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(BuiltinFunctionValue handler, int numArgs)
+        public void ExecuteFunction(Function function, int numArgs = -1, bool pushToStackTrace = false)
         {
-            handler.Value(this, numArgs);
-        }
+            if (pushToStackTrace)
+            {
+                this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
+            }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(Function function, int numArgs = -1)
-        {
             this.CurrentCode = function;
             this.CurrentScope = new Scope(this.CurrentScope);
             this.lineCounter = 0;

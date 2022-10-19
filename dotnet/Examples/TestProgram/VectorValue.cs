@@ -1,0 +1,86 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+#nullable enable
+
+namespace SimpleStackVM.Example
+{
+    public class VectorValue : IObjectValue
+    {
+        #region Fields
+        public IEnumerable<KeyValuePair<string, IValue>> ObjectValues
+        {
+            get
+            {
+                yield return new KeyValuePair<string, IValue>("x", new NumberValue(this.X));
+                yield return new KeyValuePair<string, IValue>("y", new NumberValue(this.Y));
+                yield return new KeyValuePair<string, IValue>("z", new NumberValue(this.Z));
+            }
+        }
+        public int ObjectLength => 3;
+        public string TypeName => "person";
+
+        public readonly float X;
+        public readonly float Y;
+        public readonly float Z;
+
+        #endregion
+
+        #region Constructor
+        public VectorValue(float x, float y, float z)
+        {
+            this.X = x;
+            this.Y = y;
+            this.Z = z;
+        }
+        #endregion
+
+        #region Methods
+        public override string ToString()
+        {
+            return $"{this.X}, {this.Y}, {this.Z}";
+        }
+
+        public int CompareTo(IValue? other)
+        {
+            return StandardObjectLibrary.GeneralCompareTo(this, other);
+        }
+
+        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        {
+            switch (key)
+            {
+                case "x":
+                {
+                    value = new NumberValue(this.X);
+                    return true;
+                }
+                case "y":
+                {
+                    value = new NumberValue(this.Y);
+                    return true;
+                }
+                case "z":
+                {
+                    value = new NumberValue(this.Z);
+                    return true;
+                }
+                // case "add":
+                // {
+                //     // value = new ClassBuiltinFunctionValue(this, CreateDelegate this.Add);
+                //     return true;
+                // }
+            }
+
+            value = null;
+            return false;
+        }
+
+        public void Add(VectorValue other)
+        {
+
+        }
+        #endregion
+    }
+}

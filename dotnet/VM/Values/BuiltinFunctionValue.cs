@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Runtime.CompilerServices;
+
 namespace SimpleStackVM
 {
     public struct BuiltinFunctionValue : IFunctionValue
@@ -36,6 +38,12 @@ namespace SimpleStackVM
         }
 
         public override string ToString() => "builtin-function";
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace)
+        {
+            this.Value.Invoke(vm, numArgs);
+        }
         #endregion
     }
 }
