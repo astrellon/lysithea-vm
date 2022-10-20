@@ -13,9 +13,7 @@ namespace SimpleStackVM.Example
         public static void Main(string[] args)
         {
             var assembler = new VirtualMachineAssembler();
-            assembler.BuiltinScope.CombineScope(StandardMathLibrary.Scope);
-            assembler.BuiltinScope.CombineScope(StandardMiscLibrary.Scope);
-            assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
+            StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(CustomScope);
             var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testObject.lisp"));
 

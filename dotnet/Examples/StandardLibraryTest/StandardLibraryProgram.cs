@@ -14,6 +14,7 @@ namespace SimpleStackVM
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
             var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testStandardLibrary.lisp"));
+            // var script = assembler.ParseFromText(File.ReadAllText("../../../examples/benchmark1.lisp"));
 
             var vm = new VirtualMachine(8);
 

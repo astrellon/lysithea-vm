@@ -2,19 +2,21 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace SimpleStackVM.Example
+namespace SimpleStackVM
 {
-    public struct ClassBuiltinFunctionValue : IFunctionValue
+    public struct ClassBuiltinFunctionValue<T> : IFunctionValue
     {
+        public delegate void ClassBuiltinFunctionInvoke<TInvoke>(TInvoke self, VirtualMachine vm, int numArgs);
+
         #region Fields
-        private readonly object self;
-        private readonly MethodInfo method;
+        private readonly T self;
+        private readonly ClassBuiltinFunctionInvoke<T> method;
 
         public string TypeName => "class-builtin-function";
         #endregion
 
         #region Constructor
-        public ClassBuiltinFunctionValue(object self, MethodInfo method)
+        public ClassBuiltinFunctionValue(T self, ClassBuiltinFunctionInvoke<T> method)
         {
             this.self = self;
             this.method = method;
@@ -28,13 +30,17 @@ namespace SimpleStackVM.Example
         }
         public int CompareTo(IValue other)
         {
-            return 1;
+            if (other == null || !(other is ClassBuiltinFunctionValue<T> otherFunction))
+            {
+                return -1;
+            }
+
+            return this.method == otherFunction.method ? 0 : 1;
         }
 
         public void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace)
         {
-            var args = new object[] { vm, numArgs };
-            this.method.Invoke(this.self, args);
+            this.method.Invoke(this.self, vm, numArgs);
         }
         #endregion
     }

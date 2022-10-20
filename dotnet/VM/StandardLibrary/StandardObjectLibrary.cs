@@ -114,29 +114,36 @@ namespace SimpleStackVM
             return new ObjectValue(result);
         }
 
-        public static int GeneralCompareTo(IObjectValue left, IValue? right)
+        public static int GeneralCompareTo(IObjectValue left, IValue? rightInput)
         {
-            if (left == right)
+            if (left == rightInput)
             {
                 return 0;
             }
 
-            if (left == null || !(right is IObjectValue rightObject))
+            if (left == null || !(rightInput is IObjectValue right))
             {
                 return 1;
             }
 
-            var compareLength = left.ObjectLength.CompareTo(rightObject.ObjectLength);
+            var leftKeys = left.ObjectKeys;
+            var rightKeys = right.ObjectKeys;
+            var compareLength = leftKeys.Count.CompareTo(rightKeys.Count);
             if (compareLength != 0)
             {
                 return compareLength;
             }
 
-            foreach (var kvp in left.ObjectValues)
+            foreach (var key in leftKeys)
             {
-                if (rightObject.TryGetValue(kvp.Key, out var otherValue))
+                if (!left.TryGetValue(key, out var leftValue))
                 {
-                    var compare = kvp.Value.CompareTo(otherValue);
+                    throw new Exception($"Object key: {key} not present in the object!: {left.ToString()}");
+                }
+
+                if (right.TryGetValue(key, out var rightValue))
+                {
+                    var compare = leftValue.CompareTo(rightValue);
                     if (compare != 0)
                     {
                         return compare;
@@ -148,7 +155,7 @@ namespace SimpleStackVM
                 }
             }
 
-            return 1;
+            return 0;
         }
         #endregion
     }

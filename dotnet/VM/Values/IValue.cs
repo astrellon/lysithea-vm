@@ -15,16 +15,14 @@ namespace SimpleStackVM
 
     public interface IObjectValue : IValue
     {
-        IEnumerable<KeyValuePair<string, IValue>> ObjectValues { get; }
-        int ObjectLength { get; }
+        IReadOnlyList<string> ObjectKeys { get; }
 
         bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value);
     }
 
     public interface IArrayValue : IValue
     {
-        IEnumerable<IValue> ArrayValues { get; }
-        int ArrayLength { get; }
+        IReadOnlyList<IValue> ArrayValues { get; }
 
         bool TryGet(int index, [NotNullWhen(true)] out IValue? result);
     }

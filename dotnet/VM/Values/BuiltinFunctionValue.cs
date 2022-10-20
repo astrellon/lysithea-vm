@@ -29,12 +29,7 @@ namespace SimpleStackVM
                 return -1;
             }
 
-            if (this.Value == otherFunction.Value)
-            {
-                return 0;
-            }
-
-            return 1;
+            return this.Value == otherFunction.Value ? 0 : 1;
         }
 
         public override string ToString() => "builtin-function";

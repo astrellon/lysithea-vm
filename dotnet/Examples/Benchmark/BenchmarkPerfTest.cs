@@ -6,16 +6,8 @@ using BenchmarkDotNet.Running;
 
 namespace SimpleStackVM
 {
-    public static class Benchmarks
-    {
-        public static void Main(string[] args)
-        {
-            var summary = BenchmarkRunner.Run<BenchmarkClass>();
-        }
-    }
-
     [MemoryDiagnoser]
-    public class BenchmarkClass
+    public class BenchmarkPerfTest
     {
         #region Fields
         private static Random Rand = new Random();
@@ -37,7 +29,7 @@ namespace SimpleStackVM
             return assembler;
         }
 
-        [Benchmark]
+        // [Benchmark]
         public void TestControl()
         {
             Counter = 0;
@@ -66,7 +58,7 @@ namespace SimpleStackVM
 
         private static void DoDone()
         {
-            Console.WriteLine($"Done: {Total}");
+            // Console.WriteLine($"Done: {Total}");
         }
 
         [Benchmark]
@@ -75,17 +67,18 @@ namespace SimpleStackVM
             Counter = 0;
 
             var vm = new VirtualMachine(8);
-            try
-            {
-                vm.Execute(Code);
-            }
-            catch (VirtualMachineException exp)
-            {
-                Console.WriteLine(exp.Message);
-                var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
-                Console.WriteLine($"VM Stack: {stackTrace}");
-                Console.WriteLine(exp.StackTrace);
-            }
+            vm.Execute(Code);
+            // try
+            // {
+            //     vm.Execute(Code);
+            // }
+            // catch (VirtualMachineException exp)
+            // {
+            //     Console.WriteLine(exp.Message);
+            //     var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
+            //     Console.WriteLine($"VM Stack: {stackTrace}");
+            //     Console.WriteLine(exp.StackTrace);
+            // }
         }
 
         [Benchmark]
@@ -94,18 +87,19 @@ namespace SimpleStackVM
             Counter = 0;
 
             SharedVM.Reset();
-
-            try
-            {
                 SharedVM.Execute(Code);
-            }
-            catch (VirtualMachineException exp)
-            {
-                Console.WriteLine(exp.Message);
-                var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
-                Console.WriteLine($"VM Stack: {stackTrace}");
-                Console.WriteLine(exp.StackTrace);
-            }
+
+            // try
+            // {
+            //     SharedVM.Execute(Code);
+            // }
+            // catch (VirtualMachineException exp)
+            // {
+            //     Console.WriteLine(exp.Message);
+            //     var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
+            //     Console.WriteLine($"VM Stack: {stackTrace}");
+            //     Console.WriteLine(exp.StackTrace);
+            // }
         }
 
         private static Scope CreateScope()
@@ -114,7 +108,8 @@ namespace SimpleStackVM
 
             result.Define("rand", (vm, numArgs) =>
             {
-                vm.PushStack(Rand.NextDouble());
+                // vm.PushStack(Rand.NextDouble());
+                vm.PushStack(5);
             });
 
             result.Define("add", (vm, numArgs) =>
@@ -133,7 +128,7 @@ namespace SimpleStackVM
             result.Define("done", (vm, numArgs) =>
             {
                 var total = vm.PopStack<NumberValue>();
-                Console.WriteLine($"Done: {total.Value}");
+                // Console.WriteLine($"Done: {total.Value}");
             });
 
             return result;

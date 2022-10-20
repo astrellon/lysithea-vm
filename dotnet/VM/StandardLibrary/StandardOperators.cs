@@ -79,7 +79,7 @@ namespace SimpleStackVM
                 else
                 {
                     var result = 0.0;
-                    for (var i = 0; i < args.ArrayLength; i++)
+                    for (var i = 0; i < args.Length; i++)
                     {
                         if (args[i] is NumberValue argNum)
                         {

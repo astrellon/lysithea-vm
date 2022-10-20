@@ -1,0 +1,18 @@
+(define testString (function ()
+    (define str "012 hello there")
+    (set str (str.set 1 "b"))
+    (set str (str.insert 1 "a"))
+    (set str (str.removeAt 0))
+    (set str (str.removeAll "2"))
+    (set str (str.insert -12 "c"))
+
+    (define str1 (str.substring 0 3))
+    (define str2 (str.substring -1 1))
+    (define str3 (str.substring -11 5))
+))
+
+(define i 0)
+(loop (< i 100000)
+    (testString)
+    (set i (+ i 1))
+)

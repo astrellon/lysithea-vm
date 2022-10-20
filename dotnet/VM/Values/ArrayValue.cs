@@ -16,9 +16,9 @@ namespace SimpleStackVM
 
         public string TypeName => "array";
 
-        public IEnumerable<IValue> ArrayValues => this.Value;
-        public int ArrayLength => this.Value.Count;
-        public IValue this[int index] => Value[this.GetIndex(index)];
+        public IReadOnlyList<IValue> ArrayValues => this.Value;
+        public int Length => this.Value.Count;
+        public IValue this[int index] => this.Value[this.GetIndex(index)];
 
         #endregion
 

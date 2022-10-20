@@ -14,8 +14,9 @@ namespace SimpleStackVM
         public readonly IReadOnlyDictionary<string, IValue> Value;
         public string TypeName => "object";
 
-        public IEnumerable<KeyValuePair<string, IValue>> ObjectValues => this.Value;
-        public int ObjectLength => this.Value.Count;
+        public IReadOnlyList<string> ObjectKeys => this.Value.Keys.ToList();
+
+        public IValue this[string key] => this.Value[key];
         #endregion
 
         #region Constructor

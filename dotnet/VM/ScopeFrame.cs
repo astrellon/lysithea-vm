@@ -1,6 +1,6 @@
 namespace SimpleStackVM
 {
-    public class ScopeFrame
+    public struct ScopeFrame
     {
         #region Fields
         public readonly int LineCounter;

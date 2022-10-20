@@ -40,11 +40,14 @@
     (print "Running string tests")
 
     (define str "012 hello there")
-    (set str (string.set str 1 "b"))
+    (set str (str.set str 1 "b"))
     (set str (string.insert str 1 "a"))
     (set str (string.removeAt str 0))
     (set str (string.removeAll str "2"))
     (set str (string.insert str -12 "c"))
+
+    (print "Length: " (str.length))
+    (print "Length: " (string.length str))
 
     (assert.equals str "abc hello there")
     (assert.notEquals str "012 hello there")

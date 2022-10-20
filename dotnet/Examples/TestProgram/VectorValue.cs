@@ -9,17 +9,10 @@ namespace SimpleStackVM.Example
     public class VectorValue : IObjectValue
     {
         #region Fields
-        public IEnumerable<KeyValuePair<string, IValue>> ObjectValues
-        {
-            get
-            {
-                yield return new KeyValuePair<string, IValue>("x", new NumberValue(this.X));
-                yield return new KeyValuePair<string, IValue>("y", new NumberValue(this.Y));
-                yield return new KeyValuePair<string, IValue>("z", new NumberValue(this.Z));
-            }
-        }
-        public int ObjectLength => 3;
-        public string TypeName => "person";
+        private static readonly IReadOnlyList<string> Keys = new [] { "x", "y", "z", "add" };
+        public IReadOnlyList<string> ObjectKeys => Keys;
+
+        public string TypeName => "vector";
 
         public readonly float X;
         public readonly float Y;
@@ -68,7 +61,7 @@ namespace SimpleStackVM.Example
                 }
                 case "add":
                 {
-                    value = new ClassBuiltinFunctionValue(this, ((Action<VirtualMachine, int>)this.Add).Method);
+                    value = new ClassBuiltinFunctionValue<VectorValue>(this, Add);
                     return true;
                 }
             }
@@ -77,12 +70,12 @@ namespace SimpleStackVM.Example
             return false;
         }
 
-        public void Add(VirtualMachine vm, int numArgs)
+        public static void Add(VectorValue self, VirtualMachine vm, int numArgs)
         {
             var other = vm.PopStack<VectorValue>();
-            var x = this.X + other.X;
-            var y = this.Y + other.Y;
-            var z = this.Z + other.Z;
+            var x = self.X + other.X;
+            var y = self.Y + other.Y;
+            var z = self.Z + other.Z;
             vm.PushStack(new VectorValue(x, y, z));
         }
         #endregion

@@ -9,16 +9,8 @@ namespace SimpleStackVM.Example
     public class PersonValue : IObjectValue
     {
         #region Fields
-        public IEnumerable<KeyValuePair<string, IValue>> ObjectValues
-        {
-            get
-            {
-                yield return new KeyValuePair<string, IValue>("name", this.Name);
-                yield return new KeyValuePair<string, IValue>("age", this.Age);
-                yield return new KeyValuePair<string, IValue>("address", this.Address);
-            }
-        }
-        public int ObjectLength => 3;
+        private static readonly IReadOnlyList<string> Keys = new [] { "name", "age", "address" };
+        public IReadOnlyList<string> ObjectKeys => Keys;
         public string TypeName => "person";
 
         public readonly StringValue Name;

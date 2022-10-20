@@ -122,10 +122,10 @@ namespace SimpleStackVM
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {key.ToString()}");
                         }
 
-                        if (this.CurrentScope.TryGetProperty(arrayInput, out var foundValue) ||
-                            (this.BuiltinScope != null && this.BuiltinScope.TryGetProperty(arrayInput, out foundValue)))
+                        var top = this.PopStack();
+                        if (ValuePropertyAccess.TryGetProperty(top, arrayInput, out var found))
                         {
-                            this.PushStack(foundValue);
+                            this.PushStack(found);
                         }
                         else
                         {
@@ -262,7 +262,7 @@ namespace SimpleStackVM
             this.lineCounter = 0;
 
             var args = this.GetArgs(numArgs >= 0 ? Math.Min(numArgs, function.Parameters.Count) : function.Parameters.Count);
-            for (var i = 0; i < args.ArrayLength; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 var argName = function.Parameters[i];
                 this.CurrentScope.Define(argName, args[i]);
