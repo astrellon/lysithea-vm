@@ -4,6 +4,9 @@
     (define arr (0 1 2))
     (assert.equals (0 1 2) arr)
 
+    (assert.equals 3 (arr.length))
+    (assert.equals 3 (array.length arr))
+
     (set arr (array.set arr 1 "b"))
     (assert.equals (0 "b" 2) arr)
 
@@ -19,6 +22,9 @@
     (set arr (array.remove arr 2))
     (assert.notEquals ("a" "b" "c" "e") arr)
     (assert.equals ("a" "b" "c" "d") arr)
+
+    (assert.equals 4 (arr.length))
+    (assert.equals 4 (array.length arr))
 
     (assert.equals ("a" "b") (array.sublist arr 0 2))
     (assert.equals ("a" "b" "c" "d") (array.sublist arr 0 -1))
@@ -40,7 +46,7 @@
     (print "Running string tests")
 
     (define str "012 hello there")
-    (set str (str.set str 1 "b"))
+    (set str (string.set str 1 "b"))
     (set str (string.insert str 1 "a"))
     (set str (string.removeAt str 0))
     (set str (string.removeAll str "2"))

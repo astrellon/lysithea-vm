@@ -7,19 +7,28 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace SimpleStackVM
 {
-    public struct ArrayValue : IArrayValue
+    public struct ArrayValue : IArrayValue, IObjectValue
     {
         #region Fields
+        // Static
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);
+        private static IReadOnlyList<string> Keys = new [] { "length" };
 
-        public readonly IReadOnlyList<IValue> Value;
-
+        // IValue
         public string TypeName => "array";
 
+        // IArrayValue
         public IReadOnlyList<IValue> ArrayValues => this.Value;
         public int Length => this.Value.Count;
+
+        // IObjectValue
+        public IReadOnlyList<string> ObjectKeys => Keys;
+
+        // Helper
         public IValue this[int index] => this.Value[this.GetIndex(index)];
 
+        // Internal
+        public readonly IReadOnlyList<IValue> Value;
         #endregion
 
         #region Constructor
@@ -98,6 +107,23 @@ namespace SimpleStackVM
             }
 
             return 1;
+        }
+
+        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        {
+            if (key == "length")
+            {
+                value = new ClassBuiltinFunctionValue<ArrayValue>(this, GetLength);
+                return true;
+            }
+
+            value = NullValue.Value;
+            return false;
+        }
+
+        public static void GetLength(ArrayValue self, VirtualMachine vm, int numArgs)
+        {
+            vm.PushStack(self.Value.Count);
         }
         #endregion
     }

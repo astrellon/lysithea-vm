@@ -26,4 +26,9 @@ namespace SimpleStackVM
 
         bool TryGet(int index, [NotNullWhen(true)] out IValue? result);
     }
+
+    public interface IFunctionValue : IValue
+    {
+        void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace);
+    }
 }

@@ -1,6 +1,6 @@
-#nullable enable
-
 using System.Diagnostics.CodeAnalysis;
+
+#nullable enable
 
 namespace SimpleStackVM
 {
@@ -8,9 +8,18 @@ namespace SimpleStackVM
     {
         public static bool TryGetProperty(IValue current, ArrayValue properties, [NotNullWhen(true)] out IValue? result)
         {
+            result = NullValue.Value;
             for (var i = 0; i < properties.Length; i++)
             {
-                if (current is IObjectValue currentObject)
+                if (TryParseIndex(properties[i], out var index) && current is ArrayValue currentArray)
+                {
+                    if (!currentArray.TryGet(index, out var test))
+                    {
+                        return false;
+                    }
+                    current = test;
+                }
+                else if (current is IObjectValue currentObject)
                 {
                     if (!currentObject.TryGetValue(properties[i].ToString(), out var test))
                     {
@@ -19,17 +28,9 @@ namespace SimpleStackVM
                     }
                     current = test;
                 }
-                else if (current is IArrayValue currentArray)
+                else
                 {
-                    if (TryParseIndex(properties[i], out var index))
-                    {
-                        if (!currentArray.TryGet(index, out var test))
-                        {
-                            result = NullValue.Value;
-                            return false;
-                        }
-                        current = test;
-                    }
+                    return false;
                 }
             }
 

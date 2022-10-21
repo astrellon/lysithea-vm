@@ -290,25 +290,20 @@ namespace SimpleStackVM
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
-                if (isProperty)
+                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
                 {
-                    if (ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                    if (foundProperty is IFunctionValue)
                     {
-                        if (foundProperty is IFunctionValue)
-                        {
-                            // If we found the property then we're done and we can just push that known value onto the stack.
-                            var callValue = new IValue[]{ foundProperty, numArgsValue };
-                            return new List<ITempCodeLine> {
-                                new CodeLine(Operator.CallDirect, new ArrayValue(callValue))
-                            };
-                        }
-                        else
-                        {
-                            throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundProperty.ToString()}");
-                        }
+                        // If we found the property then we're done and we can just push that known value onto the stack.
+                        var callValue = new IValue[]{ foundProperty, numArgsValue };
+                        return new List<ITempCodeLine> {
+                            new CodeLine(Operator.CallDirect, new ArrayValue(callValue))
+                        };
                     }
+
+                    throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundProperty.ToString()}");
                 }
-                else
+                else if (!isProperty)
                 {
                     // This was not a property request but we found the parent so just push onto the stack.
                     if (foundParent is IFunctionValue)
@@ -318,10 +313,8 @@ namespace SimpleStackVM
                             new CodeLine(Operator.CallDirect, new ArrayValue(callValue))
                         };
                     }
-                    else
-                    {
-                        throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundParent.ToString()}");
-                    }
+
+                    throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundParent.ToString()}");
                 }
             }
 
@@ -345,15 +338,12 @@ namespace SimpleStackVM
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
-                if (isProperty)
+                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
                 {
-                    if (ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
-                    {
-                        // If we found the property then we're done and we can just push that known value onto the stack.
-                        return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundProperty) };
-                    }
+                    // If we found the property then we're done and we can just push that known value onto the stack.
+                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundProperty) };
                 }
-                else
+                else if (!isProperty)
                 {
                     // This was not a property request but we found the parent so just push onto the stack.
                     return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundParent) };

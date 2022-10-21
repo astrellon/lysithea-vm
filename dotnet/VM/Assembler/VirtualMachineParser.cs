@@ -73,10 +73,8 @@ namespace SimpleStackVM
             {
                 throw new ArgumentException("Unexpected }");
             }
-            else
-            {
-                return Atom(token);
-            }
+
+            return Atom(token);
         }
 
         public static IValue Atom(string input)
