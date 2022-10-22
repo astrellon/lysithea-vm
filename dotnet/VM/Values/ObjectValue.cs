@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
@@ -60,7 +59,10 @@ namespace SimpleStackVM
                 }
                 first = false;
 
+                result.Append('"');
                 result.Append(kvp.Key);
+                result.Append('"');
+
                 result.Append(' ');
                 result.Append(kvp.Value.ToString());
             }

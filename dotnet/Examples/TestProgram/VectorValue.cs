@@ -61,7 +61,7 @@ namespace SimpleStackVM.Example
                 }
                 case "add":
                 {
-                    value = new ClassBuiltinFunctionValue<VectorValue>(this, Add);
+                    value = new BuiltinFunctionValue(this.Add);
                     return true;
                 }
             }
@@ -70,12 +70,12 @@ namespace SimpleStackVM.Example
             return false;
         }
 
-        public static void Add(VectorValue self, VirtualMachine vm, int numArgs)
+        public void Add(VirtualMachine vm, int numArgs)
         {
             var other = vm.PopStack<VectorValue>();
-            var x = self.X + other.X;
-            var y = self.Y + other.Y;
-            var z = self.Z + other.Z;
+            var x = this.X + other.X;
+            var y = this.Y + other.Y;
+            var z = this.Z + other.Z;
             vm.PushStack(new VectorValue(x, y, z));
         }
         #endregion
