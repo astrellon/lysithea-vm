@@ -10,7 +10,7 @@ namespace SimpleStackVM
     {
         public static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<BenchmarkStrings>();
+            var summary = BenchmarkRunner.Run<BenchmarkStdLib>();
         }
     }
 }
