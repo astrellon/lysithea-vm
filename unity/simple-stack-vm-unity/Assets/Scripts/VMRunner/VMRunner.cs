@@ -71,9 +71,16 @@ namespace SimpleStackVM.Unity
         #endregion
 
         #region Methods
-        public void Init(int stackSize, Action<string, VirtualMachine> runHandler)
+        public void Init(int stackSize)
         {
             this.VM = new VirtualMachine(stackSize);
+        }
+
+        public void StartScript(Script script)
+        {
+            this.VM.Running = true;
+            this.VM.Paused = false;
+            this.VM.ChangeToScript(script);
         }
 
         public void Wait(TimeSpan timespan)

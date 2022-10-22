@@ -52,7 +52,7 @@ namespace SimpleStackVM
 
         public Function ParseGlobalFunction(ArrayValue input)
         {
-            var tempCodeLines = input.SelectMany(Parse).ToList();
+            var tempCodeLines = input.Value.SelectMany(Parse).ToList();
             return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
         }
 
@@ -60,12 +60,12 @@ namespace SimpleStackVM
         {
             if (input is ArrayValue arrayValue)
             {
-                if (!arrayValue.Any())
+                if (!arrayValue.Value.Any())
                 {
                     return new List<ITempCodeLine>();
                 }
 
-                var first = arrayValue.First();
+                var first = arrayValue.Value.First();
                 // If the first item in an array is a symbol we assume that it is a function call or a label
                 if (first is VariableValue firstSymbolValue)
                 {
@@ -90,7 +90,7 @@ namespace SimpleStackVM
 
                     var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
-                    foreach (var item in arrayValue.Skip(1))
+                    foreach (var item in arrayValue.Value.Skip(1))
                     {
                         result.AddRange(Parse(item));
                     }
@@ -98,7 +98,7 @@ namespace SimpleStackVM
                     // If it is not an opcode then it must be a function call
                     if (!isOpCode)
                     {
-                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Count - 1));
+                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Length - 1));
                     }
                     else if (opCode != Operator.Push)
                     {
@@ -114,7 +114,7 @@ namespace SimpleStackVM
             {
                 if (!symbolValue.IsLabel)
                 {
-                    return new List<ITempCodeLine> { this.OptimiseGetSymbolValue(symbolValue) };
+                    return this.OptimiseGetSymbolValue(symbolValue);
                 }
             }
 
@@ -147,7 +147,7 @@ namespace SimpleStackVM
 
         public List<ITempCodeLine> ParseLoop(ArrayValue input)
         {
-            if (input.Count < 3)
+            if (input.Length < 3)
             {
                 throw new Exception("Loop input has too few inputs");
             }
@@ -163,7 +163,7 @@ namespace SimpleStackVM
             result.AddRange(Parse(comparisonCall));
 
             result.Add(new CodeLine(Operator.JumpFalse, labelEnd));
-            for (var i = 2; i < input.Count; i++)
+            for (var i = 2; i < input.Length; i++)
             {
                 result.AddRange(Parse(input[i]));
             }
@@ -177,11 +177,11 @@ namespace SimpleStackVM
 
         public List<ITempCodeLine> ParseCond(ArrayValue input, bool isIfStatement)
         {
-            if (input.Count < 3)
+            if (input.Length < 3)
             {
                 throw new Exception("Condition input has too few inputs");
             }
-            if (input.Count > 4)
+            if (input.Length > 4)
             {
                 throw new Exception("Condition input has too many inputs!");
             }
@@ -190,7 +190,7 @@ namespace SimpleStackVM
             var labelElse = $":CondElse{ifLabelNum}";
             var labelEnd = $":CondEnd{ifLabelNum}";
 
-            var hasElseCall = input.Count == 4;
+            var hasElseCall = input.Length == 4;
             var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
 
             var comparisonCall = (ArrayValue)input[1];
@@ -231,9 +231,9 @@ namespace SimpleStackVM
 
         public IEnumerable<ITempCodeLine> ParseFlatten(ArrayValue input)
         {
-            if (input.All(i => i is ArrayValue))
+            if (input.Value.All(i => i is ArrayValue))
             {
-                return input.SelectMany(Parse);
+                return input.Value.SelectMany(Parse);
             }
 
             return Parse(input);
@@ -252,13 +252,13 @@ namespace SimpleStackVM
 
         public Function ParseFunction(ArrayValue input)
         {
-            var parameters = ((ArrayValue)input[1]).Select(arg => arg.ToString()).ToList();
-            var tempCodeLines = input.Skip(2).SelectMany(Parse).ToList();
+            var parameters = ((ArrayValue)input[1]).Value.Select(arg => arg.ToString()).ToList();
+            var tempCodeLines = input.Value.Skip(2).SelectMany(Parse).ToList();
 
             return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
         }
 
-        public List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
+        public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
             {
@@ -282,52 +282,98 @@ namespace SimpleStackVM
         #endregion
 
         #region Helper Methods
-        private IEnumerable<ITempCodeLine> OptimiseCallSymbolValue(VariableValue input, int numArgs)
+        private List<ITempCodeLine> OptimiseCallSymbolValue(VariableValue input, int numArgs)
         {
             var numArgsValue = new NumberValue(numArgs);
-
-            var getSymbol = GetSymbolValue(input);
-            if (this.BuiltinScope.TryGet(getSymbol, out var value))
+            var isProperty = IsGetPropertyRequest(input, out var parentKey, out var property);
+            // Check if we know about the parent object? (eg: string.length, the parent is the string object)
+            if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
-                yield return new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { value, numArgsValue }));
+                // If the get is for a property? (eg: string.length, length is the property)
+                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                {
+                    if (foundProperty is IFunctionValue)
+                    {
+                        // If we found the property then we're done and we can just push that known value onto the stack.
+                        var callValue = new IValue[]{ foundProperty, numArgsValue };
+                        return new List<ITempCodeLine> {
+                            new CodeLine(Operator.CallDirect, new ArrayValue(callValue))
+                        };
+                    }
 
+                    throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundProperty.ToString()}");
+                }
+                else if (!isProperty)
+                {
+                    // This was not a property request but we found the parent so just push onto the stack.
+                    if (foundParent is IFunctionValue)
+                    {
+                        var callValue = new IValue[]{ foundParent, numArgsValue };
+                        return new List<ITempCodeLine> {
+                            new CodeLine(Operator.CallDirect, new ArrayValue(callValue))
+                        };
+                    }
+
+                    throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundParent.ToString()}");
+                }
             }
-            else
+
+            // Could not find the parent right now, so look for the parent at runtime.
+            var result = new List<ITempCodeLine> { new CodeLine(Operator.Get, new StringValue(parentKey)) };
+
+            // If this was also a property check also look up the property at runtime.
+            if (isProperty)
             {
-                yield return this.ParseGet(getSymbol);
-                yield return new CodeLine(Operator.Call, numArgsValue);
+                result.Add(new CodeLine(Operator.GetProperty, property));
             }
+
+            result.Add(new CodeLine(Operator.Call, numArgsValue));
+            return result;
         }
 
-        private ITempCodeLine OptimiseGetSymbolValue(VariableValue input)
+        private List<ITempCodeLine> OptimiseGetSymbolValue(VariableValue input)
         {
-            var getSymbol = GetSymbolValue(input);
-            if (this.BuiltinScope.TryGet(getSymbol, out var value))
+            var isProperty = IsGetPropertyRequest(input, out var parentKey, out var property);
+            // Check if we know about the parent object? (eg: string.length, the parent is the string object)
+            if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
-                return new CodeLine(Operator.Push, value);
+                // If the get is for a property? (eg: string.length, length is the property)
+                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                {
+                    // If we found the property then we're done and we can just push that known value onto the stack.
+                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundProperty) };
+                }
+                else if (!isProperty)
+                {
+                    // This was not a property request but we found the parent so just push onto the stack.
+                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundParent) };
+                }
             }
 
-            return this.ParseGet(getSymbol);
-        }
+            // Could not find the parent right now, so look for the parent at runtime.
+            var result = new List<ITempCodeLine> { new CodeLine(Operator.Get, new StringValue(parentKey)) };
 
-        private ITempCodeLine ParseGet(IValue input)
-        {
-            if (input is ArrayValue)
+            // If this was also a property check also look up the property at runtime.
+            if (isProperty)
             {
-                return new CodeLine(Operator.GetProperty, input);
+                result.Add(new CodeLine(Operator.GetProperty, property));
             }
-            return new CodeLine(Operator.Get, new StringValue(input.ToString()));
+            return result;
         }
 
-        private static IValue GetSymbolValue(VariableValue input)
+        private static bool IsGetPropertyRequest(VariableValue input, out string parentKey, out ArrayValue property)
         {
             if (input.Value.Contains('.'))
             {
-                var split = input.Value.Split('.').Select(c => new VariableValue(c) as IValue);
-                return new ArrayValue(split.ToList());
+                var split = input.Value.Split('.');
+                parentKey = split.First();
+                property = new ArrayValue(split.Skip(1).Select(c => new VariableValue(c) as IValue).ToList());
+                return true;
             }
 
-            return input;
+            parentKey = input.Value;
+            property = ArrayValue.Empty;
+            return false;
         }
 
         private static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines)

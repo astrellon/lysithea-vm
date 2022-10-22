@@ -73,13 +73,13 @@ namespace SimpleStackVM
                 var args = vm.GetArgs(numArgs);
                 if (args[0] is StringValue)
                 {
-                    var result = string.Join("", args);
+                    var result = string.Join("", args.Value);
                     vm.PushStack(result);
                 }
                 else
                 {
                     var result = 0.0;
-                    for (var i = 0; i < args.Count; i++)
+                    for (var i = 0; i < args.Length; i++)
                     {
                         if (args[i] is NumberValue argNum)
                         {

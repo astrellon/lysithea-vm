@@ -41,7 +41,7 @@ namespace SimpleStackVM
             result.Define("print", (vm, numArgs) =>
             {
                 var args = vm.GetArgs(numArgs);
-                Console.WriteLine(string.Join("", args));
+                Console.WriteLine(string.Join("", args.Value));
             });
 
             return result;

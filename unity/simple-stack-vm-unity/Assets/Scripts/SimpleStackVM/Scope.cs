@@ -6,9 +6,7 @@ namespace SimpleStackVM
 {
     public interface IReadOnlyScope
     {
-        bool TryGet(IValue key, out IValue value);
         bool TryGetKey(string key, out IValue value);
-        bool TryGetProperty(ArrayValue key, out IValue value);
 
         IReadOnlyDictionary<string, IValue> Values { get; }
     }
@@ -17,9 +15,10 @@ namespace SimpleStackVM
     {
         #region Fields
         public static readonly IReadOnlyScope Empty = new Scope();
+        private static readonly IReadOnlyDictionary<string, IValue> EmptyScopeValues = new Dictionary<string, IValue>();
 
-        private readonly Dictionary<string, IValue> values = new Dictionary<string, IValue>();
-        public IReadOnlyDictionary<string, IValue> Values => this.values;
+        private Dictionary<string, IValue>? values = null;// = new Dictionary<string, IValue>();
+        public IReadOnlyDictionary<string, IValue> Values => this.values ?? EmptyScopeValues;
 
         public Scope? Parent;
         #endregion
@@ -42,17 +41,25 @@ namespace SimpleStackVM
 
         public void Define(string key, IValue value)
         {
+            if (this.values == null)
+            {
+                this.values = new Dictionary<string, IValue>();
+            }
             this.values[key] = value;
         }
 
         public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction)
         {
+            if (this.values == null)
+            {
+                this.values = new Dictionary<string, IValue>();
+            }
             this.values[key] = new BuiltinFunctionValue(builtinFunction);
         }
 
         public bool TrySet(string key, IValue value)
         {
-            if (this.values.ContainsKey(key))
+            if (this.values != null && this.values.ContainsKey(key))
             {
                 this.values[key] = value;
                 return true;
@@ -66,19 +73,9 @@ namespace SimpleStackVM
             return false;
         }
 
-        public bool TryGet(IValue key, out IValue value)
-        {
-            if (key is ArrayValue list)
-            {
-                return this.TryGetProperty(list, out value);
-            }
-
-            return this.TryGetKey(key.ToString(), out value);
-        }
-
         public bool TryGetKey(string key, out IValue value)
         {
-            if (this.values.TryGetValue(key, out var foundValue))
+            if (this.values != null && this.values.TryGetValue(key, out var foundValue))
             {
                 value = foundValue;
                 return true;
@@ -91,38 +88,6 @@ namespace SimpleStackVM
 
             value = NullValue.Value;
             return false;
-        }
-
-        public bool TryGetProperty(ArrayValue input, out IValue value)
-        {
-            this.TryGetKey(input[0].ToString(), out var current);
-            for (var i = 1; i < input.Count; i++)
-            {
-                if (current is ObjectValue currentObject)
-                {
-                    if (!currentObject.TryGetValue(input[i].ToString(), out current))
-                    {
-                        value = NullValue.Value;
-                        return false;
-                    }
-                }
-                else if (current is ArrayValue currentArray)
-                {
-                    if (!currentArray.TryGet(input[i], out current))
-                    {
-                        value = NullValue.Value;
-                        return false;
-                    }
-                }
-                else
-                {
-                    value = NullValue.Value;
-                    return false;
-                }
-            }
-
-            value = current;
-            return true;
         }
         #endregion
     }

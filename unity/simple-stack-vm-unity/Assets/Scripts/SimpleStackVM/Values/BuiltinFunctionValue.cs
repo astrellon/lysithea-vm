@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Runtime.CompilerServices;
+
 namespace SimpleStackVM
 {
     public struct BuiltinFunctionValue : IFunctionValue
@@ -20,17 +22,6 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public override bool Equals(object? other)
-        {
-            if (other == null) return false;
-            if (other is BuiltinFunctionValue otherProc)
-            {
-                return this.Value == otherProc.Value;
-            }
-
-            return false;
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null || !(other is BuiltinFunctionValue otherFunction))
@@ -38,16 +29,16 @@ namespace SimpleStackVM
                 return -1;
             }
 
-            if (this.Value == otherFunction.Value)
-            {
-                return 0;
-            }
-
-            return 1;
+            return this.Value == otherFunction.Value ? 0 : 1;
         }
 
         public override string ToString() => "builtin-function";
-        public override int GetHashCode() => this.Value.GetHashCode();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace)
+        {
+            this.Value.Invoke(vm, numArgs);
+        }
         #endregion
     }
 }

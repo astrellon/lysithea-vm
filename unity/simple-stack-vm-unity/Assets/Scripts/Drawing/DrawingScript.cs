@@ -20,10 +20,8 @@ namespace SimpleStackVM.Unity
                 return;
             }
 
-            // var jsonStr = this.JsonText.text;
-            // var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
-
-            // this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
+            var codeString = this.CodeText.text;
+            this.Script = DrawingVM.Assembler.ParseFromText(codeString);
         }
         #endregion
 

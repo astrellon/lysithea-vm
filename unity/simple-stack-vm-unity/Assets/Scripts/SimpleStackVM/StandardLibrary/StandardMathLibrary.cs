@@ -28,11 +28,13 @@ namespace SimpleStackVM
                     var top = vm.PopStack<NumberValue>();
                     vm.PushStack(Math.Sin(top.Value));
                 })},
+
                 {"cos", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
                     vm.PushStack(Math.Cos(top.Value));
                 })},
+
                 {"tan", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     var top = vm.PopStack<NumberValue>();
@@ -121,7 +123,7 @@ namespace SimpleStackVM
                 })},
             };
 
-            result.Define("math", mathFunctions);
+            result.Define("math", new ObjectValue(mathFunctions));
 
             return result;
         }

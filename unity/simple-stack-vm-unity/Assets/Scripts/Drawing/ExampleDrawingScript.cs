@@ -8,8 +8,7 @@ namespace SimpleStackVM.Unity
     {
         #region Fields
         public string OptionTitle;
-        public string StartScope;
-        public TextAsset JsonText;
+        public TextAsset CodeText;
         #endregion
     }
 }

@@ -74,7 +74,7 @@ namespace SimpleStackVM
                 })}
             };
 
-            result.Define("object", objectFunctions);
+            result.Define("object", new ObjectValue(objectFunctions));
 
             return result;
         }
@@ -112,6 +112,50 @@ namespace SimpleStackVM
         {
             var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
+        }
+
+        public static int GeneralCompareTo(IObjectValue left, IValue? rightInput)
+        {
+            if (left == rightInput)
+            {
+                return 0;
+            }
+
+            if (left == null || !(rightInput is IObjectValue right))
+            {
+                return 1;
+            }
+
+            var leftKeys = left.ObjectKeys;
+            var rightKeys = right.ObjectKeys;
+            var compareLength = leftKeys.Count.CompareTo(rightKeys.Count);
+            if (compareLength != 0)
+            {
+                return compareLength;
+            }
+
+            foreach (var key in leftKeys)
+            {
+                if (!left.TryGetValue(key, out var leftValue))
+                {
+                    throw new Exception($"Object key: {key} not present in the object!: {left.ToString()}");
+                }
+
+                if (right.TryGetValue(key, out var rightValue))
+                {
+                    var compare = leftValue.CompareTo(rightValue);
+                    if (compare != 0)
+                    {
+                        return compare;
+                    }
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+
+            return 0;
         }
         #endregion
     }

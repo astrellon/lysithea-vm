@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -10,66 +10,43 @@ namespace SimpleStackVM.Unity
     {
         #region Fields
         public const string HandleName = "random";
+        public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion
 
         #region Methods
-        public static void AddHandler(VirtualMachine vm)
+        public static Scope CreateScope()
         {
-            // vm.AddBuiltinHandler(HandleName, Handler);
-        }
+            var result = new Scope();
 
-        public static void Handler(string command, VirtualMachine vm)
-        {
-            switch (command)
+            var randomFunctions = new Dictionary<string, IValue>
             {
-                case "pick":
-                    {
-                        var list = vm.PopStack<ArrayValue>();
-                        var index = Random.Range(0, list.Value.Count);
-                        vm.PushStack(list.Value[index]);
-                        break;
-                    }
-                case "bool":
-                    {
-                        var isTrue = Random.value >= 0.5;
-                        vm.PushStack(isTrue);
-                        break;
-                    }
-                case "color":
-                case "colour":
-                    {
-                        var colour = RandomColour();
-                        vm.PushStack(new AnyValue(colour));
-                        break;
-                    }
-                case "range":
-                    {
-                        var upper = vm.PopStack<NumberValue>();
-                        var lower = vm.PopStack<NumberValue>();
-                        var newValue = Random.Range(lower.FloatValue, upper.FloatValue);
-                        vm.PushStack(newValue);
-                        break;
-                    }
-                case "vector":
-                    {
-                        var vector1Value = vm.PopStack();
-                        var vector2Value = vm.PopStack();
+                {"pick", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var list = vm.PopStack<ArrayValue>();
+                    var index = Random.Range(0, list.Value.Count);
+                    vm.PushStack(list.Value[index]);
+                })},
+                {"bool", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var isTrue = Random.value >= 0.5;
+                    vm.PushStack(isTrue);
+                })},
+                {"value", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    vm.PushStack(Random.value);
+                })},
+                {"range", new BuiltinFunctionValue((vm, numArgs) =>
+                {
+                    var upper = vm.PopStack<NumberValue>();
+                    var lower = vm.PopStack<NumberValue>();
+                    var newValue = Random.Range(lower.FloatValue, upper.FloatValue);
+                    vm.PushStack(newValue);
+                })}
+            };
 
-                        if (!UnityUtils.TryGetVector(vector1Value, out var vector1) ||
-                            !UnityUtils.TryGetVector(vector2Value, out var vector2))
-                        {
-                            Debug.LogError("Unable to parse vectors for random vector");
-                            return;
-                        }
+            result.Define("random", new ObjectValue(randomFunctions));
 
-                        var x = Random.Range(vector1.x, vector2.x);
-                        var y = Random.Range(vector1.y, vector2.y);
-                        var z = Random.Range(vector1.z, vector2.z);
-
-                        vm.PushStack(new AnyValue(new Vector3(x, y, z)));
-                        break;
-                    }
-            }
+            return result;
         }
 
         private static Color RandomColour()

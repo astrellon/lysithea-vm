@@ -41,7 +41,7 @@ namespace SimpleStackVM
                 {
                     var index = vm.PopStack<NumberValue>();
                     var top = vm.PopStack<ArrayValue>();
-                    top.TryGet(index, out var value);
+                    top.TryGet(index.IntValue, out var value);
                     vm.PushStack(value);
                 })},
 
@@ -105,7 +105,7 @@ namespace SimpleStackVM
                 })}
             };
 
-            result.Define("array", arrayFunctions);
+            result.Define("array", new ObjectValue(arrayFunctions));
 
             return result;
         }
@@ -171,7 +171,7 @@ namespace SimpleStackVM
         {
             for (var i = 0; i < self.Value.Count; i++)
             {
-                if (input.Equals(self.Value[i]))
+                if (input.CompareTo(self.Value[i]) == 0)
                 {
                     return i;
                 }

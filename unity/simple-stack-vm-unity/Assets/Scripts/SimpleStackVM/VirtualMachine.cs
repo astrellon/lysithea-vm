@@ -48,10 +48,20 @@ namespace SimpleStackVM
             this.Paused = false;
         }
 
-        public void Execute(Script script)
+        public void ChangeToScript(Script script)
         {
+            this.lineCounter = 0;
+            this.stack.Clear();
+            this.stackTrace.Clear();
+
             this.BuiltinScope = script.BuiltinScope;
             this.CurrentCode = script.Code;
+        }
+
+        public void Execute(Script script)
+        {
+            this.ChangeToScript(script);
+
             this.Running = true;
             this.Paused = false;
             while (this.Running && !this.Paused)
@@ -122,10 +132,10 @@ namespace SimpleStackVM
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {key.ToString()}");
                         }
 
-                        if (this.CurrentScope.TryGetProperty(arrayInput, out var foundValue) ||
-                            (this.BuiltinScope != null && this.BuiltinScope.TryGetProperty(arrayInput, out foundValue)))
+                        var top = this.PopStack();
+                        if (ValuePropertyAccess.TryGetProperty(top, arrayInput, out var found))
                         {
-                            this.PushStack(foundValue);
+                            this.PushStack(found);
                         }
                         else
                         {
@@ -155,7 +165,7 @@ namespace SimpleStackVM
                         var label = codeLine.Input ?? this.PopStack();
 
                         var top = this.PopStack();
-                        if (top.Equals(BoolValue.False))
+                        if (top.CompareTo(BoolValue.False) == 0)
                         {
                             this.Jump(label.ToString());
                         }
@@ -165,7 +175,7 @@ namespace SimpleStackVM
                     {
                         var label = codeLine.Input ?? this.PopStack();
                         var top = this.PopStack();
-                        if (top.Equals(BoolValue.True))
+                        if (top.CompareTo(BoolValue.True) == 0)
                         {
                             this.Jump(label.ToString());
                         }
@@ -243,41 +253,26 @@ namespace SimpleStackVM
             return args;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CallFunction(IFunctionValue value, int numArgs, bool pushToStackTrace)
         {
-            if (value is FunctionValue foundProc)
-            {
-                if (pushToStackTrace)
-                {
-                    this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
-                }
-                this.ExecuteFunction(foundProc.Value, numArgs);
-            }
-            else if (value is BuiltinFunctionValue foundBuiltin)
-            {
-                this.ExecuteFunction(foundBuiltin, numArgs);
-            }
-            else
-            {
-                throw new OperatorException(this.CreateStackTrace(), $"Unknown function call type");
-            }
+            value.Invoke(this, numArgs, pushToStackTrace);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(BuiltinFunctionValue handler, int numArgs)
+        public void ExecuteFunction(Function function, int numArgs = -1, bool pushToStackTrace = false)
         {
-            handler.Value(this, numArgs);
-        }
+            if (pushToStackTrace)
+            {
+                this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
+            }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(Function function, int numArgs = -1)
-        {
             this.CurrentCode = function;
             this.CurrentScope = new Scope(this.CurrentScope);
             this.lineCounter = 0;
 
             var args = this.GetArgs(numArgs >= 0 ? Math.Min(numArgs, function.Parameters.Count) : function.Parameters.Count);
-            for (var i = 0; i < args.Count; i++)
+            for (var i = 0; i < args.Length; i++)
             {
                 var argName = function.Parameters[i];
                 this.CurrentScope.Define(argName, args[i]);
@@ -339,6 +334,22 @@ namespace SimpleStackVM
             }
 
             throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
+        }
+
+        public delegate T CastValueDelegate<T>(IValue input);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T PopStack<T>(CastValueDelegate<T> castFunc) where T : IValue
+        {
+            var obj = this.PopStack();
+            try
+            {
+                return castFunc(obj);
+            }
+            catch (Exception exp)
+            {
+                throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: {exp.Message}");
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

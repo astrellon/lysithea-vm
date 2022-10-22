@@ -45,7 +45,7 @@ namespace SimpleStackVM.Unity
         void Awake()
         {
             Instance = this;
-            this.VMRunner.Init(32, this.OnRunHandler);
+            this.VMRunner.Init(32);
             this.VMRunner.OnComplete += (runner) =>
             {
                 this.OnSectionChange?.Invoke(SectionType.DialogueEnded);
