@@ -113,10 +113,31 @@ namespace SimpleStackVM
                         }
 
                         var keyString = key.ToString();
+                        var pushArrayOntoStack = false;
+                        if (keyString.StartsWith("..."))
+                        {
+                            pushArrayOntoStack = true;
+                            keyString = keyString.Substring(3);
+                        }
+
                         if (this.CurrentScope.TryGetKey(keyString, out var foundValue) ||
                             (this.BuiltinScope != null && this.BuiltinScope.TryGetKey(keyString, out foundValue)))
                         {
-                            this.PushStack(foundValue);
+                            if (pushArrayOntoStack)
+                            {
+                                if (foundValue is IArrayValue foundArrayValue)
+                                {
+                                    foreach (var item in foundArrayValue.ArrayValues)
+                                    {
+                                        this.PushStack(item);
+                                    }
+                                }
+                                throw new OperatorException(this.CreateStackTrace(), $"Unable to unpack array value onto stack: {foundValue.ToString()}");
+                            }
+                            else
+                            {
+                                this.PushStack(foundValue);
+                            }
                         }
                         else
                         {
@@ -271,10 +292,17 @@ namespace SimpleStackVM
             this.CurrentScope = new Scope(this.CurrentScope);
             this.lineCounter = 0;
 
-            var args = this.GetArgs(numArgs >= 0 ? Math.Min(numArgs, function.Parameters.Count) : function.Parameters.Count);
-            for (var i = 0; i < args.Length; i++)
+            var args = this.GetArgs(numArgs);
+            var numCalledArgs = Math.Min(numArgs, function.Parameters.Count);
+            for (var i = 0; i < numCalledArgs; i++)
             {
                 var argName = function.Parameters[i];
+                if (argName.StartsWith("..."))
+                {
+                    args = StandardArrayLibrary.SubList(args, i, -1);
+                    this.CurrentScope.Define(argName.Substring(3), args);
+                    break;
+                }
                 this.CurrentScope.Define(argName, args[i]);
             }
         }

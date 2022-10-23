@@ -19,6 +19,8 @@ namespace SimpleStackVM.Unity
             public DialogueActor Actor;
         }
 
+        private VirtualMachineAssembler assembler;
+
         public delegate void TextSegmentHandler(IValue text);
         public delegate void ShowChoiceHandler(IValue text, int index);
         public delegate void SectionHandler(SectionType sectionType);
@@ -45,6 +47,8 @@ namespace SimpleStackVM.Unity
         void Awake()
         {
             Instance = this;
+
+            this.assembler = this.CreateAssembler();
             this.VMRunner.Init(32);
             this.VMRunner.OnComplete += (runner) =>
             {
@@ -56,12 +60,7 @@ namespace SimpleStackVM.Unity
         {
             dialogue.Awake();
             this.selfActor = selfActor;
-            // this.vm.ClearProcedures();
-            // this.vm.AddProcedures(dialogue.Procedures);
-            // this.vm.SetCurrentProcedure(startProcedure);
-            this.vm.Reset();
-            this.vm.Running = true;
-            this.VMRunner.Running = true;
+            this.VMRunner.StartScript(dialogue.Script);
         }
 
         public void Continue()
@@ -126,108 +125,6 @@ namespace SimpleStackVM.Unity
             }
         }
 
-        private void OnRunHandler(string command, VirtualMachine vm)
-        {
-            if (command == "actor")
-            {
-                var actorScriptId = vm.PopStack().ToString();
-                this.CurrentActor = this.GetActor(actorScriptId);
-                this.OnEmotion?.Invoke("idle");
-            }
-            else if (command == "beginLine")
-            {
-                this.BeginLine();
-            }
-            else if (command == "randomPick")
-            {
-                this.RandomPick(vm.PopStack(), vm);
-            }
-            else if (command == "text")
-            {
-                this.ShowText(vm.PopStack());
-            }
-            else if (command == "beginLineText")
-            {
-                this.BeginLine();
-                this.ShowText(vm.PopStack());
-            }
-            else if (command == "endLine")
-            {
-                this.EndLine(vm);
-            }
-            else if (command == "choice")
-            {
-                var choiceValue = vm.PopStack();
-                var choiceLabel = vm.PopStack();
-                this.CreateChoice(choiceValue, choiceLabel);
-            }
-            else if (command == "get")
-            {
-                var key = vm.PopStack().ToString();
-                vm.PushStack(this.GetVariable(key));
-            }
-            else if (command == "set")
-            {
-                var value = vm.PopStack();
-                var key = vm.PopStack().ToString();
-                this.SetVariable(key, value);
-            }
-            else if (command == "emotion")
-            {
-                var emotion = vm.PopStack().ToString();
-                this.OnEmotion?.Invoke(emotion);
-            }
-            else if (command == "wait")
-            {
-                var waitTime = TimeSpan.FromMilliseconds(this.vm.PopStack<NumberValue>().Value);
-                this.VMRunner.Wait(waitTime);
-            }
-            else
-            {
-                Debug.LogWarning($"Unknown VM run command: {command}");
-            }
-        }
-
-        public void SetVariable(string key, IValue value)
-        {
-            this.variables[key] = value;
-        }
-
-        public IValue GetVariable(string key)
-        {
-            if (this.variables.TryGetValue(key, out var result))
-            {
-                return result;
-            }
-
-            return NullValue.Value;
-        }
-
-        public void BeginLine()
-        {
-            this.choiceBuffer.Clear();
-            this.OnSectionChange?.Invoke(SectionType.NewLine);
-        }
-
-        public void EndLine(VirtualMachine vm)
-        {
-            vm.Paused = true;
-            this.OnSectionChange?.Invoke(this.choiceBuffer.Count > 0 ? SectionType.ForChoices : SectionType.ToContinue);
-        }
-
-        public void RandomPick(IValue value, VirtualMachine vm)
-        {
-            if (value is ArrayValue arrayValue)
-            {
-                var index = UnityEngine.Random.Range(0, arrayValue.Value.Count);
-                vm.PushStack(arrayValue.Value[index]);
-            }
-            else
-            {
-                vm.PushStack(value);
-            }
-        }
-
         public void ShowText(IValue value)
         {
             this.OnTextSegment?.Invoke(value);
@@ -238,6 +135,59 @@ namespace SimpleStackVM.Unity
             var index = this.choiceBuffer.Count;
             this.choiceBuffer.Add(choiceValue);
             this.OnShowChoice?.Invoke(choiceLabel, index);
+        }
+
+        private VirtualMachineAssembler CreateAssembler()
+        {
+            var assembler = new VirtualMachineAssembler();
+            StandardLibrary.AddToScope(assembler.BuiltinScope);
+            assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
+
+            assembler.BuiltinScope.Define("actor", new BuiltinFunctionValue(this.ActorFunc));
+            assembler.BuiltinScope.Define("beginLine", new BuiltinFunctionValue(this.BeginLineFunc));
+            assembler.BuiltinScope.Define("endLine", new BuiltinFunctionValue(this.EndLineFunc));
+            assembler.BuiltinScope.Define("choice", new BuiltinFunctionValue(this.ChoiceFunc));
+            assembler.BuiltinScope.Define("wait", new BuiltinFunctionValue(this.WaitFunc));
+
+            return assembler;
+        }
+
+        public void BeginLineFunc(VirtualMachine vm, int numArgs)
+        {
+            this.choiceBuffer.Clear();
+            this.OnSectionChange?.Invoke(SectionType.NewLine);
+        }
+
+        public void EndLineFunc(VirtualMachine vm, int numArgs)
+        {
+            vm.Paused = true;
+            this.OnSectionChange?.Invoke(this.choiceBuffer.Count > 0 ? SectionType.ForChoices : SectionType.ToContinue);
+        }
+
+        private void ActorFunc(VirtualMachine vm, int numArgs)
+        {
+            var actorScriptId = vm.PopStack().ToString();
+            this.CurrentActor = this.GetActor(actorScriptId);
+            this.OnEmotion?.Invoke("idle");
+        }
+
+        private void ChoiceFunc(VirtualMachine vm, int numArgs)
+        {
+            var choiceValue = vm.PopStack();
+            var choiceLabel = vm.PopStack();
+            this.CreateChoice(choiceValue, choiceLabel);
+        }
+
+        private void EmotionFunc(VirtualMachine vm, int numArgs)
+        {
+            var emotion = vm.PopStack().ToString();
+            this.OnEmotion?.Invoke(emotion);
+        }
+
+        private void WaitFunc(VirtualMachine vm, int numArgs)
+        {
+            var waitTime = TimeSpan.FromMilliseconds(this.vm.PopStack<NumberValue>().Value);
+            this.VMRunner.Wait(waitTime);
         }
     }
 }

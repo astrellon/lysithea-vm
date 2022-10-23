@@ -271,16 +271,6 @@ namespace SimpleStackVM
             };
         }
 
-        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, numArgs) =>
-        {
-            vm.PushStack(new NumberValue(vm.PopStack<NumberValue>().Value + 1));
-        });
-
-        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, numArgs) =>
-        {
-            vm.PushStack(new NumberValue(vm.PopStack<NumberValue>().Value - 1));
-        });
-
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
@@ -298,8 +288,8 @@ namespace SimpleStackVM
                 case LoopKeyword: return ParseLoop(arrayValue);
                 case IfKeyword: return ParseCond(arrayValue, true);
                 case UnlessKeyword: return ParseCond(arrayValue, false);
-                case IncKeyword: return ParseChangeVariable(arrayValue[1], IncNumber);
-                case DecKeyword: return ParseChangeVariable(arrayValue[1], DecNumber);
+                case IncKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.IncNumber);
+                case DecKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.DecNumber);
             }
 
             return new List<ITempCodeLine>();
@@ -388,7 +378,7 @@ namespace SimpleStackVM
 
         private static bool IsGetPropertyRequest(VariableValue input, out string parentKey, out ArrayValue property)
         {
-            if (input.Value.Contains('.'))
+            if (input.Value.Contains('.') && !input.Value.StartsWith("..."))
             {
                 var split = input.Value.Split('.');
                 parentKey = split.First();

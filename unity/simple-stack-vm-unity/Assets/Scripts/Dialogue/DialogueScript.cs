@@ -7,15 +7,15 @@ namespace SimpleStackVM.Unity
     public class DialogueScript : ScriptableObject
     {
         #region Fields
-        public TextAsset JsonText;
+        public TextAsset CodeText;
 
-        public List<Function> Procedures;
+        public Script Script { get; private set; } = Script.Empty;
         #endregion
 
         #region Methods
         public void Awake()
         {
-            if (this.Procedures != null && this.Procedures.Count > 0)
+            if (!this.Script.Code.IsEmpty)
             {
                 return;
             }

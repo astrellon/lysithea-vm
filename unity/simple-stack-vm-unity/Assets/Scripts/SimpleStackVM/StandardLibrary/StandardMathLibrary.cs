@@ -121,12 +121,26 @@ namespace SimpleStackVM
                     var left = vm.PopStack();
                     vm.PushStack(left.CompareTo(right) < 0 ? left : right);
                 })},
+
+                {"inc", IncNumber},
+                {"dec", DecNumber},
             };
 
             result.Define("math", new ObjectValue(mathFunctions));
 
             return result;
         }
+
+        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, numArgs) =>
+        {
+            vm.PushStack(new NumberValue(vm.PopStack<NumberValue>().Value + 1));
+        });
+
+        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, numArgs) =>
+        {
+            vm.PushStack(new NumberValue(vm.PopStack<NumberValue>().Value - 1));
+        });
+
         #endregion
     }
 }
