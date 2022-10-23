@@ -7,11 +7,9 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3f07b6d17b7010346990f81800f3f59e, type: 3}
-  m_Name: drawCircle
+  m_Script: {fileID: 11500000, guid: 51c04690da8b7b300a4f314060cf48f8, type: 3}
+  m_Name: DrawCircle
   m_EditorClassIdentifier: 
-  OptionTitle: Draw In A Circle
-  StartScope: MainCircle
-  JsonText: {fileID: 4900000, guid: b7926248442d0472aae37ff61b89f649, type: 3}
+  CodeText: {fileID: 2811297602134710623, guid: 7fafa160b16945f53b013b60c5731679, type: 3}

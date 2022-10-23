@@ -17,5 +17,3 @@
 (define makeGround (function ()
     (draw.element "plane" vector3.zero (randomColour) 100)
 ))
-
-(makeGround)

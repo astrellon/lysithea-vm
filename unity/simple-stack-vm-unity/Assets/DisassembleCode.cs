@@ -6,7 +6,7 @@ namespace SimpleStackVM.Unity
 {
     public class DisassembleCode : MonoBehaviour
     {
-        public UIScope UIScope;
+        // public UICodeEdit UIScope;
 
         public void PullCode()
         {

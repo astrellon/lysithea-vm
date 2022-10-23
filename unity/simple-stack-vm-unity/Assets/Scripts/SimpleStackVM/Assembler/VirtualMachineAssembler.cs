@@ -29,6 +29,8 @@ namespace SimpleStackVM
         private const string UnlessKeyword = "unless";
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
+        private const string IncKeyword = "inc";
+        private const string DecKeyword = "dec";
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
@@ -258,6 +260,27 @@ namespace SimpleStackVM
             return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
         }
 
+        public List<ITempCodeLine> ParseChangeVariable(IValue input, BuiltinFunctionValue changeFunc)
+        {
+            var varName = new StringValue(input.ToString());
+            return new List<ITempCodeLine>
+            {
+                new CodeLine(Operator.Get, varName),
+                new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { changeFunc, new NumberValue(1) })),
+                new CodeLine(Operator.Set, varName)
+            };
+        }
+
+        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, numArgs) =>
+        {
+            vm.PushStack(new NumberValue(vm.PopStack<NumberValue>().Value + 1));
+        });
+
+        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, numArgs) =>
+        {
+            vm.PushStack(new NumberValue(vm.PopStack<NumberValue>().Value - 1));
+        });
+
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
@@ -275,6 +298,8 @@ namespace SimpleStackVM
                 case LoopKeyword: return ParseLoop(arrayValue);
                 case IfKeyword: return ParseCond(arrayValue, true);
                 case UnlessKeyword: return ParseCond(arrayValue, false);
+                case IncKeyword: return ParseChangeVariable(arrayValue[1], IncNumber);
+                case DecKeyword: return ParseChangeVariable(arrayValue[1], DecNumber);
             }
 
             return new List<ITempCodeLine>();
