@@ -7,7 +7,7 @@ namespace SimpleStackVM.Unity
     public class DrawingVM : MonoBehaviour
     {
         public static DrawingVM Instance { get; private set; }
-        public static readonly VirtualMachineAssembler Assembler = CreateAssembler();
+        private readonly VirtualMachineAssembler assembler = CreateAssembler();
 
         public VMRunner VMRunner;
 
@@ -16,6 +16,12 @@ namespace SimpleStackVM.Unity
         void Awake()
         {
             Instance = this;
+            this.VMRunner.Init(32);
+        }
+
+        public Script AssembleScript(string text)
+        {
+            return this.assembler.ParseFromText(text);
         }
 
         public void StartDrawing(IEnumerable<IDrawingScript> includeScripts, IDrawingScript mainScript)
@@ -37,7 +43,7 @@ namespace SimpleStackVM.Unity
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(DrawingLibrary.Scope);
-            assembler.BuiltinScope.CombineScope(RandomLibrary.Scope);
+            assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
 
             return assembler;
         }

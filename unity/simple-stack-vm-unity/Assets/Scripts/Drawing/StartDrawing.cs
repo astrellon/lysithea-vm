@@ -7,7 +7,7 @@ namespace SimpleStackVM.Unity
     {
         #region Fields
         public List<DrawingScript> IncludeScripts;
-        public IDrawingScript MainScript;
+        public DrawingScript MainScript;
         #endregion
 
         #region Methods

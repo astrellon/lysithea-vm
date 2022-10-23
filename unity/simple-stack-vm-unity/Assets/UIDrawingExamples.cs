@@ -25,8 +25,8 @@ namespace SimpleStackVM.Unity
             }
 
             var exampleOption = this.TextExamples[index - 1];
-            this.UIScope.StartScopeName.text = exampleOption.StartScope;
-            this.UIScope.ScopeData.text = exampleOption.JsonText.text;
+            // this.UIScope.StartScopeName.text = exampleOption.StartScope;
+            // this.UIScope.ScopeData.text = exampleOption.JsonText.text;
         }
     }
 }

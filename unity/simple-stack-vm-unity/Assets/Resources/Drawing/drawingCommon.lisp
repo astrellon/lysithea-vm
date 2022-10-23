@@ -6,8 +6,16 @@
     (return (colour.hsv hue saturation value))
 ))
 
+(define randomVector (function (from to)
+    (define x (random.range from.x to.x))
+    (define y (random.range from.y to.y))
+    (define z (random.range from.z to.z))
+
+    (return (vector3.new x y z))
+))
+
 (define makeGround (function ()
-    (draw.complex "plane" vector.zero (randomColour) 100)
+    (draw.element "plane" vector3.zero (randomColour) 100)
 ))
 
 (makeGround)

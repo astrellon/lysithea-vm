@@ -15,13 +15,13 @@ namespace SimpleStackVM.Unity
         #region Methods
         public void Awake()
         {
-            if (this.Script.Code.IsEmpty)
+            if (!this.Script.Code.IsEmpty)
             {
                 return;
             }
 
             var codeString = this.CodeText.text;
-            this.Script = DrawingVM.Assembler.ParseFromText(codeString);
+            this.Script = DrawingVM.Instance.AssembleScript(codeString);
         }
         #endregion
 

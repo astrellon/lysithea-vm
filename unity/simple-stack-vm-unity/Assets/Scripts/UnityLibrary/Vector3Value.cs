@@ -1,11 +1,18 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
+
+#nullable enable
 
 namespace SimpleStackVM
 {
-    public struct Vector3Value : IValue
+    public struct Vector3Value : IObjectValue
     {
         #region Fields
+        public static readonly IReadOnlyList<string> Keys = new[] { "x", "y", "z" };
+        public IReadOnlyList<string> ObjectKeys => Keys;
+
         public readonly Vector3 Value;
 
         public string TypeName => "vector3";
@@ -45,6 +52,19 @@ namespace SimpleStackVM
             }
 
             throw new Exception($"Invalid Vector3 cast: {input.ToString()}");
+        }
+
+        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue value)
+        {
+            switch (key)
+            {
+                case "x": value = new NumberValue(this.Value.x); return true;
+                case "y": value = new NumberValue(this.Value.y); return true;
+                case "z": value = new NumberValue(this.Value.z); return true;
+            }
+
+            value = NullValue.Value;
+            return false;
         }
         #endregion
     }

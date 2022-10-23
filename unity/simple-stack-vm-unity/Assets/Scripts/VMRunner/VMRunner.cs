@@ -78,6 +78,7 @@ namespace SimpleStackVM.Unity
 
         public void StartScript(Script script)
         {
+            this.Running = true;
             this.VM.Running = true;
             this.VM.Paused = false;
             this.VM.ChangeToScript(script);
