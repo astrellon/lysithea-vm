@@ -2114,7 +2114,8 @@ MonoBehaviour:
   Running: 0
   WaitUntil: -1
   VMStepTiming: 0
-  MaxStepsPerFrame: 100000
+  BreakStepsPerFrame: 1000000
+  MaxStepsPerFrame: 100
 --- !u!114 &630172460
 MonoBehaviour:
   m_ObjectHideFlags: 0
