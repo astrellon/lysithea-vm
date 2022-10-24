@@ -43,40 +43,40 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("say", (vm, numArgs) =>
+            result.Define("say", (vm, args) =>
             {
-                Say(vm.PopStack());
+                Say(args.Get(0));
             });
 
-            result.Define("getPlayerName", (vm, numArgs) =>
+            result.Define("getPlayerName", (vm, args) =>
             {
                 var name = Console.ReadLine()?.Trim() ?? "<Empty>";
                 vm.GlobalScope.Define("playerName", new StringValue(name));
             });
 
-            result.Define("randomSay", (vm, numArgs) =>
+            result.Define("randomSay", (vm, args) =>
             {
-                RandomSay(vm.PopStack<ArrayValue>());
+                RandomSay(args.Get<ArrayValue>(0));
             });
 
-            result.Define("isShopEnabled", (vm, numArgs) =>
+            result.Define("isShopEnabled", (vm, args) =>
             {
                 vm.PushStack(IsShopEnabled);
             });
 
-            result.Define("moveTo", (vm, numArgs) =>
+            result.Define("moveTo", (vm, args) =>
             {
-                var label = vm.PopStack();
-                var proc = vm.PopStack<FunctionValue>();
+                var proc = args.Get<FunctionValue>(0);
+                var label = args.Get(1);
 
                 vm.CallFunction(proc, 0, false);
                 vm.Jump(label.ToString());
             });
 
-            result.Define("choice", (vm, numArgs) =>
+            result.Define("choice", (vm, args) =>
             {
-                var choiceJumpLabel = vm.PopStack();
-                var choiceText = vm.PopStack();
+                var choiceText = args.Get(0);
+                var choiceJumpLabel = args.Get(1);
                 if (choiceJumpLabel is IFunctionValue procValue)
                 {
                     ChoiceBuffer.Add(procValue);
@@ -88,7 +88,7 @@ namespace SimpleStackVM
                 SayChoice(choiceText);
             });
 
-            result.Define("waitForChoice", (vm, numArgs) =>
+            result.Define("waitForChoice", (vm, args) =>
             {
                 if (!ChoiceBuffer.Any())
                 {
@@ -119,12 +119,12 @@ namespace SimpleStackVM
                 } while (!choiceValid);
             });
 
-            result.Define("openTheShop", (vm, numArgs) =>
+            result.Define("openTheShop", (vm, args) =>
             {
                 IsShopEnabled = true;
             });
 
-            result.Define("openShop", (vm, numArgs) =>
+            result.Define("openShop", (vm, args) =>
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
             });

@@ -39,36 +39,36 @@ namespace SimpleStackVM.Example
         {
             var result = new Scope();
 
-            result.Define("done", (vm, numArgs) =>
+            result.Define("done", (vm, args) =>
             {
                 Console.WriteLine("Done!");
             });
 
-            result.Define("rand", (vm, numArgs) =>
+            result.Define("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
             });
 
-            result.Define("newPerson", (vm, numArgs) =>
+            result.Define("newPerson", (vm, args) =>
             {
-                var location = vm.PopStack<ArrayValue>();
-                var age = vm.PopStack<NumberValue>();
-                var name = vm.PopStack<StringValue>();
+                var name = args.Get<StringValue>(0);
+                var age = args.Get<NumberValue>(1);
+                var location = args.Get<ArrayValue>(2);
                 vm.PushStack(new PersonValue(name, age, location));
             });
 
-            result.Define("newVector", (vm, numArgs) =>
+            result.Define("newVector", (vm, args) =>
             {
-                var z = vm.PopStack<NumberValue>();
-                var y = vm.PopStack<NumberValue>();
-                var x = vm.PopStack<NumberValue>();
+                var x = args.Get<NumberValue>(0);
+                var y = args.Get<NumberValue>(1);
+                var z = args.Get<NumberValue>(2);
                 vm.PushStack(new VectorValue(x.FloatValue, y.FloatValue, z.FloatValue));
             });
 
-            result.Define("combinePerson", (vm, numArgs) =>
+            result.Define("combinePerson", (vm, args) =>
             {
-                var right = vm.PopStack<PersonValue>();
-                var left = vm.PopStack<PersonValue>();
+                var left = args.Get<PersonValue>(0);
+                var right = args.Get<PersonValue>(1);
 
                 var name = new StringValue($"{left.Name} - {right.Name}");
                 var age = new NumberValue(left.Age.Value + right.Age.Value);

@@ -60,7 +60,7 @@ namespace SimpleStackVM
             return false;
         }
 
-        public void GetLength(VirtualMachine vm, int numArgs)
+        public void GetLength(VirtualMachine vm, ArgumentsValue args)
         {
             vm.PushStack(this.Value.Length);
         }

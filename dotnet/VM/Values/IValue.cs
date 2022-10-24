@@ -29,6 +29,6 @@ namespace SimpleStackVM
 
     public interface IFunctionValue : IValue
     {
-        void Invoke(VirtualMachine vm, int numArgs, bool pushToStackTrace);
+        void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace);
     }
 }

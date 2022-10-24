@@ -130,6 +130,6 @@
 (print "Values1: " values)
 (print "Values2: " ...values)
 
-;; (testArray)
-;; (testString)
-;; (testObject)
+(testArray)
+(testString)
+(testObject)

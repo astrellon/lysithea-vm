@@ -17,60 +17,59 @@ namespace SimpleStackVM
 
             var stringFunctions = new Dictionary<string, IValue>
             {
-                {"length", new BuiltinFunctionValue((vm, numArgs) =>
+                {"length", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
                     vm.PushStack(new NumberValue(top.Value.Length));
                 })},
 
-                {"set", new BuiltinFunctionValue((vm, numArgs) =>
+                {"set", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var value = vm.PopStack();
-                    var index = vm.PopStack<NumberValue>();
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
+                    var index = args.Get<NumberValue>(1);
+                    var value = args.Get(2);
                     vm.PushStack(Set(top, index.IntValue, value.ToString()));
                 })},
 
-                {"get", new BuiltinFunctionValue((vm, numArgs) =>
+                {"get", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var index = vm.PopStack<NumberValue>();
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
+                    var index = args.Get<NumberValue>(1);
                     vm.PushStack(Get(top, index.IntValue));
                 })},
 
-                {"insert", new BuiltinFunctionValue((vm, numArgs) =>
+                {"insert", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var value = vm.PopStack();
-                    var index = vm.PopStack<NumberValue>();
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
+                    var index = args.Get<NumberValue>(1);
+                    var value = args.Get(2);
                     vm.PushStack(Insert(top, index.IntValue, value.ToString()));
                 })},
 
-                {"substring", new BuiltinFunctionValue((vm, numArgs) =>
+                {"substring", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var length = vm.PopStack<NumberValue>();
-                    var index = vm.PopStack<NumberValue>();
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
+                    var index = args.Get<NumberValue>(1);
+                    var length = args.Get<NumberValue>(2);
                     vm.PushStack(SubString(top, index.IntValue, length.IntValue));
                 })},
 
-                {"removeAt", new BuiltinFunctionValue((vm, numArgs) =>
+                {"removeAt", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var index = vm.PopStack<NumberValue>();
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
+                    var index = args.Get<NumberValue>(1);
                     vm.PushStack(RemoveAt(top, index.IntValue));
                 })},
 
-                {"removeAll", new BuiltinFunctionValue((vm, numArgs) =>
+                {"removeAll", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var values = vm.PopStack<StringValue>();
-                    var top = vm.PopStack<StringValue>();
+                    var top = args.Get<StringValue>(0);
+                    var values = args.Get<StringValue>(1);
                     vm.PushStack(RemoveAll(top, values.Value));
                 })},
 
-                {"join", new BuiltinFunctionValue((vm, numArgs) =>
+                {"join", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var args = vm.GetArgs(numArgs);
                     var separator = args.Value.First().ToString();
                     var result = string.Join(separator, args.Value.Skip(1));
                     vm.PushStack(result);

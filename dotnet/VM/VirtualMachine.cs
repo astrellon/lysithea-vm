@@ -251,11 +251,11 @@ namespace SimpleStackVM
         }
 
         #region Function Methods
-        public ArrayValue GetArgs(int numArgs)
+        public ArgumentsValue GetArgs(int numArgs)
         {
             if (numArgs == 0)
             {
-                return ArrayValue.Empty;
+                return ArgumentsValue.Empty;
             }
 
             var hasArguments = false;
@@ -272,19 +272,20 @@ namespace SimpleStackVM
 
             if (hasArguments)
             {
-                return new ArrayValue(temp.SelectMany(FlattenTempArgs).ToList());
+                return new ArgumentsValue(temp.SelectMany(FlattenTempArgs).ToList());
             }
-            return new ArrayValue(temp);
+            return new ArgumentsValue(temp);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CallFunction(IFunctionValue value, int numArgs, bool pushToStackTrace)
         {
-            value.Invoke(this, numArgs, pushToStackTrace);
+            var args = this.GetArgs(numArgs);
+            value.Invoke(this, args, pushToStackTrace);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(Function function, int numArgs = -1, bool pushToStackTrace = false)
+        public void ExecuteFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
         {
             if (pushToStackTrace)
             {
@@ -295,14 +296,13 @@ namespace SimpleStackVM
             this.CurrentScope = new Scope(this.CurrentScope);
             this.lineCounter = 0;
 
-            var args = this.GetArgs(numArgs);
             var numCalledArgs = Math.Min(args.ArrayValues.Count, function.Parameters.Count);
             for (var i = 0; i < numCalledArgs; i++)
             {
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    args = StandardArrayLibrary.SubList(args, i, -1);
+                    args = args.SubList(i);
                     this.CurrentScope.Define(argName.Substring(3), args);
                     break;
                 }
@@ -369,33 +369,6 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T PopStack<T>() where T : IValue
-        {
-            var obj = this.PopStack();
-            if (obj.GetType() == typeof(T))
-            {
-                return (T)obj;
-            }
-
-            throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
-        }
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T PopStack<T>(CastValueDelegate<T> castFunc) where T : IValue
-        {
-            var obj = this.PopStack();
-            try
-            {
-                return castFunc(obj);
-            }
-            catch (Exception exp)
-            {
-                throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: {exp.Message}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IValue PeekStack()
         {
             if (!this.stack.TryPeek(out var obj))
@@ -404,18 +377,6 @@ namespace SimpleStackVM
             }
 
             return obj;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T PeekStack<T>() where T : IValue
-        {
-            var obj = this.PeekStack();
-            if (obj.GetType() == typeof(T))
-            {
-                return (T)obj;
-            }
-
-            throw new StackException(this.CreateStackTrace(), "Unable to peek stack, type cast error");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

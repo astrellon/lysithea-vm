@@ -70,9 +70,9 @@ namespace SimpleStackVM.Example
             return false;
         }
 
-        public void Add(VirtualMachine vm, int numArgs)
+        public void Add(VirtualMachine vm, ArgumentsValue args)
         {
-            var other = vm.PopStack<VectorValue>();
+            var other = args.Get<VectorValue>(0);
             var x = this.X + other.X;
             var y = this.Y + other.Y;
             var z = this.Z + other.Z;

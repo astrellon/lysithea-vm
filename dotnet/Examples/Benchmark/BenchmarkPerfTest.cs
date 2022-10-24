@@ -114,8 +114,8 @@ namespace SimpleStackVM
 
             result.Define("add", (vm, numArgs) =>
             {
-                var num1 = vm.PopStack<NumberValue>();
-                var num2 = vm.PopStack<NumberValue>();
+                var num1 = (NumberValue)vm.PopStack();
+                var num2 = (NumberValue)vm.PopStack();
                 vm.PushStack((num1.Value + num2.Value));
             });
 
@@ -127,7 +127,7 @@ namespace SimpleStackVM
 
             result.Define("done", (vm, numArgs) =>
             {
-                var total = vm.PopStack<NumberValue>();
+                var total = (NumberValue)vm.PopStack();
                 // Console.WriteLine($"Done: {total.Value}");
             });
 
