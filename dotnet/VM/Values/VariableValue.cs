@@ -15,7 +15,7 @@ namespace SimpleStackVM
         #region Constructor
         public VariableValue(string value)
         {
-            this.Value = string.Intern(value);
+            this.Value = value;
         }
         #endregion
 

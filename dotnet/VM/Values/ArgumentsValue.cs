@@ -48,9 +48,9 @@ namespace SimpleStackVM
         {
             if (this.TryGet(index, out var foundValue))
             {
-                if (foundValue.GetType() == typeof(T))
+                if (foundValue is T foundCasted)
                 {
-                    result = (T)foundValue;
+                    result = foundCasted;
                     return true;
                 }
             }
@@ -75,9 +75,9 @@ namespace SimpleStackVM
         {
             if (TryGet(index, out var value))
             {
-                if (value.GetType() == typeof(T))
+                if (value is T result)
                 {
-                    return (T)value;
+                    return result;
                 }
                 throw new System.Exception($"Unable to cast argument to: {typeof(T).FullName} for {value.ToString()}");
             }
