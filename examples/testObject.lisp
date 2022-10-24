@@ -1,5 +1,7 @@
+; A comment!
 (define testPerson (function ()
-    (define personObj {
+    ; A second comment
+    (define personObj { ; A third comment
         name "Alan"
         age 33
         address ("location 1" "location 2")

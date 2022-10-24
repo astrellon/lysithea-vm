@@ -12,6 +12,13 @@ namespace SimpleStackVM.Example
         #region Methods
         public static void Main(string[] args)
         {
+            using var file = File.OpenRead("../../../examples/testObject.lisp");
+            using var reader = new StreamReader(file);
+            var result = VirtualMachineStreamParser.ReadAllTokens(reader);
+        }
+
+        public static void MainOld(string[] args)
+        {
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(CustomScope);

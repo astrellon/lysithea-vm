@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,6 +41,29 @@ namespace SimpleStackVM
         #region Methods
 
         #region Parse From Input
+        public Script ParseFromStream(Stream input)
+        {
+            using var reader = new StreamReader(input);
+            var parsed = VirtualMachineStreamParser.ReadAllTokens(reader);
+
+            var code = this.ParseGlobalFunction(parsed);
+            var scriptScope = new Scope();
+            scriptScope.CombineScope(this.BuiltinScope);
+
+            return new Script(scriptScope, code);
+        }
+
+        public Script ParseFromStream(TextReader reader)
+        {
+            var parsed = VirtualMachineStreamParser.ReadAllTokens(reader);
+
+            var code = this.ParseGlobalFunction(parsed);
+            var scriptScope = new Scope();
+            scriptScope.CombineScope(this.BuiltinScope);
+
+            return new Script(scriptScope, code);
+        }
+
         public Script ParseFromText(string input)
         {
             var tokens = VirtualMachineParser.Tokenize(input);

@@ -10,7 +10,8 @@ namespace SimpleStackVM
     public class BenchmarkStdLib
     {
         #region Fields
-        private static string CodeText = File.ReadAllText("/home/alan/git/simple-stack-vm/examples/testStandardLibraryNoAssert.lisp");
+        private const string FilePath = "/home/alan/git/simple-stack-vm/examples/testStandardLibraryNoAssert2.lisp";
+        private static string CodeText = File.ReadAllText(FilePath);
         private static readonly VirtualMachineAssembler Assembler = CreateAssembler();
         private static readonly Script Code = Assembler.ParseFromText(CodeText);
         private static readonly VirtualMachine SharedVM = new VirtualMachine(8);
@@ -40,14 +41,22 @@ namespace SimpleStackVM
         }
 
         [Benchmark]
-        public void TestStdLibCreateAll()
+        public void TestStdLibStreamFile()
         {
-            var assembler = CreateAssembler();
-            var code = assembler.ParseFromText(CodeText);
+            using var file = File.OpenRead(FilePath);
+            var code = Assembler.ParseFromStream(file);
             var vm = new VirtualMachine(8);
             vm.Execute(code);
         }
 
+        [Benchmark]
+        public void TestStdLibStreamString()
+        {
+            using var reader = new StringReader(CodeText);
+            var code = Assembler.ParseFromStream(reader);
+            var vm = new VirtualMachine(8);
+            vm.Execute(code);
+        }
         #endregion
     }
 }
