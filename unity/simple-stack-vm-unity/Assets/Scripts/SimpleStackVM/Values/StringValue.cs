@@ -19,7 +19,7 @@ namespace SimpleStackVM
         #region Constructor
         public StringValue(string value)
         {
-            this.Value = string.Intern(value);
+            this.Value = value;
         }
         #endregion
 
@@ -60,7 +60,7 @@ namespace SimpleStackVM
             return false;
         }
 
-        public void GetLength(VirtualMachine vm, int numArgs)
+        public void GetLength(VirtualMachine vm, ArgumentsValue args)
         {
             vm.PushStack(this.Value.Length);
         }

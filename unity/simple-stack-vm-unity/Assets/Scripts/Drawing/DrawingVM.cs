@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,11 +29,9 @@ namespace SimpleStackVM.Unity
 
             foreach (var drawingScript in includeScripts)
             {
-                drawingScript.Awake();
                 this.vm.Execute(drawingScript.Script);
             }
 
-            mainScript.Awake();
             this.VMRunner.StartScript(mainScript.Script);
         }
 

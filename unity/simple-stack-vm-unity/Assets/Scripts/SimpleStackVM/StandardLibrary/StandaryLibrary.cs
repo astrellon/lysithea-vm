@@ -29,7 +29,7 @@ namespace SimpleStackVM
 
         public static void AddToScope(Scope scope, LibraryType libraries = LibraryType.All)
         {
-            if (libraries.HasFlag(LibraryType.All))
+            if (AllLibraries != null && libraries.HasFlag(LibraryType.All))
             {
                 scope.CombineScope(AllLibraries);
                 return;

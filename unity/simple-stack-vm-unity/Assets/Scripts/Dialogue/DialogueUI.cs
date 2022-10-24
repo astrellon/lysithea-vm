@@ -61,15 +61,15 @@ namespace SimpleStackVM.Unity
             }
         }
 
-        private void OnTextSegment(IValue text)
+        private void OnTextSegment(string text)
         {
-            this.DialogueText.text += this.ProcessText(text.ToString());
+            this.DialogueText.text += text;
         }
 
-        private void OnShowChoice(IValue text, int index)
+        private void OnShowChoice(string text, int index)
         {
             var newChoice = Instantiate(this.ChoicePrefab, this.ChoiceTarget);
-            newChoice.ChoiceText = text.ToString();
+            newChoice.ChoiceText = text;
             newChoice.ChoiceIndex = index;
             newChoice.DialogueVM = this.DialogueVM;
         }
@@ -107,20 +107,6 @@ namespace SimpleStackVM.Unity
             var children = new List<GameObject>();
             foreach (Transform child in this.ChoiceTarget) children.Add(child.gameObject);
             children.ForEach(child => Destroy(child));
-        }
-
-        private string ProcessText(string input)
-        {
-            return TextReplaceRegex.Replace(input, (a) =>
-            {
-                if (a.Value[0] == '{')
-                {
-                    var actorName = a.Value.Substring(1, a.Value.Length - 2);
-                    var actor = this.DialogueVM.GetActor(actorName);
-                    return actor.Name;
-                }
-                return a.Value;
-            });
         }
 
         public void ContinueDialogue()

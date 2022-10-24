@@ -17,7 +17,7 @@ namespace SimpleStackVM
         public static readonly IReadOnlyScope Empty = new Scope();
         private static readonly IReadOnlyDictionary<string, IValue> EmptyScopeValues = new Dictionary<string, IValue>();
 
-        private Dictionary<string, IValue>? values = null;// = new Dictionary<string, IValue>();
+        private Dictionary<string, IValue>? values = null;
         public IReadOnlyDictionary<string, IValue> Values => this.values ?? EmptyScopeValues;
 
         public Scope? Parent;
@@ -31,6 +31,14 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
+        public void Clear()
+        {
+            if (this.values != null)
+            {
+                this.values.Clear();
+            }
+        }
+
         public void CombineScope(IReadOnlyScope input)
         {
             foreach (var kvp in input.Values)

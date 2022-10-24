@@ -1,6 +1,5 @@
 
 using System;
-using System.Linq;
 
 namespace SimpleStackVM
 {
@@ -15,63 +14,50 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define(">", (vm, numArgs) =>
+            result.Define(">", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) > 0);
+                vm.PushStack(args[0].CompareTo(args[1]) > 0);
             });
 
-            result.Define(">=", (vm, numArgs) =>
+            result.Define(">=", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) >= 0);
+                vm.PushStack(args[0].CompareTo(args[1]) >= 0);
             });
 
-            result.Define("==", (vm, numArgs) =>
+            result.Define("==", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) == 0);
+                vm.PushStack(args[0].CompareTo(args[1]) == 0);
             });
 
-            result.Define("!=", (vm, numArgs) =>
+            result.Define("!=", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) != 0);
+                vm.PushStack(args[0].CompareTo(args[1]) != 0);
             });
 
-            result.Define("<", (vm, numArgs) =>
+            result.Define("<", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) < 0);
+                vm.PushStack(args[0].CompareTo(args[1]) < 0);
             });
 
-            result.Define("<=", (vm, numArgs) =>
+            result.Define("<=", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) <= 0);
+                vm.PushStack(args[0].CompareTo(args[1]) <= 0);
             });
 
-            result.Define("!", (vm, numArgs) =>
+            result.Define("!", (vm, args) =>
             {
-                var top = vm.PopStack<BoolValue>();
-                vm.PushStack(!top.Value);
+                var value = args.Get<BoolValue>(0).Value;
+                vm.PushStack(!value);
             });
 
-            result.Define("+", (vm, numArgs) =>
+            result.Define("+", (vm, args) =>
             {
-                if (numArgs == 0)
+                if (args.Length == 0)
                 {
                     return;
                 }
 
-                var args = vm.GetArgs(numArgs);
-                if (args[0] is StringValue)
+                if (args.TryGet<StringValue>(0, out var firstString))
                 {
                     var result = string.Join("", args.Value);
                     vm.PushStack(result);
@@ -79,56 +65,43 @@ namespace SimpleStackVM
                 else
                 {
                     var result = 0.0;
-                    for (var i = 0; i < args.Length; i++)
+                    foreach (NumberValue num in args.Value)
                     {
-                        if (args[i] is NumberValue argNum)
-                        {
-                            result += argNum.Value;
-                        }
-                        else
-                        {
-                            throw new Exception("Add only works on numbers and strings");
-                        }
+                        result += num.Value;
                     }
                     vm.PushStack(result);
                 }
             });
 
-            result.Define("-", (vm, numArgs) =>
+            result.Define("-", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value - right.Value);
+                vm.PushStack(args.Get<NumberValue>(0).Value - args.Get<NumberValue>(1).Value);
             });
 
-            result.Define("*", (vm, numArgs) =>
+            result.Define("*", (vm, args) =>
             {
-                if (numArgs < 2)
+                if (args.Length < 2)
                 {
                     throw new Exception("Multiple operator expects more than 1 input");
                 }
 
-                var total = vm.PopStack<NumberValue>().Value;
-                for (var i = numArgs - 2; i >= 0; i--)
+                var total = 1.0;
+                foreach (NumberValue num in args.ArrayValues)
                 {
-                    total *= vm.PopStack<NumberValue>().Value;
+                    total *= num.Value;
                 }
 
                 vm.PushStack(total);
             });
 
-            result.Define("/", (vm, numArgs) =>
+            result.Define("/", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value / right.Value);
+                vm.PushStack(args.Get<NumberValue>(0).Value / args.Get<NumberValue>(1).Value);
             });
 
-            result.Define("%", (vm, numArgs) =>
+            result.Define("%", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value % right.Value);
+                vm.PushStack(args.Get<NumberValue>(0).Value % args.Get<NumberValue>(1).Value);
             });
 
             return result;

@@ -17,12 +17,12 @@ namespace SimpleStackVM.Unity
 
             var drawingFunctions = new Dictionary<string, IValue>
             {
-                {"element", new BuiltinFunctionValue((vm, numArgs) =>
+                {"element", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var scale = vm.PopStack(Vector3Value.Cast);
-                    var colour = vm.PopStack(ColourValue.Cast);
-                    var position = vm.PopStack(Vector3Value.Cast);
-                    var elementName = vm.PopStack<StringValue>();
+                    var elementName = args.Get<StringValue>(0);
+                    var position = args.Get(1, Vector3Value.Cast);
+                    var colour = args.Get(2, ColourValue.Cast);
+                    var scale = args.Get(3, Vector3Value.Cast);
 
                     DrawingContext.Instance.DrawElement(elementName.Value, position.Value, colour.Value, scale.Value);
                 })},

@@ -83,14 +83,24 @@ namespace SimpleStackVM
                         return keywordParse;
                     }
 
+                    var result = new List<ITempCodeLine>();
                     // Attempt to parse as an op code
                     var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
                     if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
                     {
-                        return new List<ITempCodeLine> { new CodeLine(opCode, arrayValue[1]) };
+                        if (arrayValue[1] is IArrayValue)
+                        {
+                            result.AddRange(Parse(arrayValue[1]));
+                            result.Add(new CodeLine(opCode, null));
+                        }
+                        else
+                        {
+                            result.Add(new CodeLine(opCode, arrayValue[1]));
+                        }
+
+                        return result;
                     }
 
-                    var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
                     foreach (var item in arrayValue.Value.Skip(1))
                     {

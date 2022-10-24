@@ -190,8 +190,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4280756007
+  m_fontColor: {r: 0.15294118, g: 0.15294118, b: 0.15294118, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -325,8 +325,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4280756007
+  m_fontColor: {r: 0.15294118, g: 0.15294118, b: 0.15294118, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -460,8 +460,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4280756007
+  m_fontColor: {r: 0.15294118, g: 0.15294118, b: 0.15294118, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1077,7 +1077,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Dialogue: {fileID: 11400000, guid: 41e87959e16ab8234b6feb30ab582329, type: 2}
-  StartScope: Main
   SelfActor: {fileID: 848435988}
 --- !u!114 &848435990
 MonoBehaviour:
@@ -1440,7 +1439,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Dialogue: {fileID: 11400000, guid: 67cf078ffc6a0531c958d2b5c12befde, type: 2}
-  StartScope: Main
   SelfActor: {fileID: 1160910068}
 --- !u!114 &1160910065
 MonoBehaviour:
@@ -1634,7 +1632,7 @@ GameObject:
   - component: {fileID: 1571150332}
   - component: {fileID: 1571150333}
   m_Layer: 0
-  m_Name: GameManager
+  m_Name: DialogueVM
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1703,6 +1701,8 @@ MonoBehaviour:
   Running: 1
   WaitUntil: -1
   VMStepTiming: -1
+  BreakStepsPerFrame: 1000000
+  MaxStepsPerFrame: 10000
 --- !u!1 &1579702125
 GameObject:
   m_ObjectHideFlags: 0
@@ -1987,7 +1987,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Dialogue: {fileID: 11400000, guid: 67cf078ffc6a0531c958d2b5c12befde, type: 2}
-  StartScope: Main
   SelfActor: {fileID: 1686319448}
 --- !u!114 &1686319448
 MonoBehaviour:

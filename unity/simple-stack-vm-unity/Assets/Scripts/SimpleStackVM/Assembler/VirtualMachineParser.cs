@@ -102,10 +102,16 @@ namespace SimpleStackVM
             if ((first == '"'  && last == '"') ||
                 (first == '\'' && last == '\''))
             {
-                return new StringValue(input.Substring(1, input.Length - 2));
+                return new StringValue(ParseString(input.Substring(1, input.Length - 2)));
             }
 
             return new VariableValue(input);
+        }
+
+        private static string ParseString(string input)
+        {
+            return input.Replace("\\n", "\n")
+                .Replace("\\t", "\t");
         }
 
         private static T PopFront<T>(List<T> input)

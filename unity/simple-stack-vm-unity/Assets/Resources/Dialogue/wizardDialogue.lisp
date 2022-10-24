@@ -1,3 +1,4 @@
+; Helper Function
 (define beginLineText (function (...input)
     (beginLine)
     (text ...input)
@@ -35,7 +36,7 @@
 ))
 
 (define whatPowers (function ()
-    (actor "PLAYER")
+    (actor PLAYER)
     (emotion "happy")
     (beginLineText "What kind of powers do you have?")
     (endLine)
@@ -49,8 +50,8 @@
     (actor SELF)
     (emotion "sad")
     (beginLineText "Unfortunately I do not at this time, if only someone could complete this quest.")
-    (choice "I can quest" (function () (jump :ICanQuest) ))
-    (choice "Hope you find someone" (function () (jump :FindSomeoneElse) ))
+    (choice "I can quest" (function () (moveTo doYouSell :ICanQuest) ))
+    (choice "Hope you find someone" (function () (moveTo doYouSell :FindSomeoneElse) ))
     (endLine)
 
     (:ICanQuest)
@@ -71,7 +72,7 @@
 (define chance (function ()
     (actor SELF)
     (beginLineText "Are you ready for some chance?\n")
-    (jump (random.pick (:Choice1 :Choice2 :Choice3)))
+    (jump (random.pick :Choice1 :Choice2 :Choice3))
 
     (:Choice1)
     (emotion "happy")
@@ -98,3 +99,5 @@
     (beginLineText "Thanks for coming by " PLAYER.name ", see you later")
     (endLine)
 ))
+
+(main)
