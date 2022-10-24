@@ -7,7 +7,7 @@ namespace SimpleStackVM
     public static class StandardMathLibrary
     {
         #region Fields
-        private const double DegToRad = System.Math.PI / 180.0;
+        public const double DegToRad = System.Math.PI / 180.0;
 
         public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion

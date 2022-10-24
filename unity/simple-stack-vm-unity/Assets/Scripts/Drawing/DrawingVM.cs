@@ -42,6 +42,17 @@ namespace SimpleStackVM.Unity
             assembler.BuiltinScope.CombineScope(DrawingLibrary.Scope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
 
+            assembler.BuiltinScope.Define("nativeCalcPosition", new BuiltinFunctionValue((vm, args) =>
+            {
+                var pos = NativeDrawCircle.CalcPosition(args.Get<NumberValue>(0).IntValue);
+                vm.PushStack(new Vector3Value(pos));
+            }));
+            assembler.BuiltinScope.Define("nativeCalcColour", new BuiltinFunctionValue((vm, args) =>
+            {
+                var colour = NativeDrawCircle.CalcColour(args.Get<NumberValue>(0).IntValue);
+                vm.PushStack(new ColourValue(colour));
+            }));
+
             return assembler;
         }
     }

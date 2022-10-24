@@ -16,6 +16,6 @@
 (makeGround)
 (define i 0)
 (loop (< i 100)
-    (draw.element "box" (calcPosition i) (calcColour i) 1)
+    (draw.element "Box" (calcPosition i) (calcColour i) 1)
     (inc i)
 )
