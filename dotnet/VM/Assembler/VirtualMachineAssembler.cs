@@ -29,6 +29,8 @@ namespace SimpleStackVM
         private const string UnlessKeyword = "unless";
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
+        private const string IncKeyword = "inc";
+        private const string DecKeyword = "dec";
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
@@ -258,6 +260,17 @@ namespace SimpleStackVM
             return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
         }
 
+        public List<ITempCodeLine> ParseChangeVariable(IValue input, BuiltinFunctionValue changeFunc)
+        {
+            var varName = new StringValue(input.ToString());
+            return new List<ITempCodeLine>
+            {
+                new CodeLine(Operator.Get, varName),
+                new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { changeFunc, new NumberValue(1) })),
+                new CodeLine(Operator.Set, varName)
+            };
+        }
+
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
@@ -275,6 +288,8 @@ namespace SimpleStackVM
                 case LoopKeyword: return ParseLoop(arrayValue);
                 case IfKeyword: return ParseCond(arrayValue, true);
                 case UnlessKeyword: return ParseCond(arrayValue, false);
+                case IncKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.IncNumber);
+                case DecKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.DecNumber);
             }
 
             return new List<ITempCodeLine>();
@@ -333,6 +348,15 @@ namespace SimpleStackVM
 
         private List<ITempCodeLine> OptimiseGetSymbolValue(VariableValue input)
         {
+            var isArgumentUnpack = false;
+            if (input.Value.StartsWith("..."))
+            {
+                isArgumentUnpack = true;
+                input = new VariableValue(input.Value.Substring(3));
+            }
+
+            var result = new List<ITempCodeLine>();
+
             var isProperty = IsGetPropertyRequest(input, out var parentKey, out var property);
             // Check if we know about the parent object? (eg: string.length, the parent is the string object)
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
@@ -341,23 +365,31 @@ namespace SimpleStackVM
                 if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.
-                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundProperty) };
+                    result.Add(new CodeLine(Operator.Push, foundProperty));
                 }
                 else if (!isProperty)
                 {
                     // This was not a property request but we found the parent so just push onto the stack.
-                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, foundParent) };
+                    result.Add(new CodeLine(Operator.Push, foundParent));
+                }
+            }
+            else
+            {
+                // Could not find the parent right now, so look for the parent at runtime.
+                result.Add(new CodeLine(Operator.Get, new StringValue(parentKey)));
+
+                // If this was also a property check also look up the property at runtime.
+                if (isProperty)
+                {
+                    result.Add(new CodeLine(Operator.GetProperty, property));
                 }
             }
 
-            // Could not find the parent right now, so look for the parent at runtime.
-            var result = new List<ITempCodeLine> { new CodeLine(Operator.Get, new StringValue(parentKey)) };
-
-            // If this was also a property check also look up the property at runtime.
-            if (isProperty)
+            if (isArgumentUnpack)
             {
-                result.Add(new CodeLine(Operator.GetProperty, property));
+                result.Add(new CodeLine(Operator.ToArgument, null));
             }
+
             return result;
         }
 

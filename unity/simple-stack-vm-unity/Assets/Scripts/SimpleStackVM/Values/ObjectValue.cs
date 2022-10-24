@@ -70,10 +70,7 @@ namespace SimpleStackVM
             return result.ToString();
         }
 
-        public int CompareTo(IValue? other)
-        {
-            return StandardObjectLibrary.GeneralCompareTo(this, other);
-        }
+        public int CompareTo(IValue? other) => StandardObjectLibrary.GeneralCompareTo(this, other);
         #endregion
     }
 }

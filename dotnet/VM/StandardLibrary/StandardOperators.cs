@@ -103,9 +103,18 @@ namespace SimpleStackVM
 
             result.Define("*", (vm, numArgs) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value * right.Value);
+                if (numArgs < 2)
+                {
+                    throw new Exception("Multiple operator expects more than 1 input");
+                }
+
+                var total = vm.PopStack<NumberValue>().Value;
+                for (var i = numArgs - 2; i >= 0; i--)
+                {
+                    total *= vm.PopStack<NumberValue>().Value;
+                }
+
+                vm.PushStack(total);
             });
 
             result.Define("/", (vm, numArgs) =>

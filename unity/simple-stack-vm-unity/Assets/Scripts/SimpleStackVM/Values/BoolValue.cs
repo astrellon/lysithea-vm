@@ -25,12 +25,13 @@ namespace SimpleStackVM
 
         public int CompareTo(IValue? other)
         {
-            if (other == null || !(other is BoolValue otherBool))
+            if (other == null) return 1;
+            if (other is BoolValue otherBoolValue)
             {
-                return 1;
+                return this.Value.CompareTo(otherBoolValue.Value);
             }
 
-            return this.Value.CompareTo(otherBool.Value);
+            return 1;
         }
         #endregion
     }

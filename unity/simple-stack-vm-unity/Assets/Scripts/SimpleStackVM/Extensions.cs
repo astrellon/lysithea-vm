@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace SimpleStackVM
 {
@@ -25,18 +24,6 @@ namespace SimpleStackVM
         public static void PushStack(this VirtualMachine vm, string value)
         {
             vm.PushStack(new StringValue(value));
-        }
-        public static void PushStack(this VirtualMachine vm, IReadOnlyList<IValue> value)
-        {
-            vm.PushStack(new ArrayValue(value));
-        }
-        public static void PushStack(this VirtualMachine vm, IReadOnlyDictionary<string, IValue> value)
-        {
-            vm.PushStack(new ObjectValue(value));
-        }
-        public static void PushStack(this VirtualMachine vm, BuiltinFunctionValue.BuiltinFunctionDelegate value)
-        {
-            vm.PushStack(new BuiltinFunctionValue(value));
         }
         #endregion
     }

@@ -1,6 +1,9 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+
+#nullable enable
 
 namespace SimpleStackVM
 {
@@ -202,6 +205,57 @@ namespace SimpleStackVM
                 result[i] = self.Value[i + index];
             }
             return new ArrayValue(result);
+        }
+
+        public static int GeneralCompareTo(IArrayValue left, IValue? rightInput)
+        {
+            if (left == rightInput)
+            {
+                return 0;
+            }
+
+            if (left == null || !(rightInput is IArrayValue right))
+            {
+                return 1;
+            }
+
+            var compareLength = left.ArrayValues.Count.CompareTo(right.ArrayValues.Count);
+            if (compareLength != 0)
+            {
+                return compareLength;
+            }
+
+            for (var i = 0; i < left.ArrayValues.Count; i++)
+            {
+                var compare = left.ArrayValues[i].CompareTo(right.ArrayValues[i]);
+                if (compare != 0)
+                {
+                    return compare;
+                }
+            }
+
+            return 0;
+        }
+
+        public static string GeneralToString(IArrayValue input)
+        {
+            var result = new StringBuilder();
+            result.Append('(');
+            var first = true;
+            foreach (var value in input.ArrayValues)
+            {
+                if (!first)
+                {
+                    result.Append(' ');
+                }
+                first = false;
+
+                result.Append(value.ToString());
+            }
+
+            result.Append(')');
+            return result.ToString();
+
         }
         #endregion
     }

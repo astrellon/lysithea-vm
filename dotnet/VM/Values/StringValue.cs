@@ -64,7 +64,6 @@ namespace SimpleStackVM
         {
             vm.PushStack(this.Value.Length);
         }
-
         #endregion
     }
 }

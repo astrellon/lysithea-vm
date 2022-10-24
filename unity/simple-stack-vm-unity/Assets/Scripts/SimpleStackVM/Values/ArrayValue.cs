@@ -63,51 +63,9 @@ namespace SimpleStackVM
             return false;
         }
 
-        public override string ToString()
-        {
-            var result = new StringBuilder();
-            result.Append('(');
-            var first = true;
-            foreach (var value in this.Value)
-            {
-                if (!first)
-                {
-                    result.Append(' ');
-                }
-                first = false;
-
-                result.Append(value.ToString());
-            }
-
-            result.Append(')');
-            return result.ToString();
-        }
-
-        public int CompareTo(IValue? other)
-        {
-            if (other == null) return 1;
-            if (other is ArrayValue otherArray)
-            {
-                var compareLength = this.Value.Count.CompareTo(otherArray.Value.Count);
-                if (compareLength != 0)
-                {
-                    return compareLength;
-                }
-
-                for (var i = 0; i < this.Value.Count; i++)
-                {
-                    var compare = this.Value[i].CompareTo(otherArray.Value[i]);
-                    if (compare != 0)
-                    {
-                        return compare;
-                    }
-                }
-
-                return 0;
-            }
-
-            return 1;
-        }
+        public override string ToString() => StandardArrayLibrary.GeneralToString(this);
+        public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
+        public void GetLength(VirtualMachine vm, int numArgs) => vm.PushStack(this.Value.Count);
 
         public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
         {
@@ -121,10 +79,6 @@ namespace SimpleStackVM
             return false;
         }
 
-        public void GetLength(VirtualMachine vm, int numArgs)
-        {
-            vm.PushStack(this.Value.Count);
-        }
         #endregion
     }
 }

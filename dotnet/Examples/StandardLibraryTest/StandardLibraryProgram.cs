@@ -13,20 +13,13 @@ namespace SimpleStackVM
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testStandardLibraryNoAssert.lisp"));
-            // var script = assembler.ParseFromText(File.ReadAllText("../../../examples/benchmark1.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testStandardLibrary.lisp"));
 
             var vm = new VirtualMachine(8);
 
             try
             {
                 var sw = Stopwatch.StartNew();
-                vm.Execute(script);
-                sw.Stop();
-                Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");
-
-                vm.Reset();
-                sw = Stopwatch.StartNew();
                 vm.Execute(script);
                 sw.Stop();
                 Console.WriteLine($"Time taken: {sw.Elapsed.TotalMilliseconds} ms");

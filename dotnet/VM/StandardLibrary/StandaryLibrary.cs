@@ -17,9 +17,24 @@ namespace SimpleStackVM
             All = (1 << 6) - 1
         }
 
+        public static IReadOnlyScope AllLibraries = CreateAllLibrariesScope();
+
         #region Methods
+        public static Scope CreateAllLibrariesScope()
+        {
+            var result = new Scope();
+            AddToScope(result);
+            return result;
+        }
+
         public static void AddToScope(Scope scope, LibraryType libraries = LibraryType.All)
         {
+            if (libraries.HasFlag(LibraryType.All))
+            {
+                scope.CombineScope(AllLibraries);
+                return;
+            }
+
             if (libraries.HasFlag(LibraryType.Operators))
             {
                 scope.CombineScope(StandardOperators.Scope);

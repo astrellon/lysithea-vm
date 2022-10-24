@@ -119,6 +119,17 @@
     (print "Object tests passed!")
 ))
 
-(testArray)
-(testString)
-(testObject)
+(define testUnpack (function (firstArg ...inputs)
+    (print "First arg: " firstArg)
+    (print "Second arg: " inputs)
+    (print "Unpacked args: " (string.join "|" ...inputs))
+))
+
+(testUnpack "Hello" "There" "How" 5 "you?")
+(define values ("abc" 567 "hello there"))
+(print "Values1: " values)
+(print "Values2: " ...values)
+
+;; (testArray)
+;; (testString)
+;; (testObject)

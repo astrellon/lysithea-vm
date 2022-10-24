@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -8,6 +9,7 @@ namespace SimpleStackVM
 {
     public class VirtualMachine
     {
+        public delegate T CastValueDelegate<T>(IValue input);
 
         #region Fields
         private readonly FixedStack<IValue> stack;
@@ -104,6 +106,17 @@ namespace SimpleStackVM
 
                         break;
                     }
+                case Operator.ToArgument:
+                    {
+                        var top = codeLine.Input ?? this.PopStack();
+                        if (!(top is IArrayValue arrayValue))
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to convert argument value onto stack: {top.ToString()}");
+                        }
+
+                        this.PushStack(new ArgumentsValue(arrayValue.ArrayValues));
+                        break;
+                    }
                 case Operator.Get:
                     {
                         var key = codeLine.Input ?? this.PopStack();
@@ -113,31 +126,10 @@ namespace SimpleStackVM
                         }
 
                         var keyString = key.ToString();
-                        var pushArrayOntoStack = false;
-                        if (keyString.StartsWith("..."))
-                        {
-                            pushArrayOntoStack = true;
-                            keyString = keyString.Substring(3);
-                        }
-
                         if (this.CurrentScope.TryGetKey(keyString, out var foundValue) ||
                             (this.BuiltinScope != null && this.BuiltinScope.TryGetKey(keyString, out foundValue)))
                         {
-                            if (pushArrayOntoStack)
-                            {
-                                if (foundValue is IArrayValue foundArrayValue)
-                                {
-                                    foreach (var item in foundArrayValue.ArrayValues)
-                                    {
-                                        this.PushStack(item);
-                                    }
-                                }
-                                throw new OperatorException(this.CreateStackTrace(), $"Unable to unpack array value onto stack: {foundValue.ToString()}");
-                            }
-                            else
-                            {
-                                this.PushStack(foundValue);
-                            }
+                            this.PushStack(foundValue);
                         }
                         else
                         {
@@ -261,17 +253,28 @@ namespace SimpleStackVM
         #region Function Methods
         public ArrayValue GetArgs(int numArgs)
         {
-            var args = ArrayValue.Empty;
-            if (numArgs > 0)
+            if (numArgs == 0)
             {
-                var temp = new IValue[numArgs];
-                for (var i = 0; i < numArgs; i++)
-                {
-                    temp[numArgs - i - 1] = this.PopStack();
-                }
-                args = new ArrayValue(temp);
+                return ArrayValue.Empty;
             }
-            return args;
+
+            var hasArguments = false;
+            var temp = new IValue[numArgs];
+            for (var i = 0; i < numArgs; i++)
+            {
+                var value = this.PopStack();
+                if (value is ArgumentsValue)
+                {
+                    hasArguments = true;
+                }
+                temp[numArgs - i - 1] = value;
+            }
+
+            if (hasArguments)
+            {
+                return new ArrayValue(temp.SelectMany(FlattenTempArgs).ToList());
+            }
+            return new ArrayValue(temp);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -293,7 +296,7 @@ namespace SimpleStackVM
             this.lineCounter = 0;
 
             var args = this.GetArgs(numArgs);
-            var numCalledArgs = Math.Min(numArgs, function.Parameters.Count);
+            var numCalledArgs = Math.Min(args.ArrayValues.Count, function.Parameters.Count);
             for (var i = 0; i < numCalledArgs; i++)
             {
                 var argName = function.Parameters[i];
@@ -338,6 +341,19 @@ namespace SimpleStackVM
             }
         }
 
+        private static IEnumerable<IValue> FlattenTempArgs(IValue input)
+        {
+            if (input is ArgumentsValue argValue)
+            {
+                foreach (var item in argValue.ArrayValues)
+                {
+                    yield return item;
+                }
+                yield break;
+            }
+
+            yield return input;
+        }
         #endregion
 
         #region Stack Methods
@@ -364,7 +380,6 @@ namespace SimpleStackVM
             throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
         }
 
-        public delegate T CastValueDelegate<T>(IValue input);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T PopStack<T>(CastValueDelegate<T> castFunc) where T : IValue
