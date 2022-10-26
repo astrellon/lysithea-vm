@@ -1,32 +1,122 @@
 using System;
+using System.Text;
 using System.Linq;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System.IO;
 
 namespace SimpleStackVM
 {
     public static class VirtualMachineParser
     {
-        #region Fields
-        private static Regex TokenRegex = new Regex("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
-        private static Regex CommentRegex = new Regex(@"^\s*(;|\/\/).*$", RegexOptions.Multiline);
-        private static Regex BracketRegex = new Regex(@"[\(\)\{\}]");
-        #endregion
-
         #region Methods
-        public static List<string> Tokenize(string input)
+        public static IEnumerable<string> Tokenize(TextReader input)
         {
-            var cleaned = CommentRegex.Replace(input, "");
-            cleaned = BracketRegex.Replace(cleaned, " $& ");
+            var inQuote = '\0';
+            var escaped = false;
+            var inComment = false;
+            var accumulator = new StringBuilder();
+            while (input.Peek() >= 0)
+            {
+                var ch = (char)input.Read();
+                if (inComment)
+                {
+                    if (ch == '\n' || ch == '\r')
+                    {
+                        inComment = false;
+                    }
+                    continue;
+                }
 
-            return TokenRegex.Matches(cleaned).Select(m => m.Value).ToList();
+                if (inQuote != '\0')
+                {
+                    if (escaped)
+                    {
+                        switch (ch)
+                        {
+                            case '"':
+                            case '\'':
+                            case '\\':
+                            {
+                                accumulator.Append(ch);
+                                continue;
+                            }
+                        }
+                        escaped = false;
+                    }
+                    else if (ch == '\\')
+                    {
+                        escaped = true;
+                        continue;
+                    }
+
+                    accumulator.Append(ch);
+                    if (ch == inQuote)
+                    {
+                        yield return accumulator.ToString();
+                        accumulator.Clear();
+                        inQuote = '\0';
+                    }
+                }
+                else
+                {
+                    switch (ch)
+                    {
+                        case ';':
+                        {
+                            inComment = true;
+                            break;
+                        }
+
+                        case '"':
+                        case '\'':
+                        {
+                            inQuote = ch;
+                            accumulator.Append(ch);
+                            break;
+                        }
+
+                        case '(':
+                        case ')':
+                        case '{':
+                        case '}':
+                        {
+                            if (accumulator.Length > 0)
+                            {
+                                yield return accumulator.ToString();
+                                accumulator.Clear();
+                            }
+                            yield return ch.ToString();
+                            break;
+                        }
+
+                        case ' ':
+                        case '\t':
+                        case '\n':
+                        case '\r':
+                        {
+                            if (accumulator.Length > 0)
+                            {
+                                yield return accumulator.ToString();
+                                accumulator.Clear();
+                            }
+                            break;
+                        }
+                        default:
+                        {
+                            accumulator.Append(ch);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
-        public static ArrayValue ReadAllTokens(List<string> tokens)
+        public static ArrayValue ReadAllTokens(TextReader input)
         {
+            var tokens = Tokenize(input).GetEnumerator();
             var result = new List<IValue>();
 
-            while (tokens.Any())
+            while (tokens.MoveNext())
             {
                 result.Add(ReadFromTokens(tokens));
             }
@@ -34,47 +124,59 @@ namespace SimpleStackVM
             return new ArrayValue(result);
         }
 
-        public static IValue ReadFromTokens(List<string> tokens)
+        public static IValue ReadFromTokens(IEnumerator<string> tokens)
         {
-            if (tokens.Count == 0)
+            var token = tokens.Current;
+            switch (token)
             {
-                throw new ArgumentException("Unexpected end of tokens");
-            }
-
-            var token = PopFront(tokens);
-            if (token == "(")
-            {
-                var list = new List<IValue>();
-                while (tokens.First() != ")")
+                case null:
                 {
-                    list.Add(ReadFromTokens(tokens));
+                    throw new ArgumentException("Unexpected end of tokens");
                 }
-                PopFront(tokens);
-                return new ArrayValue(list);
-            }
-            else if (token == ")")
-            {
-                throw new ArgumentException("Unexpected )");
-            }
-            else if (token == "{")
-            {
-                var map = new Dictionary<string, IValue>();
-                while (tokens.First() != "}")
+                case "(":
                 {
-                    var key = ReadFromTokens(tokens).ToString();
-                    var value = ReadFromTokens(tokens);
-                    map[key] = value;
+                    var list = new List<IValue>();
+                    while (tokens.MoveNext())
+                    {
+                        if (tokens.Current == ")")
+                        {
+                            break;
+                        }
+                        list.Add(ReadFromTokens(tokens));
+                    }
+
+                    return new ArrayValue(list);
                 }
-                PopFront(tokens);
+                case ")":
+                {
+                    throw new ArgumentException("Unexpected )");
+                }
+                case "{":
+                {
+                    var map = new Dictionary<string, IValue>();
+                    while (tokens.MoveNext())
+                    {
+                        if (tokens.Current == "}")
+                        {
+                            break;
+                        }
+                        var key = ReadFromTokens(tokens).ToString();
+                        tokens.MoveNext();
+                        var value = ReadFromTokens(tokens);
+                        map[key] = value;
+                    }
 
-                return new ObjectValue(map);
+                    return new ObjectValue(map);
+                }
+                case "}":
+                {
+                    throw new ArgumentException("Unexpected }");
+                }
+                default:
+                {
+                    return Atom(token);
+                }
             }
-            else if (token == "}")
-            {
-                throw new ArgumentException("Unexpected }");
-            }
-
-            return Atom(token);
         }
 
         public static IValue Atom(string input)
@@ -102,28 +204,10 @@ namespace SimpleStackVM
             if ((first == '"'  && last == '"') ||
                 (first == '\'' && last == '\''))
             {
-                return new StringValue(ParseString(input.Substring(1, input.Length - 2)));
+                return new StringValue(input.Substring(1, input.Length - 2));
             }
 
             return new VariableValue(input);
-        }
-
-        private static string ParseString(string input)
-        {
-            return input.Replace("\\n", "\n")
-                .Replace("\\t", "\t");
-        }
-
-        private static T PopFront<T>(List<T> input)
-        {
-            if (input.Any())
-            {
-                var result = input.First();
-                input.RemoveAt(0);
-                return result;
-            }
-
-            throw new ArgumentException("Unable to pop empty list");
         }
         #endregion
     }

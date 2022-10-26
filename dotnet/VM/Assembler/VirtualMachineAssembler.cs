@@ -41,10 +41,9 @@ namespace SimpleStackVM
         #region Methods
 
         #region Parse From Input
-        public Script ParseFromStream(Stream input)
+        public Script ParseFromReader(TextReader reader)
         {
-            using var reader = new StreamReader(input);
-            var parsed = VirtualMachineStreamParser.ReadAllTokens(reader);
+            var parsed = VirtualMachineParser.ReadAllTokens(reader);
 
             var code = this.ParseGlobalFunction(parsed);
             var scriptScope = new Scope();
@@ -53,27 +52,22 @@ namespace SimpleStackVM
             return new Script(scriptScope, code);
         }
 
-        public Script ParseFromStream(TextReader reader)
+        public Script ParseFromStream(Stream input)
         {
-            var parsed = VirtualMachineStreamParser.ReadAllTokens(reader);
+            using var reader = new StreamReader(input);
+            return ParseFromReader(reader);
+        }
 
-            var code = this.ParseGlobalFunction(parsed);
-            var scriptScope = new Scope();
-            scriptScope.CombineScope(this.BuiltinScope);
-
-            return new Script(scriptScope, code);
+        public Script ParseFromFile(string filePath)
+        {
+            using var file = File.OpenRead(filePath);
+            return ParseFromStream(file);
         }
 
         public Script ParseFromText(string input)
         {
-            var tokens = VirtualMachineParser.Tokenize(input);
-            var parsed = VirtualMachineParser.ReadAllTokens(tokens);
-
-            var code = this.ParseGlobalFunction(parsed);
-            var scriptScope = new Scope();
-            scriptScope.CombineScope(this.BuiltinScope);
-
-            return new Script(scriptScope, code);
+            using var reader = new StringReader(input);
+            return ParseFromReader(reader);
         }
 
         public Function ParseGlobalFunction(ArrayValue input)

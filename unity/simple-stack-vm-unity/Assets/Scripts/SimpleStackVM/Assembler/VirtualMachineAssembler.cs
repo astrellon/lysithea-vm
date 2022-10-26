@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,16 +41,27 @@ namespace SimpleStackVM
         #region Methods
 
         #region Parse From Input
-        public Script ParseFromText(string input)
+        public Script ParseFromReader(TextReader reader)
         {
-            var tokens = VirtualMachineParser.Tokenize(input);
-            var parsed = VirtualMachineParser.ReadAllTokens(tokens);
+            var parsed = VirtualMachineParser.ReadAllTokens(reader);
 
             var code = this.ParseGlobalFunction(parsed);
             var scriptScope = new Scope();
             scriptScope.CombineScope(this.BuiltinScope);
 
             return new Script(scriptScope, code);
+        }
+
+        public Script ParseFromStream(Stream input)
+        {
+            using var reader = new StreamReader(input);
+            return ParseFromReader(reader);
+        }
+
+        public Script ParseFromText(string input)
+        {
+            using var reader = new StringReader(input);
+            return ParseFromReader(reader);
         }
 
         public Function ParseGlobalFunction(ArrayValue input)
@@ -83,24 +95,14 @@ namespace SimpleStackVM
                         return keywordParse;
                     }
 
-                    var result = new List<ITempCodeLine>();
                     // Attempt to parse as an op code
                     var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
                     if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
                     {
-                        if (arrayValue[1] is IArrayValue)
-                        {
-                            result.AddRange(Parse(arrayValue[1]));
-                            result.Add(new CodeLine(opCode, null));
-                        }
-                        else
-                        {
-                            result.Add(new CodeLine(opCode, arrayValue[1]));
-                        }
-
-                        return result;
+                        return new List<ITempCodeLine> { new CodeLine(opCode, arrayValue[1]) };
                     }
 
+                    var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
                     foreach (var item in arrayValue.Value.Skip(1))
                     {

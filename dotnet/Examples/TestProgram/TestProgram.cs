@@ -14,7 +14,7 @@ namespace SimpleStackVM.Example
         {
             using var file = File.OpenRead("../../../examples/testObject.lisp");
             using var reader = new StreamReader(file);
-            var result = VirtualMachineStreamParser.ReadAllTokens(reader);
+            var result = VirtualMachineParser.ReadAllTokens(reader);
         }
 
         public static void MainOld(string[] args)
