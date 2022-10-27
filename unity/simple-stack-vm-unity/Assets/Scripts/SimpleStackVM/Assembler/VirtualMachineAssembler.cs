@@ -67,7 +67,9 @@ namespace SimpleStackVM
         public Function ParseGlobalFunction(ArrayValue input)
         {
             var tempCodeLines = input.Value.SelectMany(Parse).ToList();
-            return VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
+            var result = VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
+            result.Name = "global";
+            return result;
         }
 
         public List<ITempCodeLine> Parse(IValue input)

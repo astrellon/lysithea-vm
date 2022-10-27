@@ -49,10 +49,10 @@
     (text "What do you want to know?")
     (choice "Who are you?" :WhoAmI?)
 
-    (if (= isSetWhoAmI true)
+    (if (== isSetWhoAmI true)
         (choice "Where is this?" :WhereIsThis?)
     )
-    (if (= isSetWhereIsThis true)
+    (if (== isSetWhereIsThis true)
         (choice "What is this?" :WhatIsThis?)
     )
 

@@ -38,25 +38,26 @@ namespace SimpleStackVM
                             case '\\':
                             {
                                 accumulator.Append(ch);
-                                continue;
+                                break;
                             }
                             case 't':
                             {
                                 accumulator.Append('\t');
-                                continue;
+                                break;
                             }
                             case 'r':
                             {
                                 accumulator.Append('\r');
-                                continue;
+                                break;
                             }
                             case 'n':
                             {
                                 accumulator.Append('\n');
-                                continue;
+                                break;
                             }
                         }
                         escaped = false;
+                        continue;
                     }
                     else if (ch == '\\')
                     {

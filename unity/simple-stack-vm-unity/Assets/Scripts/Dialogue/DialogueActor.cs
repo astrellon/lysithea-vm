@@ -42,6 +42,11 @@ namespace SimpleStackVM.Unity
             return this.Value == otherActor.Value ? 0 : 1;
         }
 
+        public override string ToString()
+        {
+            return $"Actor: {this.Value.Name}";
+        }
+
         public bool TryGetValue(string key, [NotNullWhen(true)] out IValue value)
         {
             if (key == "name")

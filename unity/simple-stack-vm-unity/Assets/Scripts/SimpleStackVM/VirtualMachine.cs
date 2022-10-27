@@ -26,6 +26,7 @@ namespace SimpleStackVM
 
         public IReadOnlyFixedStack<IValue> Stack => this.stack;
         public IReadOnlyFixedStack<ScopeFrame> StackTrace => this.stackTrace;
+        public int LineCounter => this.lineCounter;
         #endregion
 
         #region Constructor
