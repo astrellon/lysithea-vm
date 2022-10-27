@@ -4,17 +4,14 @@
 
     (loop (< count 10)
         (set total (+ total (step)))
-        (set count (+ count 1))
+        (inc count)
 
         (if (< count 5)
         (
             (print "Count less than 5")
-            (continue)
-            (print "Should not print!")
         )
         (
             (print "Count more than 5")
-            (break)
         )
         )
 
@@ -35,6 +32,15 @@
     (return (+ (rand) (rand)))
 ))
 
-(main)
+;; (main)
+;; (print "Super done!")
 
-(print "Super done!")
+(define labelJump (function ()
+    (return :Hello)
+))
+
+(jump (labelJump))
+(print "Should not print")
+
+(:Hello)
+(print "Hello\nThere")

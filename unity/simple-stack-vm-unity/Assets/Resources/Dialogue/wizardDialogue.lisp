@@ -1,16 +1,20 @@
-; Helper Function
+; Helper Functions
 (define beginLineText (function (...input)
     (beginLine)
     (text ...input)
 ))
 
+(define wholeLine (function (...input)
+    (beginLine)
+    (text ...input)
+    (endLine)
+))
+
 (define main (function ()
     (actor SELF)
-    (beginLineText "Welcome " PLAYER.name ", I've been expecting you.")
-    (endLine)
+    (wholeLine "Welcome " PLAYER.name ", I've been expecting you.")
 
-    (actor PLAYER)
-    (emotion "shocked")
+    (actor PLAYER "shocked")
     (beginLineText "You have?")
     (wait 500)
     (text " How did you know I was coming?")
@@ -36,36 +40,59 @@
 ))
 
 (define whatPowers (function ()
-    (actor PLAYER)
-    (emotion "happy")
-    (beginLineText "What kind of powers do you have?")
+    (actor PLAYER "happy")
+    (wholeLine "What kind of powers do you have?")
+
+    (:Start)
+    (choice "Can you shoot fire?" :CanShootFire?)
+    (choice "Can freeze water?" :CanFreezeWater?)
+    (choice "Can make lightning?" :CanMakeLightning?)
+    (choice "I'm done" :Return)
     (endLine)
+
+    (:CanShootFire?)
+    (actor SELF "happy")
+    (wholeLine "Most definitely I can shoot fire!")
+    (jump :Start)
+
+    (:CanFreezeWater?)
+    (actor SELF)
+    (wholeLine "I can, but only using a freeze.")
+
+    (actor PLAYER)
+    (wholeLine "Oh, that's not all that impressive.")
+    (jump :Start)
+
+    (:CanMakeLightning?)
+    (actor SELF)
+    (wholeLine "Sometimes, usually on even numbered days though.")
+
+    (actor PLAYER)
+    (wholeLine "Yea that makes sense.")
+    (jump :Start)
+
+    (:Return)
+    (return)
 ))
 
 (define doYouSell (function ()
     (actor PLAYER)
-    (beginLineText "Do you have anything to sell?")
-    (endLine)
+    (wholeLine "Do you have anything to sell?")
 
-    (actor SELF)
-    (emotion "sad")
+    (actor SELF "sad")
     (beginLineText "Unfortunately I do not at this time, if only someone could complete this quest.")
-    (choice "I can quest" (function () (moveTo doYouSell :ICanQuest) ))
-    (choice "Hope you find someone" (function () (moveTo doYouSell :FindSomeoneElse) ))
+    (choice "I can quest" :ICanQuest)
+    (choice "Hope you find someone" :FindSomeoneElse)
     (endLine)
 
     (:ICanQuest)
-    (actor PLAYER)
-    (emotion "happy")
-    (beginLineText "I can go on a quest for you!")
-    (endLine)
+    (actor PLAYER "happy")
+    (wholeLine "I can go on a quest for you!")
     (return)
 
     (:FindSomeoneElse)
-    (actor PLAYER)
-    (emotion "sad")
-    (beginLineText "Gee, well I hope you find someone.")
-    (endLine)
+    (actor PLAYER "sad")
+    (wholeLine "Gee, well I hope you find someone.")
     (return)
 ))
 
@@ -96,8 +123,7 @@
 
 (define goodBye (function ()
     (actor SELF)
-    (beginLineText "Thanks for coming by " PLAYER.name ", see you later")
-    (endLine)
+    (wholeLine "Thanks for coming by " PLAYER.name ", see you later")
 ))
 
 (main)

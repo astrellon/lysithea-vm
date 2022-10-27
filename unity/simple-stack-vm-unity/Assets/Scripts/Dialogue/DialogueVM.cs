@@ -36,7 +36,7 @@ namespace SimpleStackVM.Unity
 
         private VirtualMachineAssembler assembler;
         private VirtualMachine vm => this.VMRunner.VM;
-        private readonly List<IFunctionValue> choiceBuffer = new List<IFunctionValue>();
+        private readonly List<IValue> choiceBuffer = new List<IValue>();
 
         // Start is called before the first frame update
         void Awake()
@@ -86,13 +86,20 @@ namespace SimpleStackVM.Unity
                 return;
             }
 
-            var choiceFunc = this.choiceBuffer[index];
-            Debug.Log($"Selecting choice: {index}, {choiceFunc.ToString()}");
-            this.vm.CallFunction(choiceFunc, 0, false);
+            var choiceValue = this.choiceBuffer[index];
+            Debug.Log($"Selecting choice: {index}, {choiceValue.ToString()}");
+            if (choiceValue is IFunctionValue choiceFunc)
+            {
+                this.vm.CallFunction(choiceFunc, 0, false);
+            }
+            else
+            {
+                this.vm.Jump(choiceValue.ToString());
+            }
             this.vm.Paused = false;
         }
 
-        public void CreateChoice(string choiceLabel, IFunctionValue choiceValue)
+        public void CreateChoice(string choiceLabel, IValue choiceValue)
         {
             var index = this.choiceBuffer.Count;
             this.choiceBuffer.Add(choiceValue);
@@ -119,11 +126,14 @@ namespace SimpleStackVM.Unity
 
         public void MoveToFunc(VirtualMachine vm, ArgumentsValue args)
         {
-            var proc = args.Get<IFunctionValue>(0);
-            var label = args.Get(1);
+            var func = args.Get<IFunctionValue>(0);
+            vm.CallFunction(func, 0, false);
 
-            vm.CallFunction(proc, 0, false);
-            vm.Jump(label.ToString());
+            if (args.Length > 1)
+            {
+                var label = args.Get(1);
+                vm.Jump(label.ToString());
+            }
         }
 
         public void BeginLineFunc(VirtualMachine vm, ArgumentsValue args)
@@ -147,13 +157,20 @@ namespace SimpleStackVM.Unity
         private void ActorFunc(VirtualMachine vm, ArgumentsValue args)
         {
             this.CurrentActor = args.Get<DialogueActorValue>(0).Value;
-            this.OnEmotion?.Invoke("idle");
+            if (args.Length == 1)
+            {
+                this.OnEmotion?.Invoke("idle");
+            }
+            else
+            {
+                this.OnEmotion?.Invoke(args.Get<StringValue>(1).Value);
+            }
         }
 
         private void ChoiceFunc(VirtualMachine vm, ArgumentsValue args)
         {
             var choiceLabel = args.Get<StringValue>(0);
-            var choiceValue = args.Get<IFunctionValue>(1);
+            var choiceValue = args.Get(1);
             this.CreateChoice(choiceLabel.ToString(), choiceValue);
         }
 

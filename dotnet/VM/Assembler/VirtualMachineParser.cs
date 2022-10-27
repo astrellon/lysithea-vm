@@ -40,6 +40,21 @@ namespace SimpleStackVM
                                 accumulator.Append(ch);
                                 continue;
                             }
+                            case 't':
+                            {
+                                accumulator.Append('\t');
+                                continue;
+                            }
+                            case 'r':
+                            {
+                                accumulator.Append('\r');
+                                continue;
+                            }
+                            case 'n':
+                            {
+                                accumulator.Append('\n');
+                                continue;
+                            }
                         }
                         escaped = false;
                     }

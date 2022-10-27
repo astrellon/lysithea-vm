@@ -95,13 +95,6 @@ namespace SimpleStackVM
                         return keywordParse;
                     }
 
-                    // Attempt to parse as an op code
-                    var isOpCode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
-                    if (isOpCode && VirtualMachineAssembler.IsJumpCall(opCode))
-                    {
-                        return new List<ITempCodeLine> { new CodeLine(opCode, arrayValue[1]) };
-                    }
-
                     var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
                     foreach (var item in arrayValue.Value.Skip(1))
@@ -110,7 +103,7 @@ namespace SimpleStackVM
                     }
 
                     // If it is not an opcode then it must be a function call
-                    if (!isOpCode)
+                    if (!VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode))
                     {
                         result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Length - 1));
                     }
@@ -449,12 +442,6 @@ namespace SimpleStackVM
             }
 
             return true;
-        }
-
-        private static bool IsJumpCall(Operator input)
-        {
-            return input == Operator.Call || input == Operator.Jump ||
-                input == Operator.JumpTrue || input == Operator.JumpFalse;
         }
         #endregion
 
