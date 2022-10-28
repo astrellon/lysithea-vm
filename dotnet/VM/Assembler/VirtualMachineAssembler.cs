@@ -375,10 +375,19 @@ namespace SimpleStackVM
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
-                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                if (isProperty)
                 {
-                    // If we found the property then we're done and we can just push that known value onto the stack.
-                    result.Add(new CodeLine(Operator.Push, foundProperty));
+                    if (ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                    {
+                        // If we found the property then we're done and we can just push that known value onto the stack.
+                        result.Add(new CodeLine(Operator.Push, foundProperty));
+                    }
+                    else
+                    {
+                        // We didn't find the property at compile time, so look it up at run time.
+                        result.Add(new CodeLine(Operator.Push, foundParent));
+                        result.Add(new CodeLine(Operator.GetProperty, property));
+                    }
                 }
                 else if (!isProperty)
                 {

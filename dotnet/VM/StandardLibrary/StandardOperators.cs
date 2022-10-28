@@ -82,7 +82,7 @@ namespace SimpleStackVM
             {
                 if (args.Length < 2)
                 {
-                    throw new Exception("Multiple operator expects more than 1 input");
+                    throw new Exception("Multiply operator expects more than 1 input");
                 }
 
                 var total = 1.0;

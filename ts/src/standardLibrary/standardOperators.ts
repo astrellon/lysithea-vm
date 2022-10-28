@@ -1,5 +1,7 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { isValueNumber, isValueString, valueCompareTo, valueToString } from "../types";
+import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import { isNumberValue } from "../values/numberValue";
+import { isStringValue } from "../values/stringValue";
 
 export const operatorScope: IReadOnlyScope = createOperatorScope();
 
@@ -7,107 +9,97 @@ export function createOperatorScope()
 {
     const result = new Scope();
 
-    result.define('>', (vm, numArgs) =>
+    result.define('>', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStack();
-        const left = vm.popStack();
-        vm.pushStack(valueCompareTo(left, right) > 0);
-    });
+        vm.pushStackBool(args.at(0).compareTo(args.at(1)) > 0);
+    }));
 
-    result.define('>=', (vm, numArgs) =>
+    result.define('>=', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStack();
-        const left = vm.popStack();
-        vm.pushStack(valueCompareTo(left, right) >= 0);
-    });
+        vm.pushStackBool(args.at(0).compareTo(args.at(1)) >= 0);
+    }));
 
-    result.define('==', (vm, numArgs) =>
+    result.define('==', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStack();
-        const left = vm.popStack();
-        vm.pushStack(valueCompareTo(left, right) === 0);
-    });
+        vm.pushStackBool(args.at(0).compareTo(args.at(1)) === 0);
+    }));
 
-    result.define('!=', (vm, numArgs) =>
+    result.define('!=', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStack();
-        const left = vm.popStack();
-        vm.pushStack(valueCompareTo(left, right) !== 0);
-    });
+        vm.pushStackBool(args.at(0).compareTo(args.at(1)) !== 0);
+    }));
 
-    result.define('<', (vm, numArgs) =>
+    result.define('<', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStack();
-        const left = vm.popStack();
-        vm.pushStack(valueCompareTo(left, right) < 0);
-    });
+        vm.pushStackBool(args.at(0).compareTo(args.at(1)) < 0);
+    }));
 
-    result.define('<=', (vm, numArgs) =>
+    result.define('<=', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStack();
-        const left = vm.popStack();
-        vm.pushStack(valueCompareTo(left, right) <= 0);
-    });
+        vm.pushStackBool(args.at(0).compareTo(args.at(1)) <= 0);
+    }));
 
-    result.define('+', (vm, numArgs) =>
+    result.define('+', new BuiltinFunctionValue((vm, args) =>
     {
-        if (numArgs === 0)
+        if (args.value.length === 0)
         {
             return;
         }
 
-        const args = vm.getArgs(numArgs);
-        if (isValueString(args[0]))
+        const first = args.at(0);
+        if (isStringValue(first))
         {
-            const result = args.map(valueToString).join('');
-            vm.pushStack(result);
+            const result = args.value.map(v => v.toString()).join('');
+            vm.pushStackString(result);
         }
-        else if (isValueNumber(args[0]))
+        else if (isNumberValue(first))
         {
             let result = 0;
-            for (let i = 0; i < args.length; i++)
+            for (let i = 0; i < args.value.length; i++)
             {
-                const item = args[i];
-                if (isValueNumber(item))
+                const item = args.value[i];
+                if (isNumberValue(item))
                 {
-                    result += item;
+                    result += item.value;
                 }
                 else
                 {
                     throw new Error('Add only works on numbers and strings');
                 }
             }
-            vm.pushStack(result);
+            vm.pushStackNumber(result);
         }
-    });
+    }));
 
-    result.define('-', (vm, numArgs) =>
+    result.define('-', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStackCast(isValueNumber);
-        const left = vm.popStackCast(isValueNumber);
-        vm.pushStack(left - right);
-    });
+        vm.pushStackNumber(args.atNumber(0) - args.atNumber(1));
+    }));
 
-    result.define('*', (vm, numArgs) =>
+    result.define('*', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStackCast(isValueNumber);
-        const left = vm.popStackCast(isValueNumber);
-        vm.pushStack(left * right);
-    });
+        if (args.value.length < 2)
+        {
+            throw new Error('Multiply operator expects more than 1 input');
+        }
 
-    result.define('/', (vm, numArgs) =>
-    {
-        const right = vm.popStackCast(isValueNumber);
-        const left = vm.popStackCast(isValueNumber);
-        vm.pushStack(left / right);
-    });
+        let total = 1.0;
+        for (let i = 0; i < args.value.length; i++)
+        {
+            total *= args.atNumber(i);
+        }
+        vm.pushStackNumber(total);
+    }));
 
-    result.define('%', (vm, numArgs) =>
+    result.define('/', new BuiltinFunctionValue((vm, args) =>
     {
-        const right = vm.popStackCast(isValueNumber);
-        const left = vm.popStackCast(isValueNumber);
-        vm.pushStack(left % right);
-    });
+        vm.pushStackNumber(args.atNumber(0) / args.atNumber(1));
+    }));
+
+    result.define('%', new BuiltinFunctionValue((vm, args) =>
+    {
+        vm.pushStackNumber(args.atNumber(0) % args.atNumber(1));
+    }));
 
     return result;
 }

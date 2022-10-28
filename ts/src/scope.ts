@@ -1,20 +1,20 @@
-import { ArrayValue, isValueArray, isValueNumber, isValueObject, isValueString, Value, valueToString } from './types';
-
-export interface IReadOnlyScope
-{
-    get: (key: Value) => Value | undefined;
-    getKey: (key: string) => Value | undefined;
-    getProperty: (key: ArrayValue) => Value | undefined;
-    get values(): Readonly<ScopeData>;
-}
+import { IValue } from "./values/ivalues";
 
 export interface ScopeData
 {
-    [key: string]: Value;
+    [key: string]: IValue;
+}
+
+export interface IReadOnlyScope
+{
+    readonly get: (key: string) => IValue | undefined;
+    get values(): Readonly<ScopeData>;
 }
 
 export default class Scope implements IReadOnlyScope
 {
+    public static readonly Empty: IReadOnlyScope = new Scope(undefined);
+
     private readonly _values: ScopeData = {};
     private readonly _parent: Scope | undefined;
 
@@ -36,12 +36,12 @@ export default class Scope implements IReadOnlyScope
         }
     }
 
-    public define(key: string, value: Value)
+    public define(key: string, value: IValue)
     {
         this._values[key] = value;
     }
 
-    public set(key: string, value: Value): boolean
+    public set(key: string, value: IValue): boolean
     {
         if (this._values.hasOwnProperty(key))
         {
@@ -57,21 +57,7 @@ export default class Scope implements IReadOnlyScope
         return false;
     }
 
-    public get(key: Value): Value | undefined
-    {
-        if (isValueString(key))
-        {
-            return this.getKey(key);
-        }
-        if (isValueArray(key))
-        {
-            return this.getProperty(key);
-        }
-
-        return undefined;
-    }
-
-    public getKey(key: string): Value | undefined
+    public get(key: string): IValue | undefined
     {
         const result = this._values[key];
         if (result != null)
@@ -81,44 +67,9 @@ export default class Scope implements IReadOnlyScope
 
         if (this._parent !== undefined)
         {
-            return this._parent.getKey(key);
+            return this._parent.get(key);
         }
 
         return undefined;
-    }
-
-    public getProperty(key: ArrayValue): Value | undefined
-    {
-        let current = this.getKey(valueToString(key[0]));
-        if (current === undefined)
-        {
-            return current;
-        }
-
-        for (let i = 1; i < key.length; i++)
-        {
-            if (isValueObject(current))
-            {
-                current = current[valueToString(key[i])];
-            }
-            else if (isValueArray(current))
-            {
-                const index = key[i];
-                if (isValueNumber(index))
-                {
-                    current = current[index];
-                }
-                else if (isValueString(index))
-                {
-                    current = current[parseInt(index)];
-                }
-            }
-            else
-            {
-                return undefined;
-            }
-        }
-
-        return current;
     }
 }

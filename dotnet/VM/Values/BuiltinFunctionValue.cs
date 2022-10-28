@@ -26,7 +26,7 @@ namespace SimpleStackVM
         {
             if (other == null || !(other is BuiltinFunctionValue otherFunction))
             {
-                return -1;
+                return 1;
             }
 
             return this.Value == otherFunction.Value ? 0 : 1;

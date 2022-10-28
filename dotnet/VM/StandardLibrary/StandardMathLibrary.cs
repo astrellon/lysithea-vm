@@ -87,7 +87,14 @@ namespace SimpleStackVM
                 {"parse", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.Get(0);
-                    vm.PushStack(double.Parse(top.ToString()));
+                    if (top is NumberValue)
+                    {
+                        vm.PushStack(top);
+                    }
+                    else
+                    {
+                        vm.PushStack(double.Parse(top.ToString()));
+                    }
                 })},
 
                 {"log", new BuiltinFunctionValue((vm, args) =>
@@ -118,16 +125,16 @@ namespace SimpleStackVM
 
                 {"min", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var max = args.Get(0);
+                    var min = args.Get(0);
                     for (var i = 1; i < args.Length; i++)
                     {
                         var next = args[i];
-                        if (next.CompareTo(max) < 0)
+                        if (next.CompareTo(min) < 0)
                         {
-                            max = next;
+                            min = next;
                         }
                     }
-                    vm.PushStack(max);
+                    vm.PushStack(min);
                 })},
 
                 {"inc", IncNumber},

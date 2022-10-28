@@ -24,7 +24,7 @@ namespace SimpleStackVM
         {
             if (other == null || !(other is FunctionValue otherProcedure))
             {
-                return -1;
+                return 1;
             }
 
             if (this.Value == otherProcedure.Value)

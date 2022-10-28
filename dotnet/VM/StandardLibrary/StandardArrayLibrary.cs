@@ -27,8 +27,8 @@ namespace SimpleStackVM
 
                 {"length", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    vm.PushStack(top.Length);
+                    var top = args.Get<IArrayValue>(0);
+                    vm.PushStack(top.ArrayValues.Count);
                 })},
 
                 {"set", new BuiltinFunctionValue((vm, args) =>
@@ -41,10 +41,16 @@ namespace SimpleStackVM
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
+                    var top = args.Get<IArrayValue>(0);
                     var index = args.Get<NumberValue>(1);
-                    top.TryGet(index.IntValue, out var value);
-                    vm.PushStack(value);
+                    if (top.TryGet(index.IntValue, out var value))
+                    {
+                        vm.PushStack(value);
+                    }
+                    else
+                    {
+                        vm.PushStack(NullValue.Value);
+                    }
                 })},
 
                 {"insert", new BuiltinFunctionValue((vm, args) =>
@@ -59,7 +65,7 @@ namespace SimpleStackVM
                 {
                     var top = args.Get<ArrayValue>(0);
                     var index = args.Get<NumberValue>(1);
-                    var value = args.Get<ArrayValue>(2);
+                    var value = args.Get<IArrayValue>(2);
                     vm.PushStack(InsertFlatten(top, index.IntValue, value));
                 })},
 
@@ -86,14 +92,14 @@ namespace SimpleStackVM
 
                 {"contains", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
+                    var top = args.Get<IArrayValue>(0);
                     var value = args.Get(1);
                     vm.PushStack(Contains(top, value));
                 })},
 
                 {"indexOf", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
+                    var top = args.Get<IArrayValue>(0);
                     var value = args.Get(1);
                     vm.PushStack(IndexOf(top, value));
                 })},
@@ -126,10 +132,10 @@ namespace SimpleStackVM
             return new ArrayValue(newValue);
         }
 
-        public static ArrayValue InsertFlatten(ArrayValue self, int index, ArrayValue input)
+        public static ArrayValue InsertFlatten(ArrayValue self, int index, IArrayValue input)
         {
             var newValue = self.Value.ToList();
-            newValue.InsertRange(self.GetIndex(index), input.Value);
+            newValue.InsertRange(self.GetIndex(index), input.ArrayValues);
             return new ArrayValue(newValue);
         }
 
@@ -154,16 +160,17 @@ namespace SimpleStackVM
             return new ArrayValue(newValue);
         }
 
-        public static bool Contains(ArrayValue self, IValue input)
+        public static bool Contains(IArrayValue self, IValue input)
         {
-            return self.Value.Contains(input);
+            return self.ArrayValues.Contains(input);
         }
 
-        public static int IndexOf(ArrayValue self, IValue input)
+        public static int IndexOf(IArrayValue self, IValue input)
         {
-            for (var i = 0; i < self.Value.Count; i++)
+            var list = self.ArrayValues;
+            for (var i = 0; i < list.Count; i++)
             {
-                if (input.CompareTo(self.Value[i]) == 0)
+                if (input.CompareTo(list[i]) == 0)
                 {
                     return i;
                 }

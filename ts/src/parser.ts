@@ -1,30 +1,162 @@
-import { ArrayValue, ObjectValue, Value, valueToString } from "./types";
+// import { ArrayValue, ObjectValue, Value, valueToString } from "./types";
 
-const tokenRegex = /[^\s"']+|"([^"]*)"|'([^']*)'"/g;
-const commentRegex = /^\s*(;|\/\/).*$/gm;
-const bracketRegex = /([\(\)\{\}])/g;
+import ArrayValue from "./values/arrayValue";
+import BoolValue from "./values/boolValue";
+import { IValue } from "./values/ivalues";
+import NullValue from "./values/nullValue";
+import NumberValue from "./values/numberValue";
+import ObjectValue from "./values/objectValue";
+import StringValue from "./values/stringValue";
+import VariableValue from "./values/variableValue";
+
+// const tokenRegex = /[^\s"']+|"([^"]*)"|'([^']*)'"/g;
+// const commentRegex = /^\s*(;|\/\/).*$/gm;
+// const bracketRegex = /([\(\)\{\}])/g;
+
+// export function tokenize(input: string)
+// {
+//     const cleaned = input.replace(bracketRegex, " $& ")
+//         .replace(commentRegex, '')
+
+//     return [...cleaned.matchAll(tokenRegex)].map(c => c[0]);
+// }
 
 export function tokenize(input: string)
 {
-    const cleaned = input.replace(bracketRegex, " $& ")
-        .replace(commentRegex, '')
+    let inQuote = "\0";
+    let escaped = false;
+    let inComment = false;
+    let accumulator = "";
+    let index = 0;
+    const result: string[] = [];
 
-    return [...cleaned.matchAll(tokenRegex)].map(c => c[0]);
+    while (index < input.length)
+    {
+        const ch = input.charAt(index++);
+        if (inComment)
+        {
+            if (ch === '\n' || ch === '\r')
+            {
+                inComment = false;
+            }
+            continue;
+        }
+
+        if (inQuote != '\0')
+        {
+            if (escaped)
+            {
+                switch (ch)
+                {
+                    case '"':
+                    case '\'':
+                    case '\\':
+                        {
+                            accumulator += ch;
+                            break;
+                        }
+                    case 't':
+                        {
+                            accumulator += '\t';
+                            break;
+                        }
+                    case 'r':
+                        {
+                            accumulator += '\r';
+                            break;
+                        }
+                    case 'n':
+                        {
+                            accumulator += '\n';
+                            break;
+                        }
+                }
+                escaped = false;
+                continue;
+            }
+            else if (ch == '\\')
+            {
+                escaped = true;
+                continue;
+            }
+
+            accumulator += ch;
+            if (ch == inQuote)
+            {
+                result.push(accumulator);
+                accumulator = "";
+                inQuote = '\0';
+            }
+        }
+        else
+        {
+            switch (ch)
+            {
+                case ';':
+                    {
+                        inComment = true;
+                        break;
+                    }
+
+                case '"':
+                case '\'':
+                    {
+                        inQuote = ch;
+                        accumulator += ch;
+                        break;
+                    }
+
+                case '(':
+                case ')':
+                case '{':
+                case '}':
+                    {
+                        if (accumulator.length > 0)
+                        {
+                            result.push(accumulator);
+                            accumulator = "";
+                        }
+                        result.push(ch);
+                        break;
+                    }
+
+                case ' ':
+                case '\t':
+                case '\n':
+                case '\r':
+                    {
+                        if (accumulator.length > 0)
+                        {
+                            result.push(accumulator);
+                            accumulator = "";
+                        }
+                        break;
+                    }
+                default:
+                    {
+                        accumulator += ch;
+                        break;
+                    }
+            }
+        }
+    }
+
+    return result;
 }
 
 export function readAllTokens(tokens: string[]): ArrayValue
 {
-    const result: Value[] = [];
+    const result: IValue[] = [];
 
     while (tokens.length > 0)
     {
         result.push(readFromTokens(tokens));
     }
 
-    return result;
+    return new ArrayValue(result);
 }
 
-export function readFromTokens(tokens: string[]): Value
+export function readFromTokens(tokens: string[]): IValue
 {
     if (tokens.length === 0)
     {
@@ -34,13 +166,13 @@ export function readFromTokens(tokens: string[]): Value
     const token = popFront(tokens);
     if (token === '(')
     {
-        const list: Value[] = [];
+        const list: IValue[] = [];
         while (tokens[0] !== ')')
         {
             list.push(readFromTokens(tokens));
         }
         popFront(tokens);
-        return list as ArrayValue;
+        return new ArrayValue(list);
     }
     else if (token === ')')
     {
@@ -48,15 +180,15 @@ export function readFromTokens(tokens: string[]): Value
     }
     else if (token === '{')
     {
-        const map: { [key: string]: Value } = {};
+        const map: { [key: string]: IValue } = {};
         while (tokens[0] !== '}')
         {
-            const key = valueToString(readFromTokens(tokens));
+            const key = readFromTokens(tokens).toString();
             const value = readFromTokens(tokens);
             map[key] = value;
         }
         popFront(tokens);
-        return map as ObjectValue;
+        return new ObjectValue(map);
     }
     else if (token === '}')
     {
@@ -68,24 +200,24 @@ export function readFromTokens(tokens: string[]): Value
     }
 }
 
-function atom(input: string): Value
+function atom(input: string): IValue
 {
     const parsedNumber = parseFloat(input);
     if (!isNaN(parsedNumber))
     {
-        return parsedNumber;
+        return new NumberValue(parsedNumber);
     }
     if (input === 'true')
     {
-        return true;
+        return BoolValue.True;
     }
     if (input === 'false')
     {
-        return false;
+        return BoolValue.False;
     }
     if (input === 'null')
     {
-        return null;
+        return NullValue.Value;
     }
 
     const first = input[0];
@@ -93,10 +225,10 @@ function atom(input: string): Value
     if ((first === '"' && last === '"') ||
         (first === "'" && last === "'"))
     {
-        return input.substring(1, input.length - 1);
+        return new StringValue(input.substring(1, input.length - 1));
     }
 
-    return Symbol(input);
+    return new VariableValue(input);
 }
 
 function popFront<T>(input: T[])
