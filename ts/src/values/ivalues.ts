@@ -1,5 +1,5 @@
 import VirtualMachine from "../virtualMachine";
-import ArgumentsValue from "./argumentsValue";
+import ArrayValue from "./arrayValue";
 
 export type CompareResult = -1 | 0 | 1;
 export interface IValue
@@ -12,18 +12,18 @@ export interface IValue
 export interface IObjectValue extends IValue
 {
     readonly objectKeys: () => ReadonlyArray<string>;
-    readonly tryGetValue: (key: string) => IValue | undefined;
+    readonly tryGetKey: (key: string) => IValue | undefined;
 }
 
 export interface IArrayValue extends IValue
 {
     readonly arrayValues: () => ReadonlyArray<IValue>;
-    readonly tryGet: (index: number) => IValue | undefined;
+    readonly tryGetIndex: (index: number) => IValue | undefined;
 }
 
 export interface IFunctionValue extends IValue
 {
-    readonly invoke: (vm: VirtualMachine, args: ArgumentsValue, pushToStackTrace: boolean) => void;
+    readonly invoke: (vm: VirtualMachine, args: ArrayValue, pushToStackTrace: boolean) => void;
 }
 
 export function isIArrayValue(input: IValue | undefined): input is IArrayValue

@@ -11,7 +11,7 @@ export function getProperty(current: IValue, properties: IArrayValue): IValue | 
         const index = parseIndex(propValues[i]);
         if (index !== undefined && isIArrayValue(current))
         {
-            const test = current.tryGet(index);
+            const test = current.tryGetIndex(index);
             if (test === undefined)
             {
                 return undefined;
@@ -20,7 +20,7 @@ export function getProperty(current: IValue, properties: IArrayValue): IValue | 
         }
         else if (isIObjectValue(current))
         {
-            const test = current.tryGetValue(propValues[i].toString());
+            const test = current.tryGetKey(propValues[i].toString());
             if (test === undefined)
             {
                 return undefined;

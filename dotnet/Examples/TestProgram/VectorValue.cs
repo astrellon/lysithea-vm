@@ -40,7 +40,7 @@ namespace SimpleStackVM.Example
             return StandardObjectLibrary.GeneralCompareTo(this, other);
         }
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             switch (key)
             {
@@ -70,9 +70,9 @@ namespace SimpleStackVM.Example
             return false;
         }
 
-        public void Add(VirtualMachine vm, ArgumentsValue args)
+        public void Add(VirtualMachine vm, ArrayValue args)
         {
-            var other = args.Get<VectorValue>(0);
+            var other = args.GetIndex<VectorValue>(0);
             var x = this.X + other.X;
             var y = this.Y + other.Y;
             var z = this.Z + other.Z;

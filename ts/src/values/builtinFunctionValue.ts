@@ -1,8 +1,8 @@
 import VirtualMachine from "../virtualMachine";
-import ArgumentsValue from "./argumentsValue";
+import ArrayValue from "./arrayValue";
 import { CompareResult, IFunctionValue, IValue } from "./ivalues";
 
-export type BuiltinVMFunction = (vm: VirtualMachine, args: ArgumentsValue) => void;
+export type BuiltinVMFunction = (vm: VirtualMachine, args: ArrayValue) => void;
 
 export default class BuiltinFunctionValue implements IFunctionValue
 {
@@ -23,7 +23,7 @@ export default class BuiltinFunctionValue implements IFunctionValue
         return this.value === other.value ? 0 : 1;
     }
 
-    public invoke(vm: VirtualMachine, args: ArgumentsValue, pushToStackTrace: boolean)
+    public invoke(vm: VirtualMachine, args: ArrayValue, pushToStackTrace: boolean)
     {
         this.value(vm, args);
     }

@@ -1,6 +1,6 @@
 import virtualMachine from "../virtualMachine";
 import VMFunction from "../vmFunction";
-import argumentsValue from "./argumentsValue";
+import ArrayValue from "./arrayValue";
 import { CompareResult, IFunctionValue, IValue } from "./ivalues";
 
 export default class FunctionValue implements IFunctionValue
@@ -23,7 +23,7 @@ export default class FunctionValue implements IFunctionValue
         return this.value === other.value ? 0 : 1;
     }
 
-    public invoke(vm: virtualMachine, args: argumentsValue, pushToStackTrace: boolean)
+    public invoke(vm: virtualMachine, args: ArrayValue, pushToStackTrace: boolean)
     {
         vm.executeFunction(this.value, args, pushToStackTrace);
     }

@@ -55,7 +55,7 @@ export function createMathScope()
         }),
         parse: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.get(0);
+            const top = args.getIndex(0);
             if (isNumberValue(top))
             {
                 vm.pushStack(top);

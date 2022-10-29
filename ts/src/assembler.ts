@@ -58,39 +58,18 @@ export function parseOperator(input: string): Operator
     input = input.toLowerCase();
     switch (input)
     {
-        case 'push': return Operator.Push;
-        case 'toargument': return Operator.ToArgument;
-        case 'call': return Operator.Call;
-        case 'calldirect': return Operator.CallDirect;
-        case 'return': return Operator.Return;
-        case 'getproperty': return Operator.GetProperty;
-        case 'get': return Operator.Get;
-        case 'set': return Operator.Set;
-        case 'define': return Operator.Define;
-        case 'jump': return Operator.Jump;
-        case 'jumptrue': return Operator.JumpTrue;
-        case 'jumpfalse': return Operator.JumpFalse;
-    }
-
-    return Operator.Unknown;
-}
-
-export function operatorToString(input: Operator): string
-{
-    switch (input)
-    {
-        case Operator.Call: return 'call';
-        case Operator.CallDirect: return 'callDirect';
-        case Operator.Define: return 'define';
-        case Operator.Get: return 'get';
-        case Operator.GetProperty: return 'getProperty';
-        case Operator.Jump: return 'jump';
-        case Operator.JumpFalse: return 'jumpFalse';
-        case Operator.JumpTrue: return 'jumpTrue';
-        case Operator.Push: return 'push';
-        case Operator.Return: return 'return';
-        case Operator.Set: return 'set';
-        case Operator.ToArgument: return 'toArgument';
+        case 'push': return 'push';
+        case 'toargument': return 'toArgument';
+        case 'call': return 'call';
+        case 'calldirect': return 'callDirect';
+        case 'return': return 'return';
+        case 'getproperty': return 'getProperty';
+        case 'get': return 'get';
+        case 'set': return 'set';
+        case 'define': return 'define';
+        case 'jump': return 'jump';
+        case 'jumptrue': return 'jumpTrue';
+        case 'jumpfalse': return 'jumpFalse';
     }
 
     return 'unknown';
@@ -148,11 +127,11 @@ export default class VirtualMachineAssembler
                 const opCode = parseOperator(firstString);
 
                 // If it is not an opcode then it must be a function call
-                if (opCode === Operator.Unknown)
+                if (opCode === 'unknown')
                 {
                     result = result.concat(this.optimiseCallSymbolValue(first, input.value.length - 1));
                 }
-                else if (opCode !== Operator.Push)
+                else if (opCode !== 'push')
                 {
                     result.push(codeLine(opCode));
                 }
@@ -170,20 +149,20 @@ export default class VirtualMachineAssembler
             }
         }
 
-        return [ codeLine(Operator.Push, input) ];
+        return [ codeLine('push', input) ];
     }
 
     public parseSet(input: ArrayValue)
     {
         let result = this.parse(input.value[2]);
-        result.push(codeLine(Operator.Set, input.value[1]));
+        result.push(codeLine('set', input.value[1]));
         return result;
     }
 
     public parseDefine(input: ArrayValue)
     {
         let result = this.parse(input.value[2]);
-        result.push(codeLine(Operator.Define, input.value[1]));
+        result.push(codeLine('define', input.value[1]));
 
         if (result[0].value !== undefined && result[0].value instanceof FunctionValue)
         {
@@ -208,13 +187,13 @@ export default class VirtualMachineAssembler
 
         const comparisonCall = input.value[1];
         let result = [ labelLine(labelStart), ...this.parse(comparisonCall) ];
-        result.push(codeLine(Operator.JumpFalse, new StringValue(labelEnd)));
+        result.push(codeLine('jumpFalse', new StringValue(labelEnd)));
         for (let i = 2; i < input.value.length; i++)
         {
             result = result.concat(this.parse(input.value[i]));
         }
 
-        result.push(codeLine(Operator.Jump, new StringValue(labelStart)));
+        result.push(codeLine('jump', new StringValue(labelStart)));
         result.push(labelLine(labelEnd));
 
         this.loopStack.pop();
@@ -238,7 +217,7 @@ export default class VirtualMachineAssembler
         const labelEnd = `:CondEnd${ifLabelNum}`;
 
         const hasElseCall = input.value.length === 4;
-        const jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
+        const jumpOperator = isIfStatement ? 'jumpFalse' : 'jumpTrue';
 
         const comparisonCall = input.value[1];
         const firstBlock = input.value[2] as ArrayValue;
@@ -253,7 +232,7 @@ export default class VirtualMachineAssembler
             // First block of code
             result = result.concat(this.parseFlatten(firstBlock));
             // Jump after the condition, skipping second block of code.
-            result.push(codeLine(Operator.Jump, new StringValue(labelEnd)));
+            result.push(codeLine('jump', new StringValue(labelEnd)));
 
             // Jump target for else
             result.push(labelLine(labelElse));
@@ -293,7 +272,7 @@ export default class VirtualMachineAssembler
         }
 
         const loopLabel = this.loopStack[this.loopStack.length - 1];
-        return [codeLine(Operator.Jump, new StringValue(jumpToStart ? loopLabel.start : loopLabel.end))];
+        return [codeLine('jump', new StringValue(jumpToStart ? loopLabel.start : loopLabel.end))];
     }
 
     public parseFunction(input: ArrayValue)
@@ -341,9 +320,9 @@ export default class VirtualMachineAssembler
     {
         const varName = new StringValue(input.toString());
         return [
-            codeLine(Operator.Get, varName),
-            codeLine(Operator.CallDirect, new ArrayValue([changeFunc, new NumberValue(1)])),
-            codeLine(Operator.Set, varName)
+            codeLine('get', varName),
+            codeLine('callDirect', new ArrayValue([changeFunc, new NumberValue(1)])),
+            codeLine('set', varName)
         ];
     }
 
@@ -355,7 +334,7 @@ export default class VirtualMachineAssembler
                 {
                     const func = this.parseFunction(arrayValue);
                     const funcValue = new FunctionValue(func);
-                    return [codeLine(Operator.Push, funcValue)];
+                    return [codeLine('push', funcValue)];
                 }
             case ContinueKeyword: return this.parseLoopJump(ContinueKeyword, true);
             case BreakKeyword: return this.parseLoopJump(BreakKeyword, false);
@@ -388,7 +367,7 @@ export default class VirtualMachineAssembler
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.
                     const callValue = new ArrayValue([foundProperty, numArgsValue]);
-                    return [codeLine(Operator.CallDirect, callValue)];
+                    return [codeLine('callDirect', callValue)];
                 }
 
                 throw new Error(`Attempting to call a value that is not a function: ${input.toString()} = ${foundProperty.toString()}`);
@@ -399,7 +378,7 @@ export default class VirtualMachineAssembler
                 if (isIFunctionValue(foundParent))
                 {
                     const callValue = new ArrayValue([foundParent, numArgsValue]);
-                    return [codeLine(Operator.CallDirect, callValue)];
+                    return [codeLine('callDirect', callValue)];
                 }
 
                 throw new Error(`Attempting to call a value that is not a function: ${input.toString()} = ${foundParent.toString()}`);
@@ -407,15 +386,15 @@ export default class VirtualMachineAssembler
         }
 
         // Could not find the parent right now, so look for the parent at runtime.
-        const result: TempCodeLine[] = [codeLine(Operator.Get, new StringValue(propertyRequestInfo.parentKey))];
+        const result: TempCodeLine[] = [codeLine('get', new StringValue(propertyRequestInfo.parentKey))];
 
         // If this was also a property check also look up the property at runtime.
         if (propertyRequestInfo.isPropertyRequest)
         {
-            result.push(codeLine(Operator.GetProperty, propertyRequestInfo.property));
+            result.push(codeLine('getProperty', propertyRequestInfo.property));
         }
 
-        result.push(codeLine(Operator.Call, numArgsValue));
+        result.push(codeLine('call', numArgsValue));
         return result;
     }
 
@@ -439,32 +418,32 @@ export default class VirtualMachineAssembler
             {
                 if (foundProperty !== undefined)
                 {
-                    result.push(codeLine(Operator.Push, foundProperty));
+                    result.push(codeLine('push', foundProperty));
                 }
                 else
                 {
-                    result.push(codeLine(Operator.Push, foundParent));
-                    result.push(codeLine(Operator.GetProperty, propertyRequestInfo.property));
+                    result.push(codeLine('push', foundParent));
+                    result.push(codeLine('getProperty', propertyRequestInfo.property));
                 }
             }
             else if (!propertyRequestInfo.isPropertyRequest)
             {
-                result.push(codeLine(Operator.Push, foundParent));
+                result.push(codeLine('push', foundParent));
             }
         }
         else
         {
-            result.push(codeLine(Operator.Get, new StringValue(propertyRequestInfo.parentKey)));
+            result.push(codeLine('get', new StringValue(propertyRequestInfo.parentKey)));
 
             if (propertyRequestInfo.isPropertyRequest)
             {
-                result.push(codeLine(Operator.GetProperty, propertyRequestInfo.property));
+                result.push(codeLine('getProperty', propertyRequestInfo.property));
             }
         }
 
         if (isArgumentUnpack)
         {
-            result.push(codeLine(Operator.ToArgument, undefined));
+            result.push(codeLine('toArgument', undefined));
         }
 
         return result;

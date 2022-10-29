@@ -38,7 +38,7 @@ namespace SimpleStackVM.Example
             return StandardObjectLibrary.GeneralCompareTo(this, other);
         }
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             switch (key)
             {

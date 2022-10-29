@@ -38,7 +38,7 @@ namespace SimpleStackVM
         public override string ToString() => $"function:{this.Value.Name}";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace)
+        public void Invoke(VirtualMachine vm, ArrayValue args, bool pushToStackTrace)
         {
             vm.ExecuteFunction(this.Value, args, pushToStackTrace);
         }

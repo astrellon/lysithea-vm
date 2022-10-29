@@ -21,7 +21,7 @@ let choiceBuffer: IFunctionValue[] = [];
 const dialogueScope = new Scope();
 dialogueScope.define('say', new BuiltinFunctionValue((vm, args) =>
 {
-    say(args.get(0));
+    say(args.getIndex(0));
 }));
 dialogueScope.define('getPlayerName', new BuiltinFunctionValue((vm, args) =>
 {
@@ -34,12 +34,12 @@ dialogueScope.define('getPlayerName', new BuiltinFunctionValue((vm, args) =>
 }));
 dialogueScope.define('randomSay', new BuiltinFunctionValue((vm, args) =>
 {
-    randomSay(args.getCast(0, isIArrayValue));
+    randomSay(args.getIndexCast(0, isIArrayValue));
 }));
 dialogueScope.define('choice', new BuiltinFunctionValue((vm, args) =>
 {
-    const choiceText = args.get(0);
-    const choiceFunc = args.getCast(1, isIFunctionValue);
+    const choiceText = args.getIndex(0);
+    const choiceFunc = args.getIndexCast(1, isIFunctionValue);
     choiceBuffer.push(choiceFunc);
     sayChoice(choiceText);
 }));
@@ -80,8 +80,8 @@ dialogueScope.define('isShopEnabled', new BuiltinFunctionValue((vm, args) =>
 }));
 dialogueScope.define('moveTo', new BuiltinFunctionValue((vm, args) =>
 {
-    const proc = args.getCast(0, isIFunctionValue);
-    const label = args.get(1).toString();
+    const proc = args.getIndexCast(0, isIFunctionValue);
+    const label = args.getIndex(1).toString();
     vm.callFunction(proc, 0, false);
     vm.jump(label);
 }));

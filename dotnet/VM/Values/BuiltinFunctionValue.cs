@@ -7,7 +7,7 @@ namespace SimpleStackVM
     public struct BuiltinFunctionValue : IFunctionValue
     {
         #region Field
-        public delegate void BuiltinFunctionDelegate(VirtualMachine vm, ArgumentsValue args);
+        public delegate void BuiltinFunctionDelegate(VirtualMachine vm, ArrayValue args);
 
         public readonly BuiltinFunctionDelegate Value;
 
@@ -35,7 +35,7 @@ namespace SimpleStackVM
         public override string ToString() => "builtin-function";
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace)
+        public void Invoke(VirtualMachine vm, ArrayValue args, bool pushToStackTrace)
         {
             this.Value.Invoke(vm, args);
         }

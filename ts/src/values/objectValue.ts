@@ -69,7 +69,7 @@ export default class ObjectValue implements IObjectValue
         return 0;
     }
 
-    public tryGetValue(key: string)
+    public tryGetKey(key: string)
     {
         return this.value[key];
     }

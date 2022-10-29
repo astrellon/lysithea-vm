@@ -43,17 +43,7 @@ namespace SimpleStackVM
         [Benchmark]
         public void TestStdLibStreamFile()
         {
-            using var file = File.OpenRead(FilePath);
-            var code = Assembler.ParseFromStream(file);
-            var vm = new VirtualMachine(8);
-            vm.Execute(code);
-        }
-
-        [Benchmark]
-        public void TestStdLibStreamString()
-        {
-            using var reader = new StringReader(CodeText);
-            var code = Assembler.ParseFromStream(reader);
+            var code = Assembler.ParseFromFile(FilePath);
             var vm = new VirtualMachine(8);
             vm.Execute(code);
         }

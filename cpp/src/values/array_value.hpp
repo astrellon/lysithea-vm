@@ -12,15 +12,16 @@ namespace stack_vm
     using array_vector = std::vector<ivalue>;
     using array_ptr = std::shared_ptr<array_vector>;
 
-    class array_value : public ivalue
+    class array_value : public iarray_value
     {
         public:
             // Fields
             array_ptr value;
+            bool is_arguments_value;
 
             // Constructor
-            array_value(const array_vector &value) : value(std::make_shared<array_vector>(value)) { }
-            array_value(array_ptr value) : value(value) { }
+            array_value(const array_vector &value, bool is_arguments_value = false) : value(std::make_shared<array_vector>(value)), is_arguments_value(is_arguments_value) { }
+            array_value(array_ptr value, bool is_arguments_value = false) : value(value), is_arguments_value(is_arguments_value) { }
 
             // Methods
             virtual int compare_to(const ivalue *input) const
@@ -59,7 +60,7 @@ namespace stack_vm
 
             virtual std::string type_name() const
             {
-                return "array";
+                return is_arguments_value ? "arguments" : "array";
             }
     };
 } // stack_vm

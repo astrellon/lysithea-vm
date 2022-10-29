@@ -34,8 +34,8 @@ export function createAssertScope()
 
         equals: new BuiltinFunctionValue((vm, args) =>
         {
-            const expected = args.get(0);
-            const actual = args.get(1);
+            const expected = args.getIndex(0);
+            const actual = args.getIndex(1);
             if (expected.compareTo(actual) !== 0)
             {
                 vm.running = false;
@@ -46,8 +46,8 @@ export function createAssertScope()
 
         notEquals: new BuiltinFunctionValue((vm, args) =>
         {
-            const expected = args.get(0);
-            const actual = args.get(1);
+            const expected = args.getIndex(0);
+            const actual = args.getIndex(1);
             if (expected.compareTo(actual) === 0)
             {
                 vm.running = false;

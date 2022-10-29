@@ -13,7 +13,7 @@ namespace SimpleStackVM
             {
                 if (TryParseIndex(properties[i], out var index) && current is ArrayValue currentArray)
                 {
-                    if (!currentArray.TryGet(index, out var test))
+                    if (!currentArray.TryGetIndex(index, out var test))
                     {
                         return false;
                     }
@@ -21,7 +21,7 @@ namespace SimpleStackVM
                 }
                 else if (current is IObjectValue currentObject)
                 {
-                    if (!currentObject.TryGetValue(properties[i].ToString(), out var test))
+                    if (!currentObject.TryGetKey(properties[i].ToString(), out var test))
                     {
                         result = NullValue.Value;
                         return false;

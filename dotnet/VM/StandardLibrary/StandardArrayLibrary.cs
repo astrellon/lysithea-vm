@@ -27,23 +27,23 @@ namespace SimpleStackVM
 
                 {"length", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<IArrayValue>(0);
+                    var top = args.GetIndex<IArrayValue>(0);
                     vm.PushStack(top.ArrayValues.Count);
                 })},
 
                 {"set", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var value = args.Get(2);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var value = args.GetIndex(2);
                     vm.PushStack(Set(top, index.IntValue, value));
                 })},
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<IArrayValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    if (top.TryGet(index.IntValue, out var value))
+                    var top = args.GetIndex<IArrayValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    if (top.TryGetIndex(index.IntValue, out var value))
                     {
                         vm.PushStack(value);
                     }
@@ -55,60 +55,60 @@ namespace SimpleStackVM
 
                 {"insert", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var value = args.Get(2);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var value = args.GetIndex(2);
                     vm.PushStack(Insert(top, index.IntValue, value));
                 })},
 
                 {"insertFlatten", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var value = args.Get<IArrayValue>(2);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var value = args.GetIndex<IArrayValue>(2);
                     vm.PushStack(InsertFlatten(top, index.IntValue, value));
                 })},
 
                 {"remove", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var value = args.Get(1);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var value = args.GetIndex(1);
                     vm.PushStack(Remove(top, value));
                 })},
 
                 {"removeAt", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var index = args.Get<NumberValue>(1);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
                     vm.PushStack(RemoveAt(top, index.IntValue));
                 })},
 
                 {"removeAll", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var value = args.Get(1);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var value = args.GetIndex(1);
                     vm.PushStack(RemoveAll(top, value));
                 })},
 
                 {"contains", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<IArrayValue>(0);
-                    var value = args.Get(1);
+                    var top = args.GetIndex<IArrayValue>(0);
+                    var value = args.GetIndex(1);
                     vm.PushStack(Contains(top, value));
                 })},
 
                 {"indexOf", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<IArrayValue>(0);
-                    var value = args.Get(1);
+                    var top = args.GetIndex<IArrayValue>(0);
+                    var value = args.GetIndex(1);
                     vm.PushStack(IndexOf(top, value));
                 })},
 
                 {"sublist", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ArrayValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var length = args.Get<NumberValue>(2);
+                    var top = args.GetIndex<ArrayValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var length = args.GetIndex<NumberValue>(2);
                     vm.PushStack(SubList(top, index.IntValue, length.IntValue));
                 })}
             };
@@ -121,43 +121,43 @@ namespace SimpleStackVM
         public static ArrayValue Set(ArrayValue self, int index, IValue input)
         {
             var newValue = self.Value.ToList();
-            newValue[self.GetIndex(index)] = input;
-            return new ArrayValue(newValue);
+            newValue[self.CalcIndex(index)] = input;
+            return new ArrayValue(newValue, self.IsArgumentArray);
         }
 
         public static ArrayValue Insert(ArrayValue self, int index, IValue input)
         {
             var newValue = self.Value.ToList();
-            newValue.Insert(self.GetIndex(index), input);
-            return new ArrayValue(newValue);
+            newValue.Insert(self.CalcIndex(index), input);
+            return new ArrayValue(newValue, self.IsArgumentArray);
         }
 
         public static ArrayValue InsertFlatten(ArrayValue self, int index, IArrayValue input)
         {
             var newValue = self.Value.ToList();
-            newValue.InsertRange(self.GetIndex(index), input.ArrayValues);
-            return new ArrayValue(newValue);
+            newValue.InsertRange(self.CalcIndex(index), input.ArrayValues);
+            return new ArrayValue(newValue, self.IsArgumentArray);
         }
 
         public static ArrayValue RemoveAt(ArrayValue self, int index)
         {
             var newValue = self.Value.ToList();
-            newValue.RemoveAt(self.GetIndex(index));
-            return new ArrayValue(newValue);
+            newValue.RemoveAt(self.CalcIndex(index));
+            return new ArrayValue(newValue, self.IsArgumentArray);
         }
 
         public static ArrayValue Remove(ArrayValue self, IValue input)
         {
             var newValue = self.Value.ToList();
             newValue.Remove(input);
-            return new ArrayValue(newValue);
+            return new ArrayValue(newValue, self.IsArgumentArray);
         }
 
         public static ArrayValue RemoveAll(ArrayValue self, IValue input)
         {
             var newValue = self.Value.ToList();
             newValue.RemoveAll(v => v.CompareTo(input) == 0);
-            return new ArrayValue(newValue);
+            return new ArrayValue(newValue, self.IsArgumentArray);
         }
 
         public static bool Contains(IArrayValue self, IValue input)
@@ -181,7 +181,7 @@ namespace SimpleStackVM
 
         public static ArrayValue SubList(ArrayValue self, int index, int length)
         {
-            index = self.GetIndex(index);
+            index = self.CalcIndex(index);
             if (length < 0)
             {
                 length = self.Value.Count - index;
@@ -205,7 +205,7 @@ namespace SimpleStackVM
             {
                 result[i] = self.Value[i + index];
             }
-            return new ArrayValue(result);
+            return new ArrayValue(result, self.IsArgumentArray);
         }
 
         public static int GeneralCompareTo(IArrayValue left, IValue? rightInput)

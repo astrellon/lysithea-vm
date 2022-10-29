@@ -45,7 +45,7 @@ namespace SimpleStackVM
 
             result.Define("say", (vm, args) =>
             {
-                Say(args.Get(0));
+                Say(args.GetIndex(0));
             });
 
             result.Define("getPlayerName", (vm, args) =>
@@ -56,7 +56,7 @@ namespace SimpleStackVM
 
             result.Define("randomSay", (vm, args) =>
             {
-                RandomSay(args.Get<ArrayValue>(0));
+                RandomSay(args.GetIndex<ArrayValue>(0));
             });
 
             result.Define("isShopEnabled", (vm, args) =>
@@ -66,8 +66,8 @@ namespace SimpleStackVM
 
             result.Define("moveTo", (vm, args) =>
             {
-                var proc = args.Get<FunctionValue>(0);
-                var label = args.Get(1);
+                var proc = args.GetIndex<FunctionValue>(0);
+                var label = args.GetIndex(1);
 
                 vm.CallFunction(proc, 0, false);
                 vm.Jump(label.ToString());
@@ -75,8 +75,8 @@ namespace SimpleStackVM
 
             result.Define("choice", (vm, args) =>
             {
-                var choiceText = args.Get(0);
-                var choiceJumpLabel = args.Get(1);
+                var choiceText = args.GetIndex(0);
+                var choiceJumpLabel = args.GetIndex(1);
                 if (choiceJumpLabel is IFunctionValue procValue)
                 {
                     ChoiceBuffer.Add(procValue);

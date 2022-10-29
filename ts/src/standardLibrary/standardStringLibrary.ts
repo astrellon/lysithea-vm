@@ -31,30 +31,30 @@ export function createStringScope()
 
         get: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.getCast(0, isStringValue);
+            const top = args.getIndexCast(0, isStringValue);
             const index = args.getNumber(1);
             vm.pushStackString(top.value[top.getIndex(index)]);
         }),
 
         set: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.getCast(0, isStringValue);
+            const top = args.getIndexCast(0, isStringValue);
             const index = args.getNumber(1);
-            const value = args.get(2).toString();
+            const value = args.getIndex(2).toString();
             vm.pushStack(set(top, index, value));
         }),
 
         insert: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.getCast(0, isStringValue);
+            const top = args.getIndexCast(0, isStringValue);
             const index = args.getNumber(1);
-            const value = args.get(2).toString();
+            const value = args.getIndex(2).toString();
             vm.pushStack(insert(top, index, value));
         }),
 
         substring: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.getCast(0, isStringValue);
+            const top = args.getIndexCast(0, isStringValue);
             const index = args.getNumber(1);
             const length = args.getNumber(2);
             vm.pushStack(substring(top, index, length));
@@ -62,15 +62,15 @@ export function createStringScope()
 
         removeAt: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.getCast(0, isStringValue);
+            const top = args.getIndexCast(0, isStringValue);
             const index = args.getNumber(1);
             vm.pushStack(removeAt(top, index));
         }),
 
         removeAll: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.getCast(0, isStringValue);
-            const values = args.get(1).toString();
+            const top = args.getIndexCast(0, isStringValue);
+            const values = args.getIndex(1).toString();
             vm.pushStack(removeAll(top, values));
         })
     }

@@ -46,7 +46,7 @@ namespace SimpleStackVM
 
             result.Define("!", (vm, args) =>
             {
-                var value = args.Get<BoolValue>(0).Value;
+                var value = args.GetIndex<BoolValue>(0).Value;
                 vm.PushStack(!value);
             });
 
@@ -57,7 +57,7 @@ namespace SimpleStackVM
                     return;
                 }
 
-                if (args.TryGet<StringValue>(0, out var firstString))
+                if (args.TryGetIndex<StringValue>(0, out var firstString))
                 {
                     var result = string.Join("", args.Value);
                     vm.PushStack(result);
@@ -75,7 +75,7 @@ namespace SimpleStackVM
 
             result.Define("-", (vm, args) =>
             {
-                vm.PushStack(args.Get<NumberValue>(0).Value - args.Get<NumberValue>(1).Value);
+                vm.PushStack(args.GetIndex<NumberValue>(0).Value - args.GetIndex<NumberValue>(1).Value);
             });
 
             result.Define("*", (vm, args) =>
@@ -96,12 +96,12 @@ namespace SimpleStackVM
 
             result.Define("/", (vm, args) =>
             {
-                vm.PushStack(args.Get<NumberValue>(0).Value / args.Get<NumberValue>(1).Value);
+                vm.PushStack(args.GetIndex<NumberValue>(0).Value / args.GetIndex<NumberValue>(1).Value);
             });
 
             result.Define("%", (vm, args) =>
             {
-                vm.PushStack(args.Get<NumberValue>(0).Value % args.Get<NumberValue>(1).Value);
+                vm.PushStack(args.GetIndex<NumberValue>(0).Value % args.GetIndex<NumberValue>(1).Value);
             });
 
             return result;

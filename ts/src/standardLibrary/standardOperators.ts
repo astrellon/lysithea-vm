@@ -11,32 +11,32 @@ export function createOperatorScope()
 
     result.define('>', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.get(0).compareTo(args.get(1)) > 0);
+        vm.pushStackBool(args.getIndex(0).compareTo(args.getIndex(1)) > 0);
     }));
 
     result.define('>=', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.get(0).compareTo(args.get(1)) >= 0);
+        vm.pushStackBool(args.getIndex(0).compareTo(args.getIndex(1)) >= 0);
     }));
 
     result.define('==', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.get(0).compareTo(args.get(1)) === 0);
+        vm.pushStackBool(args.getIndex(0).compareTo(args.getIndex(1)) === 0);
     }));
 
     result.define('!=', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.get(0).compareTo(args.get(1)) !== 0);
+        vm.pushStackBool(args.getIndex(0).compareTo(args.getIndex(1)) !== 0);
     }));
 
     result.define('<', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.get(0).compareTo(args.get(1)) < 0);
+        vm.pushStackBool(args.getIndex(0).compareTo(args.getIndex(1)) < 0);
     }));
 
     result.define('<=', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.get(0).compareTo(args.get(1)) <= 0);
+        vm.pushStackBool(args.getIndex(0).compareTo(args.getIndex(1)) <= 0);
     }));
 
     result.define('+', new BuiltinFunctionValue((vm, args) =>
@@ -46,7 +46,7 @@ export function createOperatorScope()
             return;
         }
 
-        const first = args.get(0);
+        const first = args.getIndex(0);
         if (isStringValue(first))
         {
             const result = args.value.map(v => v.toString()).join('');
