@@ -18,6 +18,8 @@ file(GLOB FILE_SRC
 file(GLOB STD_LIB_FILE_SRC
     "src/standard_library/*.hpp"
     "src/standard_library/*.cpp"
+    "src/values/*.hpp"
+    "src/values/*.cpp"
 )
 
 # add_executable(perfTest ${FILE_SRC} perf_test_main.cpp)
