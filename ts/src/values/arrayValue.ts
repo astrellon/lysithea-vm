@@ -36,12 +36,12 @@ export default class ArrayValue implements IArrayValue, IObjectValue
         return index;
     }
 
-    public get(index: number): IValue | undefined
+    public tryGet(index: number): IValue | undefined
     {
         return this.value[this.getIndex(index)];
     }
 
-    public getValue(key: string): IValue | undefined
+    public tryGetValue(key: string): IValue | undefined
     {
         return undefined;
     }

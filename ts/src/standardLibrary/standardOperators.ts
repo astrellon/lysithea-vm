@@ -11,32 +11,32 @@ export function createOperatorScope()
 
     result.define('>', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.at(0).compareTo(args.at(1)) > 0);
+        vm.pushStackBool(args.get(0).compareTo(args.get(1)) > 0);
     }));
 
     result.define('>=', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.at(0).compareTo(args.at(1)) >= 0);
+        vm.pushStackBool(args.get(0).compareTo(args.get(1)) >= 0);
     }));
 
     result.define('==', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.at(0).compareTo(args.at(1)) === 0);
+        vm.pushStackBool(args.get(0).compareTo(args.get(1)) === 0);
     }));
 
     result.define('!=', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.at(0).compareTo(args.at(1)) !== 0);
+        vm.pushStackBool(args.get(0).compareTo(args.get(1)) !== 0);
     }));
 
     result.define('<', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.at(0).compareTo(args.at(1)) < 0);
+        vm.pushStackBool(args.get(0).compareTo(args.get(1)) < 0);
     }));
 
     result.define('<=', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackBool(args.at(0).compareTo(args.at(1)) <= 0);
+        vm.pushStackBool(args.get(0).compareTo(args.get(1)) <= 0);
     }));
 
     result.define('+', new BuiltinFunctionValue((vm, args) =>
@@ -46,7 +46,7 @@ export function createOperatorScope()
             return;
         }
 
-        const first = args.at(0);
+        const first = args.get(0);
         if (isStringValue(first))
         {
             const result = args.value.map(v => v.toString()).join('');
@@ -73,7 +73,7 @@ export function createOperatorScope()
 
     result.define('-', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackNumber(args.atNumber(0) - args.atNumber(1));
+        vm.pushStackNumber(args.getNumber(0) - args.getNumber(1));
     }));
 
     result.define('*', new BuiltinFunctionValue((vm, args) =>
@@ -86,19 +86,19 @@ export function createOperatorScope()
         let total = 1.0;
         for (let i = 0; i < args.value.length; i++)
         {
-            total *= args.atNumber(i);
+            total *= args.getNumber(i);
         }
         vm.pushStackNumber(total);
     }));
 
     result.define('/', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackNumber(args.atNumber(0) / args.atNumber(1));
+        vm.pushStackNumber(args.getNumber(0) / args.getNumber(1));
     }));
 
     result.define('%', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackNumber(args.atNumber(0) % args.atNumber(1));
+        vm.pushStackNumber(args.getNumber(0) % args.getNumber(1));
     }));
 
     return result;

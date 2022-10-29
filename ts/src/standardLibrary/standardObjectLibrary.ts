@@ -17,16 +17,16 @@ export function createObjectScope()
     {
         set: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isObjectValue);
-            const key = args.atString(1);
-            const value = args.at(2);
+            const top = args.getCast(0, isObjectValue);
+            const key = args.getString(1);
+            const value = args.get(2);
             vm.pushStack(set(top, key, value));
         }),
 
         get: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isObjectValue);
-            const key = args.atString(1);
+            const top = args.getCast(0, isObjectValue);
+            const key = args.getString(1);
             const found = get(top, key);
             if (found !== undefined)
             {
@@ -40,33 +40,33 @@ export function createObjectScope()
 
         removeKey: new BuiltinFunctionValue((vm, args) =>
         {
-            const obj = args.atCast(0, isObjectValue);
-            const key = args.atString(1);
+            const obj = args.getCast(0, isObjectValue);
+            const key = args.getString(1);
             vm.pushStack(removeKey(obj, key));
         }),
 
         removeValues: new BuiltinFunctionValue((vm, args) =>
         {
-            const obj = args.atCast(0, isObjectValue);
-            const values = args.at(1);
+            const obj = args.getCast(0, isObjectValue);
+            const values = args.get(1);
             vm.pushStack(removeValues(obj, values));
         }),
 
         keys: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isObjectValue);
+            const top = args.getCast(0, isObjectValue);
             vm.pushStack(keys(top));
         }),
 
         values: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isObjectValue);
+            const top = args.getCast(0, isObjectValue);
             vm.pushStack(values(top));
         }),
 
         length: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isObjectValue);
+            const top = args.getCast(0, isObjectValue);
             vm.pushStackNumber(length(top));
         })
     }

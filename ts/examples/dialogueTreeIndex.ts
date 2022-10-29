@@ -1,4 +1,3 @@
-import { ArrayValue, BuiltinFunctionValue, FunctionValue, isValueAnyFunction, isValueArray, isValueFunction, numberCompareTo, Value, valueToString, VMFunction } from "../src/types";
 import VirtualMachine from "../src/virtualMachine";
 import VirtualMachineRunner from "../src/virtualMachineRunner";
 import fs from "fs";
@@ -7,6 +6,9 @@ import Scope from "../src/scope";
 import VirtualMachineAssembler from "../src/assembler";
 import { operatorScope } from "../src/standardLibrary/standardOperators";
 import { arrayScope } from "../src/standardLibrary/standardArrayLibrary";
+import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "../src/values/ivalues";
+import BuiltinFunctionValue from "../src/values/builtinFunctionValue";
+import StringValue from "../src/values/stringValue";
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -14,34 +16,34 @@ const rl = readline.createInterface({
 });
 
 let isShopEnabled = false;
-let choiceBuffer: (FunctionValue | BuiltinFunctionValue)[] = [];
+let choiceBuffer: IFunctionValue[] = [];
 
 const dialogueScope = new Scope();
-dialogueScope.define('say', (vm, numArgs) =>
+dialogueScope.define('say', new BuiltinFunctionValue((vm, args) =>
 {
-    say(vm.popStack());
-});
-dialogueScope.define('getPlayerName', (vm, numArgs) =>
+    say(args.get(0));
+}));
+dialogueScope.define('getPlayerName', new BuiltinFunctionValue((vm, args) =>
 {
     vm.paused = true;
     rl.question('', (name) =>
     {
-        vm.globalScope.define('playerName', name);
+        vm.globalScope.define('playerName', new StringValue(name));
         vm.paused = false;
     });
-});
-dialogueScope.define('randomSay', (vm, numArgs) =>
+}));
+dialogueScope.define('randomSay', new BuiltinFunctionValue((vm, args) =>
 {
-    randomSay(vm.popStackCast(isValueArray));
-});
-dialogueScope.define('choice', (vm, numArgs) =>
+    randomSay(args.getCast(0, isIArrayValue));
+}));
+dialogueScope.define('choice', new BuiltinFunctionValue((vm, args) =>
 {
-    const choiceJumpLabel = vm.popStackCast(isValueAnyFunction);
-    const choiceText = vm.popStack();
-    choiceBuffer.push(choiceJumpLabel);
+    const choiceText = args.get(0);
+    const choiceFunc = args.getCast(1, isIFunctionValue);
+    choiceBuffer.push(choiceFunc);
     sayChoice(choiceText);
-});
-dialogueScope.define('waitForChoice', (vm, numArgs) =>
+}));
+dialogueScope.define('waitForChoice', new BuiltinFunctionValue((vm, args) =>
 {
     if (choiceBuffer.length === 0)
     {
@@ -63,40 +65,40 @@ dialogueScope.define('waitForChoice', (vm, numArgs) =>
             console.log('Invalid choice');
         }
     });
-});
-dialogueScope.define('openTheShop', (vm, numArgs) =>
+}));
+dialogueScope.define('openTheShop', new BuiltinFunctionValue((vm, args) =>
 {
     isShopEnabled = true;
-});
-dialogueScope.define('openShop', (vm, numArgs) =>
+}));
+dialogueScope.define('openShop', new BuiltinFunctionValue((vm, args) =>
 {
     console.log('Opening the shop to the player and quitting dialogue');
-});
-dialogueScope.define('isShopEnabled', (vm, numArgs) =>
+}));
+dialogueScope.define('isShopEnabled', new BuiltinFunctionValue((vm, args) =>
 {
-    vm.pushStack(isShopEnabled);
-});
-dialogueScope.define('moveTo', (vm, numArgs) =>
+    vm.pushStackBool(isShopEnabled);
+}));
+dialogueScope.define('moveTo', new BuiltinFunctionValue((vm, args) =>
 {
-    const label = valueToString(vm.popStack());
-    const proc = vm.popStackCast(isValueFunction);
+    const proc = args.getCast(0, isIFunctionValue);
+    const label = args.get(1).toString();
     vm.callFunction(proc, 0, false);
     vm.jump(label);
-});
+}));
 
-function say(value: Value)
+function say(value: IValue)
 {
-    const text = valueToString(value);
-    console.log('Say:', text);
+    console.log('Say:', value.toString());
 }
 
-function randomSay(value: ArrayValue)
+function randomSay(value: IArrayValue)
 {
-    var randIndex = Math.floor(Math.random() * value.length);
-    say(value[randIndex]);
+    const values = value.arrayValues();
+    const randIndex = Math.floor(Math.random() * values.length);
+    say(values[randIndex]);
 }
 
-function sayChoice(value: Value)
+function sayChoice(value: IValue)
 {
     console.log('- ', choiceBuffer.length, ':', value?.toString());
 }
@@ -122,12 +124,11 @@ const assembler = new VirtualMachineAssembler();
 assembler.builtinScope.combineScope(dialogueScope);
 assembler.builtinScope.combineScope(operatorScope);
 assembler.builtinScope.combineScope(arrayScope);
-const code = assembler.parseFromText(file);
+const script = assembler.parseFromText(file);
 
 const vm = new VirtualMachine(64);
 // Some functions are looked up dynamically, so the VM must know then as well as the assembler.
-vm.builtinScope.combineScope(dialogueScope);
-vm.currentCode = code;
+vm.changeToScript(script);
 vm.running = true;
 
 const runner = new VirtualMachineRunner(vm);

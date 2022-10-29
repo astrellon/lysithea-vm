@@ -19,43 +19,43 @@ export function createMathScope()
 
         sin: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.sin(args.atNumber(0)));
+            vm.pushStackNumber(Math.sin(args.getNumber(0)));
         }),
         cos: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.cos(args.atNumber(0)));
+            vm.pushStackNumber(Math.cos(args.getNumber(0)));
         }),
         tan: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.tan(args.atNumber(0)));
+            vm.pushStackNumber(Math.tan(args.getNumber(0)));
         }),
         exp: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.exp(args.atNumber(0)));
+            vm.pushStackNumber(Math.exp(args.getNumber(0)));
         }),
         ceil: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.ceil(args.atNumber(0)));
+            vm.pushStackNumber(Math.ceil(args.getNumber(0)));
         }),
         floor: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.floor(args.atNumber(0)));
+            vm.pushStackNumber(Math.floor(args.getNumber(0)));
         }),
         round: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.round(args.atNumber(0)));
+            vm.pushStackNumber(Math.round(args.getNumber(0)));
         }),
         isFinite: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackBool(Number.isFinite(args.atNumber(0)));
+            vm.pushStackBool(Number.isFinite(args.getNumber(0)));
         }),
         isNaN: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackBool(isNaN(args.atNumber(0)));
+            vm.pushStackBool(isNaN(args.getNumber(0)));
         }),
         parse: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.at(0);
+            const top = args.get(0);
             if (isNumberValue(top))
             {
                 vm.pushStack(top);
@@ -67,11 +67,11 @@ export function createMathScope()
         }),
         log: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.log(args.atNumber(0)));
+            vm.pushStackNumber(Math.log(args.getNumber(0)));
         }),
         abs: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStackNumber(Math.abs(args.atNumber(0)));
+            vm.pushStackNumber(Math.abs(args.getNumber(0)));
         }),
         max: new BuiltinFunctionValue((vm, args) =>
         {
@@ -111,9 +111,9 @@ export function createMathScope()
 
 export const incNumber = new BuiltinFunctionValue((vm, args) =>
 {
-    vm.pushStackNumber(args.atNumber(0) + 1);
+    vm.pushStackNumber(args.getNumber(0) + 1);
 });
 export const decNumber = new BuiltinFunctionValue((vm, args) =>
 {
-    vm.pushStackNumber(args.atNumber(0) - 1);
+    vm.pushStackNumber(args.getNumber(0) - 1);
 });

@@ -1,7 +1,6 @@
 import { operatorToString } from "./assembler";
 import Scope, { IReadOnlyScope } from "./scope";
 import Script from "./script";
-import { Operator, ScopeFrame } from "./types";
 import ArgumentsValue from "./values/argumentsValue";
 import BoolValue from "./values/boolValue";
 import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
@@ -9,6 +8,28 @@ import NumberValue from "./values/numberValue";
 import StringValue from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
 import VMFunction from "./vmFunction";
+
+export interface CodeLine
+{
+    readonly operator: Operator;
+    readonly value?: IValue;
+}
+
+export enum Operator
+{
+    Unknown,
+    Push, ToArgument,
+    Call, CallDirect, Return,
+    GetProperty, Get, Set, Define,
+    Jump, JumpTrue, JumpFalse
+}
+
+export interface ScopeFrame
+{
+    readonly lineNumber: number;
+    readonly function: VMFunction;
+    readonly scope: Scope;
+}
 
 export default class VirtualMachine
 {
@@ -113,16 +134,22 @@ export default class VirtualMachine
                         throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${key.toString()}`);
                     }
 
-                    const foundValue = this._currentScope.get(key.value);
+                    let foundValue = this._currentScope.get(key.value);
                     if (foundValue !== undefined)
                     {
                         this.pushStack(foundValue);
+                        break;
                     }
-                    else
+                    else if (this.builtinScope !== undefined)
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to get variable: ${key.toString()}`);
+                        foundValue = this.builtinScope.get(key.value);
+                        if (foundValue !== undefined)
+                        {
+                            this.pushStack(foundValue);
+                            break;
+                        }
                     }
-                    break;
+                    throw new Error(`${this.getScopeLine()}: Unable to get variable: ${key.toString()}`);
                 }
             case Operator.GetProperty:
                 {
@@ -215,13 +242,13 @@ export default class VirtualMachine
                 {
                     const funcCall = codeLine.value;
                     if (funcCall == null || !isIArrayValue(funcCall) ||
-                        !isIFunctionValue(funcCall.get(0)) ||
-                        !(funcCall.get(1) instanceof NumberValue))
+                        !isIFunctionValue(funcCall.tryGet(0)) ||
+                        !(funcCall.tryGet(1) instanceof NumberValue))
                     {
                         throw new Error(`${this.getScopeLine()}: Call direct needs an array of the function and num args code line input`);
                     }
 
-                    this.callFunction(funcCall.get(0) as IFunctionValue, (funcCall.get(1) as NumberValue).value, true);
+                    this.callFunction(funcCall.tryGet(0) as IFunctionValue, (funcCall.tryGet(1) as NumberValue).value, true);
                     break;
                 }
         }
@@ -401,17 +428,6 @@ export default class VirtualMachine
         }
 
         return this._stack[this._stack.length - 1];
-    }
-
-    public peekStackCast<T>(guardCheck: (v: any) => v is T): T
-    {
-        const top = this.peekStack();
-        if (guardCheck(top))
-        {
-            return top as T;
-        }
-
-        throw new Error(`${this.getScopeLine()}: Peek stack cast error`);
     }
 
     public createStackTrace(): string[]

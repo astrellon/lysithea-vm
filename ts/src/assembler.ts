@@ -1,7 +1,7 @@
 import { readAllTokens, tokenize } from "./parser";
 import Scope from "./scope";
+import Script from "./script";
 import { decNumber, incNumber } from "./standardLibrary/standardMathLibrary";
-import { CodeLine, Operator } from "./types";
 import ArrayValue from "./values/arrayValue";
 import FunctionValue from "./values/functionValue";
 import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
@@ -9,6 +9,7 @@ import NumberValue from "./values/numberValue";
 import StringValue from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
 import VariableValue from "./values/variableValue";
+import { CodeLine, Operator } from "./virtualMachine";
 import VMFunction from "./vmFunction";
 
 interface TempCodeLine
@@ -106,7 +107,12 @@ export default class VirtualMachineAssembler
     {
         const tokens = tokenize(input);
         const parsed = readAllTokens(tokens);
-        return this.parseGlobalFunction(parsed);
+
+        const code = this.parseGlobalFunction(parsed);
+        const scriptScope = new Scope();
+        scriptScope.combineScope(this.builtinScope);
+
+        return new Script(scriptScope, code);
     }
 
     public parse(input: IValue): TempCodeLine[]
@@ -306,7 +312,9 @@ export default class VirtualMachineAssembler
     public parseGlobalFunction(input: ArrayValue)
     {
         const tempCodeLines = input.value.map(v => this.parse(v)).flat(1);
-        return this.processTempFunction([], tempCodeLines);
+        var result = this.processTempFunction([], tempCodeLines);
+        result.name = 'global';
+        return result;
     }
 
     public processTempFunction(parameters: string[], tempCodeLines: TempCodeLine[]) : VMFunction

@@ -12,7 +12,7 @@ export function createAssertScope()
     {
         true: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atBool(0);
+            const top = args.getBool(0);
             if (!top)
             {
                 vm.running = false;
@@ -23,7 +23,7 @@ export function createAssertScope()
 
         false: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atBool(0);
+            const top = args.getBool(0);
             if (top)
             {
                 vm.running = false;
@@ -34,8 +34,8 @@ export function createAssertScope()
 
         equals: new BuiltinFunctionValue((vm, args) =>
         {
-            const expected = args.at(0);
-            const actual = args.at(1);
+            const expected = args.get(0);
+            const actual = args.get(1);
             if (expected.compareTo(actual) !== 0)
             {
                 vm.running = false;
@@ -46,8 +46,8 @@ export function createAssertScope()
 
         notEquals: new BuiltinFunctionValue((vm, args) =>
         {
-            const expected = args.at(0);
-            const actual = args.at(1);
+            const expected = args.get(0);
+            const actual = args.get(1);
             if (expected.compareTo(actual) === 0)
             {
                 vm.running = false;

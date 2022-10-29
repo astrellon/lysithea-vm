@@ -25,6 +25,6 @@ export default class FunctionValue implements IFunctionValue
 
     public invoke(vm: virtualMachine, args: argumentsValue, pushToStackTrace: boolean)
     {
-
+        vm.executeFunction(this.value, args, pushToStackTrace);
     }
 }

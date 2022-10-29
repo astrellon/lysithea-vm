@@ -1,5 +1,3 @@
-// import { ArrayValue, ObjectValue, Value, valueToString } from "./types";
-
 import ArrayValue from "./values/arrayValue";
 import BoolValue from "./values/boolValue";
 import { IValue } from "./values/ivalues";
@@ -8,18 +6,6 @@ import NumberValue from "./values/numberValue";
 import ObjectValue from "./values/objectValue";
 import StringValue from "./values/stringValue";
 import VariableValue from "./values/variableValue";
-
-// const tokenRegex = /[^\s"']+|"([^"]*)"|'([^']*)'"/g;
-// const commentRegex = /^\s*(;|\/\/).*$/gm;
-// const bracketRegex = /([\(\)\{\}])/g;
-
-// export function tokenize(input: string)
-// {
-//     const cleaned = input.replace(bracketRegex, " $& ")
-//         .replace(commentRegex, '')
-
-//     return [...cleaned.matchAll(tokenRegex)].map(c => c[0]);
-// }
 
 export function tokenize(input: string)
 {

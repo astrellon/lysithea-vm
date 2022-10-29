@@ -1,4 +1,4 @@
-import { CodeLine } from "./types";
+import { CodeLine } from "./virtualMachine";
 
 type CodeLines = ReadonlyArray<CodeLine>;
 type Parameters = ReadonlyArray<string>;

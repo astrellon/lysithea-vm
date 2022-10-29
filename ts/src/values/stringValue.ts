@@ -36,7 +36,7 @@ export default class StringValue implements IObjectValue
         return index;
     }
 
-    public getValue(key: string)
+    public tryGetValue(key: string)
     {
         return undefined;
     }

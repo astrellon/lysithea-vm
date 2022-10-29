@@ -25,52 +25,52 @@ export function createStringScope()
 
         length: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atString(0);
+            const top = args.getString(0);
             vm.pushStackNumber(top.length);
         }),
 
         get: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isStringValue);
-            const index = args.atNumber(1);
+            const top = args.getCast(0, isStringValue);
+            const index = args.getNumber(1);
             vm.pushStackString(top.value[top.getIndex(index)]);
         }),
 
         set: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isStringValue);
-            const index = args.atNumber(1);
-            const value = args.at(2).toString();
+            const top = args.getCast(0, isStringValue);
+            const index = args.getNumber(1);
+            const value = args.get(2).toString();
             vm.pushStack(set(top, index, value));
         }),
 
         insert: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isStringValue);
-            const index = args.atNumber(1);
-            const value = args.at(2).toString();
+            const top = args.getCast(0, isStringValue);
+            const index = args.getNumber(1);
+            const value = args.get(2).toString();
             vm.pushStack(insert(top, index, value));
         }),
 
         substring: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isStringValue);
-            const index = args.atNumber(1);
-            const length = args.atNumber(2);
+            const top = args.getCast(0, isStringValue);
+            const index = args.getNumber(1);
+            const length = args.getNumber(2);
             vm.pushStack(substring(top, index, length));
         }),
 
         removeAt: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isStringValue);
-            const index = args.atNumber(1);
+            const top = args.getCast(0, isStringValue);
+            const index = args.getNumber(1);
             vm.pushStack(removeAt(top, index));
         }),
 
         removeAll: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = args.atCast(0, isStringValue);
-            const values = args.at(1).toString();
+            const top = args.getCast(0, isStringValue);
+            const values = args.get(1).toString();
             vm.pushStack(removeAll(top, values));
         })
     }

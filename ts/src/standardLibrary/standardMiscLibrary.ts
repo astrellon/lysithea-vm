@@ -9,17 +9,17 @@ export function createMiscScope()
 
     result.define('toString', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackString(args.at(0).toString());
+        vm.pushStackString(args.get(0).toString());
     }));
 
     result.define('typeof', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackString(args.at(0).typename());
+        vm.pushStackString(args.get(0).typename());
     }));
 
     result.define('compareTo', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackNumber(args.at(0).compareTo(args.at(1)));
+        vm.pushStackNumber(args.get(0).compareTo(args.get(1)));
     }));
 
     result.define('print', new BuiltinFunctionValue((vm, args) =>

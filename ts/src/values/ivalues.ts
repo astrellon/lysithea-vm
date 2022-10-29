@@ -12,13 +12,13 @@ export interface IValue
 export interface IObjectValue extends IValue
 {
     readonly objectKeys: () => ReadonlyArray<string>;
-    readonly getValue: (key: string) => IValue | undefined;
+    readonly tryGetValue: (key: string) => IValue | undefined;
 }
 
 export interface IArrayValue extends IValue
 {
     readonly arrayValues: () => ReadonlyArray<IValue>;
-    readonly get: (index: number) => IValue | undefined;
+    readonly tryGet: (index: number) => IValue | undefined;
 }
 
 export interface IFunctionValue extends IValue

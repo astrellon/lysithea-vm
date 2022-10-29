@@ -27,12 +27,12 @@ export default class ArgumentsValue implements IArrayValue
         return arrayCompareTo(this, other);
     }
 
-    public get(index: number): IValue | undefined
+    public tryGet(index: number): IValue | undefined
     {
         return this.value[index];
     }
 
-    public at(index: number): IValue
+    public get(index: number): IValue
     {
         if (index < 0 || index >= this.value.length)
         {
@@ -42,7 +42,7 @@ export default class ArgumentsValue implements IArrayValue
         return this.value[index];
     }
 
-    public atCast<T>(index: number, guardCheck: (v: any) => v is T): T
+    public getCast<T>(index: number, guardCheck: (v: any) => v is T): T
     {
         const value = this.value[index];
         if (guardCheck(value))
@@ -53,19 +53,19 @@ export default class ArgumentsValue implements IArrayValue
         throw new Error(`Unable to get argument: [${index}] failed guard check`);
     }
 
-    public atNumber(index: number)
+    public getNumber(index: number)
     {
-        return this.atCast(index, isNumberValue).value;
+        return this.getCast(index, isNumberValue).value;
     }
 
-    public atString(index: number)
+    public getString(index: number)
     {
-        return this.atCast(index, isStringValue).value;
+        return this.getCast(index, isStringValue).value;
     }
 
-    public atBool(index: number)
+    public getBool(index: number)
     {
-        return this.atCast(index, isBoolValue).value;
+        return this.getCast(index, isBoolValue).value;
     }
 
     public sublist(index: number): ArgumentsValue
