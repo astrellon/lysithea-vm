@@ -77,7 +77,18 @@ export default class VirtualMachine
 
         this.builtinScope = script.builtinScope;
         this.currentCode = script.code;
+    }
 
+    public execute(script: Script)
+    {
+        this.changeToScript(script);
+
+        this.running = true;
+        this.paused = false;
+        while (this.running && !this.paused)
+        {
+            this.step();
+        }
     }
 
     public step()

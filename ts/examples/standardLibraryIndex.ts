@@ -9,17 +9,13 @@ const file = fs.readFileSync('../examples/testStandardLibrary.lisp', {encoding: 
 const assembler = new VirtualMachineAssembler();
 addToScope(assembler.builtinScope, LibraryType.all);
 assembler.builtinScope.combineScope(assertScope);
-const code = assembler.parseFromText(file);
+const script = assembler.parseFromText(file);
 
 const vm = new VirtualMachine(16);
-vm.currentCode = code;
-vm.running = true;
 
 const before = Date.now();
-while (vm.running && !vm.paused)
-{
-    vm.step();
-}
+
+vm.execute(script);
 
 const after = Date.now();
 console.log('Time taken:', (after - before), 'ms');

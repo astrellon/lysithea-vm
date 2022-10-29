@@ -1,4 +1,5 @@
 import { isBoolValue } from "./boolValue";
+import BuiltinFunctionValue from "./builtinFunctionValue";
 import { CompareResult, IArrayValue, IObjectValue, IValue } from "./ivalues";
 import { isNumberValue, numberCompareTo } from "./numberValue";
 import { isStringValue } from "./stringValue";
@@ -20,7 +21,22 @@ export default class ArrayValue implements IArrayValue, IObjectValue
     }
 
     public typename() { return this.isArgumentValue ? 'arguments' : 'array'; }
-    public toString() { return ''; }
+    public toString()
+    {
+        let first = true;
+        let result = '(';
+        for (const item of this.value)
+        {
+            if (!first)
+            {
+                result += ' ';
+            }
+            first = false;
+            result += item.toString();
+        }
+        result += ')';
+        return result;
+    }
     public arrayValues() { return this.value; }
 
     public compareTo(other: IValue): CompareResult
@@ -84,6 +100,14 @@ export default class ArrayValue implements IArrayValue, IObjectValue
 
     public tryGetKey(key: string): IValue | undefined
     {
+        if (key === 'length')
+        {
+            return new BuiltinFunctionValue((vm, args) =>
+            {
+                vm.pushStackNumber(this.value.length);
+            });
+        }
+
         return undefined;
     }
 

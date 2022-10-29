@@ -360,8 +360,8 @@ export default class VirtualMachineAssembler
         if (foundParent !== undefined)
         {
             // If the get is for a property? (eg: string.length, length is the property)
-            const foundProperty = getProperty(foundParent, propertyRequestInfo.property)
-            if (propertyRequestInfo.isPropertyRequest && foundProperty !== undefined)
+            let foundProperty: IValue | undefined = undefined;
+            if (propertyRequestInfo.isPropertyRequest && (foundProperty = getProperty(foundParent, propertyRequestInfo.property)) !== undefined)
             {
                 if (isIFunctionValue(foundProperty))
                 {
@@ -413,9 +413,9 @@ export default class VirtualMachineAssembler
         const foundParent = this.builtinScope.get(propertyRequestInfo.parentKey);
         if (foundParent !== undefined)
         {
-            const foundProperty = getProperty(foundParent, propertyRequestInfo.property);
             if (propertyRequestInfo.isPropertyRequest)
             {
+                const foundProperty = getProperty(foundParent, propertyRequestInfo.property);
                 if (foundProperty !== undefined)
                 {
                     result.push(codeLine('push', foundProperty));

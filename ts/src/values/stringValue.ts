@@ -1,3 +1,4 @@
+import BuiltinFunctionValue from "./builtinFunctionValue";
 import { CompareResult, IObjectValue, IValue } from "./ivalues";
 
 const keys: ReadonlyArray<string> = [ 'length' ];
@@ -38,6 +39,14 @@ export default class StringValue implements IObjectValue
 
     public tryGetKey(key: string)
     {
+        if (key === 'length')
+        {
+            return new BuiltinFunctionValue((vm, args) =>
+            {
+                vm.pushStackNumber(this.value.length);
+            });
+        }
+
         return undefined;
     }
 

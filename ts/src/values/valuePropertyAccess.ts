@@ -27,8 +27,10 @@ export function getProperty(current: IValue, properties: IArrayValue): IValue | 
             }
             current = test;
         }
-
-        return undefined;
+        else
+        {
+            return undefined;
+        }
     }
 
     return current;
