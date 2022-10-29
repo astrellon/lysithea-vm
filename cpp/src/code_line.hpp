@@ -2,7 +2,7 @@
 
 #include <optional>
 
-#include "value.hpp"
+#include "values/ivalue.hpp"
 #include "operator.hpp"
 
 namespace stack_vm
@@ -12,12 +12,12 @@ namespace stack_vm
         public:
             // Fields
             const vm_operator op;
-            const std::optional<stack_vm::value> value;
+            std::optional<ivalue> value;
 
             // Constructor
             code_line(vm_operator op) : op(op) { }
-            code_line(vm_operator op, const stack_vm::value &value) : op(op), value(value) { }
-            code_line(vm_operator op, const std::optional<stack_vm::value> value) : op(op), value(value) { }
+            code_line(vm_operator op, const ivalue &value) : op(op), value(value) { }
+            code_line(vm_operator op, const std::optional<ivalue> value) : op(op), value(value) { }
 
             // Methods
     };

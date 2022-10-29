@@ -11,15 +11,17 @@ namespace stack_vm
         std::transform(upper_case.begin(), upper_case.end(), upper_case.begin(), ::toupper);
 
         if (upper_case == "PUSH") return vm_operator::push;
-        if (upper_case == "RUN") return vm_operator::run;
+        if (upper_case == "TOARGUMENT") return vm_operator::to_argument;
         if (upper_case == "CALL") return vm_operator::call;
+        if (upper_case == "CALLDIRECT") return vm_operator::call_direct;
+        if (upper_case == "RETURN") return vm_operator::call_return;
+        if (upper_case == "GETPROPERTY") return vm_operator::get_property;
+        if (upper_case == "GET") return vm_operator::get;
+        if (upper_case == "SET") return vm_operator::set;
+        if (upper_case == "DEFINE") return vm_operator::define;
         if (upper_case == "JUMP") return vm_operator::jump;
         if (upper_case == "JUMPTRUE") return vm_operator::jump_true;
         if (upper_case == "JUMPFALSE") return vm_operator::jump_false;
-        if (upper_case == "RETURN") return vm_operator::call_return;
-        if (upper_case == "SWAP") return vm_operator::swap;
-        if (upper_case == "COPY") return vm_operator::copy;
-        if (upper_case == "POP") return vm_operator::pop;
 
         return vm_operator::unknown;
     }
