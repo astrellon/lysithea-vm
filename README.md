@@ -35,10 +35,10 @@ private static Scope CreateScope()
 {
     var result = new Scope();
 
-    result.Set("add", vm =>
+    result.Set("add", (vm, args) =>
     {
-        var num1 = vm.PopStack<NumberValue>();
-        var num2 = vm.PopStack<NumberValue>();
+        var num1 = args.GetIndex<NumberValue>(0);
+        var num2 = args.GetIndex<NumberValue>(1);
         vm.PushStack((NumberValue)(num1.Value + num2.Value));
     });
 

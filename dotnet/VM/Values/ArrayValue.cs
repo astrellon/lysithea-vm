@@ -67,58 +67,6 @@ namespace SimpleStackVM
             return false;
         }
 
-        public bool TryGetIndex<T>(int index, [NotNullWhen(true)] out T? result) where T : IValue
-        {
-            if (this.TryGetIndex(index, out var foundValue))
-            {
-                if (foundValue is T foundCasted)
-                {
-                    result = foundCasted;
-                    return true;
-                }
-            }
-
-            result = default(T);
-            return false;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IValue GetIndex(int index)
-        {
-            if (TryGetIndex(index, out var value))
-            {
-                return value;
-            }
-
-            throw new System.IndexOutOfRangeException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetIndex<T>(int index) where T : IValue
-        {
-            if (TryGetIndex(index, out var value))
-            {
-                if (value is T result)
-                {
-                    return result;
-                }
-                throw new System.Exception($"Unable to cast argument to: {typeof(T).FullName} for {value.ToString()}");
-            }
-
-            throw new System.IndexOutOfRangeException();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetIndex<T>(int index, VirtualMachine.CastValueDelegate<T> cast) where T : IValue
-        {
-            if (TryGetIndex(index, out var value))
-            {
-                return cast(value);
-            }
-
-            throw new System.IndexOutOfRangeException();
-        }
-
         public override string ToString() => StandardArrayLibrary.GeneralToString(this);
         public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
         public void GetLength(VirtualMachine vm, ArrayValue args) => vm.PushStack(this.Value.Count);

@@ -49,25 +49,25 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("rand", (vm, numArgs) =>
+            result.Define("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
             });
 
-            result.Define("add", (vm, numArgs) =>
+            result.Define("add", (vm, args) =>
             {
                 var num1 = (NumberValue)vm.PopStack();
                 var num2 = (NumberValue)vm.PopStack();
                 vm.PushStack((num1.Value + num2.Value));
             });
 
-            result.Define("isDone", (vm, numArgs) =>
+            result.Define("isDone", (vm, args) =>
             {
                 Counter++;
                 vm.PushStack((Counter >= 1_000_000));
             });
 
-            result.Define("done", (vm, numArgs) =>
+            result.Define("done", (vm, args) =>
             {
                 var total = (NumberValue)vm.PopStack();
                 Console.WriteLine($"Done: {total.Value}");
