@@ -1,44 +1,45 @@
 #pragma once
 
-#include <memory>
+#include <functional>
 #include <string>
+
 #include "./ivalue.hpp"
-#include "../function.hpp"
 
 namespace stack_vm
 {
-    using function_ptr = std::shared_ptr<function>;
+    class virtual_machine;
 
-    class function_value : public ifunction_value
+    using builtin_function_callback = std::function<void (virtual_machine &, const array_value &)>;
+
+    class builtin_function_value : public ifunction_value
     {
         public:
             // Fields
-            function_ptr value;
+            builtin_function_callback value;
 
             // Constructor
-            function_value(function_ptr value) : value(value) { }
-            function_value(function value) : value(std::make_shared<function>(value)) { }
+            builtin_function_value(builtin_function_callback value) : value(value) { }
 
             // Methods
             virtual int compare_to(const ivalue *input) const
             {
-                auto other = dynamic_cast<const function_value *>(input);
+                auto other = dynamic_cast<const builtin_function_value *>(input);
                 if (!other)
                 {
                     return 1;
                 }
 
-                return value.get() == other->value.get() ? 0 : 1;
+                return &value == &(other->value) ? 0 : 1;
             }
 
             virtual std::string to_string() const
             {
-                return "function:" + value->name;
+                return "builtin-function";
             }
 
             virtual std::string type_name() const
             {
-                return "function";
+                return "builtin-function";
             }
 
             virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace)
@@ -46,5 +47,4 @@ namespace stack_vm
                 // vm
             }
     };
-
 } // stack_vm

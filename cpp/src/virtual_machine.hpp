@@ -39,7 +39,7 @@ namespace stack_vm
             bool paused;
 
             // Constructor
-            virtual_machine(int stackSize, run_handler global_run_handler);
+            virtual_machine(int stackSize);
 
             // Methods
             void add_scope(std::shared_ptr<scope> scope);
@@ -94,7 +94,7 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<value> stack;
+            fixed_stack<std::shared_ptr<value>> stack;
             fixed_stack<scope_frame> stack_trace;
             std::unordered_map<std::string, std::shared_ptr<scope>> scopes;
             std::shared_ptr<scope> current_scope;

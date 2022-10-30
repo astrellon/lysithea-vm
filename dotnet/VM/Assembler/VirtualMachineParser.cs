@@ -6,30 +6,50 @@ using System.IO;
 
 namespace SimpleStackVM
 {
-    public static class VirtualMachineParser
+    public class VirtualMachineParser
     {
-        #region Methods
-        public static IEnumerable<string> Tokenize(TextReader input)
+        #region Fields
+        public string Current { get; private set; }
+        private char inQuote = '\0';
+        private char returnSymbol = '\0';
+        private bool escaped = false;
+        private bool inComment = false;
+        private StringBuilder accumulator = new StringBuilder();
+        private TextReader input;
+        #endregion
+
+        #region Constructor
+        public VirtualMachineParser(TextReader input)
         {
-            var inQuote = '\0';
-            var escaped = false;
-            var inComment = false;
-            var accumulator = new StringBuilder();
-            while (input.Peek() >= 0)
+            this.input = input;
+        }
+        #endregion
+
+        #region Methods
+        public bool MoveNext()
+        {
+            if (this.returnSymbol != '\0')
             {
-                var ch = (char)input.Read();
-                if (inComment)
+                this.Current = this.returnSymbol.ToString();
+                this.returnSymbol = '\0';
+                return true;
+            }
+
+            while (this.input.Peek() >= 0)
+            {
+                var ch = (char)this.input.Read();
+                if (this.inComment)
                 {
                     if (ch == '\n' || ch == '\r')
                     {
-                        inComment = false;
+                        this.inComment = false;
                     }
                     continue;
                 }
 
-                if (inQuote != '\0')
+                if (this.inQuote != '\0')
                 {
-                    if (escaped)
+                    if (this.escaped)
                     {
                         switch (ch)
                         {
@@ -37,40 +57,41 @@ namespace SimpleStackVM
                             case '\'':
                             case '\\':
                             {
-                                accumulator.Append(ch);
+                                this.accumulator.Append(ch);
                                 break;
                             }
                             case 't':
                             {
-                                accumulator.Append('\t');
+                                this.accumulator.Append('\t');
                                 break;
                             }
                             case 'r':
                             {
-                                accumulator.Append('\r');
+                                this.accumulator.Append('\r');
                                 break;
                             }
                             case 'n':
                             {
-                                accumulator.Append('\n');
+                                this.accumulator.Append('\n');
                                 break;
                             }
                         }
-                        escaped = false;
+                        this.escaped = false;
                         continue;
                     }
                     else if (ch == '\\')
                     {
-                        escaped = true;
+                        this.escaped = true;
                         continue;
                     }
 
-                    accumulator.Append(ch);
-                    if (ch == inQuote)
+                    this.accumulator.Append(ch);
+                    if (ch == this.inQuote)
                     {
-                        yield return accumulator.ToString();
-                        accumulator.Clear();
-                        inQuote = '\0';
+                        this.Current = this.accumulator.ToString();
+                        this.accumulator.Clear();
+                        this.inQuote = '\0';
+                        return true;
                     }
                 }
                 else
@@ -79,15 +100,15 @@ namespace SimpleStackVM
                     {
                         case ';':
                         {
-                            inComment = true;
+                            this.inComment = true;
                             break;
                         }
 
                         case '"':
                         case '\'':
                         {
-                            inQuote = ch;
-                            accumulator.Append(ch);
+                            this.inQuote = ch;
+                            this.accumulator.Append(ch);
                             break;
                         }
 
@@ -96,13 +117,17 @@ namespace SimpleStackVM
                         case '{':
                         case '}':
                         {
-                            if (accumulator.Length > 0)
+                            if (this.accumulator.Length > 0)
                             {
-                                yield return accumulator.ToString();
-                                accumulator.Clear();
+                                this.returnSymbol = ch;
+                                this.Current = this.accumulator.ToString();
+                                this.accumulator.Clear();
                             }
-                            yield return ch.ToString();
-                            break;
+                            else
+                            {
+                                this.Current = ch.ToString();
+                            }
+                            return true;
                         }
 
                         case ' ':
@@ -110,10 +135,11 @@ namespace SimpleStackVM
                         case '\n':
                         case '\r':
                         {
-                            if (accumulator.Length > 0)
+                            if (this.accumulator.Length > 0)
                             {
-                                yield return accumulator.ToString();
+                                this.Current = accumulator.ToString();
                                 accumulator.Clear();
+                                return true;
                             }
                             break;
                         }
@@ -125,24 +151,26 @@ namespace SimpleStackVM
                     }
                 }
             }
+
+            return false;
         }
 
         public static ArrayValue ReadAllTokens(TextReader input)
         {
-            var tokens = Tokenize(input).GetEnumerator();
+            var parser = new VirtualMachineParser(input);
             var result = new List<IValue>();
 
-            while (tokens.MoveNext())
+            while (parser.MoveNext())
             {
-                result.Add(ReadFromTokens(tokens));
+                result.Add(ReadFromTokens(parser));
             }
 
             return new ArrayValue(result);
         }
 
-        public static IValue ReadFromTokens(IEnumerator<string> tokens)
+        public static IValue ReadFromTokens(VirtualMachineParser parser)
         {
-            var token = tokens.Current;
+            var token = parser.Current;
             switch (token)
             {
                 case null:
@@ -152,13 +180,13 @@ namespace SimpleStackVM
                 case "(":
                 {
                     var list = new List<IValue>();
-                    while (tokens.MoveNext())
+                    while (parser.MoveNext())
                     {
-                        if (tokens.Current == ")")
+                        if (parser.Current == ")")
                         {
                             break;
                         }
-                        list.Add(ReadFromTokens(tokens));
+                        list.Add(ReadFromTokens(parser));
                     }
 
                     return new ArrayValue(list);
@@ -170,15 +198,15 @@ namespace SimpleStackVM
                 case "{":
                 {
                     var map = new Dictionary<string, IValue>();
-                    while (tokens.MoveNext())
+                    while (parser.MoveNext())
                     {
-                        if (tokens.Current == "}")
+                        if (parser.Current == "}")
                         {
                             break;
                         }
-                        var key = ReadFromTokens(tokens).ToString();
-                        tokens.MoveNext();
-                        var value = ReadFromTokens(tokens);
+                        var key = ReadFromTokens(parser).ToString();
+                        parser.MoveNext();
+                        var value = ReadFromTokens(parser);
                         map[key] = value;
                     }
 

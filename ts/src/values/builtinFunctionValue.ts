@@ -2,13 +2,13 @@ import VirtualMachine from "../virtualMachine";
 import ArrayValue from "./arrayValue";
 import { CompareResult, IFunctionValue, IValue } from "./ivalues";
 
-export type BuiltinVMFunction = (vm: VirtualMachine, args: ArrayValue) => void;
+export type BuiltinFunctionCallback = (vm: VirtualMachine, args: ArrayValue) => void;
 
 export default class BuiltinFunctionValue implements IFunctionValue
 {
-    public readonly value: BuiltinVMFunction;
+    public readonly value: BuiltinFunctionCallback;
 
-    constructor (value: BuiltinVMFunction)
+    constructor (value: BuiltinFunctionCallback)
     {
         this.value = value;
     }
