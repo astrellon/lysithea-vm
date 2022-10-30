@@ -1,18 +1,24 @@
 Simple Stack Virtual Machine
 =
 
-This repository contains code for a simple stack based virtual machine. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. The final command is to run an external command through a handler.
+This repository contains code for a simple stack based virtual machine. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. A very limited standard library is provided however it is optional and not required for a program to run.
 
 This is built it contains no math functions, string manipulation or anything, but the values the stack support is:
 - Null: An empty value, not really intended to be pushed around, but if a command does not have a value (because the operator is taking a value from the stack) then the code line value will be null.
 - Strings: Based off the standard string type from the host programming language. But it is generally based off the C# model which means immutable and UTF-8.
 - Boolean: true/false
 - Number: 64 bit double.
-- Object/Dictionary/Map: Key value pair with string keys and the value being another valid VM value.
-- List/Array: A list of VM values.
-- Function: A collection of code put into a value.
+- Object/Dictionary/Map: Key value pair with string keys and the value being another value.
+- List/Array: A list of values.
+- Function: A collection of code put into a value, it also contains the labels for jumps and input parameters.
 - BuiltinFunction: A reference to a builtin function that can be passed around like a value.
-- Any: This is somewhat implementation dependant, but an extra value that lets you push any kind of value onto the stack, however if a valid bool, string, or number is pushed as a number it is not expected that comparing
+
+All of these are built on top of several base interfaces:
+
+- IValue: Base interface for all value types, the only things that a value needs is a way to compare with another value, a way to turn it into a string and what is it's type name.
+- IArrayValue: For any array type values this only requires knowing a list of all values and a way to access single values.
+- IObjectValue: For any object type values this only requires knowing a list of accessible keys and a way to look up individual key value.
+- IFunctionValue: For any callable function like value it just needs a way to be invoked.
 
 Code:
 -
@@ -35,17 +41,17 @@ private static Scope CreateScope()
 {
     var result = new Scope();
 
-    result.Set("add", (vm, args) =>
+    result.Define("add", (vm, args) =>
     {
         var num1 = args.GetIndex<NumberValue>(0);
         var num2 = args.GetIndex<NumberValue>(1);
         vm.PushStack((NumberValue)(num1.Value + num2.Value));
     });
 
-    result.Set("print", vm =>
+    result.Define("print", (vm, args) =>
     {
-        var top = vm.PopStack();
-        Console.WriteLine($"Print: {top.ToString()}");
+        Console.Write("Print: ");
+        Console.WriteLine(string.Join("", args.Value));
     });
 
     return result;
@@ -65,13 +71,16 @@ Labels are used to let you jump around the code, optionally based on some condit
 
 ```lisp
 (define main (function ()
-    (push 0)
+    (set x 0)
     (:start)
 
-    (inc)
-    (isDone)
-
-    (jumpFalse :start)
+    (inc x)
+    (if (< x 10))
+        (
+            (print "Less than 10: " x)
+            (jump :start)
+        )
+    )
     (done)
 ))
 
