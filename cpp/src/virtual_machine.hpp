@@ -8,25 +8,27 @@
 #include "operator.hpp"
 #include "code_line.hpp"
 #include "scope.hpp"
-#include "value.hpp"
+#include "script.hpp"
+#include "function.hpp"
 #include "fixed_stack.hpp"
+#include "./values/ivalue.hpp"
+#include "./values/array_value.hpp"
+#include "./values/string_value.hpp"
+#include "./values/bool_value.hpp"
 
 namespace stack_vm
 {
-    class virtual_machine;
-
-    using run_handler = std::function<void (const std::string &, virtual_machine &)>;
-
     class scope_frame
     {
         public:
             // Fields
             int line_counter;
-            std::shared_ptr<stack_vm::scope> scope;
+            std::shared_ptr<function> function;
+            std::shared_ptr<scope> scope;
 
             // Constructor
-            scope_frame() : line_counter(0), scope(nullptr) { }
-            scope_frame(int line_counter, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), scope(scope) { }
+            scope_frame() : line_counter(0), function(nullptr), scope(nullptr) { }
+            scope_frame(int line_counter, std::shared_ptr<stack_vm::function> function, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), function(function), scope(scope) { }
 
             // Methods
     };
@@ -37,34 +39,29 @@ namespace stack_vm
             // Fields
             bool running;
             bool paused;
+            std::shared_ptr<const scope> builtinScope;
+            std::shared_ptr<function> current_code;
 
             // Constructor
             virtual_machine(int stackSize);
 
             // Methods
-            void add_scope(std::shared_ptr<scope> scope);
-            void add_scopes(const std::vector<std::shared_ptr<scope>> scopes);
-            void set_current_scope(const std::string &scope_name);
-            void add_run_handler(const std::string &handler_name, run_handler handler);
-            void set_global_run_handler(run_handler handler);
             void reset();
+            void change_to_script(std::shared_ptr<script> input);
+            void execute(std::shared_ptr<script> input);
             void step();
-
-            void call(const value &label);
-            void call_return();
-
-            void jump(const value &label);
             void jump(const std::string &label);
-            void jump(const std::string &label, const std::string &scope_name);
 
-            void run_command(const value &label);
+            // Function methods
+            std::shared_ptr<array_value> get_args(int num_args);
+            void call_function(ifunction_value &value, int num_args, bool push_to_stack_trace);
+            void execute_function(function &func, const array_value &args, bool push_to_stack_trace);
+            void push_to_stack_trace(scope_frame &frame);
 
-            void swap(int top_offset);
-            void copy(int top_offset);
-
-            inline value pop_stack()
+            // Stack methods
+            inline std::shared_ptr<ivalue> pop_stack()
             {
-                value result;
+                std::shared_ptr<ivalue> result;
                 if (!stack.pop(result))
                 {
                     throw std::runtime_error("Unable to pop stack, empty stack");
@@ -72,7 +69,7 @@ namespace stack_vm
                 return result;
             }
 
-            inline void push_stack(value input)
+            inline void push_stack(std::shared_ptr<ivalue> input)
             {
                 if (!stack.push(input))
                 {
@@ -80,9 +77,9 @@ namespace stack_vm
                 }
             }
 
-            inline value peek_stack() const
+            inline std::shared_ptr<ivalue> peek_stack() const
             {
-                value result;
+                std::shared_ptr<ivalue> result;
                 if (!stack.peek(result))
                 {
                     throw std::runtime_error("Unable to peek stack, empty stack");
@@ -94,15 +91,14 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<std::shared_ptr<value>> stack;
+            fixed_stack<std::shared_ptr<ivalue>> stack;
             fixed_stack<scope_frame> stack_trace;
-            std::unordered_map<std::string, std::shared_ptr<scope>> scopes;
             std::shared_ptr<scope> current_scope;
+            std::shared_ptr<scope> global_scope;
+
             int program_counter;
-            std::unordered_map<std::string, stack_vm::run_handler> run_handlers;
-            stack_vm::run_handler global_run_handler;
 
             // Methods
-            value get_arg(const code_line &input);
+            std::shared_ptr<ivalue> get_arg(const code_line &input);
     };
 } // stack_vm

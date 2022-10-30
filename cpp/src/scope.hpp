@@ -2,6 +2,9 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
+
+#include "./values/builtin_function_value.hpp"
 
 namespace stack_vm
 {
@@ -11,6 +14,8 @@ namespace stack_vm
     {
         public:
             // Fields
+            std::unordered_map<std::string, std::shared_ptr<ivalue>> values;
+            std::shared_ptr<scope> parent;
 
             // Constructor
             scope();
@@ -21,11 +26,8 @@ namespace stack_vm
             void combine_scope(const scope &input);
 
             void define(const std::string &key, std::shared_ptr<ivalue> value);
-
-        private:
-            // Fields
-            std::shared_ptr<scope> parent;
-
-            // Methods
+            void define(const std::string &key, builtin_function_callback &callback);
+            bool trySet(const std::string &key, std::shared_ptr<ivalue> value);
+            bool tryGetKey(const std::string &key, std::shared_ptr<ivalue> &result) const;
     };
 } // stack_vm

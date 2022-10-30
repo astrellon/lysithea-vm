@@ -2,44 +2,8 @@
 
 namespace stack_vm
 {
-    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler global_run_handler) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false), global_run_handler(global_run_handler)
+    virtual_machine::virtual_machine(int stack_size) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false)
     {
-    }
-
-    void virtual_machine::add_scope(std::shared_ptr<scope> scope)
-    {
-        scopes[scope->name] = scope;
-    }
-
-    void virtual_machine::add_scopes(std::vector<std::shared_ptr<scope>> scopes)
-    {
-        for (auto &scope : scopes)
-        {
-            add_scope(scope);
-        }
-    }
-
-    void virtual_machine::add_run_handler(const std::string &handler_name, stack_vm::run_handler handler)
-    {
-        run_handlers[handler_name] = handler;
-    }
-
-    void virtual_machine::set_global_run_handler(stack_vm::run_handler handler)
-    {
-        global_run_handler = handler;
-    }
-
-    void virtual_machine::set_current_scope(const std::string &scope_name)
-    {
-        auto find = scopes.find(scope_name);
-        if (find == scopes.end())
-        {
-            throw std::runtime_error("Unable to find scope");
-        }
-        else
-        {
-            current_scope = find->second;
-        }
     }
 
     void virtual_machine::reset()
@@ -51,11 +15,11 @@ namespace stack_vm
         paused = false;
     }
 
-    value virtual_machine::get_arg(const code_line &input)
+    std::shared_ptr<ivalue> virtual_machine::get_arg(const code_line &input)
     {
-        if (input.value.has_value())
+        if (input.value)
         {
-            return input.value.value();
+            return input.value;
         }
 
         return pop_stack();
@@ -63,7 +27,7 @@ namespace stack_vm
 
     void virtual_machine::step()
     {
-        if (program_counter >= current_scope->code.size())
+        if (program_counter >= current_code->code.size())
         {
             running = false;
             return;
@@ -71,7 +35,7 @@ namespace stack_vm
 
         // print_stack_debug();
 
-        const auto &code_line = current_scope->code[program_counter++];
+        const auto &code_line = current_code->code[program_counter++];
 
         switch (code_line.op)
         {
@@ -89,37 +53,6 @@ namespace stack_vm
                 else
                 {
                     stack.push(code_line.value.value());
-                }
-                break;
-            }
-            case vm_operator::pop:
-            {
-                pop_stack();
-                break;
-            }
-            case vm_operator::swap:
-            {
-                const auto &value = get_arg(code_line);
-                if (value.is_number())
-                {
-                    swap(static_cast<int>(value.get_number()));
-                }
-                else
-                {
-                    throw std::runtime_error("Swap operator needs a number value");
-                }
-                break;
-            }
-            case vm_operator::copy:
-            {
-                const auto &value = get_arg(code_line);
-                if (value.is_number())
-                {
-                    copy(static_cast<int>(value.get_number()));
-                }
-                else
-                {
-                    throw std::runtime_error("Copy operator needs a number value");
                 }
                 break;
             }

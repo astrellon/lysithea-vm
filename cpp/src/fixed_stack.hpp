@@ -54,31 +54,6 @@ namespace stack_vm
                 return true;
             }
 
-            bool swap(int top_offset)
-            {
-                auto size = stack_size();
-                auto new_index = size - top_offset - 1;
-                if (new_index < 0 || new_index > size)
-                {
-                    return false;
-                }
-
-                std::iter_swap(data.rbegin(), data.begin() + new_index);
-                return true;
-            }
-
-            bool copy(int top_offset)
-            {
-                auto size = stack_size();
-                auto new_index = stack_size() - top_offset - 1;
-                if (new_index < 0 || new_index > size)
-                {
-                    return false;
-                }
-                data.emplace_back(data[new_index]);
-                return true;
-            }
-
             inline int stack_size() const { return static_cast<int>(data.size()); }
 
             const std::vector<T> stack_data() const
