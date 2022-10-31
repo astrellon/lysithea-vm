@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "values/ivalue.hpp"
+#include "values/undefined_value.hpp"
 #include "operator.hpp"
 
 namespace stack_vm
@@ -16,9 +17,8 @@ namespace stack_vm
             std::shared_ptr<ivalue> value;
 
             // Constructor
-            code_line(vm_operator op) : op(op) { }
-            code_line(vm_operator op, ivalue *value) : op(op), value(value) { }
-            // code_line(vm_operator op, std::optional<ivalue> value) : op(op), value(value) { }
+            code_line(vm_operator op) : op(op), value(nullptr) { }
+            code_line(vm_operator op, const ivalue &value) : op(op), value(std::make_shared<ivalue>(value)) { }
 
             // Methods
     };

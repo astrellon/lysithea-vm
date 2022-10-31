@@ -1,5 +1,7 @@
 #include "virtual_machine.hpp"
 
+#include <stdexcept>
+
 namespace stack_vm
 {
     virtual_machine::virtual_machine(int stack_size) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false)
@@ -13,16 +15,6 @@ namespace stack_vm
         stack_trace.clear();
         running = false;
         paused = false;
-    }
-
-    std::shared_ptr<ivalue> virtual_machine::get_arg(const code_line &input)
-    {
-        if (input.value)
-        {
-            return input.value;
-        }
-
-        return pop_stack();
     }
 
     void virtual_machine::step()
@@ -45,16 +37,25 @@ namespace stack_vm
             }
             case vm_operator::push:
             {
-                if (!code_line.value.has_value())
+                if (code_line.value)
                 {
-                    auto top = peek_stack();
-                    stack.push(top);
+                    stack.push(code_line.value);
                 }
                 else
                 {
-                    stack.push(code_line.value.value());
+                    throw std::runtime_error("Push needs an input");
                 }
                 break;
+            }
+            case vm_operator::to_argument:
+            {
+                const auto &top = get_arg<iarray_value>(code_line);
+                if (!top)
+                {
+                    throw std::runtime_error("Unable to convert input to argument")
+                }
+
+                this->push_stack(std::make_shared<array_value>(top->object_keys))
             }
             case vm_operator::jump:
             {

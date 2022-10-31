@@ -8,6 +8,9 @@ namespace stack_vm
     class null_value : public ivalue
     {
         public:
+            // Fields
+            static const null_value instance;
+
             // Methods
             virtual int compare_to(const ivalue *input) const
             {

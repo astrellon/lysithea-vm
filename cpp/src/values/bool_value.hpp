@@ -9,8 +9,8 @@ namespace stack_vm
     {
         public:
             // Fields
-            static bool_value True;
-            static bool_value False;
+            static const bool_value True;
+            static const bool_value False;
 
             bool value;
 

@@ -9,10 +9,10 @@
 
 namespace stack_vm
 {
-    using array_vector = std::vector<ivalue>;
+    using array_vector = std::vector<std::shared_ptr<ivalue>>;
     using array_ptr = std::shared_ptr<array_vector>;
 
-    class array_value : public iarray_value
+    class array_value : public iarray_value, public iobject_value
     {
         public:
             // Fields
@@ -43,7 +43,7 @@ namespace stack_vm
 
                 for (auto i = 0; i < this_array.size(); i++)
                 {
-                    auto compare_value = this_array[i].compare_to(&other_array[i]);
+                    auto compare_value = this_array[i]->compare_to(other_array[i].get());
                     if (compare_value != 0)
                     {
                         return compare_value;
@@ -61,6 +61,54 @@ namespace stack_vm
             virtual std::string type_name() const
             {
                 return is_arguments_value ? "arguments" : "array";
+            }
+
+            virtual std::vector<std::shared_ptr<ivalue>> array_values() const
+            {
+                return *value.get();
+            }
+
+            virtual std::vector<std::string> object_keys() const
+            {
+                const std::vector<std::string> result { "length" };
+                return result;
+            }
+
+            virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const
+            {
+                auto index = calc_index(index);
+                if (index < 0 || index >= value->size())
+                {
+                    return false;
+                }
+
+                result = value->at(index);
+                return true;
+            }
+
+            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const
+            {
+                if (key == "length")
+                {
+                    result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
+                    {
+                        number_value length(this->value->size());
+                        vm.push_stack(length);
+                    });
+                    return true;
+                }
+
+                return false;
+            }
+
+            inline int calc_index(int index) const
+            {
+                if (index < 0)
+                {
+                    return static_cast<int>(value->size()) + index;
+                }
+
+                return index;
             }
     };
 } // stack_vm

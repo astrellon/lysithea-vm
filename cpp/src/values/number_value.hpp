@@ -18,6 +18,7 @@ namespace stack_vm
             number_value(int value) : value(static_cast<double>(value)) { }
             number_value(long value) : value(static_cast<double>(value)) { }
             number_value(unsigned int value) : value(static_cast<double>(value)) { }
+            number_value(std::size_t value) : value(static_cast<double>(value)) { }
 
             // Methods
             virtual int compare_to(const ivalue *input)

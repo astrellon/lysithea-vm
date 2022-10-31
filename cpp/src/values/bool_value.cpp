@@ -2,6 +2,6 @@
 
 namespace stack_vm
 {
-    bool_value bool_value::True(true);
-    bool_value bool_value::False(false);
+    const bool_value bool_value::True(true);
+    const bool_value bool_value::False(false);
 } // stack_vm

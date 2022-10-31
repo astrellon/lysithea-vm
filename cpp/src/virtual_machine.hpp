@@ -59,9 +59,9 @@ namespace stack_vm
             void push_to_stack_trace(scope_frame &frame);
 
             // Stack methods
-            inline std::shared_ptr<ivalue> pop_stack()
+            inline ivalue pop_stack()
             {
-                std::shared_ptr<ivalue> result;
+                ivalue result;
                 if (!stack.pop(result))
                 {
                     throw std::runtime_error("Unable to pop stack, empty stack");
@@ -69,7 +69,7 @@ namespace stack_vm
                 return result;
             }
 
-            inline void push_stack(std::shared_ptr<ivalue> input)
+            inline void push_stack(const ivalue &input)
             {
                 if (!stack.push(input))
                 {
@@ -77,9 +77,9 @@ namespace stack_vm
                 }
             }
 
-            inline std::shared_ptr<ivalue> peek_stack() const
+            inline ivalue peek_stack() const
             {
-                std::shared_ptr<ivalue> result;
+                ivalue result;
                 if (!stack.peek(result))
                 {
                     throw std::runtime_error("Unable to peek stack, empty stack");
@@ -91,7 +91,7 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<std::shared_ptr<ivalue>> stack;
+            fixed_stack<ivalue> stack;
             fixed_stack<scope_frame> stack_trace;
             std::shared_ptr<scope> current_scope;
             std::shared_ptr<scope> global_scope;
@@ -99,6 +99,26 @@ namespace stack_vm
             int program_counter;
 
             // Methods
-            std::shared_ptr<ivalue> get_arg(const code_line &input);
+            inline ivalue get_arg(const code_line &input)
+            {
+                if (input.value)
+                {
+                    return input.value;
+                }
+
+                return pop_stack();
+            }
+
+            template <typename T>
+            inline T get_arg(const code_line &input)
+            {
+                auto result = input.value;
+                if (!input.value)
+                {
+                    result = pop_stack();
+                }
+
+                return dynamic_cast<T *>(result.get());
+            }
     };
 } // stack_vm
