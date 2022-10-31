@@ -15,13 +15,13 @@ file(GLOB FILE_SRC
     # "src/*.cpp"
     "src/parser.cpp"
     "src/parser.hpp"
+    "src/values/*.hpp"
+    "src/values/*.cpp"
 )
 
 file(GLOB STD_LIB_FILE_SRC
-    "src/standard_library/*.hpp"
-    "src/standard_library/*.cpp"
-    "src/values/*.hpp"
-    "src/values/*.cpp"
+    # "src/standard_library/*.hpp"
+    # "src/standard_library/*.cpp"
 )
 
 add_executable(perfTest ${FILE_SRC} perf_test_main.cpp)

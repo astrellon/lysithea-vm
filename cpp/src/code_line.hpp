@@ -1,14 +1,13 @@
 #pragma once
 
-// #include <optional>
 #include <memory>
 
-#include "values/ivalue.hpp"
-#include "values/undefined_value.hpp"
 #include "operator.hpp"
 
 namespace stack_vm
 {
+    class ivalue;
+
     class code_line
     {
         public:
@@ -18,7 +17,7 @@ namespace stack_vm
 
             // Constructor
             code_line(vm_operator op) : op(op), value(nullptr) { }
-            code_line(vm_operator op, const ivalue &value) : op(op), value(std::make_shared<ivalue>(value)) { }
+            code_line(vm_operator op, std::shared_ptr<ivalue> value) : op(op), value(value) { }
 
             // Methods
     };

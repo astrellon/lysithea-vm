@@ -20,43 +20,17 @@ namespace stack_vm
             bool is_arguments_value;
 
             // Constructor
-            array_value(const array_vector &value, bool is_arguments_value = false) : value(std::make_shared<array_vector>(value)), is_arguments_value(is_arguments_value) { }
-            array_value(array_ptr value, bool is_arguments_value = false) : value(value), is_arguments_value(is_arguments_value) { }
+            array_value(const array_vector &value, bool is_arguments_value)
+                : value(std::make_shared<array_vector>(value)), is_arguments_value(is_arguments_value) { }
+
+            array_value(array_ptr value, bool is_arguments_value)
+                : value(value), is_arguments_value(is_arguments_value) { }
+
+            virtual ~array_value() { }
 
             // Methods
-            virtual int compare_to(const ivalue *input) const
-            {
-                auto other = dynamic_cast<const array_value *>(input);
-                if (!other)
-                {
-                    return 1;
-                }
-
-                const auto &this_array = *value.get();
-                const auto &other_array = *other->value.get();
-
-                auto compare_length = number_value::compare(this_array.size(), other_array.size());
-                if (compare_length != 0)
-                {
-                    return compare_length;
-                }
-
-                for (auto i = 0; i < this_array.size(); i++)
-                {
-                    auto compare_value = this_array[i]->compare_to(other_array[i].get());
-                    if (compare_value != 0)
-                    {
-                        return compare_value;
-                    }
-                }
-
-                return 0;
-            }
-
-            virtual std::string to_string() const
-            {
-                return "";
-            }
+            virtual int compare_to(const ivalue *input) const;
+            virtual std::string to_string() const;
 
             virtual std::string type_name() const
             {
@@ -76,7 +50,7 @@ namespace stack_vm
 
             virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const
             {
-                auto index = calc_index(index);
+                index = calc_index(index);
                 if (index < 0 || index >= value->size())
                 {
                     return false;
@@ -86,20 +60,7 @@ namespace stack_vm
                 return true;
             }
 
-            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const
-            {
-                if (key == "length")
-                {
-                    result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
-                    {
-                        number_value length(this->value->size());
-                        vm.push_stack(length);
-                    });
-                    return true;
-                }
-
-                return false;
-            }
+            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const;
 
             inline int calc_index(int index) const
             {

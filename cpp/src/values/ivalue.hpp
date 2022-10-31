@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <unordered_map>
 
 namespace stack_vm
@@ -50,6 +51,6 @@ namespace stack_vm
             virtual ~ifunction_value() { }
 
             // Methods
-            virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace);
+            virtual void invoke(virtual_machine &vm, std::shared_ptr<array_value> args, bool push_to_stack_trace) const;
     };
 } // stack_vm

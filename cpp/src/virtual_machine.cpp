@@ -1,5 +1,6 @@
 #include "virtual_machine.hpp"
 
+#include <cmath>
 #include <stdexcept>
 
 namespace stack_vm
@@ -49,33 +50,34 @@ namespace stack_vm
             }
             case vm_operator::to_argument:
             {
-                const auto &top = get_arg<iarray_value>(code_line);
+                const auto top = get_operator_arg<iarray_value>(code_line);
                 if (!top)
                 {
-                    throw std::runtime_error("Unable to convert input to argument")
+                    throw std::runtime_error("Unable to convert input to argument");
                 }
 
-                this->push_stack(std::make_shared<array_value>(top->object_keys))
+                const auto values = top->array_values();
+                this->push_stack(std::make_shared<array_value>(values));
             }
-            case vm_operator::jump:
+            case vm_operator::get
             {
-                const auto &label = get_arg(code_line);
-                jump(label);
                 break;
             }
-            case vm_operator::jump_true:
+            case vm_operator::get_property:
             {
-                const auto &label = get_arg(code_line);
-                const auto &top = pop_stack();
-                if (top.is_true())
-                {
-                    jump(label);
-                }
+                break;
+            }
+            case vm_operator::define:
+            {
+                break;
+            }
+            case vm_operator::set:
+            {
                 break;
             }
             case vm_operator::jump_false:
             {
-                const auto &label = get_arg(code_line);
+                const auto &label = get_operator_arg(code_line);
                 const auto &top = pop_stack();
                 if (top.is_false())
                 {
@@ -83,10 +85,20 @@ namespace stack_vm
                 }
                 break;
             }
-            case vm_operator::call:
+            case vm_operator::jump_true:
             {
-                const auto &label = get_arg(code_line);
-                call(label);
+                const auto &label = get_operator_arg(code_line);
+                const auto &top = pop_stack();
+                if (top.is_true())
+                {
+                    jump(label);
+                }
+                break;
+            }
+            case vm_operator::jump:
+            {
+                const auto label = get_operator_arg(code_line);
+                jump(label);
                 break;
             }
             case vm_operator::call_return:
@@ -94,34 +106,105 @@ namespace stack_vm
                 call_return();
                 break;
             }
-            case vm_operator::run:
+            case vm_operator::call:
             {
-                const auto &top = get_arg(code_line);
-                run_command(top);
+                const auto &label = get_operator_arg(code_line);
+                call(label);
+                break;
+            }
+            case vm_operator::call_direct:
+            {
                 break;
             }
         }
     }
 
-    void virtual_machine::run_command(const value &input)
+    std::shared_ptr<array_value> virtual_machine::get_args(int num_args)
     {
-        if (input.is_array())
+        if (num_args == 0)
         {
-            auto arr = input.get_array();
-            auto ns = arr->at(0).get_string();
-            auto find_ns = run_handlers.find(*ns.get());
-            if (find_ns == run_handlers.end())
+            array_vector empty;
+            return std::make_shared<array_value>(empty, true);
+        }
+
+        auto has_arguments = false;
+        array_vector temp(num_args);
+        for (auto i = 0; i < num_args; i++)
+        {
+            auto value = pop_stack();
+            auto is_arg = dynamic_cast<const array_value *>(value.get());
+            if (is_arg && is_arg->is_arguments_value)
             {
-                std::string message("Unable to find run command namespace: ");
-                message += input.to_string();
-                throw std::runtime_error(message);
+                has_arguments = true;
+            }
+            temp[num_args - i - 1] = value;
+        }
+
+        if (has_arguments)
+        {
+            array_vector combined;
+            for (const auto &iter : temp)
+            {
+                auto is_arg = dynamic_cast<const array_value *>(iter.get());
+                if (is_arg && is_arg->is_arguments_value)
+                {
+                    for (const auto &arg_iter : *is_arg->value)
+                    {
+                        combined.push_back(arg_iter);
+                    }
+                }
+                else
+                {
+                    combined.push_back(iter);
+                }
             }
 
-            find_ns->second(arr->at(1).to_string(), *this);
+            return std::make_shared<array_value>(combined, true);
         }
-        else
+
+        return std::make_shared<array_value>(temp, true);
+    }
+
+    void virtual_machine::jump(const std::string &label)
+    {
+        auto find = current_code->labels.find(label);
+        if (find == current_code->labels.end())
         {
-            global_run_handler(input.to_string(), *this);
+            throw std::runtime_error("Unable to jump to label");
+        }
+
+        program_counter = find->second;
+    }
+
+    void virtual_machine::call_function(const ifunction_value &value, int num_args, bool push_to_stack_trace)
+    {
+        auto args = get_args(num_args);
+        value.invoke(*this, args, push_to_stack_trace);
+    }
+
+    void virtual_machine::execute_function(std::shared_ptr<function> func, std::shared_ptr<array_value> args, bool push_to_stack_trace)
+    {
+        if (push_to_stack_trace)
+        {
+            // push_stack()
+        }
+
+        current_code = func;
+        current_scope = std::make_shared<scope>(current_scope);
+        program_counter = 0;
+
+        auto num_called_args = std::min(args->value->size(), func->parameters.size());
+        for (auto i = 0; i < num_called_args; i++)
+        {
+            const auto &arg_name = func->parameters[i];
+            auto starts_with_unpack = arg_name.length() > 3 &&
+                arg_name[0] == '.' && arg_name[1] == '.' && arg_name[2] == '.';
+            if (starts_with_unpack)
+            {
+                // TODO
+                break;
+            }
+            current_scope->define(arg_name, args->value->at(i));
         }
     }
 
@@ -157,24 +240,6 @@ namespace stack_vm
         }
     }
 
-    void virtual_machine::jump(const std::string &label)
-    {
-        if (label.size() > 0)
-        {
-            if (label[0] == ':')
-            {
-                jump(label, "");
-            }
-            else
-            {
-                jump("", label);
-            }
-        }
-        else
-        {
-            program_counter = 0;
-        }
-    }
 
     void virtual_machine::jump(const std::string &label, const std::string &scope_name)
     {

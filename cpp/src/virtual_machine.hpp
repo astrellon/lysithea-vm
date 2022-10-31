@@ -54,14 +54,14 @@ namespace stack_vm
 
             // Function methods
             std::shared_ptr<array_value> get_args(int num_args);
-            void call_function(ifunction_value &value, int num_args, bool push_to_stack_trace);
-            void execute_function(function &func, const array_value &args, bool push_to_stack_trace);
-            void push_to_stack_trace(scope_frame &frame);
+            void call_function(const ifunction_value &value, int num_args, bool push_to_stack_trace);
+            void execute_function(std::shared_ptr<function> func, std::shared_ptr<array_value> args, bool push_to_stack_trace);
+            void push_to_stack_trace(const scope_frame &frame);
 
             // Stack methods
-            inline ivalue pop_stack()
+            inline std::shared_ptr<ivalue> pop_stack()
             {
-                ivalue result;
+                std::shared_ptr<ivalue> result;
                 if (!stack.pop(result))
                 {
                     throw std::runtime_error("Unable to pop stack, empty stack");
@@ -69,7 +69,7 @@ namespace stack_vm
                 return result;
             }
 
-            inline void push_stack(const ivalue &input)
+            inline void push_stack(std::shared_ptr<ivalue> input)
             {
                 if (!stack.push(input))
                 {
@@ -77,9 +77,9 @@ namespace stack_vm
                 }
             }
 
-            inline ivalue peek_stack() const
+            inline std::shared_ptr<ivalue> peek_stack() const
             {
-                ivalue result;
+                std::shared_ptr<ivalue> result;
                 if (!stack.peek(result))
                 {
                     throw std::runtime_error("Unable to peek stack, empty stack");
@@ -91,7 +91,7 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<ivalue> stack;
+            fixed_stack<std::shared_ptr<ivalue>> stack;
             fixed_stack<scope_frame> stack_trace;
             std::shared_ptr<scope> current_scope;
             std::shared_ptr<scope> global_scope;
@@ -99,18 +99,18 @@ namespace stack_vm
             int program_counter;
 
             // Methods
-            inline ivalue get_arg(const code_line &input)
+            inline ivalue *get_operator_arg(const code_line &input)
             {
                 if (input.value)
                 {
-                    return input.value;
+                    return input.value.get();
                 }
 
-                return pop_stack();
+                return pop_stack().get();
             }
 
             template <typename T>
-            inline T get_arg(const code_line &input)
+            inline T *get_operator_arg(const code_line &input)
             {
                 auto result = input.value;
                 if (!input.value)

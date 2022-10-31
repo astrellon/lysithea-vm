@@ -6,6 +6,12 @@
 // #include "src/virtual_machine.hpp"
 // #include "src/assembler.hpp"
 #include "src/parser.hpp"
+#include "src/values/ivalue.hpp"
+#include "src/values/number_value.hpp"
+#include "src/values/bool_value.hpp"
+#include "src/values/string_value.hpp"
+#include "src/values/object_value.hpp"
+#include "src/values/array_value.hpp"
 
 using namespace stack_vm;
 
@@ -86,6 +92,14 @@ int main()
     {
         std::cout << "Token: |" << token << "|\n";
     }
+
+    std::vector<std::shared_ptr<ivalue>> arg_values;
+    arg_values.push_back(std::make_shared<number_value>(5.0f));
+    arg_values.push_back(std::make_shared<bool_value>(true));
+    arg_values.push_back(std::make_shared<string_value>("Hello"));
+
+    array_value args(arg_values, false);
+    std::cout << "Args: " << args.to_string() << '\n';
 
     std::cout << "- Done\n";
 

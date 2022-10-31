@@ -23,45 +23,8 @@ namespace stack_vm
             object_value(object_ptr value) : value(value) { }
 
             // Methods
-            virtual int compare_to(const ivalue *input) const
-            {
-                auto other = dynamic_cast<const object_value *>(input);
-                if (!other)
-                {
-                    return 1;
-                }
-
-                const auto &this_object = *value.get();
-                const auto &other_object = *other->value.get();
-
-                auto compare_length = number_value::compare(this_object.size(), other_object.size());
-                if (compare_length != 0)
-                {
-                    return compare_length;
-                }
-
-                for (auto iter = this_object.begin(); iter != this_object.end(); ++iter)
-                {
-                    auto find_other = other_object.find(iter->first);
-                    if (find_other == other_object.end())
-                    {
-                        return 1;
-                    }
-
-                    auto compare_value = iter->second->compare_to(find_other->second.get());
-                    if (compare_value != 0)
-                    {
-                        return 0;
-                    }
-                }
-
-                return 0;
-            }
-
-            virtual std::string to_string() const
-            {
-                return "";
-            }
+            virtual int compare_to(const ivalue *input) const;
+            virtual std::string to_string() const;
 
             virtual std::string type_name() const
             {

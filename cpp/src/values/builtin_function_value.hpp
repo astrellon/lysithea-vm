@@ -42,9 +42,9 @@ namespace stack_vm
                 return "builtin-function";
             }
 
-            virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace)
-            {
-                // vm
-            }
+            // virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace)
+            // {
+            //     // vm
+            // }
     };
 } // stack_vm
