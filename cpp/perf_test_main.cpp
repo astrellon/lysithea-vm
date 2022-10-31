@@ -12,6 +12,7 @@
 #include "src/values/string_value.hpp"
 #include "src/values/object_value.hpp"
 #include "src/values/array_value.hpp"
+#include "src/virtual_machine.hpp"
 
 using namespace stack_vm;
 
@@ -97,11 +98,14 @@ int main()
     arg_values.push_back(std::make_shared<number_value>(5.0f));
     arg_values.push_back(std::make_shared<bool_value>(true));
     arg_values.push_back(std::make_shared<string_value>("Hello"));
+    arg_values.push_back(std::make_shared<array_value>(arg_values, true));
 
     array_value args(arg_values, false);
     std::cout << "Args: " << args.to_string() << '\n';
 
     std::cout << "- Done\n";
+
+    virtual_machine vm(16);
 
     return 0;
 }

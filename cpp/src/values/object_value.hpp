@@ -12,7 +12,7 @@ namespace stack_vm
     using object_map = std::unordered_map<std::string, std::shared_ptr<ivalue>>;
     using object_ptr = std::shared_ptr<object_map>;
 
-    class object_value : public iobject_value
+    class object_value : public ivalue
     {
         public:
             // Fields
@@ -26,10 +26,8 @@ namespace stack_vm
             virtual int compare_to(const ivalue *input) const;
             virtual std::string to_string() const;
 
-            virtual std::string type_name() const
-            {
-                return "object";
-            }
+            virtual std::string type_name() const { return "object"; }
+            virtual bool is_object() const { return true; }
 
             virtual std::vector<std::string> object_keys() const
             {

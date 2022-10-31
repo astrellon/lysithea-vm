@@ -54,9 +54,11 @@ namespace stack_vm
 
             // Function methods
             std::shared_ptr<array_value> get_args(int num_args);
-            void call_function(const ifunction_value &value, int num_args, bool push_to_stack_trace);
+            void call_function(const ivalue &value, int num_args, bool push_to_stack_trace);
+            bool try_return();
+            void call_return();
             void execute_function(std::shared_ptr<function> func, std::shared_ptr<array_value> args, bool push_to_stack_trace);
-            void push_to_stack_trace(const scope_frame &frame);
+            void push_stack_trace(const scope_frame &frame);
 
             // Stack methods
             inline std::shared_ptr<ivalue> pop_stack()

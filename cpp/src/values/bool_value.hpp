@@ -29,6 +29,9 @@ namespace stack_vm
                 return value == other->value ? 0 : 1;
             }
 
+            virtual bool is_true() const { return value == true; }
+            virtual bool is_false() const { return value == false; }
+
             virtual std::string to_string() const
             {
                 return value ? "true" : "false";

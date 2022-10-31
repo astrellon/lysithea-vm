@@ -9,7 +9,7 @@ namespace stack_vm
 {
     using function_ptr = std::shared_ptr<function>;
 
-    class function_value : public ifunction_value
+    class function_value : public ivalue
     {
         public:
             // Fields
@@ -31,15 +31,9 @@ namespace stack_vm
                 return value.get() == other->value.get() ? 0 : 1;
             }
 
-            virtual std::string to_string() const
-            {
-                return "function:" + value->name;
-            }
-
-            virtual std::string type_name() const
-            {
-                return "function";
-            }
+            virtual std::string to_string() const { return "function:" + value->name; }
+            virtual std::string type_name() const { return "function"; }
+            virtual bool is_function() const { return true; }
 
             // virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace)
             // {

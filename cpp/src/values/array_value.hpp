@@ -12,7 +12,7 @@ namespace stack_vm
     using array_vector = std::vector<std::shared_ptr<ivalue>>;
     using array_ptr = std::shared_ptr<array_vector>;
 
-    class array_value : public iarray_value, public iobject_value
+    class array_value : public ivalue
     {
         public:
             // Fields
@@ -31,6 +31,9 @@ namespace stack_vm
             // Methods
             virtual int compare_to(const ivalue *input) const;
             virtual std::string to_string() const;
+
+            virtual bool is_array() const { return true; }
+            virtual bool is_object() const { return true; }
 
             virtual std::string type_name() const
             {

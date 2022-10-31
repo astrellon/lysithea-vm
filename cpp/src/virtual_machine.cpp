@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <iostream>
 
 namespace stack_vm
 {
@@ -50,17 +51,30 @@ namespace stack_vm
             }
             case vm_operator::to_argument:
             {
-                const auto top = get_operator_arg<iarray_value>(code_line);
+                const auto top = get_operator_arg(code_line);
                 if (!top)
                 {
                     throw std::runtime_error("Unable to convert input to argument");
                 }
 
                 const auto values = top->array_values();
-                this->push_stack(std::make_shared<array_value>(values));
+                push_stack(std::make_shared<array_value>(values, true));
             }
-            case vm_operator::get
+            case vm_operator::get:
             {
+                const auto key = get_operator_arg(code_line);
+                auto is_string = dynamic_cast<const string_value *>(key);
+                if (!is_string)
+                {
+                    throw std::runtime_error("Unable to get value, input needs to be a string");
+                }
+
+                std::shared_ptr<ivalue> found_value;
+                if (current_scope->tryGetKey(key->to_string(), found_value) ||
+                    builtinScope && builtinScope->tryGetKey(key->to_string(), found_value))
+                {
+                    push_stack(found_value);
+                }
                 break;
             }
             case vm_operator::get_property:
@@ -79,9 +93,9 @@ namespace stack_vm
             {
                 const auto &label = get_operator_arg(code_line);
                 const auto &top = pop_stack();
-                if (top.is_false())
+                if (top->is_false())
                 {
-                    jump(label);
+                    jump(label->to_string());
                 }
                 break;
             }
@@ -89,16 +103,16 @@ namespace stack_vm
             {
                 const auto &label = get_operator_arg(code_line);
                 const auto &top = pop_stack();
-                if (top.is_true())
+                if (top->is_true())
                 {
-                    jump(label);
+                    jump(label->to_string());
                 }
                 break;
             }
             case vm_operator::jump:
             {
                 const auto label = get_operator_arg(code_line);
-                jump(label);
+                jump(label->to_string());
                 break;
             }
             case vm_operator::call_return:
@@ -109,7 +123,7 @@ namespace stack_vm
             case vm_operator::call:
             {
                 const auto &label = get_operator_arg(code_line);
-                call(label);
+                // call(label->to_string());
                 break;
             }
             case vm_operator::call_direct:
@@ -176,8 +190,12 @@ namespace stack_vm
         program_counter = find->second;
     }
 
-    void virtual_machine::call_function(const ifunction_value &value, int num_args, bool push_to_stack_trace)
+    void virtual_machine::call_function(const ivalue &value, int num_args, bool push_to_stack_trace)
     {
+        if (!value.is_function())
+        {
+            throw std::runtime_error("Unable to invoke non function value");
+        }
         auto args = get_args(num_args);
         value.invoke(*this, args, push_to_stack_trace);
     }
@@ -186,7 +204,7 @@ namespace stack_vm
     {
         if (push_to_stack_trace)
         {
-            // push_stack()
+            push_stack_trace(scope_frame(program_counter, current_code, current_scope));
         }
 
         current_code = func;
@@ -208,89 +226,26 @@ namespace stack_vm
         }
     }
 
-    void virtual_machine::call(const value &input)
-    {
-        stack_trace.push(scope_frame(program_counter, current_scope));
-        jump(input);
-    }
-
-    void virtual_machine::jump(const value &input)
-    {
-        if (input.is_string())
-        {
-            jump(*input.get_string().get());
-        }
-        else if (input.is_array())
-        {
-            const auto &list = *std::get<std::shared_ptr<array_value>>(input.data);
-            if (list.size() == 0)
-            {
-                throw std::runtime_error("Cannot jump to empty array");
-            }
-
-            const auto &label = list[0].to_string();
-            if (list.size() > 1)
-            {
-                jump(label, list[1].to_string());
-            }
-            else
-            {
-                jump(label, "");
-            }
-        }
-    }
-
-
-    void virtual_machine::jump(const std::string &label, const std::string &scope_name)
-    {
-        if (scope_name.size() > 0)
-        {
-            auto find = scopes.find(scope_name);
-            if (find == scopes.end())
-            {
-                throw std::runtime_error("Unable to find scope to jump to");
-            }
-            else
-            {
-                current_scope = find->second;
-            }
-        }
-
-        if (label.size() == 0)
-        {
-            program_counter = 0;
-            return;
-        }
-
-        auto find_label = current_scope->labels.find(label);
-        if (find_label == current_scope->labels.end())
-        {
-            throw std::runtime_error("Unable to find label in current scope to jump to");
-        }
-
-        program_counter = find_label->second;
-    }
-
-    void virtual_machine::call_return()
+    bool virtual_machine::try_return()
     {
         scope_frame top;
         if (!stack_trace.pop(top))
         {
-            throw std::runtime_error("Unable to pop stack track, empty stack");
+            return false;
         }
 
+        current_code = top.function;
         current_scope = top.scope;
         program_counter = top.line_counter;
+        return true;
     }
 
-    void virtual_machine::swap(int top_offset)
+    void virtual_machine::call_return()
     {
-        stack.swap(top_offset);
-    }
-
-    void virtual_machine::copy(int top_offset)
-    {
-        stack.copy(top_offset);
+        if (!try_return())
+        {
+            throw std::runtime_error("Unable to return, call stack empty");
+        }
     }
 
     void virtual_machine::print_stack_debug()
@@ -299,7 +254,7 @@ namespace stack_vm
         std::cout << "Stack size: " << data.size() << "\n";
         for (const auto &iter : data)
         {
-            std::cout << "- " << iter.to_string() << "\n";
+            std::cout << "- " << iter->to_string() << "\n";
         }
     }
 } // namespace stack_vm

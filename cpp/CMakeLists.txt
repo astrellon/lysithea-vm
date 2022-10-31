@@ -15,6 +15,10 @@ file(GLOB FILE_SRC
     # "src/*.cpp"
     "src/parser.cpp"
     "src/parser.hpp"
+    "src/scope.hpp"
+    "src/scope.cpp"
+    "src/virtual_machine.cpp"
+    "src/virtual_machine.hpp"
     "src/values/*.hpp"
     "src/values/*.cpp"
 )

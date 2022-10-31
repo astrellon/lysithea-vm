@@ -39,11 +39,11 @@ namespace stack_vm
     {
         if (key == "length")
         {
-            result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
-            {
-                number_value length(this->value->size());
-                // vm.push_stack(length);
-            });
+            // result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
+            // {
+            //     number_value length(this->value->size());
+            //     // vm.push_stack(length);
+            // });
             return true;
         }
 

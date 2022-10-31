@@ -11,7 +11,7 @@ namespace stack_vm
 
     using builtin_function_callback = std::function<void (virtual_machine &, const array_value &)>;
 
-    class builtin_function_value : public ifunction_value
+    class builtin_function_value : public ivalue
     {
         public:
             // Fields
@@ -32,15 +32,9 @@ namespace stack_vm
                 return &value == &(other->value) ? 0 : 1;
             }
 
-            virtual std::string to_string() const
-            {
-                return "builtin-function";
-            }
-
-            virtual std::string type_name() const
-            {
-                return "builtin-function";
-            }
+            virtual std::string to_string() const { return "builtin-function"; }
+            virtual std::string type_name() const { return "builtin-function"; }
+            virtual bool is_function() const { return true; }
 
             // virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace)
             // {
