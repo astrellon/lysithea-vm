@@ -23,12 +23,12 @@ namespace stack_vm
         public:
             // Fields
             int line_counter;
-            std::shared_ptr<function> function;
+            std::shared_ptr<const function> function;
             std::shared_ptr<scope> scope;
 
             // Constructor
             scope_frame() : line_counter(0), function(nullptr), scope(nullptr) { }
-            scope_frame(int line_counter, std::shared_ptr<stack_vm::function> function, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), function(function), scope(scope) { }
+            scope_frame(int line_counter, std::shared_ptr<const stack_vm::function> function, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), function(function), scope(scope) { }
 
             // Methods
     };
@@ -39,31 +39,31 @@ namespace stack_vm
             // Fields
             bool running;
             bool paused;
-            std::shared_ptr<const scope> builtinScope;
-            std::shared_ptr<function> current_code;
+            std::shared_ptr<const scope> builtin_scope;
+            std::shared_ptr<const function> current_code;
 
             // Constructor
             virtual_machine(int stackSize);
 
             // Methods
             void reset();
-            void change_to_script(std::shared_ptr<script> input);
-            void execute(std::shared_ptr<script> input);
+            void change_to_script(std::shared_ptr<const script> input);
+            void execute(std::shared_ptr<const script> input);
             void step();
             void jump(const std::string &label);
 
             // Function methods
-            std::shared_ptr<array_value> get_args(int num_args);
+            std::shared_ptr<const array_value> get_args(int num_args);
             void call_function(const ivalue &value, int num_args, bool push_to_stack_trace);
             bool try_return();
             void call_return();
-            void execute_function(std::shared_ptr<function> func, std::shared_ptr<array_value> args, bool push_to_stack_trace);
+            void execute_function(std::shared_ptr<const function> func, std::shared_ptr<const array_value> args, bool push_to_stack_trace);
             void push_stack_trace(const scope_frame &frame);
 
             // Stack methods
-            inline std::shared_ptr<ivalue> pop_stack()
+            inline std::shared_ptr<const ivalue> pop_stack()
             {
-                std::shared_ptr<ivalue> result;
+                std::shared_ptr<const ivalue> result;
                 if (!stack.pop(result))
                 {
                     throw std::runtime_error("Unable to pop stack, empty stack");
@@ -71,7 +71,7 @@ namespace stack_vm
                 return result;
             }
 
-            inline void push_stack(std::shared_ptr<ivalue> input)
+            inline void push_stack(std::shared_ptr<const ivalue> input)
             {
                 if (!stack.push(input))
                 {
@@ -79,9 +79,9 @@ namespace stack_vm
                 }
             }
 
-            inline std::shared_ptr<ivalue> peek_stack() const
+            inline std::shared_ptr<const ivalue> peek_stack() const
             {
-                std::shared_ptr<ivalue> result;
+                std::shared_ptr<const ivalue> result;
                 if (!stack.peek(result))
                 {
                     throw std::runtime_error("Unable to peek stack, empty stack");
@@ -93,7 +93,7 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<std::shared_ptr<ivalue>> stack;
+            fixed_stack<std::shared_ptr<const ivalue>> stack;
             fixed_stack<scope_frame> stack_trace;
             std::shared_ptr<scope> current_scope;
             std::shared_ptr<scope> global_scope;
@@ -101,7 +101,7 @@ namespace stack_vm
             int program_counter;
 
             // Methods
-            inline ivalue *get_operator_arg(const code_line &input)
+            inline const ivalue *get_operator_arg(const code_line &input)
             {
                 if (input.value)
                 {
@@ -112,7 +112,7 @@ namespace stack_vm
             }
 
             template <typename T>
-            inline T *get_operator_arg(const code_line &input)
+            inline const T *get_operator_arg(const code_line &input)
             {
                 auto result = input.value;
                 if (!input.value)
@@ -120,7 +120,7 @@ namespace stack_vm
                     result = pop_stack();
                 }
 
-                return dynamic_cast<T *>(result.get());
+                return dynamic_cast<const T *>(result.get());
             }
     };
 } // stack_vm

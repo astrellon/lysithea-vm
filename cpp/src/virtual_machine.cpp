@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include "./values/value_property_access.hpp"
+
 namespace stack_vm
 {
     virtual_machine::virtual_machine(int stack_size) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false)
@@ -51,14 +53,14 @@ namespace stack_vm
             }
             case vm_operator::to_argument:
             {
-                const auto top = get_operator_arg(code_line);
+                const auto top = get_operator_arg<array_value>(code_line);
                 if (!top)
                 {
                     throw std::runtime_error("Unable to convert input to argument");
                 }
 
-                const auto values = top->array_values();
-                push_stack(std::make_shared<array_value>(values, true));
+                push_stack(std::make_shared<array_value>(top->value, true));
+                break;
             }
             case vm_operator::get:
             {
@@ -69,9 +71,9 @@ namespace stack_vm
                     throw std::runtime_error("Unable to get value, input needs to be a string");
                 }
 
-                std::shared_ptr<ivalue> found_value;
-                if (current_scope->tryGetKey(key->to_string(), found_value) ||
-                    builtinScope && builtinScope->tryGetKey(key->to_string(), found_value))
+                std::shared_ptr<const ivalue> found_value;
+                if (current_scope->try_get_key(key->to_string(), found_value) ||
+                    (builtin_scope && builtin_scope->try_get_key(key->to_string(), found_value)))
                 {
                     push_stack(found_value);
                 }
@@ -79,14 +81,40 @@ namespace stack_vm
             }
             case vm_operator::get_property:
             {
+                const auto key = get_operator_arg<array_value>(code_line);
+                if (!key)
+                {
+                    throw std::runtime_error("Unable to get property, input needs to be an array");
+                }
+
+                const auto top = pop_stack();
+                std::shared_ptr<const ivalue> found;
+                if (try_get_property(top, *key, found))
+                {
+                    push_stack(found);
+                }
+                else
+                {
+                    throw std::runtime_error("Unable to get property");
+                }
+
                 break;
             }
             case vm_operator::define:
             {
+                const auto key = get_operator_arg(code_line);
+                const auto value = pop_stack();
+                current_scope->define(key->to_string(), value);
                 break;
             }
             case vm_operator::set:
             {
+                const auto key = get_operator_arg(code_line);
+                const auto value = pop_stack();
+                if (!current_scope->try_set(key->to_string(), value))
+                {
+                    throw std::runtime_error("Unable to set variable that has not been defined");
+                }
                 break;
             }
             case vm_operator::jump_false:
@@ -133,12 +161,12 @@ namespace stack_vm
         }
     }
 
-    std::shared_ptr<array_value> virtual_machine::get_args(int num_args)
+    std::shared_ptr<const array_value> virtual_machine::get_args(int num_args)
     {
         if (num_args == 0)
         {
             array_vector empty;
-            return std::make_shared<array_value>(empty, true);
+            return std::make_shared<const array_value>(empty, true);
         }
 
         auto has_arguments = false;
@@ -173,10 +201,10 @@ namespace stack_vm
                 }
             }
 
-            return std::make_shared<array_value>(combined, true);
+            return std::make_shared<const array_value>(combined, true);
         }
 
-        return std::make_shared<array_value>(temp, true);
+        return std::make_shared<const array_value>(temp, true);
     }
 
     void virtual_machine::jump(const std::string &label)
@@ -200,7 +228,7 @@ namespace stack_vm
         value.invoke(*this, args, push_to_stack_trace);
     }
 
-    void virtual_machine::execute_function(std::shared_ptr<function> func, std::shared_ptr<array_value> args, bool push_to_stack_trace)
+    void virtual_machine::execute_function(std::shared_ptr<const function> func, std::shared_ptr<const array_value> args, bool push_to_stack_trace)
     {
         if (push_to_stack_trace)
         {

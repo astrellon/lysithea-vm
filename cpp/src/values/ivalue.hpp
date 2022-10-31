@@ -21,18 +21,22 @@ namespace stack_vm
             virtual std::string to_string() const = 0;
             virtual std::string type_name() const = 0;
 
+            // Boolean methods
             virtual bool is_true() const { return false; }
             virtual bool is_false() const { return false; }
 
+            // Object methods
             virtual bool is_object() const { return false; }
-            virtual std::vector<std::string> object_keys() const { return std::vector<std::string>(); }
-            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const { return false; }
+            virtual std::vector<const std::string> object_keys() const { return std::vector<const std::string>(); }
+            virtual bool try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const { return false; }
 
+            // Array methods
             virtual bool is_array() const { return false; }
-            virtual std::vector<std::shared_ptr<ivalue>> array_values() const { return std::vector<std::shared_ptr<ivalue>>(); }
-            virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const { return false; }
+            virtual int array_length() const { return 0; }
+            virtual bool try_get(int index, std::shared_ptr<const ivalue> &result) const { return false; }
 
+            // Function methods
             virtual bool is_function() const { return false; }
-            virtual void invoke(virtual_machine &vm, std::shared_ptr<array_value> args, bool push_to_stack_trace) const { }
+            virtual void invoke(virtual_machine &vm, std::shared_ptr<const array_value> args, bool push_to_stack_trace) const { }
     };
 } // stack_vm

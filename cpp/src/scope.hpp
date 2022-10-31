@@ -14,7 +14,7 @@ namespace stack_vm
     {
         public:
             // Fields
-            std::unordered_map<std::string, std::shared_ptr<ivalue>> values;
+            std::unordered_map<std::string, std::shared_ptr<const ivalue>> values;
             std::shared_ptr<scope> parent;
 
             // Constructor
@@ -25,9 +25,9 @@ namespace stack_vm
             void clear();
             void combine_scope(const scope &input);
 
-            void define(const std::string &key, std::shared_ptr<ivalue> value);
+            void define(const std::string &key, std::shared_ptr<const ivalue> value);
             void define(const std::string &key, builtin_function_callback &callback);
-            bool trySet(const std::string &key, std::shared_ptr<ivalue> value);
-            bool tryGetKey(const std::string &key, std::shared_ptr<ivalue> &result) const;
+            bool try_set(const std::string &key, std::shared_ptr<const ivalue> value);
+            bool try_get_key(const std::string &key, std::shared_ptr<const ivalue> &result) const;
     };
 } // stack_vm

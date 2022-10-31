@@ -11,7 +11,7 @@ namespace SimpleStackVM
             result = NullValue.Value;
             for (var i = 0; i < properties.Length; i++)
             {
-                if (TryParseIndex(properties[i], out var index) && current is ArrayValue currentArray)
+                if (TryParseIndex(properties[i], out var index) && current is IArrayValue currentArray)
                 {
                     if (!currentArray.TryGetIndex(index, out var test))
                     {

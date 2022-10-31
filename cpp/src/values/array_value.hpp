@@ -9,7 +9,7 @@
 
 namespace stack_vm
 {
-    using array_vector = std::vector<std::shared_ptr<ivalue>>;
+    using array_vector = std::vector<std::shared_ptr<const ivalue>>;
     using array_ptr = std::shared_ptr<array_vector>;
 
     class array_value : public ivalue
@@ -40,18 +40,11 @@ namespace stack_vm
                 return is_arguments_value ? "arguments" : "array";
             }
 
-            virtual std::vector<std::shared_ptr<ivalue>> array_values() const
-            {
-                return *value.get();
-            }
+            // Array methods
+            virtual bool is_array() const{ return true; }
+            virtual int array_length() const { return static_cast<int>(value->size()); }
 
-            virtual std::vector<std::string> object_keys() const
-            {
-                const std::vector<std::string> result { "length" };
-                return result;
-            }
-
-            virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const
+            virtual bool try_get(int index, std::shared_ptr<const ivalue> &result) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= value->size())
@@ -63,8 +56,6 @@ namespace stack_vm
                 return true;
             }
 
-            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const;
-
             inline int calc_index(int index) const
             {
                 if (index < 0)
@@ -74,5 +65,17 @@ namespace stack_vm
 
                 return index;
             }
+
+            // Object methods
+            virtual int object_length() const { return 1; }
+            virtual bool is_object() const { return true; }
+            virtual std::vector<const std::string> object_keys() const
+            {
+                std::vector<const std::string> result;
+                result.push_back("length");
+                return result;
+            }
+            virtual bool try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const;
+
     };
 } // stack_vm

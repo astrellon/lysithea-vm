@@ -13,11 +13,11 @@ namespace stack_vm
         public:
             // Fields
             const vm_operator op;
-            std::shared_ptr<ivalue> value;
+            std::shared_ptr<const ivalue> value;
 
             // Constructor
             code_line(vm_operator op) : op(op), value(nullptr) { }
-            code_line(vm_operator op, std::shared_ptr<ivalue> value) : op(op), value(value) { }
+            code_line(vm_operator op, std::shared_ptr<const ivalue> value) : op(op), value(value) { }
 
             // Methods
     };

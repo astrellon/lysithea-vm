@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "./builtin_function_value.hpp"
+#include "../virtual_machine.hpp"
 
 namespace stack_vm
 {
@@ -35,15 +36,14 @@ namespace stack_vm
         return 0;
     }
 
-    bool array_value::try_get(const std::string &key, std::shared_ptr<ivalue> &result) const
+    bool array_value::try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const
     {
         if (key == "length")
         {
-            // result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
-            // {
-            //     number_value length(this->value->size());
-            //     // vm.push_stack(length);
-            // });
+            result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
+            {
+                vm.push_stack(std::make_shared<number_value>(this->value->size()));
+            });
             return true;
         }
 
