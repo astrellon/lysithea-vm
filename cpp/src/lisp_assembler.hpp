@@ -62,9 +62,9 @@ namespace stack_vm
             std::vector<temp_code_line> parse_cond(const array_value &input, bool is_if_statement);
             std::vector<temp_code_line> parse_flatten(std::shared_ptr<ivalue> input);
             std::vector<temp_code_line> parse_loop_jump(const std::string &keyword, bool jump_to_start);
-            std::vector<function> parse_function(const array_value &input);
+            std::shared_ptr<function> parse_function(const array_value &input);
             std::vector<temp_code_line> parse_change_variable(std::shared_ptr<ivalue> input, builtin_function_value change_func);
-            // std::vector<temp_code_line> parse_keyword();
+            std::vector<temp_code_line> parse_keyword(const std::string &keyword, const array_value &input);
 
             std::shared_ptr<function> parse_global_function(const array_value &input);
 

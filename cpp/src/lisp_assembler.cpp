@@ -4,6 +4,7 @@
 
 #include "./parser.hpp"
 #include "./utils.hpp"
+#include "./values/function_value.hpp"
 
 namespace stack_vm
 {
@@ -43,6 +44,11 @@ namespace stack_vm
         code->name = "global";
 
         return code;
+    }
+
+    std::vector<lisp_assembler::temp_code_line> lisp_assembler::parse(std::shared_ptr<ivalue> input)
+    {
+
     }
 
     std::vector<lisp_assembler::temp_code_line> lisp_assembler::parse_set(const array_value &input)
@@ -223,7 +229,7 @@ namespace stack_vm
         loop_stack.pop();
 
         std::vector<temp_code_line> result;
-        result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start, loop_label.end);
+        result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start : loop_label.end);
         return result;
     }
 
@@ -243,6 +249,47 @@ namespace stack_vm
         }
 
         return process_temp_function(parameters, temp_code_lines);
+    }
+
+    std::vector<lisp_assembler::temp_code_line> lisp_assembler::parse_change_variable(std::shared_ptr<ivalue> input, builtin_function_value change_func)
+    {
+        auto var_name = std::make_shared<string_value>(input->to_string());
+        auto num_args = std::make_shared<number_value>(1);
+
+        array_vector call_array_args;
+        call_array_args.emplace_back(change_func);
+        call_array_args.emplace_back(num_args);
+        auto call_array_values = std::make_shared<array_value>(call_array_args, false);
+
+        std::vector<temp_code_line> result(3);
+        result.emplace_back(vm_operator::get, var_name);
+        result.emplace_back(vm_operator::call_direct, call_array_values);
+        result.emplace_back(vm_operator::set, var_name);
+
+        return result;
+    }
+
+    std::vector<lisp_assembler::temp_code_line> lisp_assembler::parse_keyword(const std::string &keyword, const array_value &input)
+    {
+        std::vector<temp_code_line> result;
+        if (keyword == keyword_function)
+        {
+            auto function = parse_function(input);
+            auto function_value = std::make_shared<function_value>(function);
+
+            result.emplace_back(vm_operator::push, function_value);
+            return result;
+        }
+        if (keyword == keyword_continue) { return parse_loop_jump(keyword, true); }
+        if (keyword == keyword_break) { return parse_loop_jump(keyword, false); }
+        if (keyword == keyword_set) { return parse_set(input); }
+        if (keyword == keyword_define) { return parse_define(input); }
+        if (keyword == keyword_loop) { return parse_loop(input); }
+        if (keyword == keyword_if) { return parse_cond(input, true); }
+        if (keyword == keyword_unless) { return parse_cond(input, false); }
+        // if (keyword == keyword_inc) { return parse_change_variable(input.value->at(1), false); }
+
+        return result;
     }
 
     std::shared_ptr<function> lisp_assembler::process_temp_function(const std::vector<std::string> &parameters, const std::vector<temp_code_line> &temp_code_lines)
