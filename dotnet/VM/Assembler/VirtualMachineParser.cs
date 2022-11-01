@@ -162,13 +162,13 @@ namespace SimpleStackVM
 
             while (parser.MoveNext())
             {
-                result.Add(ReadFromTokens(parser));
+                result.Add(ReadFromParser(parser));
             }
 
             return new ArrayValue(result);
         }
 
-        public static IValue ReadFromTokens(VirtualMachineParser parser)
+        public static IValue ReadFromParser(VirtualMachineParser parser)
         {
             var token = parser.Current;
             switch (token)
@@ -186,7 +186,7 @@ namespace SimpleStackVM
                         {
                             break;
                         }
-                        list.Add(ReadFromTokens(parser));
+                        list.Add(ReadFromParser(parser));
                     }
 
                     return new ArrayValue(list);
@@ -204,9 +204,9 @@ namespace SimpleStackVM
                         {
                             break;
                         }
-                        var key = ReadFromTokens(parser).ToString();
+                        var key = ReadFromParser(parser).ToString();
                         parser.MoveNext();
-                        var value = ReadFromTokens(parser);
+                        var value = ReadFromParser(parser);
                         map[key] = value;
                     }
 
@@ -225,7 +225,7 @@ namespace SimpleStackVM
 
         public static IValue Atom(string input)
         {
-            if (input.Length == 0)
+            if (input.Length == 0 || input == "null")
             {
                 return NullValue.Value;
             }
@@ -237,10 +237,6 @@ namespace SimpleStackVM
             if (bool.TryParse(input, out var boolean))
             {
                 return new BoolValue(boolean);
-            }
-            if (input == "null")
-            {
-                return NullValue.Value;
             }
 
             var first = input.First();

@@ -1,5 +1,13 @@
 #include "parser.hpp"
 
+#include "./values/null_value.hpp"
+#include "./values/bool_value.hpp"
+#include "./values/number_value.hpp"
+#include "./values/array_value.hpp"
+#include "./values/object_value.hpp"
+#include "./values/string_value.hpp"
+#include "./values/variable_value.hpp"
+
 namespace stack_vm
 {
     parser::parser(std::istream &input) : in_quote('\0'), return_symbol('\0'),
@@ -8,11 +16,11 @@ namespace stack_vm
 
     }
 
-    bool parser::move_next(std::string &output)
+    bool parser::move_next()
     {
         if (return_symbol != '\0')
         {
-            output = std::string(1, return_symbol);
+            current = std::string(1, return_symbol);
             return_symbol = '\0';
             return true;
         }
@@ -70,7 +78,7 @@ namespace stack_vm
                 accumulator << ch;
                 if (ch == in_quote)
                 {
-                    output = accumulator.str();
+                    current = accumulator.str();
                     accumulator.str("");
                     accumulator.clear();
                     in_quote = '\0';
@@ -100,8 +108,8 @@ namespace stack_vm
                     case '{':
                     case '}':
                     {
-                        output = accumulator.str();
-                        if (output.size() > 0)
+                        current = accumulator.str();
+                        if (current.size() > 0)
                         {
                             return_symbol = ch;
                             accumulator.str("");
@@ -109,7 +117,7 @@ namespace stack_vm
                         }
                         else
                         {
-                            output = std::string(1, ch);
+                            current = std::string(1, ch);
                         }
                         return true;
                     }
@@ -119,8 +127,8 @@ namespace stack_vm
                     case '\n':
                     case '\r':
                     {
-                        output = accumulator.str();
-                        if (output.size() > 0)
+                        current = accumulator.str();
+                        if (current.size() > 0)
                         {
                             accumulator.str("");
                             accumulator.clear();
@@ -140,5 +148,108 @@ namespace stack_vm
         }
 
         return false;
+    }
+
+    array_value parser::read_from_stream(std::istream &input)
+    {
+        parser input_parser(input);
+
+        array_vector result;
+        while (input_parser.move_next())
+        {
+            result.emplace_back(read_from_parser(input_parser));
+        }
+
+        return array_value(result, false);
+    }
+
+    array_value parser::read_from_text(const std::string &input)
+    {
+        std::stringstream stream(input);
+        return read_from_stream(stream);
+    }
+
+    std::shared_ptr<ivalue> parser::read_from_parser(parser &input)
+    {
+        const auto &token = input.current;
+        if (token.size() == 0)
+        {
+            throw std::runtime_error("Unexpected end of tokens");
+        }
+        if (token == "(")
+        {
+            array_vector list;
+            while (input.move_next())
+            {
+                if (input.current == ")")
+                {
+                    break;
+                }
+
+                list.push_back(read_from_parser(input));
+            }
+
+            return std::make_shared<array_value>(list, false);
+        }
+        if (token == ")")
+        {
+            throw std::runtime_error("Unexpected )");
+        }
+        if (token == "{")
+        {
+            object_map map;
+            while (input.move_next())
+            {
+                if (input.current == "}")
+                {
+                    break;
+                }
+
+                auto key = read_from_parser(input);
+                input.move_next();
+
+                map.emplace(key->to_string(), read_from_parser(input));
+            }
+
+            return std::make_shared<object_value>(map);
+        }
+        if (token == "}")
+        {
+            throw std::runtime_error("Unexpected }");
+        }
+
+        return atom(token);
+    }
+
+    std::shared_ptr<ivalue> parser::atom(const std::string &input)
+    {
+        if (input.size() == 0 || input == "null")
+        {
+            return std::make_shared<null_value>();
+        }
+
+        double num;
+        if (std::sscanf(input.c_str(), "%lf", &num) == 1)
+        {
+            return std::make_shared<number_value>(num);
+        }
+        if (input == "true")
+        {
+            return std::make_shared<bool_value>(true);
+        }
+        if (input == "false")
+        {
+            return std::make_shared<bool_value>(false);
+        }
+
+        auto first = input.front();
+        auto last = input.back();
+        if ((first == '"' && last == '"') ||
+            (first == '\'' && last == '\''))
+        {
+            return std::make_shared<string_value>(input.substr(1, input.size() - 2));
+        }
+
+        return std::make_shared<variable_value>(input);
     }
 } // stack_vm

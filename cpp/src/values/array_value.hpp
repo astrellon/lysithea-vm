@@ -9,7 +9,7 @@
 
 namespace stack_vm
 {
-    using array_vector = std::vector<std::shared_ptr<const ivalue>>;
+    using array_vector = std::vector<std::shared_ptr<ivalue>>;
     using array_ptr = std::shared_ptr<array_vector>;
 
     class array_value : public ivalue
@@ -31,20 +31,16 @@ namespace stack_vm
             // Methods
             virtual int compare_to(const ivalue *input) const;
             virtual std::string to_string() const;
-
-            virtual bool is_array() const { return true; }
-            virtual bool is_object() const { return true; }
-
             virtual std::string type_name() const
             {
                 return is_arguments_value ? "arguments" : "array";
             }
 
             // Array methods
-            virtual bool is_array() const{ return true; }
+            virtual bool is_array() const { return true; }
             virtual int array_length() const { return static_cast<int>(value->size()); }
 
-            virtual bool try_get(int index, std::shared_ptr<const ivalue> &result) const
+            virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= value->size())
@@ -69,13 +65,13 @@ namespace stack_vm
             // Object methods
             virtual int object_length() const { return 1; }
             virtual bool is_object() const { return true; }
-            virtual std::vector<const std::string> object_keys() const
+            virtual std::vector<std::string> object_keys() const
             {
-                std::vector<const std::string> result;
+                std::vector<std::string> result;
                 result.push_back("length");
                 return result;
             }
-            virtual bool try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const;
+            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const;
 
     };
 } // stack_vm

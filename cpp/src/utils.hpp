@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cctype>
+#include <vector>
 
 #include "operator.hpp"
 
@@ -21,6 +22,12 @@ namespace stack_vm
             hash = ((hash << 5) + hash) + (unsigned char) *c;
 
         return hash;
+    }
+
+    template <typename T>
+    inline void push_range(std::vector<T> &target, const std::vector<T> &input)
+    {
+        target.insert(std::begin(target), std::begin(input), std::end(input));
     }
 
 } // namespace stack_vm

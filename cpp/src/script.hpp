@@ -11,11 +11,11 @@ namespace stack_vm
     {
         public:
             // Fields
-            std::shared_ptr<const scope> builtin_scope;
+            std::shared_ptr<scope> builtin_scope;
             std::shared_ptr<function> code;
 
             // Constructor
-            script(std::shared_ptr<const scope> builtin_scope, std::shared_ptr<function> code): builtin_scope(builtin_scope), code(code) { }
+            script(std::shared_ptr<scope> builtin_scope, std::shared_ptr<function> code): builtin_scope(builtin_scope), code(code) { }
 
             // Methods
     };

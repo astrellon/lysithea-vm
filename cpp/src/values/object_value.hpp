@@ -9,7 +9,7 @@
 
 namespace stack_vm
 {
-    using object_map = std::unordered_map<std::string, std::shared_ptr<const ivalue>>;
+    using object_map = std::unordered_map<std::string, std::shared_ptr<ivalue>>;
     using object_ptr = std::shared_ptr<object_map>;
 
     class object_value : public ivalue
@@ -29,9 +29,9 @@ namespace stack_vm
             virtual std::string type_name() const { return "object"; }
             virtual bool is_object() const { return true; }
 
-            virtual std::vector<const std::string> object_keys() const
+            virtual std::vector<std::string> object_keys() const
             {
-                std::vector<const std::string> result;
+                std::vector<std::string> result;
 
                 for (const auto iter : *value.get())
                 {
@@ -41,7 +41,7 @@ namespace stack_vm
                 return result;
             }
 
-            virtual bool try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const
+            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const
             {
                 auto find = value->find(key);
                 if (find == value->end())

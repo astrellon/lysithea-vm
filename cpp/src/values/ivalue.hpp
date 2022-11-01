@@ -27,16 +27,24 @@ namespace stack_vm
 
             // Object methods
             virtual bool is_object() const { return false; }
-            virtual std::vector<const std::string> object_keys() const { return std::vector<const std::string>(); }
-            virtual bool try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const { return false; }
+            virtual std::vector<std::string> object_keys() const
+            {
+                std::vector<std::string> result;
+                return result;
+            }
+            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const { return false; }
 
             // Array methods
             virtual bool is_array() const { return false; }
             virtual int array_length() const { return 0; }
-            virtual bool try_get(int index, std::shared_ptr<const ivalue> &result) const { return false; }
+            virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const { return false; }
 
             // Function methods
             virtual bool is_function() const { return false; }
-            virtual void invoke(virtual_machine &vm, std::shared_ptr<const array_value> args, bool push_to_stack_trace) const { }
+            virtual void invoke(virtual_machine &vm, std::shared_ptr<array_value> args, bool push_to_stack_trace) const { }
+
+        private:
+            // Fields
+            static const std::vector<std::string> empty_object_keys;
     };
 } // stack_vm

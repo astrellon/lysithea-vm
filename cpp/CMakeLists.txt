@@ -17,6 +17,8 @@ file(GLOB FILE_SRC
     "src/parser.hpp"
     "src/scope.hpp"
     "src/scope.cpp"
+    "src/lisp_assembler.hpp"
+    "src/lisp_assembler.cpp"
     "src/virtual_machine.cpp"
     "src/virtual_machine.hpp"
     "src/values/*.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 
@@ -15,13 +15,13 @@ namespace stack_vm
             std::string name;
             const std::vector<code_line> code;
             const std::vector<std::string> parameters;
-            const std::map<std::string, int> labels;
+            const std::unordered_map<std::string, int> labels;
 
             // Constructor
             function(const std::vector<code_line> &code, const std::vector<std::string> &parameters) :
                 name("anonymous"), code(code), parameters(parameters) { }
 
-            function(const std::vector<code_line> &code, const std::vector<std::string> &parameters, const std::map<std::string, int> &labels) :
+            function(const std::vector<code_line> &code, const std::vector<std::string> &parameters, const std::unordered_map<std::string, int> &labels) :
                 name("anonymous"), code(code), parameters(parameters), labels(labels) { }
 
             // Methods

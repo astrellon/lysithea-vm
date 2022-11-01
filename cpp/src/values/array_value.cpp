@@ -36,7 +36,7 @@ namespace stack_vm
         return 0;
     }
 
-    bool array_value::try_get(const std::string &key, std::shared_ptr<const ivalue> &result) const
+    bool array_value::try_get(const std::string &key, std::shared_ptr<ivalue> &result) const
     {
         if (key == "length")
         {

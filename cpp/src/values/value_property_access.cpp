@@ -6,7 +6,7 @@
 
 namespace stack_vm
 {
-    bool try_get_property(std::shared_ptr<const ivalue> current, const array_value &properties, std::shared_ptr<const ivalue> &result)
+    bool try_get_property(std::shared_ptr<ivalue> current, const array_value &properties, std::shared_ptr<ivalue> &result)
     {
         for (const auto &iter : *properties.value)
         {
@@ -35,7 +35,7 @@ namespace stack_vm
         return true;
     }
 
-    bool try_parse_index(std::shared_ptr<const ivalue> input, int &result)
+    bool try_parse_index(std::shared_ptr<ivalue> input, int &result)
     {
         auto is_number = dynamic_cast<const number_value *>(input.get());
         if (is_number)

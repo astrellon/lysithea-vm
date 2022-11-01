@@ -79,31 +79,37 @@ int counter = 0;
 int main()
 {
     std::ifstream input_file;
-    input_file.open("../../examples/perfTest.lisp");
+    input_file.open("../../examples/testStandardLibraryNoAssert2.lisp");
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";
         return -1;
     }
 
-    parser parse(input_file);
+    auto parsed = parser::read_from_stream(input_file);
+    std::cout << "Parsed: " << parsed.to_string() << "\n";
 
-    std::string token;
-    while (parse.move_next(token))
-    {
-        std::cout << "Token: |" << token << "|\n";
-    }
+    // parser parse(input_file);
 
-    std::vector<std::shared_ptr<ivalue>> arg_values;
-    arg_values.push_back(std::make_shared<number_value>(5.0f));
-    arg_values.push_back(std::make_shared<bool_value>(true));
-    arg_values.push_back(std::make_shared<string_value>("Hello"));
-    arg_values.push_back(std::make_shared<array_value>(arg_values, true));
+    // std::string token;
+    // while (parse.move_next(token))
+    // {
+    //     std::cout << "Token: |" << token << "|\n";
+    // }
 
-    array_value args(arg_values, false);
-    std::cout << "Args: " << args.to_string() << '\n';
+    // array_vector arg_values;
+    // arg_values.push_back(std::make_shared<number_value>(5.0f));
+    // arg_values.push_back(std::make_shared<bool_value>(true));
+    // arg_values.push_back(std::make_shared<string_value>("Hello"));
 
-    std::cout << "- Done\n";
+    // object_map obj_map;
+    // obj_map.emplace("name", std::make_shared<string_value>("Alan"));
+    // obj_map.emplace("args", std::make_shared<array_value>(arg_values, false));
+
+    // object_value obj(obj_map);
+
+    // std::cout << "Obj: " << obj.to_string() << '\n';
+    // std::cout << "- Done\n";
 
     virtual_machine vm(16);
 

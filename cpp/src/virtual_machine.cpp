@@ -1,10 +1,10 @@
 #include "virtual_machine.hpp"
 
 #include <cmath>
-#include <stdexcept>
 #include <iostream>
 
 #include "./values/value_property_access.hpp"
+#include "./values/number_value.hpp"
 
 namespace stack_vm
 {
@@ -53,7 +53,7 @@ namespace stack_vm
             }
             case vm_operator::to_argument:
             {
-                const auto top = get_operator_arg<array_value>(code_line);
+                auto top = get_operator_arg<array_value>(code_line);
                 if (!top)
                 {
                     throw std::runtime_error("Unable to convert input to argument");
@@ -64,14 +64,14 @@ namespace stack_vm
             }
             case vm_operator::get:
             {
-                const auto key = get_operator_arg(code_line);
+                auto key = get_operator_arg(code_line);
                 auto is_string = dynamic_cast<const string_value *>(key);
                 if (!is_string)
                 {
                     throw std::runtime_error("Unable to get value, input needs to be a string");
                 }
 
-                std::shared_ptr<const ivalue> found_value;
+                std::shared_ptr<ivalue> found_value;
                 if (current_scope->try_get_key(key->to_string(), found_value) ||
                     (builtin_scope && builtin_scope->try_get_key(key->to_string(), found_value)))
                 {
@@ -81,14 +81,14 @@ namespace stack_vm
             }
             case vm_operator::get_property:
             {
-                const auto key = get_operator_arg<array_value>(code_line);
+                auto key = get_operator_arg<array_value>(code_line);
                 if (!key)
                 {
                     throw std::runtime_error("Unable to get property, input needs to be an array");
                 }
 
-                const auto top = pop_stack();
-                std::shared_ptr<const ivalue> found;
+                auto top = pop_stack();
+                std::shared_ptr<ivalue> found;
                 if (try_get_property(top, *key, found))
                 {
                     push_stack(found);
@@ -102,15 +102,15 @@ namespace stack_vm
             }
             case vm_operator::define:
             {
-                const auto key = get_operator_arg(code_line);
-                const auto value = pop_stack();
+                auto key = get_operator_arg(code_line);
+                auto value = pop_stack();
                 current_scope->define(key->to_string(), value);
                 break;
             }
             case vm_operator::set:
             {
-                const auto key = get_operator_arg(code_line);
-                const auto value = pop_stack();
+                auto key = get_operator_arg(code_line);
+                auto value = pop_stack();
                 if (!current_scope->try_set(key->to_string(), value))
                 {
                     throw std::runtime_error("Unable to set variable that has not been defined");
@@ -119,8 +119,8 @@ namespace stack_vm
             }
             case vm_operator::jump_false:
             {
-                const auto &label = get_operator_arg(code_line);
-                const auto &top = pop_stack();
+                const auto label = get_operator_arg(code_line);
+                auto top = pop_stack();
                 if (top->is_false())
                 {
                     jump(label->to_string());
@@ -129,8 +129,8 @@ namespace stack_vm
             }
             case vm_operator::jump_true:
             {
-                const auto &label = get_operator_arg(code_line);
-                const auto &top = pop_stack();
+                const auto label = get_operator_arg(code_line);
+                auto top = pop_stack();
                 if (top->is_true())
                 {
                     jump(label->to_string());
@@ -150,8 +150,21 @@ namespace stack_vm
             }
             case vm_operator::call:
             {
-                const auto &label = get_operator_arg(code_line);
-                // call(label->to_string());
+                auto is_number = dynamic_cast<const number_value *>(code_line.value.get());
+                if (!is_number)
+                {
+                    throw std::runtime_error("Call needs a num args code line input");
+                }
+
+                auto top = get_operator_arg(code_line);
+                if (top->is_function())
+                {
+                    call_function(*top, static_cast<int>(is_number->value), true);
+                }
+                else
+                {
+                    throw std::runtime_error("Call needs a function to run");
+                }
                 break;
             }
             case vm_operator::call_direct:
@@ -161,12 +174,12 @@ namespace stack_vm
         }
     }
 
-    std::shared_ptr<const array_value> virtual_machine::get_args(int num_args)
+    std::shared_ptr<array_value> virtual_machine::get_args(int num_args)
     {
         if (num_args == 0)
         {
             array_vector empty;
-            return std::make_shared<const array_value>(empty, true);
+            return std::make_shared<array_value>(empty, true);
         }
 
         auto has_arguments = false;
@@ -201,10 +214,10 @@ namespace stack_vm
                 }
             }
 
-            return std::make_shared<const array_value>(combined, true);
+            return std::make_shared<array_value>(combined, true);
         }
 
-        return std::make_shared<const array_value>(temp, true);
+        return std::make_shared<array_value>(temp, true);
     }
 
     void virtual_machine::jump(const std::string &label)
@@ -228,21 +241,21 @@ namespace stack_vm
         value.invoke(*this, args, push_to_stack_trace);
     }
 
-    void virtual_machine::execute_function(std::shared_ptr<const function> func, std::shared_ptr<const array_value> args, bool push_to_stack_trace)
+    void virtual_machine::execute_function(std::shared_ptr<function> code, std::shared_ptr<array_value> args, bool push_to_stack_trace)
     {
         if (push_to_stack_trace)
         {
             push_stack_trace(scope_frame(program_counter, current_code, current_scope));
         }
 
-        current_code = func;
+        current_code = code;
         current_scope = std::make_shared<scope>(current_scope);
         program_counter = 0;
 
-        auto num_called_args = std::min(args->value->size(), func->parameters.size());
+        auto num_called_args = std::min(args->value->size(), code->parameters.size());
         for (auto i = 0; i < num_called_args; i++)
         {
-            const auto &arg_name = func->parameters[i];
+            const auto &arg_name = code->parameters[i];
             auto starts_with_unpack = arg_name.length() > 3 &&
                 arg_name[0] == '.' && arg_name[1] == '.' && arg_name[2] == '.';
             if (starts_with_unpack)
@@ -262,8 +275,8 @@ namespace stack_vm
             return false;
         }
 
-        current_code = top.function;
-        current_scope = top.scope;
+        current_code = top.code;
+        current_scope = top.frame_scope;
         program_counter = top.line_counter;
         return true;
     }

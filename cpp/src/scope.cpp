@@ -18,7 +18,7 @@ namespace stack_vm
         }
     }
 
-    void scope::define(const std::string &key, std::shared_ptr<const ivalue> value)
+    void scope::define(const std::string &key, std::shared_ptr<ivalue> value)
     {
         values[key] = value;
     }
@@ -28,7 +28,7 @@ namespace stack_vm
         values[key] = std::make_shared<builtin_function_value>(callback);
     }
 
-    bool scope::try_set(const std::string &key, std::shared_ptr<const ivalue> value)
+    bool scope::try_set(const std::string &key, std::shared_ptr<ivalue> value)
     {
         auto find = values.find(key);
         if (find != values.end())
@@ -45,7 +45,7 @@ namespace stack_vm
         return false;
     }
 
-    bool scope::try_get_key(const std::string &key, std::shared_ptr<const ivalue> &result) const
+    bool scope::try_get_key(const std::string &key, std::shared_ptr<ivalue> &result) const
     {
         auto find = values.find(key);
         if (find != values.end())
