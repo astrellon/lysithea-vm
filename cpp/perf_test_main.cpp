@@ -3,8 +3,7 @@
 #include <random>
 #include <fstream>
 
-// #include "src/virtual_machine.hpp"
-// #include "src/assembler.hpp"
+#include "src/assembler.hpp"
 #include "src/parser.hpp"
 #include "src/values/ivalue.hpp"
 #include "src/values/number_value.hpp"
@@ -14,7 +13,7 @@
 #include "src/values/array_value.hpp"
 #include "src/virtual_machine.hpp"
 
-using namespace stack_vm;
+// using namespace stack_vm;
 
 std::random_device _rd;
 std::mt19937 _rand(_rd());
@@ -79,39 +78,18 @@ int counter = 0;
 int main()
 {
     std::ifstream input_file;
-    input_file.open("../../examples/testStandardLibraryNoAssert2.lisp");
+    input_file.open("../../examples/perfTest.lisp");
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";
         return -1;
     }
 
-    auto parsed = parser::read_from_stream(input_file);
-    std::cout << "Parsed: " << parsed.to_string() << "\n";
+    auto parsed = stack_vm::parser::read_from_stream(input_file);
+    stack_vm::assembler assembler;
+    auto code = assembler.parse_from_value(parsed);
 
-    // parser parse(input_file);
-
-    // std::string token;
-    // while (parse.move_next(token))
-    // {
-    //     std::cout << "Token: |" << token << "|\n";
-    // }
-
-    // array_vector arg_values;
-    // arg_values.push_back(std::make_shared<number_value>(5.0f));
-    // arg_values.push_back(std::make_shared<bool_value>(true));
-    // arg_values.push_back(std::make_shared<string_value>("Hello"));
-
-    // object_map obj_map;
-    // obj_map.emplace("name", std::make_shared<string_value>("Alan"));
-    // obj_map.emplace("args", std::make_shared<array_value>(arg_values, false));
-
-    // object_value obj(obj_map);
-
-    // std::cout << "Obj: " << obj.to_string() << '\n';
-    // std::cout << "- Done\n";
-
-    virtual_machine vm(16);
+    stack_vm::virtual_machine vm(16);
 
     return 0;
 }

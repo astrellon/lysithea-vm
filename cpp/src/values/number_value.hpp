@@ -21,6 +21,9 @@ namespace stack_vm
             number_value(std::size_t value) : value(static_cast<double>(value)) { }
 
             // Methods
+            int int_value() const { return static_cast<int>(value); }
+            float float_value() const { return static_cast<float>(value); }
+
             virtual int compare_to(const ivalue *input) const
             {
                 auto other = dynamic_cast<const number_value *>(input);

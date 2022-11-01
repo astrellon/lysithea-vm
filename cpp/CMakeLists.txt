@@ -11,16 +11,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -m64 -DRELEASE")
 project(simple-stack-vm)
 
 file(GLOB FILE_SRC
-    # "src/*.hpp"
-    # "src/*.cpp"
-    "src/parser.cpp"
-    "src/parser.hpp"
-    "src/scope.hpp"
-    "src/scope.cpp"
-    "src/lisp_assembler.hpp"
-    "src/lisp_assembler.cpp"
-    "src/virtual_machine.cpp"
-    "src/virtual_machine.hpp"
+    "src/*.hpp"
+    "src/*.cpp"
     "src/values/*.hpp"
     "src/values/*.cpp"
 )

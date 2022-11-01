@@ -22,6 +22,11 @@ namespace stack_vm
             variable_value(variable_ptr value) : value(value) { }
 
             // Methods
+            bool is_label() const
+            {
+                return value->size() > 0 && value->at(0) == ':';
+            }
+
             virtual int compare_to(const ivalue *input) const
             {
                 auto other = dynamic_cast<const variable_value *>(input);

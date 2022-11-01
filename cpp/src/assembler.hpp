@@ -15,7 +15,7 @@
 
 namespace stack_vm
 {
-    class lisp_assembler
+    class assembler
     {
         public:
             struct temp_code_line
@@ -32,6 +32,7 @@ namespace stack_vm
 
                 // Methods
                 bool is_label() const { return jump_label.size() > 0; }
+                std::string to_string() const;
             };
 
             // Fields
@@ -49,11 +50,12 @@ namespace stack_vm
             scope builtin_scope;
 
             // Constructor
-            lisp_assembler();
+            assembler();
 
             // Methods
             std::shared_ptr<script> parse_from_text(const std::string &input);
             std::shared_ptr<script> parse_from_stream(std::istream &input);
+            std::shared_ptr<script> parse_from_value(const array_value &input);
             std::vector<temp_code_line> parse(std::shared_ptr<ivalue> input);
 
             std::vector<temp_code_line> parse_set(const array_value &input);
@@ -67,6 +69,11 @@ namespace stack_vm
             std::vector<temp_code_line> parse_keyword(const std::string &keyword, const array_value &input);
 
             std::shared_ptr<function> parse_global_function(const array_value &input);
+
+            std::vector<temp_code_line> optimise_call_symbol_value(const std::string &variable, int num_args);
+            std::vector<temp_code_line> optimise_get_symbol_value(const std::string &variable);
+
+            static bool is_get_property_request(const std::string &variable, std::shared_ptr<string_value> &parent_key, std::shared_ptr<array_value> &property);
 
         private:
             struct loop_labels

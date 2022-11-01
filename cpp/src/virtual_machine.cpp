@@ -5,6 +5,7 @@
 
 #include "./values/value_property_access.hpp"
 #include "./values/number_value.hpp"
+#include "./utils.hpp"
 
 namespace stack_vm
 {
@@ -72,8 +73,8 @@ namespace stack_vm
                 }
 
                 std::shared_ptr<ivalue> found_value;
-                if (current_scope->try_get_key(key->to_string(), found_value) ||
-                    (builtin_scope && builtin_scope->try_get_key(key->to_string(), found_value)))
+                if (current_scope->try_get_key(*is_string->value, found_value) ||
+                    (builtin_scope && builtin_scope->try_get_key(*is_string->value, found_value)))
                 {
                     push_stack(found_value);
                 }
@@ -159,7 +160,7 @@ namespace stack_vm
                 auto top = get_operator_arg(code_line);
                 if (top->is_function())
                 {
-                    call_function(*top, static_cast<int>(is_number->value), true);
+                    call_function(*top, is_number->int_value(), true);
                 }
                 else
                 {
@@ -187,7 +188,7 @@ namespace stack_vm
         for (auto i = 0; i < num_args; i++)
         {
             auto value = pop_stack();
-            auto is_arg = dynamic_cast<const array_value *>(value.get());
+            auto is_arg = std::dynamic_pointer_cast<const array_value>(value);
             if (is_arg && is_arg->is_arguments_value)
             {
                 has_arguments = true;
@@ -200,7 +201,7 @@ namespace stack_vm
             array_vector combined;
             for (const auto &iter : temp)
             {
-                auto is_arg = dynamic_cast<const array_value *>(iter.get());
+                auto is_arg = std::dynamic_pointer_cast<const array_value>(iter);
                 if (is_arg && is_arg->is_arguments_value)
                 {
                     for (const auto &arg_iter : *is_arg->value)
@@ -256,9 +257,8 @@ namespace stack_vm
         for (auto i = 0; i < num_called_args; i++)
         {
             const auto &arg_name = code->parameters[i];
-            auto starts_with_unpack = arg_name.length() > 3 &&
-                arg_name[0] == '.' && arg_name[1] == '.' && arg_name[2] == '.';
-            if (starts_with_unpack)
+            auto is_unpack = starts_with_unpack(arg_name);
+            if (is_unpack)
             {
                 // TODO
                 break;

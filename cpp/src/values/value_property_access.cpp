@@ -40,7 +40,7 @@ namespace stack_vm
         auto is_number = dynamic_cast<const number_value *>(input.get());
         if (is_number)
         {
-            result = static_cast<int>(is_number->value);
+            result = is_number->int_value();
             return result >= 0;
         }
 

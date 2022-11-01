@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <sstream>
 
 #include "operator.hpp"
 
@@ -20,5 +21,6 @@ namespace stack_vm
             code_line(vm_operator op, std::shared_ptr<ivalue> value) : op(op), value(value) { }
 
             // Methods
+            std::string to_string() const;
     };
 } // stack_vm

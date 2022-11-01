@@ -4,7 +4,6 @@
 
 namespace stack_vm
 {
-
     vm_operator parse_operator(const std::string &input)
     {
         auto upper_case = input;
@@ -24,6 +23,27 @@ namespace stack_vm
         if (upper_case == "JUMPFALSE") return vm_operator::jump_false;
 
         return vm_operator::unknown;
+    }
+
+    std::string to_string(vm_operator input)
+    {
+        switch (input)
+        {
+            case vm_operator::call: return "call";
+            case vm_operator::call_direct: return "callDirect";
+            case vm_operator::call_return: return "return";
+            case vm_operator::define: return "define";
+            case vm_operator::get: return "get";
+            case vm_operator::get_property: return "getProperty";
+            case vm_operator::jump: return "jump";
+            case vm_operator::jump_false: return "jumpFalse";
+            case vm_operator::jump_true: return "jumpTrue";
+            case vm_operator::push: return "push";
+            case vm_operator::set: return "set";
+            case vm_operator::to_argument: return "toArgument";
+        }
+
+        return "unknown";
     }
 
     int compare(double v1, double v2)
@@ -68,5 +88,30 @@ namespace stack_vm
             return -1;
         }
         return 1;
+    }
+
+    bool starts_with_unpack(const std::string &input)
+    {
+        return input.length() > 3 && input[0] == '.' && input[1] == '.' && input[2] == '.';
+    }
+
+    std::vector<std::string> string_split(const std::string &input, const std::string &delimiter)
+    {
+        std::vector<std::string> result;
+        int start = 0;
+        int end = input.find(delimiter);
+        while (end != input.npos)
+        {
+            result.emplace_back(input.substr(start, end - start));
+            start = end + delimiter.size();
+            end = input.find(delimiter, start);
+        }
+
+        if (start != end)
+        {
+            result.emplace_back(input.substr(start));
+        }
+
+        return result;
     }
 } // stack_vm
