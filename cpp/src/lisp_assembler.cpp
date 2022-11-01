@@ -8,6 +8,17 @@
 
 namespace stack_vm
 {
+    const std::string lisp_assembler::keyword_function("function");
+    const std::string lisp_assembler::keyword_loop("loop");
+    const std::string lisp_assembler::keyword_continue("continue");
+    const std::string lisp_assembler::keyword_break("break");
+    const std::string lisp_assembler::keyword_if("if");
+    const std::string lisp_assembler::keyword_unless("unless");
+    const std::string lisp_assembler::keyword_set("set");
+    const std::string lisp_assembler::keyword_define("define");
+    const std::string lisp_assembler::keyword_inc("inc");
+    const std::string lisp_assembler::keyword_dec("dec");
+
     lisp_assembler::lisp_assembler() : label_count(0)
     {
 
@@ -48,7 +59,8 @@ namespace stack_vm
 
     std::vector<lisp_assembler::temp_code_line> lisp_assembler::parse(std::shared_ptr<ivalue> input)
     {
-
+        std::vector<temp_code_line> result;
+        return result;
     }
 
     std::vector<lisp_assembler::temp_code_line> lisp_assembler::parse_set(const array_value &input)
@@ -257,11 +269,11 @@ namespace stack_vm
         auto num_args = std::make_shared<number_value>(1);
 
         array_vector call_array_args;
-        call_array_args.emplace_back(change_func);
+        call_array_args.emplace_back(std::make_shared<builtin_function_value>(change_func));
         call_array_args.emplace_back(num_args);
         auto call_array_values = std::make_shared<array_value>(call_array_args, false);
 
-        std::vector<temp_code_line> result(3);
+        std::vector<temp_code_line> result;
         result.emplace_back(vm_operator::get, var_name);
         result.emplace_back(vm_operator::call_direct, call_array_values);
         result.emplace_back(vm_operator::set, var_name);
@@ -275,7 +287,7 @@ namespace stack_vm
         if (keyword == keyword_function)
         {
             auto function = parse_function(input);
-            auto function_value = std::make_shared<function_value>(function);
+            auto function_value = std::make_shared<stack_vm::function_value>(function);
 
             result.emplace_back(vm_operator::push, function_value);
             return result;

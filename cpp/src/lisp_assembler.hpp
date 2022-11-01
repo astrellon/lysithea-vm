@@ -26,9 +26,9 @@ namespace stack_vm
                 std::shared_ptr<ivalue> argument;
 
                 // Constructor
-                temp_code_line(const std::string &jump_label) : op(vm_operator::unknown), jump_label(jump_label) { }
+                temp_code_line(const std::string &jump_label) : op(vm_operator::unknown), jump_label(jump_label), argument(nullptr) { }
                 temp_code_line(vm_operator op, std::shared_ptr<ivalue> arg) : op(op), argument(arg) { }
-                temp_code_line(vm_operator op) : op(op) { }
+                temp_code_line(vm_operator op) : op(op), argument(nullptr) { }
 
                 // Methods
                 bool is_label() const { return jump_label.size() > 0; }
