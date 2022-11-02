@@ -41,6 +41,7 @@ namespace stack_vm
             case vm_operator::push: return "push";
             case vm_operator::set: return "set";
             case vm_operator::to_argument: return "toArgument";
+            default: break;
         }
 
         return "unknown";

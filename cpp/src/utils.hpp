@@ -31,7 +31,7 @@ namespace stack_vm
     template <typename T>
     inline void push_range(std::vector<T> &target, const std::vector<T> &input)
     {
-        target.insert(std::begin(target), std::begin(input), std::end(input));
+        target.insert(std::end(target), std::begin(input), std::end(input));
     }
 
 } // namespace stack_vm

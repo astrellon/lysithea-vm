@@ -1,28 +1,26 @@
 #include "standard_value_library.hpp"
 
-#include "../value.hpp"
+#include "../values/ivalue.hpp"
+#include "../values/array_value.hpp"
+#include "../values/builtin_function_value.hpp"
 #include "../virtual_machine.hpp"
+#include "../scope.hpp"
 #include "../utils.hpp"
 
 namespace stack_vm
 {
-    const std::string &standard_value_library::handle_name = "value";
+    std::shared_ptr<const scope> standard_value_library::scope = create_scope();
 
-    void standard_value_library::add_handler(virtual_machine &vm)
+    std::shared_ptr<const scope> standard_value_library::create_scope()
     {
-        vm.add_run_handler(handle_name, handler);
-    }
+        auto result = std::make_shared<stack_vm::scope>();
 
-    void standard_value_library::handler(const std::string &command, virtual_machine &vm)
-    {
-        switch (hash(command))
+        result->define("typeof", [](virtual_machine &vm, const array_value &args)
         {
-            case hash("typeof"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(top.type());
-                break;
-            }
+            const auto &top = vm.pop_stack();
+            vm.push_stack(top.type());
+        });
+
             case hash("toString"):
             {
                 const auto &top = vm.pop_stack();
@@ -37,5 +35,7 @@ namespace stack_vm
                 break;
             }
         }
+
+        return result;
     }
 } // stack_vm
