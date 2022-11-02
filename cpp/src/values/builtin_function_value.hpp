@@ -36,9 +36,9 @@ namespace stack_vm
             virtual std::string type_name() const { return "builtin-function"; }
             virtual bool is_function() const { return true; }
 
-            // virtual void invoke(virtual_machine &vm, const array_value &args, bool push_to_stack_trace)
-            // {
-            //     // vm
-            // }
+            virtual void invoke(virtual_machine &vm, std::shared_ptr<array_value> args, bool push_to_stack_trace) const
+            {
+                value(vm, *args);
+            }
     };
 } // stack_vm

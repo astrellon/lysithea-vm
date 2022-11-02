@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 #include <unordered_map>
 
 namespace stack_vm
@@ -41,7 +42,10 @@ namespace stack_vm
 
             // Function methods
             virtual bool is_function() const { return false; }
-            virtual void invoke(virtual_machine &vm, std::shared_ptr<array_value> args, bool push_to_stack_trace) const { }
+            virtual void invoke(virtual_machine &vm, std::shared_ptr<array_value> args, bool push_to_stack_trace) const
+            {
+                throw std::runtime_error("Attempting to invoke a function that does not override the invoke method");
+            }
 
         private:
             // Fields

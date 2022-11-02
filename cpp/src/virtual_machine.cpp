@@ -4,22 +4,49 @@
 #include <iostream>
 
 #include "./values/value_property_access.hpp"
-#include "./values/number_value.hpp"
 #include "./utils.hpp"
 
 namespace stack_vm
 {
-    virtual_machine::virtual_machine(int stack_size) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false)
+    virtual_machine::virtual_machine(int stack_size) :
+        stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false),
+        global_scope(std::make_shared<scope>())
     {
+        current_scope = global_scope;
     }
 
     void virtual_machine::reset()
     {
         program_counter = 0;
+        global_scope = std::make_shared<scope>();
+        current_scope = global_scope;
         stack.clear();
         stack_trace.clear();
         running = false;
         paused = false;
+    }
+
+    void virtual_machine::change_to_script(std::shared_ptr<script> script)
+    {
+        program_counter = 0;
+        stack.clear();
+        stack_trace.clear();
+
+        builtin_scope = script->builtin_scope;
+        current_code = script->code;
+    }
+
+    void virtual_machine::execute(std::shared_ptr<script> script)
+    {
+        change_to_script(script);
+
+        running = true;
+        paused = false;
+
+        while (running && !paused)
+        {
+            step();
+        }
     }
 
     void virtual_machine::step()
@@ -157,7 +184,7 @@ namespace stack_vm
                     throw std::runtime_error("Call needs a num args code line input");
                 }
 
-                auto top = get_operator_arg(code_line);
+                auto top = pop_stack();
                 if (top->is_function())
                 {
                     call_function(*top, is_number->int_value(), true);

@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include "./ivalue.hpp"
 #include "./number_value.hpp"
@@ -28,7 +29,37 @@ namespace stack_vm
 
             virtual ~array_value() { }
 
-            // Methods
+            // Helper Methods
+            template <typename T>
+            inline std::shared_ptr<T> get_index(int index) const
+            {
+                index = calc_index(index);
+                if (index < 0 || index >= value->size())
+                {
+                    throw std::out_of_range("Error getting array at index, out of range");
+                }
+
+                auto casted = std::dynamic_pointer_cast<T>(value->at(index));
+                if (!casted)
+                {
+                    throw std::bad_cast();
+                }
+
+                return casted;
+            }
+
+            inline std::shared_ptr<ivalue> get_index(int index) const
+            {
+                index = calc_index(index);
+                if (index < 0 || index >= value->size())
+                {
+                    throw std::out_of_range("Error getting array at index, out of range");
+                }
+
+                return value->at(index);
+            }
+
+            // Value Methods
             virtual int compare_to(const ivalue *input) const;
             virtual std::string to_string() const;
             virtual std::string type_name() const

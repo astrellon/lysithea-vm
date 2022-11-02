@@ -26,7 +26,7 @@ namespace stack_vm
             void combine_scope(const scope &input);
 
             void define(const std::string &key, std::shared_ptr<ivalue> value);
-            void define(const std::string &key, builtin_function_callback &callback);
+            void define(const std::string &key, builtin_function_callback callback);
             bool try_set(const std::string &key, std::shared_ptr<ivalue> value);
             bool try_get_key(const std::string &key, std::shared_ptr<ivalue> &result) const;
     };

@@ -7,17 +7,17 @@ namespace stack_vm
 {
     class scope;
 
-    class standard_value_library
+    class standard_misc_library
     {
         public:
             // Fields
-            static std::shared_ptr<const scope> scope;
+            static std::shared_ptr<const scope> library_scope;
 
             // Methods
             static std::shared_ptr<scope> create_scope();
 
         private:
             // Constructor
-            standard_value_library() { };
+            standard_misc_library() { };
     };
 } // stack_vm

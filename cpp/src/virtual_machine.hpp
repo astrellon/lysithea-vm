@@ -15,6 +15,7 @@
 #include "./values/ivalue.hpp"
 #include "./values/array_value.hpp"
 #include "./values/string_value.hpp"
+#include "./values/number_value.hpp"
 #include "./values/bool_value.hpp"
 
 namespace stack_vm
@@ -40,7 +41,7 @@ namespace stack_vm
             // Fields
             bool running;
             bool paused;
-            std::shared_ptr<scope> builtin_scope;
+            std::shared_ptr<const scope> builtin_scope;
             std::shared_ptr<function> current_code;
 
             // Constructor
@@ -69,6 +70,23 @@ namespace stack_vm
                 }
             }
 
+            template <typename T>
+            inline std::shared_ptr<T> pop_stack()
+            {
+                std::shared_ptr<ivalue> result;
+                if (!stack.pop(result))
+                {
+                    throw std::runtime_error("Unable to pop stack, empty stack");
+                }
+
+                auto casted = std::dynamic_pointer_cast<T>(result);
+                if (!casted)
+                {
+                    throw std::bad_cast();
+                }
+                return casted;
+            }
+
             inline std::shared_ptr<ivalue> pop_stack()
             {
                 std::shared_ptr<ivalue> result;
@@ -77,6 +95,36 @@ namespace stack_vm
                     throw std::runtime_error("Unable to pop stack, empty stack");
                 }
                 return result;
+            }
+
+            inline void push_stack(bool input)
+            {
+                push_stack(std::make_shared<bool_value>(input));
+            }
+
+            inline void push_stack(int input)
+            {
+                push_stack(std::make_shared<number_value>(input));
+            }
+
+            inline void push_stack(float input)
+            {
+                push_stack(std::make_shared<number_value>(input));
+            }
+
+            inline void push_stack(double input)
+            {
+                push_stack(std::make_shared<number_value>(input));
+            }
+
+            inline void push_stack(const char *input)
+            {
+                push_stack(std::make_shared<string_value>(input));
+            }
+
+            inline void push_stack(const std::string &input)
+            {
+                push_stack(std::make_shared<string_value>(input));
             }
 
             inline void push_stack(std::shared_ptr<ivalue> input)

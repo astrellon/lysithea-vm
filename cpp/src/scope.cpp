@@ -23,7 +23,7 @@ namespace stack_vm
         values[key] = value;
     }
 
-    void scope::define(const std::string &key, builtin_function_callback &callback)
+    void scope::define(const std::string &key, builtin_function_callback callback)
     {
         values[key] = std::make_shared<builtin_function_value>(callback);
     }
