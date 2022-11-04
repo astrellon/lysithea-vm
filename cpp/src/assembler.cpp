@@ -6,6 +6,7 @@
 #include "./utils.hpp"
 #include "./values/function_value.hpp"
 #include "./values/variable_value.hpp"
+#include "./values/value_property_access.hpp"
 
 namespace stack_vm
 {
@@ -389,14 +390,57 @@ namespace stack_vm
 
     std::vector<assembler::temp_code_line> assembler::optimise_call_symbol_value(const std::string &variable, int num_args)
     {
+        std::vector<temp_code_line> result;
         auto num_arg_value = std::make_shared<number_value>(num_args);
 
         std::shared_ptr<string_value> parent_key;
         std::shared_ptr<array_value> property;
         auto is_property = is_get_property_request(variable, parent_key, property);
 
-        std::vector<temp_code_line> result;
+        // Check if we know about the parent object? (eg: string.length, the parent is the string object)
+        std::shared_ptr<ivalue> found_parent;
+        if (builtin_scope.try_get_key(*parent_key->value, found_parent))
+        {
+            // If the get is for a property? (eg: string.length, length is the property)
+            std::shared_ptr<ivalue> found_property;
+            if (is_property && try_get_property(found_parent, *property, found_property))
+            {
+                if (found_property->is_function())
+                {
+                    // If we found the property then we're done and we can just push that known value onto the stack.
+                    array_vector call_vector;
+                    call_vector.emplace_back(found_property);
+                    call_vector.emplace_back(num_arg_value);
+
+                    auto call_value = std::make_shared<array_value>(call_vector, false);
+                    result.emplace_back(vm_operator::call_direct, call_value);
+                    return result;
+                }
+
+                throw std::runtime_error("Attempting to call a value that is not a function");
+            }
+            else if (!is_property)
+            {
+                // This was not a property request but we found the parent so just push onto the stack.
+                if (found_parent->is_function())
+                {
+                    array_vector call_vector;
+                    call_vector.emplace_back(found_parent);
+                    call_vector.emplace_back(num_arg_value);
+
+                    auto call_value = std::make_shared<array_value>(call_vector, false);
+                    result.emplace_back(vm_operator::call_direct, call_value);
+                    return result;
+                }
+
+                throw std::runtime_error("Attempting to call a value that is not a function");
+            }
+        }
+
+        // Could not find the parent right now, so look for the parent at runtime.
         result.emplace_back(vm_operator::get, parent_key);
+
+        // If this was also a property check also look up the property at runtime.
         if (is_property)
         {
             result.emplace_back(vm_operator::get_property, property);
@@ -420,10 +464,43 @@ namespace stack_vm
         auto is_property = is_get_property_request(get_name, parent_key, property);
 
         std::vector<temp_code_line> result;
-        result.emplace_back(vm_operator::get, parent_key);
-        if (is_property)
+
+        std::shared_ptr<ivalue> found_parent;
+        // Check if we know about the parent object? (eg: string.length, the parent is the string object)
+        if (builtin_scope.try_get_key(*parent_key->value, found_parent))
         {
-            result.emplace_back(vm_operator::get_property, property);
+            // If the get is for a property? (eg: string.length, length is the property)
+            if (is_property)
+            {
+                std::shared_ptr<ivalue> found_property;
+                if (try_get_property(found_parent, *property, found_property))
+                {
+                    // If we found the property then we're done and we can just push that known value onto the stack.
+                    result.emplace_back(vm_operator::push, found_property);
+                }
+                else
+                {
+                    // We didn't find the property at compile time, so look it up at run time.
+                    result.emplace_back(vm_operator::push, found_parent);
+                    result.emplace_back(vm_operator::get_property, property);
+                }
+            }
+            else
+            {
+                // This was not a property request but we found the parent so just push onto the stack.
+                result.emplace_back(vm_operator::push, found_parent);
+            }
+        }
+        else
+        {
+            // Could not find the parent right now, so look for the parent at runtime.
+            result.emplace_back(vm_operator::get, parent_key);
+
+            // If this was also a property check also look up the property at runtime.
+            if (is_property)
+            {
+                result.emplace_back(vm_operator::get_property, property);
+            }
         }
 
         if (is_argument_unpack)

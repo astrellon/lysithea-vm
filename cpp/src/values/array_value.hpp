@@ -21,6 +21,9 @@ namespace stack_vm
             bool is_arguments_value;
 
             // Constructor
+            array_value(bool is_arguments_value)
+                : value(std::make_shared<array_vector>()), is_arguments_value(is_arguments_value) {
+            }
             array_value(const array_vector &value, bool is_arguments_value)
                 : value(std::make_shared<array_vector>(value)), is_arguments_value(is_arguments_value) { }
 

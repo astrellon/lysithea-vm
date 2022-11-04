@@ -8,6 +8,8 @@
 
 namespace stack_vm
 {
+    std::shared_ptr<const array_value> virtual_machine::empty_args(std::make_shared<const array_value>(true));
+
     virtual_machine::virtual_machine(int stack_size) :
         stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false),
         global_scope(std::make_shared<scope>())
@@ -105,6 +107,10 @@ namespace stack_vm
                 {
                     push_stack(found_value);
                 }
+                else
+                {
+                    throw std::runtime_error("Unable to find value to get");
+                }
                 break;
             }
             case vm_operator::get_property:
@@ -197,17 +203,37 @@ namespace stack_vm
             }
             case vm_operator::call_direct:
             {
+                auto error = false;
+                if (!code_line.value || !code_line.value->is_array())
+                {
+                    throw std::runtime_error("Call direct needs an array input");
+                }
+
+                auto array_input = std::dynamic_pointer_cast<array_value>(code_line.value);
+                if (array_input->value->size() != 2 ||
+                    !array_input->value->at(0)->is_function())
+                {
+                    throw std::runtime_error("Call direct needs two inputs of func and number");
+                }
+
+                auto num_args = std::dynamic_pointer_cast<number_value>(array_input->value->at(1));
+                if (!num_args)
+                {
+                    throw std::runtime_error("Call direct needs two inputs of func and number");
+                }
+
+                call_function(*array_input->value->at(0), num_args->int_value(), true);
                 break;
             }
         }
     }
 
-    std::shared_ptr<array_value> virtual_machine::get_args(int num_args)
+    std::shared_ptr<const array_value> virtual_machine::get_args(int num_args)
     {
         if (num_args == 0)
         {
             array_vector empty;
-            return std::make_shared<array_value>(empty, true);
+            return empty_args;
         }
 
         auto has_arguments = false;
@@ -242,10 +268,10 @@ namespace stack_vm
                 }
             }
 
-            return std::make_shared<array_value>(combined, true);
+            return std::make_shared<const array_value>(combined, true);
         }
 
-        return std::make_shared<array_value>(temp, true);
+        return std::make_shared<const array_value>(temp, true);
     }
 
     void virtual_machine::jump(const std::string &label)
@@ -269,7 +295,7 @@ namespace stack_vm
         value.invoke(*this, args, push_to_stack_trace);
     }
 
-    void virtual_machine::execute_function(std::shared_ptr<function> code, std::shared_ptr<array_value> args, bool push_to_stack_trace)
+    void virtual_machine::execute_function(std::shared_ptr<function> code, std::shared_ptr<const array_value> args, bool push_to_stack_trace)
     {
         if (push_to_stack_trace)
         {
