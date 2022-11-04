@@ -4,10 +4,11 @@
 
 #include "./builtin_function_value.hpp"
 #include "../virtual_machine.hpp"
+#include "./value.hpp"
 
 namespace stack_vm
 {
-    int array_value::compare_to(const ivalue *input) const
+    int array_value::compare_to(const complex_value *input) const
     {
         auto other = dynamic_cast<const array_value *>(input);
         if (!other)
@@ -18,7 +19,7 @@ namespace stack_vm
         const auto &this_array = *value.get();
         const auto &other_array = *other->value.get();
 
-        auto compare_length = number_value::compare(this_array.size(), other_array.size());
+        auto compare_length = value::compare(this_array.size(), other_array.size());
         if (compare_length != 0)
         {
             return compare_length;
@@ -36,14 +37,14 @@ namespace stack_vm
         return 0;
     }
 
-    bool array_value::try_get(const std::string &key, std::shared_ptr<ivalue> &result) const
+    bool array_value::try_get(const std::string &key, stack_vm::value &result) const
     {
         if (key == "length")
         {
-            result = std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
+            result = value(std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
             {
                 vm.push_stack(std::make_shared<number_value>(this->value->size()));
-            });
+            }));
             return true;
         }
 
@@ -63,7 +64,7 @@ namespace stack_vm
             }
             first = false;
 
-            ss << iter->to_string();
+            ss << iter.to_string();
         }
         ss << ')';
         return ss.str();

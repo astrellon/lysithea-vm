@@ -101,7 +101,7 @@ namespace stack_vm
                     throw std::runtime_error("Unable to get value, input needs to be a string");
                 }
 
-                std::shared_ptr<ivalue> found_value;
+                std::shared_ptr<complex_value> found_value;
                 if (current_scope->try_get_key(*is_string->value, found_value) ||
                     (builtin_scope && builtin_scope->try_get_key(*is_string->value, found_value)))
                 {
@@ -122,7 +122,7 @@ namespace stack_vm
                 }
 
                 auto top = pop_stack();
-                std::shared_ptr<ivalue> found;
+                std::shared_ptr<complex_value> found;
                 if (try_get_property(top, *key, found))
                 {
                     push_stack(found);
@@ -285,7 +285,7 @@ namespace stack_vm
         program_counter = find->second;
     }
 
-    void virtual_machine::call_function(const ivalue &value, int num_args, bool push_to_stack_trace)
+    void virtual_machine::call_function(const complex_value &value, int num_args, bool push_to_stack_trace)
     {
         if (!value.is_function())
         {

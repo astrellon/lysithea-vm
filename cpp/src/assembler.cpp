@@ -85,10 +85,10 @@ namespace stack_vm
         return code;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse(std::shared_ptr<ivalue> input)
+    std::vector<assembler::temp_code_line> assembler::parse(value input)
     {
         std::vector<temp_code_line> result;
-        auto array_input = std::dynamic_pointer_cast<array_value>(input);
+        auto array_input = input.get_complex<array_value>();
         if (array_input)
         {
             if (array_input->value->size() == 0)
@@ -285,7 +285,7 @@ namespace stack_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_flatten(std::shared_ptr<ivalue> input)
+    std::vector<assembler::temp_code_line> assembler::parse_flatten(std::shared_ptr<complex_value> input)
     {
         auto is_array = std::dynamic_pointer_cast<const array_value>(input);
         if (is_array)
@@ -347,7 +347,7 @@ namespace stack_vm
         return process_temp_function(parameters, temp_code_lines);
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_change_variable(std::shared_ptr<ivalue> input, builtin_function_value change_func)
+    std::vector<assembler::temp_code_line> assembler::parse_change_variable(std::shared_ptr<complex_value> input, builtin_function_value change_func)
     {
         auto var_name = std::make_shared<string_value>(input->to_string());
         auto num_args = std::make_shared<number_value>(1);
@@ -398,11 +398,11 @@ namespace stack_vm
         auto is_property = is_get_property_request(variable, parent_key, property);
 
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-        std::shared_ptr<ivalue> found_parent;
+        std::shared_ptr<complex_value> found_parent;
         if (builtin_scope.try_get_key(*parent_key->value, found_parent))
         {
             // If the get is for a property? (eg: string.length, length is the property)
-            std::shared_ptr<ivalue> found_property;
+            std::shared_ptr<complex_value> found_property;
             if (is_property && try_get_property(found_parent, *property, found_property))
             {
                 if (found_property->is_function())
@@ -465,14 +465,14 @@ namespace stack_vm
 
         std::vector<temp_code_line> result;
 
-        std::shared_ptr<ivalue> found_parent;
+        std::shared_ptr<complex_value> found_parent;
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
         if (builtin_scope.try_get_key(*parent_key->value, found_parent))
         {
             // If the get is for a property? (eg: string.length, length is the property)
             if (is_property)
             {
-                std::shared_ptr<ivalue> found_property;
+                std::shared_ptr<complex_value> found_property;
                 if (try_get_property(found_parent, *property, found_property))
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.

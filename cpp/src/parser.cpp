@@ -1,8 +1,5 @@
 #include "parser.hpp"
 
-#include "./values/null_value.hpp"
-#include "./values/bool_value.hpp"
-#include "./values/number_value.hpp"
 #include "./values/array_value.hpp"
 #include "./values/object_value.hpp"
 #include "./values/string_value.hpp"
@@ -169,7 +166,7 @@ namespace stack_vm
         return read_from_stream(stream);
     }
 
-    std::shared_ptr<ivalue> parser::read_from_parser(parser &input)
+    value parser::read_from_parser(parser &input)
     {
         const auto &token = input.current;
         if (token.size() == 0)
@@ -189,7 +186,7 @@ namespace stack_vm
                 list.push_back(read_from_parser(input));
             }
 
-            return std::make_shared<array_value>(list, false);
+            return value(std::make_shared<array_value>(list, false));
         }
         if (token == ")")
         {
@@ -208,10 +205,10 @@ namespace stack_vm
                 auto key = read_from_parser(input);
                 input.move_next();
 
-                map.emplace(key->to_string(), read_from_parser(input));
+                map.emplace(key.to_string(), read_from_parser(input));
             }
 
-            return std::make_shared<object_value>(map);
+            return value(std::make_shared<object_value>(map));
         }
         if (token == "}")
         {
@@ -221,25 +218,25 @@ namespace stack_vm
         return atom(token);
     }
 
-    std::shared_ptr<ivalue> parser::atom(const std::string &input)
+    value parser::atom(const std::string &input)
     {
         if (input.size() == 0 || input == "null")
         {
-            return std::make_shared<null_value>();
+            return value();
         }
 
         double num;
         if (std::sscanf(input.c_str(), "%lf", &num) == 1)
         {
-            return std::make_shared<number_value>(num);
+            return value(num);
         }
         if (input == "true")
         {
-            return std::make_shared<bool_value>(true);
+            return value(true);
         }
         if (input == "false")
         {
-            return std::make_shared<bool_value>(false);
+            return value(false);
         }
 
         auto first = input.front();
@@ -247,9 +244,9 @@ namespace stack_vm
         if ((first == '"' && last == '"') ||
             (first == '\'' && last == '\''))
         {
-            return std::make_shared<string_value>(input.substr(1, input.size() - 2));
+            return value(std::make_shared<string_value>(input.substr(1, input.size() - 2)));
         }
 
-        return std::make_shared<variable_value>(input);
+        return value(std::make_shared<variable_value>(input));
     }
 } // stack_vm

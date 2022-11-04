@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include "../values/ivalue.hpp"
+#include "../values/complex_value.hpp"
 #include "../values/array_value.hpp"
 #include "../values/builtin_function_value.hpp"
 #include "../virtual_machine.hpp"

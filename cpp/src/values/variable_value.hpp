@@ -4,13 +4,13 @@
 #include <string>
 #include <cstring>
 
-#include "./ivalue.hpp"
+#include "./complex_value.hpp"
 
 namespace stack_vm
 {
     using variable_ptr = std::shared_ptr<std::string>;
 
-    class variable_value : public ivalue
+    class variable_value : public complex_value
     {
         public:
             // Fields
@@ -27,7 +27,7 @@ namespace stack_vm
                 return value->size() > 0 && value->at(0) == ':';
             }
 
-            virtual int compare_to(const ivalue *input) const
+            virtual int compare_to(const complex_value *input) const
             {
                 auto other = dynamic_cast<const variable_value *>(input);
                 if (!other)

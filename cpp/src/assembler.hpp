@@ -5,7 +5,7 @@
 #include <memory>
 #include <stack>
 
-#include "./values/ivalue.hpp"
+#include "./values/complex_value.hpp"
 #include "./values/string_value.hpp"
 #include "./values/builtin_function_value.hpp"
 #include "./script.hpp"
@@ -23,11 +23,12 @@ namespace stack_vm
                 // Fields
                 vm_operator op;
                 std::string jump_label;
-                std::shared_ptr<ivalue> argument;
+                value argument;
 
                 // Constructor
-                temp_code_line(const std::string &jump_label) : op(vm_operator::unknown), jump_label(jump_label), argument(nullptr) { }
-                temp_code_line(vm_operator op, std::shared_ptr<ivalue> arg) : op(op), argument(arg) { }
+                temp_code_line(const std::string &jump_label) : op(vm_operator::unknown), jump_label(jump_label), argument() { }
+                temp_code_line(vm_operator op, std::shared_ptr<complex_value> arg) : op(op), argument(arg) { }
+                temp_code_line(vm_operator op, value arg) : op(op), argument(arg) { }
                 temp_code_line(vm_operator op) : op(op), argument(nullptr) { }
 
                 // Methods
@@ -56,16 +57,16 @@ namespace stack_vm
             std::shared_ptr<script> parse_from_text(const std::string &input);
             std::shared_ptr<script> parse_from_stream(std::istream &input);
             std::shared_ptr<script> parse_from_value(const array_value &input);
-            std::vector<temp_code_line> parse(std::shared_ptr<ivalue> input);
+            std::vector<temp_code_line> parse(value input);
 
             std::vector<temp_code_line> parse_set(const array_value &input);
             std::vector<temp_code_line> parse_define(const array_value &input);
             std::vector<temp_code_line> parse_loop(const array_value &input);
             std::vector<temp_code_line> parse_cond(const array_value &input, bool is_if_statement);
-            std::vector<temp_code_line> parse_flatten(std::shared_ptr<ivalue> input);
+            std::vector<temp_code_line> parse_flatten(std::shared_ptr<complex_value> input);
             std::vector<temp_code_line> parse_loop_jump(const std::string &keyword, bool jump_to_start);
             std::shared_ptr<function> parse_function(const array_value &input);
-            std::vector<temp_code_line> parse_change_variable(std::shared_ptr<ivalue> input, builtin_function_value change_func);
+            std::vector<temp_code_line> parse_change_variable(value input, builtin_function_value change_func);
             std::vector<temp_code_line> parse_keyword(const std::string &keyword, const array_value &input);
 
             std::shared_ptr<function> parse_global_function(const array_value &input);

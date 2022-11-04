@@ -3,6 +3,8 @@
 #include <istream>
 #include <sstream>
 #include <string>
+
+#include "./values/value.hpp"
 #include "./values/array_value.hpp"
 
 namespace stack_vm
@@ -21,8 +23,8 @@ namespace stack_vm
 
             static array_value read_from_stream(std::istream &input);
             static array_value read_from_text(const std::string &input);
-            static std::shared_ptr<ivalue> read_from_parser(parser &input);
-            static std::shared_ptr<ivalue> atom(const std::string &input);
+            static value read_from_parser(parser &input);
+            static value atom(const std::string &input);
 
         private:
             // Fields

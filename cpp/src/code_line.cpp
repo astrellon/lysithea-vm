@@ -1,6 +1,6 @@
 #include "code_line.hpp"
 
-#include "./values/ivalue.hpp"
+#include "./values/complex_value.hpp"
 #include "./utils.hpp"
 
 namespace stack_vm
@@ -9,9 +9,9 @@ namespace stack_vm
     {
         std::stringstream result;
         result << stack_vm::to_string(op) << ": ";
-        if (value)
+        if (!value.is_null())
         {
-            result << value->to_string();
+            result << value.to_string();
         }
         else
         {

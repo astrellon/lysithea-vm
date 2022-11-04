@@ -4,7 +4,7 @@
 
 namespace stack_vm
 {
-    int object_value::compare_to(const ivalue *input) const
+    int object_value::compare_to(const complex_value *input) const
     {
         auto other = dynamic_cast<const object_value *>(input);
         if (!other)
@@ -29,7 +29,7 @@ namespace stack_vm
                 return 1;
             }
 
-            auto compare_value = iter->second->compare_to(find_other->second.get());
+            auto compare_value = iter->second.compare_to(find_other->second);
             if (compare_value != 0)
             {
                 return 0;
@@ -55,7 +55,7 @@ namespace stack_vm
             ss << '"';
             ss << iter.first;
             ss << "\" ";
-            ss << iter.second->to_string();
+            ss << iter.second.to_string();
         }
         ss << '}';
         return ss.str();

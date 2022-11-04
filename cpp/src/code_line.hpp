@@ -4,21 +4,22 @@
 #include <sstream>
 
 #include "operator.hpp"
+#include "./values/value.hpp"
 
 namespace stack_vm
 {
-    class ivalue;
+    class complex_value;
 
     class code_line
     {
         public:
             // Fields
             vm_operator op;
-            std::shared_ptr<ivalue> value;
+            stack_vm::value value;
 
             // Constructor
             code_line(vm_operator op) : op(op), value(nullptr) { }
-            code_line(vm_operator op, std::shared_ptr<ivalue> value) : op(op), value(value) { }
+            code_line(vm_operator op, value input) : op(op), value(input) { }
 
             // Methods
             std::string to_string() const;

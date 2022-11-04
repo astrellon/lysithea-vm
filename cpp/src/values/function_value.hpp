@@ -2,14 +2,14 @@
 
 #include <memory>
 #include <string>
-#include "./ivalue.hpp"
+#include "./complex_value.hpp"
 #include "../function.hpp"
 
 namespace stack_vm
 {
     using function_ptr = std::shared_ptr<function>;
 
-    class function_value : public ivalue
+    class function_value : public complex_value
     {
         public:
             // Fields
@@ -20,7 +20,7 @@ namespace stack_vm
             function_value(function value) : value(std::make_shared<function>(value)) { }
 
             // Methods
-            virtual int compare_to(const ivalue *input) const
+            virtual int compare_to(const complex_value *input) const
             {
                 auto other = dynamic_cast<const function_value *>(input);
                 if (!other)

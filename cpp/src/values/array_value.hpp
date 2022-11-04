@@ -5,15 +5,15 @@
 #include <string>
 #include <stdexcept>
 
-#include "./ivalue.hpp"
-#include "./number_value.hpp"
+#include "./complex_value.hpp"
+#include "./value.hpp"
 
 namespace stack_vm
 {
-    using array_vector = std::vector<std::shared_ptr<ivalue>>;
+    using array_vector = std::vector<value>;
     using array_ptr = std::shared_ptr<array_vector>;
 
-    class array_value : public ivalue
+    class array_value : public complex_value
     {
         public:
             // Fields
@@ -42,7 +42,7 @@ namespace stack_vm
                     throw std::out_of_range("Error getting array at index, out of range");
                 }
 
-                auto casted = std::dynamic_pointer_cast<T>(value->at(index));
+                auto casted = std::dynamic_pointer_cast<T>(value->at(index).get_complex());
                 if (!casted)
                 {
                     throw std::bad_cast();
@@ -51,7 +51,7 @@ namespace stack_vm
                 return casted;
             }
 
-            inline std::shared_ptr<ivalue> get_index(int index) const
+            inline value get_index(int index) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= value->size())
@@ -63,7 +63,7 @@ namespace stack_vm
             }
 
             // Value Methods
-            virtual int compare_to(const ivalue *input) const;
+            virtual int compare_to(const complex_value *input) const;
             virtual std::string to_string() const;
             virtual std::string type_name() const
             {
@@ -74,7 +74,7 @@ namespace stack_vm
             virtual bool is_array() const { return true; }
             virtual int array_length() const { return static_cast<int>(value->size()); }
 
-            virtual bool try_get(int index, std::shared_ptr<ivalue> &result) const
+            virtual bool try_get(int index, std::shared_ptr<complex_value> &result) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= value->size())
@@ -105,7 +105,7 @@ namespace stack_vm
                 result.push_back("length");
                 return result;
             }
-            virtual bool try_get(const std::string &key, std::shared_ptr<ivalue> &result) const;
+            virtual bool try_get(const std::string &key, stack_vm::value &result) const;
 
     };
 } // stack_vm
