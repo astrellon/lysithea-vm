@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <variant>
 #include <memory>
 
 #include "./string_value.hpp"
@@ -12,39 +11,46 @@ namespace stack_vm
 
     using complex_ptr = std::shared_ptr<complex_value>;
 
+    enum class value_type
+    {
+        null, is_true, is_false, number, complex
+    };
+
     class value
     {
         public:
             // Fields
-            std::variant<bool, double, std::nullptr_t, complex_ptr> data;
+            value_type type;
+            double number;
+            complex_ptr data;
 
             // Constructor
-            value() : data(nullptr) { }
-            value(bool input) : data(input) { }
-            value(int input) : data(static_cast<double>(input)) { }
-            value(unsigned int input) : data(static_cast<double>(input)) { }
-            value(double input) : data(input) { }
-            value(std::size_t input) : data(static_cast<double>(input)) { }
-            value(const char * input) : value(std::make_shared<string_value>(input)) { }
-            value(const std::string &input) : value(std::make_shared<string_value>(input)) { }
-            value(complex_ptr input) : data(input) { }
+            value() : type(value_type::null) { }
+            value(bool input) : type(input == true ? value_type::is_true : value_type::is_false) { }
+            value(int input) : type(value_type::number), number(static_cast<double>(input)) { }
+            value(unsigned int input) : type(value_type::number), number(static_cast<double>(input)) { }
+            value(double input) : type(value_type::number), number(input) { }
+            value(std::size_t input) : type(value_type::number), number(static_cast<double>(input)) { }
+            value(const char * input) : type(value_type::complex), data(std::make_shared<string_value>(input)) { }
+            value(const std::string &input) : type(value_type::complex), data(std::make_shared<string_value>(input)) { }
+            value(complex_ptr input) : type(value_type::complex), data(input) { }
 
             // Methods
             inline bool is_bool() const
             {
-                return data.index() == 0;
+                return type == value_type::is_true || type == value_type::is_false;
             }
             inline bool is_number() const
             {
-                return data.index() == 1;
+                return type == value_type::number;
             }
             inline bool is_null() const
             {
-                return data.index() == 2;
+                return type == value_type::null;
             }
             inline bool is_complex() const
             {
-                return data.index() == 3;
+                return type == value_type::complex;
             }
 
             inline bool is_function() const
@@ -76,44 +82,34 @@ namespace stack_vm
 
             inline bool is_true() const
             {
-                if (is_bool())
-                {
-                    return get_bool() == true;
-                }
-
-                return false;
+                return type == value_type::is_true;
             }
 
             inline bool is_false() const
             {
-                if (is_bool())
-                {
-                    return get_bool() == false;
-                }
-
-                return false;
+                return type == value_type::is_false;
             }
 
             inline bool get_bool() const
             {
-                return std::get<bool>(data);
+                return type == value_type::is_true;
             }
 
             inline double get_number() const
             {
-                return std::get<double>(data);
+                return number;
             }
 
             inline int get_int() const
             {
-                return static_cast<int>(get_number());
+                return static_cast<int>(number);
             }
 
             inline complex_ptr get_complex() const
             {
                 if (is_complex())
                 {
-                    return std::get<complex_ptr>(data);
+                    return data;
                 }
                 return nullptr;
             }
@@ -126,20 +122,21 @@ namespace stack_vm
 
             int compare_to(const value &other) const
             {
-                if (other.data.index() != data.index())
+                if (other.type == type)
                 {
                     return 1;
                 }
 
-                switch (data.index())
+                switch (type)
                 {
-                    case 0: return get_bool() - other.get_bool();
-                    case 1: return compare(get_number(), other.get_number());
-                    case 2: return 0;
-                    case 3:
-                    {
+                    case value_type::is_false:
+                    case value_type::is_true:
+                    case value_type::null:
+                        return 0;
+                    case value_type::number:
+                        return compare(get_number(), other.get_number());
+                    case value_type::complex:
                         return get_complex()->compare_to(other.get_complex().get());
-                    }
                 }
 
                 return 1;
@@ -147,12 +144,13 @@ namespace stack_vm
 
             std::string to_string() const
             {
-                switch (data.index())
+                switch (type)
                 {
-                    case 0: return get_bool() ? "true" : "false";
-                    case 1: return std::to_string(get_number());
-                    case 2: return "null";
-                    case 3: return get_complex()->to_string();
+                    case value_type::is_true: return "true";
+                    case value_type::is_false: return "false";
+                    case value_type::null: return "null";
+                    case value_type::number: return std::to_string(get_number());
+                    case value_type::complex: return get_complex()->to_string();
                 }
 
                 return "unknown";
@@ -160,12 +158,14 @@ namespace stack_vm
 
             std::string type_name() const
             {
-                switch (data.index())
+                switch (type)
                 {
-                    case 0: return "bool";
-                    case 1: return "number";
-                    case 2: return "null";
-                    case 3: return get_complex()->type_name();
+                    case value_type::is_true:
+                    case value_type::is_false:
+                        return "bool";
+                    case value_type::number: return "number";
+                    case value_type::null: return "null";
+                    case value_type::complex: return get_complex()->type_name();
                 }
 
                 return "unknown";
