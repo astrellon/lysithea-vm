@@ -113,7 +113,7 @@ namespace SimpleStackVM
                     // If it is not an opcode then it must be a function call
                     if (!VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode))
                     {
-                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Length - 1));
+                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Length - 1));
                     }
                     else if (opCode != Operator.Push)
                     {
@@ -125,11 +125,11 @@ namespace SimpleStackVM
 
                 // Any array that doesn't start with a symbol we assume it's a data array.
             }
-            else if (input is VariableValue symbolValue)
+            else if (input is VariableValue varValue)
             {
-                if (!symbolValue.IsLabel)
+                if (!varValue.IsLabel)
                 {
-                    return this.OptimiseGetSymbolValue(symbolValue);
+                    return this.OptimiseGetSymbolValue(varValue.Value);
                 }
             }
 
@@ -310,10 +310,11 @@ namespace SimpleStackVM
         #endregion
 
         #region Helper Methods
-        private List<ITempCodeLine> OptimiseCallSymbolValue(VariableValue input, int numArgs)
+        private List<ITempCodeLine> OptimiseCallSymbolValue(string input, int numArgs)
         {
             var numArgsValue = new NumberValue(numArgs);
             var isProperty = IsGetPropertyRequest(input, out var parentKey, out var property);
+
             // Check if we know about the parent object? (eg: string.length, the parent is the string object)
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
@@ -359,13 +360,13 @@ namespace SimpleStackVM
             return result;
         }
 
-        private List<ITempCodeLine> OptimiseGetSymbolValue(VariableValue input)
+        private List<ITempCodeLine> OptimiseGetSymbolValue(string input)
         {
             var isArgumentUnpack = false;
-            if (input.Value.StartsWith("..."))
+            if (input.StartsWith("..."))
             {
                 isArgumentUnpack = true;
-                input = new VariableValue(input.Value.Substring(3));
+                input = input.Substring(3);
             }
 
             var result = new List<ITempCodeLine>();
@@ -389,7 +390,7 @@ namespace SimpleStackVM
                         result.Add(new CodeLine(Operator.GetProperty, property));
                     }
                 }
-                else if (!isProperty)
+                else
                 {
                     // This was not a property request but we found the parent so just push onto the stack.
                     result.Add(new CodeLine(Operator.Push, foundParent));
@@ -415,17 +416,17 @@ namespace SimpleStackVM
             return result;
         }
 
-        private static bool IsGetPropertyRequest(VariableValue input, out string parentKey, out ArrayValue property)
+        private static bool IsGetPropertyRequest(string input, out string parentKey, out ArrayValue property)
         {
-            if (input.Value.Contains('.'))
+            if (input.Contains('.'))
             {
-                var split = input.Value.Split('.');
+                var split = input.Split('.');
                 parentKey = split.First();
                 property = new ArrayValue(split.Skip(1).Select(c => new VariableValue(c) as IValue).ToList());
                 return true;
             }
 
-            parentKey = input.Value;
+            parentKey = input;
             property = ArrayValue.Empty;
             return false;
         }
