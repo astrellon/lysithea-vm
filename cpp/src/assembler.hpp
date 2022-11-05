@@ -5,6 +5,7 @@
 #include <memory>
 #include <stack>
 
+#include "./values/value.hpp"
 #include "./values/complex_value.hpp"
 #include "./values/string_value.hpp"
 #include "./values/builtin_function_value.hpp"
@@ -29,7 +30,7 @@ namespace stack_vm
                 temp_code_line(const std::string &jump_label) : op(vm_operator::unknown), jump_label(jump_label), argument() { }
                 temp_code_line(vm_operator op, std::shared_ptr<complex_value> arg) : op(op), argument(arg) { }
                 temp_code_line(vm_operator op, value arg) : op(op), argument(arg) { }
-                temp_code_line(vm_operator op) : op(op), argument(nullptr) { }
+                temp_code_line(vm_operator op) : op(op), argument() { }
 
                 // Methods
                 bool is_label() const { return jump_label.size() > 0; }
@@ -63,7 +64,7 @@ namespace stack_vm
             std::vector<temp_code_line> parse_define(const array_value &input);
             std::vector<temp_code_line> parse_loop(const array_value &input);
             std::vector<temp_code_line> parse_cond(const array_value &input, bool is_if_statement);
-            std::vector<temp_code_line> parse_flatten(std::shared_ptr<complex_value> input);
+            std::vector<temp_code_line> parse_flatten(value input);
             std::vector<temp_code_line> parse_loop_jump(const std::string &keyword, bool jump_to_start);
             std::shared_ptr<function> parse_function(const array_value &input);
             std::vector<temp_code_line> parse_change_variable(value input, builtin_function_value change_func);

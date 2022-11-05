@@ -27,7 +27,7 @@ namespace stack_vm
 
         for (auto i = 0; i < this_array.size(); i++)
         {
-            auto compare_value = this_array[i]->compare_to(other_array[i].get());
+            auto compare_value = this_array[i].compare_to(other_array[i]);
             if (compare_value != 0)
             {
                 return compare_value;
@@ -41,9 +41,9 @@ namespace stack_vm
     {
         if (key == "length")
         {
-            result = value(std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
+            result = stack_vm::value(std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
             {
-                vm.push_stack(std::make_shared<number_value>(this->value->size()));
+                vm.push_stack(this->value->size());
             }));
             return true;
         }

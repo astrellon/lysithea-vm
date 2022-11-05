@@ -47,6 +47,33 @@ namespace stack_vm
                 return data.index() == 3;
             }
 
+            inline bool is_function() const
+            {
+                if (is_complex())
+                {
+                    return get_complex()->is_function();
+                }
+                return false;
+            }
+
+            inline bool is_array() const
+            {
+                if (is_complex())
+                {
+                    return get_complex()->is_array();
+                }
+                return false;
+            }
+
+            inline bool is_object() const
+            {
+                if (is_complex())
+                {
+                    return get_complex()->is_object();
+                }
+                return false;
+            }
+
             inline bool is_true() const
             {
                 if (is_bool())
@@ -84,7 +111,11 @@ namespace stack_vm
 
             inline complex_ptr get_complex() const
             {
-                return std::get<complex_ptr>(data);
+                if (is_complex())
+                {
+                    return std::get<complex_ptr>(data);
+                }
+                return nullptr;
             }
 
             template <typename T>

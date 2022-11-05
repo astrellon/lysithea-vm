@@ -71,7 +71,7 @@ namespace stack_vm
             }
             case vm_operator::push:
             {
-                if (code_line.value)
+                if (!code_line.value.is_null())
                 {
                     stack.push(code_line.value);
                 }
@@ -95,13 +95,13 @@ namespace stack_vm
             case vm_operator::get:
             {
                 auto key = get_operator_arg(code_line);
-                auto is_string = dynamic_cast<const string_value *>(key);
+                auto is_string = key.get_complex<string_value>();
                 if (!is_string)
                 {
                     throw std::runtime_error("Unable to get value, input needs to be a string");
                 }
 
-                std::shared_ptr<complex_value> found_value;
+                value found_value;
                 if (current_scope->try_get_key(*is_string->value, found_value) ||
                     (builtin_scope && builtin_scope->try_get_key(*is_string->value, found_value)))
                 {
@@ -122,7 +122,7 @@ namespace stack_vm
                 }
 
                 auto top = pop_stack();
-                std::shared_ptr<complex_value> found;
+                value found;
                 if (try_get_property(top, *key, found))
                 {
                     push_stack(found);
@@ -138,14 +138,14 @@ namespace stack_vm
             {
                 auto key = get_operator_arg(code_line);
                 auto value = pop_stack();
-                current_scope->define(key->to_string(), value);
+                current_scope->define(key.to_string(), value);
                 break;
             }
             case vm_operator::set:
             {
                 auto key = get_operator_arg(code_line);
                 auto value = pop_stack();
-                if (!current_scope->try_set(key->to_string(), value))
+                if (!current_scope->try_set(key.to_string(), value))
                 {
                     throw std::runtime_error("Unable to set variable that has not been defined");
                 }
@@ -155,9 +155,9 @@ namespace stack_vm
             {
                 const auto label = get_operator_arg(code_line);
                 auto top = pop_stack();
-                if (top->is_false())
+                if (top.is_false())
                 {
-                    jump(label->to_string());
+                    jump(label.to_string());
                 }
                 break;
             }
@@ -165,16 +165,16 @@ namespace stack_vm
             {
                 const auto label = get_operator_arg(code_line);
                 auto top = pop_stack();
-                if (top->is_true())
+                if (top.is_true())
                 {
-                    jump(label->to_string());
+                    jump(label.to_string());
                 }
                 break;
             }
             case vm_operator::jump:
             {
                 const auto label = get_operator_arg(code_line);
-                jump(label->to_string());
+                jump(label.to_string());
                 break;
             }
             case vm_operator::call_return:
@@ -184,16 +184,15 @@ namespace stack_vm
             }
             case vm_operator::call:
             {
-                auto is_number = dynamic_cast<const number_value *>(code_line.value.get());
-                if (!is_number)
+                if (!code_line.value.is_number())
                 {
                     throw std::runtime_error("Call needs a num args code line input");
                 }
 
                 auto top = pop_stack();
-                if (top->is_function())
+                if (top.is_function())
                 {
-                    call_function(*top, is_number->int_value(), true);
+                    call_function(*top.get_complex(), code_line.value.get_int(), true);
                 }
                 else
                 {
@@ -204,25 +203,25 @@ namespace stack_vm
             case vm_operator::call_direct:
             {
                 auto error = false;
-                if (!code_line.value || !code_line.value->is_array())
+                if (code_line.value.is_null() || !code_line.value.is_array())
                 {
                     throw std::runtime_error("Call direct needs an array input");
                 }
 
-                auto array_input = std::dynamic_pointer_cast<array_value>(code_line.value);
+                auto array_input = code_line.value.get_complex<const array_value>();
                 if (array_input->value->size() != 2 ||
-                    !array_input->value->at(0)->is_function())
+                    !array_input->value->at(0).is_function())
                 {
                     throw std::runtime_error("Call direct needs two inputs of func and number");
                 }
 
-                auto num_args = std::dynamic_pointer_cast<number_value>(array_input->value->at(1));
-                if (!num_args)
+                auto num_args = array_input->value->at(1);
+                if (!num_args.is_number())
                 {
                     throw std::runtime_error("Call direct needs two inputs of func and number");
                 }
 
-                call_function(*array_input->value->at(0), num_args->int_value(), true);
+                call_function(*array_input->value->at(0).get_complex(), num_args.get_int(), true);
                 break;
             }
         }
@@ -241,7 +240,7 @@ namespace stack_vm
         for (auto i = 0; i < num_args; i++)
         {
             auto value = pop_stack();
-            auto is_arg = std::dynamic_pointer_cast<const array_value>(value);
+            auto is_arg = value.get_complex<const array_value>();
             if (is_arg && is_arg->is_arguments_value)
             {
                 has_arguments = true;
@@ -254,7 +253,7 @@ namespace stack_vm
             array_vector combined;
             for (const auto &iter : temp)
             {
-                auto is_arg = std::dynamic_pointer_cast<const array_value>(iter);
+                auto is_arg = iter.get_complex<const array_value>();
                 if (is_arg && is_arg->is_arguments_value)
                 {
                     for (const auto &arg_iter : *is_arg->value)
@@ -348,7 +347,7 @@ namespace stack_vm
         std::cout << "Stack size: " << data.size() << "\n";
         for (const auto &iter : data)
         {
-            std::cout << "- " << iter->to_string() << "\n";
+            std::cout << "- " << iter.to_string() << "\n";
         }
     }
 } // namespace stack_vm

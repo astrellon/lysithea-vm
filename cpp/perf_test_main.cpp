@@ -26,9 +26,9 @@ std::shared_ptr<stack_vm::scope> create_custom_scope()
 
     result->define("add", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
     {
-        auto num1 = vm.pop_stack<stack_vm::number_value>();
-        auto num2 = vm.pop_stack<stack_vm::number_value>();
-        vm.push_stack(num1->value + num2->value);
+        auto num1 = vm.pop_stack();
+        auto num2 = vm.pop_stack();
+        vm.push_stack(num1.get_number() + num2.get_number());
     });
 
     result->define("isDone", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
@@ -39,9 +39,9 @@ std::shared_ptr<stack_vm::scope> create_custom_scope()
 
     result->define("done", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
     {
-        auto total = vm.pop_stack<stack_vm::number_value>();
+        auto total = vm.pop_stack();
 
-        std::cout << "Done: " << total->value << "\n";
+        std::cout << "Done: " << total.get_number() << "\n";
     });
 
     return result;

@@ -51,7 +51,7 @@ namespace stack_vm
                 return casted;
             }
 
-            inline value get_index(int index) const
+            inline stack_vm::value get_index(int index) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= value->size())
@@ -74,7 +74,7 @@ namespace stack_vm
             virtual bool is_array() const { return true; }
             virtual int array_length() const { return static_cast<int>(value->size()); }
 
-            virtual bool try_get(int index, std::shared_ptr<complex_value> &result) const
+            virtual bool try_get(int index, stack_vm::value &result) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= value->size())

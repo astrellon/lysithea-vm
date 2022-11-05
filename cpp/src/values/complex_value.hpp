@@ -8,6 +8,7 @@
 
 namespace stack_vm
 {
+    class value;
     class virtual_machine;
     class array_value;
 
@@ -33,12 +34,12 @@ namespace stack_vm
                 std::vector<std::string> result;
                 return result;
             }
-            virtual bool try_get(const std::string &key, std::shared_ptr<complex_value> &result) const { return false; }
+            virtual bool try_get(const std::string &key, value &result) const { return false; }
 
             // Array methods
             virtual bool is_array() const { return false; }
             virtual int array_length() const { return 0; }
-            virtual bool try_get(int index, std::shared_ptr<complex_value> &result) const { return false; }
+            virtual bool try_get(int index, value &result) const { return false; }
 
             // Function methods
             virtual bool is_function() const { return false; }

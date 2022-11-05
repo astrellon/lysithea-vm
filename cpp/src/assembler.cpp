@@ -30,9 +30,9 @@ namespace stack_vm
 
         std::stringstream result;
         result << stack_vm::to_string(op);
-        if (argument)
+        if (!argument.is_null())
         {
-            result << ": " << argument->to_string();
+            result << ": " << argument.to_string();
         }
         else
         {
@@ -98,7 +98,7 @@ namespace stack_vm
 
             auto first = array_input->value->at(0);
             // If the first item in an array is a symbol we assume that it is a function call or a label
-            auto first_symbol_value = std::dynamic_pointer_cast<variable_value>(first);
+            auto first_symbol_value = first.get_complex<variable_value>();
             if (first_symbol_value)
             {
                 if (first_symbol_value->is_label())
@@ -136,7 +136,7 @@ namespace stack_vm
         }
         else
         {
-            auto symbol_value = std::dynamic_pointer_cast<variable_value>(input);
+            auto symbol_value = input.get_complex<variable_value>();
             if (symbol_value && !symbol_value->is_label())
             {
                 return optimise_get_symbol_value(*symbol_value->value);
@@ -159,10 +159,10 @@ namespace stack_vm
         auto result = parse(input.value->at(2));
         result.emplace_back(vm_operator::define, input.value->at(1));
 
-        auto is_function = std::dynamic_pointer_cast<function>(result[0].argument);
+        auto is_function = result[0].argument.get_complex<function_value>();
         if (is_function)
         {
-            is_function->name = input.value->at(1)->to_string();
+            is_function->value->name = input.value->at(1).to_string();
         }
         return result;
     }
@@ -189,7 +189,7 @@ namespace stack_vm
         result.emplace_back(ss_label_start.str());
 
         auto comparison_value = input.value->at(1);
-        auto comparison_call = std::dynamic_pointer_cast<const array_value>(comparison_value);
+        auto comparison_call = comparison_value.get_complex<const array_value>();
         if (!comparison_call)
         {
             throw std::runtime_error("Loop comparison input needs to be an array");
@@ -235,14 +235,14 @@ namespace stack_vm
         auto jump_operator = is_if_statement ? vm_operator::jump_false : vm_operator::jump_true;
 
         auto comparison_value = input.value->at(1);
-        auto comparison_call = std::dynamic_pointer_cast<const array_value>(comparison_value);
+        auto comparison_call = comparison_value.get_complex<const array_value>();
         if (!comparison_call)
         {
             throw std::runtime_error("Condition needs comparison to be an array");
         }
 
         auto first_block_value = input.value->at(2);
-        auto first_block_call = std::dynamic_pointer_cast<const array_value>(first_block_value);
+        auto first_block_call = first_block_value.get_complex<const array_value>();
         if (!first_block_call)
         {
             throw std::runtime_error("Condition needs first block to be an array");
@@ -265,7 +265,7 @@ namespace stack_vm
 
             // Second 'else' block of code
             auto second_block_value = input.value->at(2);
-            auto second_block_call = std::dynamic_pointer_cast<const array_value>(second_block_value);
+            auto second_block_call = second_block_value.get_complex<const array_value>();
             if (!second_block_call)
             {
                 throw std::runtime_error("Condition else needs second block to be an array");
@@ -285,15 +285,15 @@ namespace stack_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_flatten(std::shared_ptr<complex_value> input)
+    std::vector<assembler::temp_code_line> assembler::parse_flatten(value input)
     {
-        auto is_array = std::dynamic_pointer_cast<const array_value>(input);
+        auto is_array = input.get_complex<const array_value>();
         if (is_array)
         {
             auto all_array = true;
             for (auto iter : *is_array->value)
             {
-                if (dynamic_cast<const array_value *>(iter.get()) == nullptr)
+                if (!iter.get_complex<const array_value>())
                 {
                     all_array = false;
                     break;
@@ -332,10 +332,10 @@ namespace stack_vm
     std::shared_ptr<function> assembler::parse_function(const array_value &input)
     {
         std::vector<std::string> parameters;
-        auto parameters_array = std::dynamic_pointer_cast<const array_value>(input.value->at(1));
+        auto parameters_array = input.value->at(1).get_complex<const array_value>();
         for (auto iter : *parameters_array->value)
         {
-            parameters.emplace_back(iter->to_string());
+            parameters.emplace_back(iter.to_string());
         }
 
         std::vector<temp_code_line> temp_code_lines;
@@ -347,10 +347,10 @@ namespace stack_vm
         return process_temp_function(parameters, temp_code_lines);
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_change_variable(std::shared_ptr<complex_value> input, builtin_function_value change_func)
+    std::vector<assembler::temp_code_line> assembler::parse_change_variable(value input, builtin_function_value change_func)
     {
-        auto var_name = std::make_shared<string_value>(input->to_string());
-        auto num_args = std::make_shared<number_value>(1);
+        auto var_name = std::make_shared<string_value>(input.to_string());
+        value num_args(1);
 
         array_vector call_array_args;
         call_array_args.emplace_back(std::make_shared<builtin_function_value>(change_func));
@@ -391,21 +391,21 @@ namespace stack_vm
     std::vector<assembler::temp_code_line> assembler::optimise_call_symbol_value(const std::string &variable, int num_args)
     {
         std::vector<temp_code_line> result;
-        auto num_arg_value = std::make_shared<number_value>(num_args);
+        value num_arg_value(num_args);
 
         std::shared_ptr<string_value> parent_key;
         std::shared_ptr<array_value> property;
         auto is_property = is_get_property_request(variable, parent_key, property);
 
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-        std::shared_ptr<complex_value> found_parent;
+        value found_parent;
         if (builtin_scope.try_get_key(*parent_key->value, found_parent))
         {
             // If the get is for a property? (eg: string.length, length is the property)
-            std::shared_ptr<complex_value> found_property;
+            value found_property;
             if (is_property && try_get_property(found_parent, *property, found_property))
             {
-                if (found_property->is_function())
+                if (found_property.is_function())
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.
                     array_vector call_vector;
@@ -422,7 +422,7 @@ namespace stack_vm
             else if (!is_property)
             {
                 // This was not a property request but we found the parent so just push onto the stack.
-                if (found_parent->is_function())
+                if (found_parent.is_function())
                 {
                     array_vector call_vector;
                     call_vector.emplace_back(found_parent);
@@ -465,14 +465,14 @@ namespace stack_vm
 
         std::vector<temp_code_line> result;
 
-        std::shared_ptr<complex_value> found_parent;
+        value found_parent;
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
         if (builtin_scope.try_get_key(*parent_key->value, found_parent))
         {
             // If the get is for a property? (eg: string.length, length is the property)
             if (is_property)
             {
-                std::shared_ptr<complex_value> found_property;
+                value found_property;
                 if (try_get_property(found_parent, *property, found_property))
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.

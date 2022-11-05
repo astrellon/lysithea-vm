@@ -15,7 +15,7 @@ namespace stack_vm
         const auto &this_object = *value.get();
         const auto &other_object = *other->value.get();
 
-        auto compare_length = number_value::compare(this_object.size(), other_object.size());
+        auto compare_length = value::compare(this_object.size(), other_object.size());
         if (compare_length != 0)
         {
             return compare_length;

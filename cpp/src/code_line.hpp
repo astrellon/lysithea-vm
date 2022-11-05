@@ -19,9 +19,14 @@ namespace stack_vm
 
             // Constructor
             code_line(vm_operator op) : op(op), value(nullptr) { }
-            code_line(vm_operator op, value input) : op(op), value(input) { }
+            code_line(vm_operator op, stack_vm::value input) : op(op), value(input) { }
 
             // Methods
             std::string to_string() const;
+
+            inline bool has_value() const
+            {
+                return !value.is_null();
+            }
     };
 } // stack_vm
