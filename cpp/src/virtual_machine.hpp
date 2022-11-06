@@ -12,11 +12,10 @@
 #include "script.hpp"
 #include "function.hpp"
 #include "fixed_stack.hpp"
-#include "./values/ivalue.hpp"
+#include "./values/value.hpp"
+#include "./values/complex_value.hpp"
 #include "./values/array_value.hpp"
 #include "./values/string_value.hpp"
-#include "./values/number_value.hpp"
-#include "./values/bool_value.hpp"
 
 namespace stack_vm
 {
@@ -56,7 +55,7 @@ namespace stack_vm
 
             // Function methods
             std::shared_ptr<const array_value> get_args(int num_args);
-            void call_function(const ivalue &value, int num_args, bool push_to_stack_trace);
+            void call_function(const complex_value &value, int num_args, bool push_to_stack_trace);
             bool try_return();
             void call_return();
             void execute_function(std::shared_ptr<function> func, std::shared_ptr<const array_value> args, bool push_to_stack_trace);
@@ -73,7 +72,7 @@ namespace stack_vm
             template <typename T>
             inline std::shared_ptr<T> pop_stack()
             {
-                std::shared_ptr<ivalue> result;
+                value result;
                 if (!stack.pop(result))
                 {
                     throw std::runtime_error("Unable to pop stack, empty stack");
@@ -87,9 +86,9 @@ namespace stack_vm
                 return casted;
             }
 
-            inline std::shared_ptr<ivalue> pop_stack()
+            inline value pop_stack()
             {
-                std::shared_ptr<ivalue> result;
+                value result;
                 if (!stack.pop(result))
                 {
                     throw std::runtime_error("Unable to pop stack, empty stack");
@@ -99,27 +98,32 @@ namespace stack_vm
 
             inline void push_stack(bool input)
             {
-                push_stack(std::make_shared<bool_value>(input));
+                push_stack(value(input));
             }
 
             inline void push_stack(int input)
             {
-                push_stack(std::make_shared<number_value>(input));
+                push_stack(value(input));
             }
 
             inline void push_stack(float input)
             {
-                push_stack(std::make_shared<number_value>(input));
+                push_stack(value(input));
             }
 
             inline void push_stack(double input)
             {
-                push_stack(std::make_shared<number_value>(input));
+                push_stack(value(input));
+            }
+
+            inline void push_stack(std::size_t input)
+            {
+                push_stack(value(input));
             }
 
             inline void push_stack(const char *input)
             {
-                push_stack(std::make_shared<string_value>(input));
+                push_stack(value(std::make_shared<string_value>(input)));
             }
 
             inline void push_stack(const std::string &input)
@@ -127,7 +131,7 @@ namespace stack_vm
                 push_stack(std::make_shared<string_value>(input));
             }
 
-            inline void push_stack(std::shared_ptr<ivalue> input)
+            inline void push_stack(value input)
             {
                 if (!stack.push(input))
                 {
@@ -135,9 +139,17 @@ namespace stack_vm
                 }
             }
 
-            inline std::shared_ptr<ivalue> peek_stack() const
+            inline void push_stack(std::shared_ptr<complex_value> input)
             {
-                std::shared_ptr<ivalue> result;
+                if (!stack.push(input))
+                {
+                    throw std::runtime_error("Unable to push stack, stack full");
+                }
+            }
+
+            inline value peek_stack() const
+            {
+                value result;
                 if (!stack.peek(result))
                 {
                     throw std::runtime_error("Unable to peek stack, empty stack");
@@ -149,7 +161,7 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<std::shared_ptr<ivalue>> stack;
+            fixed_stack<stack_vm::value> stack;
             fixed_stack<scope_frame> stack_trace;
             std::shared_ptr<scope> current_scope;
             std::shared_ptr<scope> global_scope;
@@ -159,26 +171,30 @@ namespace stack_vm
             int program_counter;
 
             // Methods
-            inline const ivalue *get_operator_arg(const code_line &input)
+            inline value get_operator_arg(const code_line &input)
             {
-                if (input.value)
+                if (!input.value.is_null())
                 {
-                    return input.value.get();
+                    return input.value;
                 }
 
-                return pop_stack().get();
+                return pop_stack();
             }
 
             template <typename T>
             inline const T *get_operator_arg(const code_line &input)
             {
                 auto result = input.value;
-                if (!input.value)
+                if (input.value.is_null())
                 {
                     result = pop_stack();
                 }
 
-                return dynamic_cast<const T *>(result.get());
+                if (result.is_complex())
+                {
+                    return dynamic_cast<const T *>(result.get_complex().get());
+                }
+                return nullptr;
             }
     };
 } // stack_vm

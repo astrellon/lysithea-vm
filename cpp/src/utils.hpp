@@ -15,16 +15,6 @@ namespace stack_vm
     int compare(int v1, int v2);
     int compare(std::size_t v1, std::size_t v2);
 
-    constexpr uint32_t hash(const std::string_view &input) noexcept
-    {
-        uint32_t hash = 5381;
-
-        for(const char *c = input.data(); c < input.data() + input.size(); ++c)
-            hash = ((hash << 5) + hash) + (unsigned char) *c;
-
-        return hash;
-    }
-
     bool starts_with_unpack(const std::string &input);
     std::vector<std::string> string_split(const std::string &input, const std::string &delimiter);
 

@@ -2,25 +2,25 @@
 
 #include <memory>
 #include <string>
-#include "./ivalue.hpp"
+#include "./complex_value.hpp"
 #include "../function.hpp"
 
 namespace stack_vm
 {
     using function_ptr = std::shared_ptr<function>;
 
-    class function_value : public ivalue
+    class function_value : public complex_value
     {
         public:
             // Fields
-            function_ptr value;
+            function_ptr data;
 
             // Constructor
-            function_value(function_ptr value) : value(value) { }
-            function_value(function value) : value(std::make_shared<function>(value)) { }
+            function_value(function_ptr data) : data(data) { }
+            function_value(function data) : data(std::make_shared<function>(data)) { }
 
             // Methods
-            virtual int compare_to(const ivalue *input) const
+            virtual int compare_to(const complex_value *input) const
             {
                 auto other = dynamic_cast<const function_value *>(input);
                 if (!other)
@@ -28,10 +28,10 @@ namespace stack_vm
                     return 1;
                 }
 
-                return value.get() == other->value.get() ? 0 : 1;
+                return data.get() == other->data.get() ? 0 : 1;
             }
 
-            virtual std::string to_string() const { return "function:" + value->name; }
+            virtual std::string to_string() const { return "function:" + data->name; }
             virtual std::string type_name() const { return "function"; }
             virtual bool is_function() const { return true; }
 

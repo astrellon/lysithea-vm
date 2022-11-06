@@ -25,86 +25,93 @@ namespace SimpleStackVM
 
                 {"sin", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<NumberValue>(0);
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Sin(top.Value));
                 })},
 
                 {"cos", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<NumberValue>(0);
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Cos(top.Value));
                 })},
 
                 {"tan", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<NumberValue>(0);
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Tan(top.Value));
                 })},
 
                 {"pow", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
-                    var y = args.Get<NumberValue>(1);
+                    var x = args.GetIndex<NumberValue>(0);
+                    var y = args.GetIndex<NumberValue>(1);
                     vm.PushStack(Math.Pow(x.Value, y.Value));
                 })},
 
                 {"exp", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Exp(x.Value));
                 })},
 
                 {"floor", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Floor(x.Value));
                 })},
 
                 {"ceil", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Ceiling(x.Value));
                 })},
 
                 {"round", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Round(x.Value));
                 })},
 
                 {"isFinite", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(double.IsFinite(x.Value));
                 })},
 
                 {"isNaN", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0);
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(double.IsNaN(x.Value));
                 })},
 
                 {"parse", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get(0);
-                    vm.PushStack(double.Parse(top.ToString()));
+                    var top = args.GetIndex(0);
+                    if (top is NumberValue)
+                    {
+                        vm.PushStack(top);
+                    }
+                    else
+                    {
+                        vm.PushStack(double.Parse(top.ToString()));
+                    }
                 })},
 
                 {"log", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<NumberValue>(0);
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Log(top.Value));
                 })},
 
                 {"abs", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<NumberValue>(0);
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Abs(top.Value));
                 })},
 
                 {"max", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var max = args.Get(0);
+                    var max = args.GetIndex(0);
                     for (var i = 1; i < args.Length; i++)
                     {
                         var next = args[i];
@@ -118,36 +125,23 @@ namespace SimpleStackVM
 
                 {"min", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var max = args.Get(0);
+                    var min = args.GetIndex(0);
                     for (var i = 1; i < args.Length; i++)
                     {
                         var next = args[i];
-                        if (next.CompareTo(max) < 0)
+                        if (next.CompareTo(min) < 0)
                         {
-                            max = next;
+                            min = next;
                         }
                     }
-                    vm.PushStack(max);
-                })},
-
-                {"inc", IncNumber},
-                {"dec", DecNumber},
+                    vm.PushStack(min);
+                })}
             };
 
             result.Define("math", new ObjectValue(mathFunctions));
 
             return result;
         }
-
-        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>
-        {
-            vm.PushStack(new NumberValue(args.Get<NumberValue>(0).Value + 1));
-        });
-
-        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, args) =>
-        {
-            vm.PushStack(new NumberValue(args.Get<NumberValue>(0).Value - 1));
-        });
 
         #endregion
     }

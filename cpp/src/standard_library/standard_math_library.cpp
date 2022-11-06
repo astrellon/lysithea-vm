@@ -3,203 +3,139 @@
 #include <math.h>
 
 #include "../virtual_machine.hpp"
+#include "../values/object_value.hpp"
 #include "../utils.hpp"
+#include "../scope.hpp"
 
 #define M_DEG_TO_RAD M_PI / 180.0
 
 namespace stack_vm
 {
-    const std::string &standard_math_library::handle_name = "math";
+    std::shared_ptr<const scope> standard_math_library::library_scope = create_scope();
 
-    void standard_math_library::add_handler(virtual_machine &vm)
+    std::shared_ptr<scope> standard_math_library::create_scope()
     {
-        vm.add_run_handler(handle_name, handler);
-    }
+        auto result = std::make_shared<scope>();
 
-    void standard_math_library::handler(const std::string &command, virtual_machine &vm)
-    {
-        switch (hash(command))
+        auto functions = std::make_shared<object_value>();
+
+        functions->data["E"] = value(M_E);
+        functions->data["PI"] = value(M_PI);
+        functions->data["DegToRad"] = value(M_DEG_TO_RAD);
+
+        functions->data["sin"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
         {
-            case hash("sin"):
+            const auto &top = args.get_number(0);
+            vm.push_stack(sin(top));
+        });
+        functions->data["cos"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &top = args.get_number(0);
+            vm.push_stack(cos(top));
+        });
+        functions->data["tan"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &top = args.get_number(0);
+            vm.push_stack(tan(top));
+        });
+
+        functions->data["pow"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            const auto &y = args.get_number(1);
+            vm.push_stack(pow(x, y));
+        });
+        functions->data["exp"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(exp(x));
+        });
+        functions->data["floor"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(floor(x));
+        });
+        functions->data["ceil"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(ceil(x));
+        });
+        functions->data["round"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(round(x));
+        });
+        functions->data["isNaN"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(std::isnan(x));
+        });
+        functions->data["isFinite"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(std::isfinite(x));
+        });
+        functions->data["parse"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &top = args.get_index(0);
+            if (top.is_number())
             {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(sin(top.get_number()));
-                break;
-            }
-            case hash("cos"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(cos(top.get_number()));
-                break;
-            }
-            case hash("tan"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(tan(top.get_number()));
-                break;
-            }
-            case hash("sinDeg"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(sin(M_DEG_TO_RAD * top.get_number()));
-                break;
-            }
-            case hash("cosDeg"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(cos(M_DEG_TO_RAD * top.get_number()));
-                break;
-            }
-            case hash("tanDeg"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(tan(M_DEG_TO_RAD * top.get_number()));
-                break;
-            }
-            case hash("E"):
-            {
-                vm.push_stack(M_E);
-                break;
-            }
-            case hash("PI"):
-            {
-                vm.push_stack(M_PI);
-                break;
+                vm.push_stack(top);
+                return;
             }
 
-            case hash("pow"):
+            vm.push_stack(std::stod(top.to_string()));
+        });
+
+        functions->data["log"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(log(x));
+        });
+        functions->data["log2"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(log2(x));
+        });
+        functions->data["log10"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(log10(x));
+        });
+        functions->data["abs"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            const auto &x = args.get_number(0);
+            vm.push_stack(abs(x));
+        });
+
+        functions->data["max"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto max = args.get_index(0);
+            for (auto iter = args.data.cbegin() + 1; iter != args.data.cend(); ++iter)
             {
-                const auto &y = vm.pop_stack();
-                const auto &x = vm.pop_stack();
-                vm.push_stack(pow(x.get_number(), y.get_number()));
-                break;
-            }
-            case hash("exp"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(exp(x.get_number()));
-                break;
-            }
-            case hash("floor"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(floor(x.get_number()));
-                break;
-            }
-            case hash("ceil"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(ceil(x.get_number()));
-                break;
-            }
-            case hash("round"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(round(x.get_number()));
-                break;
-            }
-            case hash("isNaN"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(std::isnan(x.get_number()));
-                break;
-            }
-            case hash("isFinite"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(std::isfinite(x.get_number()));
-                break;
-            }
-            case hash("parse"):
-            {
-                const auto &check = vm.peek_stack();
-                if (check.is_number())
+                if (iter->compare_to(max) > 0)
                 {
-                    break;
+                    max = *iter;
                 }
-
-                const auto &x = vm.pop_stack();
-                vm.push_stack(std::stod(x.to_string()));
-                break;
             }
 
-            case hash("log"):
+            vm.push_stack(max);
+        });
+
+        functions->data["min"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto min = args.get_index(0);
+            for (auto iter = args.data.cbegin() + 1; iter != args.data.cend(); ++iter)
             {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(log(x.get_number()));
-                break;
-            }
-            case hash("log2"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(log2(x.get_number()));
-                break;
-            }
-            case hash("log10"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(log10(x.get_number()));
-                break;
-            }
-            case hash("abs"):
-            {
-                const auto &x = vm.pop_stack();
-                vm.push_stack(abs(x.get_number()));
-                break;
-            }
-            case hash("max"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                if (left.compare(right) > 0)
+                if (iter->compare_to(min) < 0)
                 {
-                    vm.push_stack(left);
+                    min = *iter;
                 }
-                break;
-            }
-            case hash("min"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                if (left.compare(right) > 0)
-                {
-                    vm.push_stack(right);
-                }
-                break;
             }
 
-            case hash("+"):
-            case hash("add"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                vm.push_stack(left.get_number() + right.get_number());
-                break;
-            }
-            case hash("-"):
-            case hash("sub"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                vm.push_stack(left.get_number() - right.get_number());
-                break;
-            }
-            case hash("*"):
-            case hash("mul"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                vm.push_stack(left.get_number() * right.get_number());
-                break;
-            }
-            case hash("/"):
-            case hash("command"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                vm.push_stack(left.get_number() / right.get_number());
-                break;
-            }
-        }
+            vm.push_stack(min);
+        });
+
+        return result;
     }
 } // stack_vm

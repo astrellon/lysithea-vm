@@ -124,65 +124,65 @@ namespace SimpleStackVM.Unity
             return assembler;
         }
 
-        public void MoveToFunc(VirtualMachine vm, ArgumentsValue args)
+        public void MoveToFunc(VirtualMachine vm, ArrayValue args)
         {
-            var func = args.Get<IFunctionValue>(0);
+            var func = args.GetIndex<IFunctionValue>(0);
             vm.CallFunction(func, 0, false);
 
             if (args.Length > 1)
             {
-                var label = args.Get(1);
+                var label = args.GetIndex(1);
                 vm.Jump(label.ToString());
             }
         }
 
-        public void BeginLineFunc(VirtualMachine vm, ArgumentsValue args)
+        public void BeginLineFunc(VirtualMachine vm, ArrayValue args)
         {
             this.choiceBuffer.Clear();
             this.OnSectionChange?.Invoke(SectionType.NewLine);
         }
 
-        public void EndLineFunc(VirtualMachine vm, ArgumentsValue args)
+        public void EndLineFunc(VirtualMachine vm, ArrayValue args)
         {
             vm.Paused = true;
             this.OnSectionChange?.Invoke(this.choiceBuffer.Count > 0 ? SectionType.ForChoices : SectionType.ToContinue);
         }
 
-        private void TextFunc(VirtualMachine vm, ArgumentsValue args)
+        private void TextFunc(VirtualMachine vm, ArrayValue args)
         {
             var text = string.Join("", args.Value);
             this.OnTextSegment?.Invoke(text);
         }
 
-        private void ActorFunc(VirtualMachine vm, ArgumentsValue args)
+        private void ActorFunc(VirtualMachine vm, ArrayValue args)
         {
-            this.CurrentActor = args.Get<DialogueActorValue>(0).Value;
+            this.CurrentActor = args.GetIndex<DialogueActorValue>(0).Value;
             if (args.Length == 1)
             {
                 this.OnEmotion?.Invoke("idle");
             }
             else
             {
-                this.OnEmotion?.Invoke(args.Get<StringValue>(1).Value);
+                this.OnEmotion?.Invoke(args.GetIndex<StringValue>(1).Value);
             }
         }
 
-        private void ChoiceFunc(VirtualMachine vm, ArgumentsValue args)
+        private void ChoiceFunc(VirtualMachine vm, ArrayValue args)
         {
-            var choiceLabel = args.Get<StringValue>(0);
-            var choiceValue = args.Get(1);
+            var choiceLabel = args.GetIndex<StringValue>(0);
+            var choiceValue = args.GetIndex(1);
             this.CreateChoice(choiceLabel.ToString(), choiceValue);
         }
 
-        private void EmotionFunc(VirtualMachine vm, ArgumentsValue args)
+        private void EmotionFunc(VirtualMachine vm, ArrayValue args)
         {
-            var emotion = args.Get(0).ToString();
+            var emotion = args.GetIndex(0).ToString();
             this.OnEmotion?.Invoke(emotion);
         }
 
-        private void WaitFunc(VirtualMachine vm, ArgumentsValue args)
+        private void WaitFunc(VirtualMachine vm, ArrayValue args)
         {
-            var waitTime = TimeSpan.FromMilliseconds(args.Get<NumberValue>(0).Value);
+            var waitTime = TimeSpan.FromMilliseconds(args.GetIndex<NumberValue>(0).Value);
             this.VMRunner.Wait(waitTime);
         }
     }

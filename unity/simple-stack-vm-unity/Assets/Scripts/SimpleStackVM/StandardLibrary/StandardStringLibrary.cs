@@ -19,52 +19,52 @@ namespace SimpleStackVM
             {
                 {"length", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
+                    var top = args.GetIndex<StringValue>(0);
                     vm.PushStack(new NumberValue(top.Value.Length));
                 })},
 
                 {"set", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var value = args.Get(2);
+                    var top = args.GetIndex<StringValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var value = args.GetIndex(2);
                     vm.PushStack(Set(top, index.IntValue, value.ToString()));
                 })},
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
-                    var index = args.Get<NumberValue>(1);
+                    var top = args.GetIndex<StringValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
                     vm.PushStack(Get(top, index.IntValue));
                 })},
 
                 {"insert", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var value = args.Get(2);
+                    var top = args.GetIndex<StringValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var value = args.GetIndex(2);
                     vm.PushStack(Insert(top, index.IntValue, value.ToString()));
                 })},
 
                 {"substring", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
-                    var index = args.Get<NumberValue>(1);
-                    var length = args.Get<NumberValue>(2);
+                    var top = args.GetIndex<StringValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
+                    var length = args.GetIndex<NumberValue>(2);
                     vm.PushStack(SubString(top, index.IntValue, length.IntValue));
                 })},
 
                 {"removeAt", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
-                    var index = args.Get<NumberValue>(1);
+                    var top = args.GetIndex<StringValue>(0);
+                    var index = args.GetIndex<NumberValue>(1);
                     vm.PushStack(RemoveAt(top, index.IntValue));
                 })},
 
                 {"removeAll", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<StringValue>(0);
-                    var values = args.Get<StringValue>(1);
+                    var top = args.GetIndex<StringValue>(0);
+                    var values = args.GetIndex<StringValue>(1);
                     vm.PushStack(RemoveAll(top, values.Value));
                 })},
 

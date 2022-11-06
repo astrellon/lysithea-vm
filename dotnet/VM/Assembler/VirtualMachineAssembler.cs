@@ -301,8 +301,8 @@ namespace SimpleStackVM
                 case LoopKeyword: return ParseLoop(arrayValue);
                 case IfKeyword: return ParseCond(arrayValue, true);
                 case UnlessKeyword: return ParseCond(arrayValue, false);
-                case IncKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.IncNumber);
-                case DecKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.DecNumber);
+                case IncKeyword: return ParseChangeVariable(arrayValue[1], IncNumber);
+                case DecKeyword: return ParseChangeVariable(arrayValue[1], DecNumber);
             }
 
             return new List<ITempCodeLine>();
@@ -460,6 +460,16 @@ namespace SimpleStackVM
 
             return true;
         }
+
+        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value + 1));
+        });
+
+        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value - 1));
+        });
         #endregion
 
         #endregion

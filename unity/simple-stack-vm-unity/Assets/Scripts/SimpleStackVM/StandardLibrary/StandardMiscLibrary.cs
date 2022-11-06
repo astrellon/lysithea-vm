@@ -15,20 +15,20 @@ namespace SimpleStackVM
 
             result.Define("toString", (vm, args) =>
             {
-                var top = args.Get(0);
+                var top = args.GetIndex(0);
                 vm.PushStack(top.ToString());
             });
 
             result.Define("typeof", (vm, args) =>
             {
-                var top = args.Get(0);
+                var top = args.GetIndex(0);
                 vm.PushStack(top.TypeName);
             });
 
             result.Define("compareTo", (vm, args) =>
             {
-                var left = args.Get(0);
-                var right = args.Get(1);
+                var left = args.GetIndex(0);
+                var right = args.GetIndex(1);
                 vm.PushStack(left.CompareTo(right));
             });
 

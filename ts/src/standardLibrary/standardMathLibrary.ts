@@ -98,22 +98,10 @@ export function createMathScope()
                 }
             }
             vm.pushStack(min);
-        }),
-
-        inc: incNumber,
-        dec: decNumber
+        })
     };
 
     result.define('math', new ObjectValue(mathFunctions));
 
     return result;
 }
-
-export const incNumber = new BuiltinFunctionValue((vm, args) =>
-{
-    vm.pushStackNumber(args.getNumber(0) + 1);
-});
-export const decNumber = new BuiltinFunctionValue((vm, args) =>
-{
-    vm.pushStackNumber(args.getNumber(0) - 1);
-});

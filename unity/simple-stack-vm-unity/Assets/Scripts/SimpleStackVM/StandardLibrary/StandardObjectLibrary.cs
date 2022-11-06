@@ -21,17 +21,17 @@ namespace SimpleStackVM
             {
                 {"set", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var obj = args.Get<ObjectValue>(0);
-                    var key = args.Get<StringValue>(1);
-                    var value = args.Get(2);
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var key = args.GetIndex<StringValue>(1);
+                    var value = args.GetIndex(2);
                     vm.PushStack(Set(obj, key.Value, value));
                 })},
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var obj = args.Get<ObjectValue>(0);
-                    var key = args.Get<StringValue>(1);
-                    if (obj.TryGetValue(key.Value, out var value))
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var key = args.GetIndex<StringValue>(1);
+                    if (obj.TryGetKey(key.Value, out var value))
                     {
                         vm.PushStack(value);
                     }
@@ -43,33 +43,33 @@ namespace SimpleStackVM
 
                 {"removeKey", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var obj = args.Get<ObjectValue>(0);
-                    var key = args.Get<StringValue>(1);
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var key = args.GetIndex<StringValue>(1);
                     vm.PushStack(RemoveKey(obj, key.Value));
                 })},
 
                 {"removeValues", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var obj = args.Get<ObjectValue>(0);
-                    var values = args.Get(1);
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var values = args.GetIndex(1);
                     vm.PushStack(RemoveValues(obj, values));
                 })},
 
                 {"keys", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ObjectValue>(0);
+                    var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(Keys(top));
                 })},
 
                 {"values", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ObjectValue>(0);
+                    var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(Values(top));
                 })},
 
                 {"length", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<ObjectValue>(0);
+                    var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(top.Value.Count);
                 })}
             };
@@ -136,12 +136,12 @@ namespace SimpleStackVM
 
             foreach (var key in leftKeys)
             {
-                if (!left.TryGetValue(key, out var leftValue))
+                if (!left.TryGetKey(key, out var leftValue))
                 {
                     throw new Exception($"Object key: {key} not present in the object!: {left.ToString()}");
                 }
 
-                if (right.TryGetValue(key, out var rightValue))
+                if (right.TryGetKey(key, out var rightValue))
                 {
                     var compare = leftValue.CompareTo(rightValue);
                     if (compare != 0)

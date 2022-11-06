@@ -1,26 +1,27 @@
 #include "value_property_access.hpp"
 
+#include "./value.hpp"
 #include "./array_value.hpp"
-#include "./number_value.hpp"
+#include "./object_value.hpp"
 #include "./string_value.hpp"
 
 namespace stack_vm
 {
-    bool try_get_property(std::shared_ptr<ivalue> current, const array_value &properties, std::shared_ptr<ivalue> &result)
+    bool try_get_property(value current, const array_value &properties, value &result)
     {
-        for (const auto &iter : *properties.value)
+        for (const auto &iter : properties.data)
         {
             int index;
-            if (current->is_array() && try_parse_index(iter, index))
+            if (current.is_array() && try_parse_index(iter, index))
             {
-                if (!current->try_get(index, current))
+                if (!current.get_complex()->try_get(index, current))
                 {
                     return false;
                 }
             }
-            else if (current->is_object())
+            else if (current.is_object())
             {
-                if (!current->try_get(iter->to_string(), current))
+                if (!current.get_complex()->try_get(iter.to_string(), current))
                 {
                     return false;
                 }
@@ -35,20 +36,25 @@ namespace stack_vm
         return true;
     }
 
-    bool try_parse_index(std::shared_ptr<ivalue> input, int &result)
+    bool try_parse_index(value input, int &result)
     {
-        auto is_number = dynamic_cast<const number_value *>(input.get());
-        if (is_number)
+        if (input.is_number())
         {
-            result = is_number->int_value();
+            result = input.get_int();
             return result >= 0;
         }
 
-        auto is_string = dynamic_cast<const string_value *>(input.get());
+        auto is_string = input.get_complex<const string_value>();
         if (is_string)
         {
-            result = std::stoi(*is_string->value);
-            return result >= 0;
+            try
+            {
+                result = std::stoi(is_string->data);
+                return result >= 0;
+            }
+            catch (std::exception &exp)
+            {
+            }
         }
 
         return false;

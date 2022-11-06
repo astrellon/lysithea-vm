@@ -1,8 +1,8 @@
 import { readAllTokens, tokenize } from "./parser";
 import Scope from "./scope";
 import Script from "./script";
-import { decNumber, incNumber } from "./standardLibrary/standardMathLibrary";
 import ArrayValue from "./values/arrayValue";
+import BuiltinFunctionValue from "./values/builtinFunctionValue";
 import FunctionValue from "./values/functionValue";
 import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
 import NumberValue from "./values/numberValue";
@@ -42,6 +42,15 @@ const SetKeyword = 'set';
 const DefineKeyword = 'define';
 const IncKeyword = 'inc';
 const DecKeyword = 'dec';
+
+const incNumber = new BuiltinFunctionValue((vm, args) =>
+{
+    vm.pushStackNumber(args.getNumber(0) + 1);
+});
+const decNumber = new BuiltinFunctionValue((vm, args) =>
+{
+    vm.pushStackNumber(args.getNumber(0) - 1);
+});
 
 function codeLine(operator: Operator, value?: IValue): TempCodeLine
 {

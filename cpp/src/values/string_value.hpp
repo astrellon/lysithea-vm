@@ -4,25 +4,22 @@
 #include <string>
 #include <cstring>
 
-#include "./ivalue.hpp"
+#include "./complex_value.hpp"
 
 namespace stack_vm
 {
-    using string_ptr = std::shared_ptr<std::string>;
-
-    class string_value : public ivalue
+    class string_value : public complex_value
     {
         public:
             // Fields
-            string_ptr value;
+            std::string data;
 
             // Constructor
-            string_value(const std::string value) : value(std::make_shared<std::string>(value)) { }
-            string_value(const char *value) : value(std::make_shared<std::string>(value)) { }
-            string_value(string_ptr value) : value(value) { }
+            string_value(const std::string data) : data(data) { }
+            string_value(const char *data) : data(data) { }
 
             // Methods
-            virtual int compare_to(const ivalue *input) const
+            virtual int compare_to(const complex_value *input) const
             {
                 auto other = dynamic_cast<const string_value *>(input);
                 if (!other)
@@ -30,17 +27,27 @@ namespace stack_vm
                     return 1;
                 }
 
-                return strcmp(value->c_str(), other->value->c_str());
+                return strcmp(data.c_str(), other->data.c_str());
             }
 
             virtual std::string to_string() const
             {
-                return *value.get();
+                return data;
             }
 
             virtual std::string type_name() const
             {
                 return "string";
             }
+
+            virtual int object_length() const { return 1; }
+            virtual bool is_object() const { return true; }
+            virtual std::vector<std::string> object_keys() const
+            {
+                std::vector<std::string> result;
+                result.push_back("length");
+                return result;
+            }
+            virtual bool try_get(const std::string &key, stack_vm::value &result) const;
     };
 } // stack_vm

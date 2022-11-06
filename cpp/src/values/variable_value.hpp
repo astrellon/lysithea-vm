@@ -4,30 +4,27 @@
 #include <string>
 #include <cstring>
 
-#include "./ivalue.hpp"
+#include "./complex_value.hpp"
 
 namespace stack_vm
 {
-    using variable_ptr = std::shared_ptr<std::string>;
-
-    class variable_value : public ivalue
+    class variable_value : public complex_value
     {
         public:
             // Fields
-            variable_ptr value;
+            std::string data;
 
             // Constructor
-            variable_value(const std::string value) : value(std::make_shared<std::string>(value)) { }
-            variable_value(const char *value) : value(std::make_shared<std::string>(value)) { }
-            variable_value(variable_ptr value) : value(value) { }
+            variable_value(const std::string data) : data(data) { }
+            variable_value(const char *data) : data(data) { }
 
             // Methods
             bool is_label() const
             {
-                return value->size() > 0 && value->at(0) == ':';
+                return data.size() > 0 && data.at(0) == ':';
             }
 
-            virtual int compare_to(const ivalue *input) const
+            virtual int compare_to(const complex_value *input) const
             {
                 auto other = dynamic_cast<const variable_value *>(input);
                 if (!other)
@@ -35,12 +32,12 @@ namespace stack_vm
                     return 1;
                 }
 
-                return strcmp(value->c_str(), other->value->c_str());
+                return strcmp(data.c_str(), other->data.c_str());
             }
 
             virtual std::string to_string() const
             {
-                return *value.get();
+                return data;
             }
 
             virtual std::string type_name() const
