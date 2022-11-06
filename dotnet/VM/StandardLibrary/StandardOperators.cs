@@ -86,6 +86,7 @@ namespace SimpleStackVM
                     vm.PushStack(-total);
                     return;
                 }
+
                 foreach (NumberValue num in args.Value.Skip(1))
                 {
                     total -= num.Value;

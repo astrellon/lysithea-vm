@@ -4,7 +4,7 @@ import { addToScope, LibraryType } from "../src/standardLibrary/index";
 import VirtualMachineAssembler from "../src/assembler";
 import { assertScope } from "../src/standardLibrary/standardAssertLibrary";
 
-const file = fs.readFileSync('../examples/testStandardLibrary.lisp', {encoding: 'utf-8'});
+const file = fs.readFileSync('../examples/benchmark1.lisp', {encoding: 'utf-8'});
 
 const assembler = new VirtualMachineAssembler();
 addToScope(assembler.builtinScope, LibraryType.all);

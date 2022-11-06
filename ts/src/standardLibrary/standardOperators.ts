@@ -1,7 +1,6 @@
 import Scope, { IReadOnlyScope } from "../scope";
 import BuiltinFunctionValue from "../values/builtinFunctionValue";
 import { isNumberValue } from "../values/numberValue";
-import { isStringValue } from "../values/stringValue";
 
 export const operatorScope: IReadOnlyScope = createOperatorScope();
 
@@ -43,16 +42,11 @@ export function createOperatorScope()
     {
         if (args.value.length === 0)
         {
-            return;
+            throw new Error('Addition operator expects at least 1 input');
         }
 
         const first = args.getIndex(0);
-        if (isStringValue(first))
-        {
-            const result = args.value.map(v => v.toString()).join('');
-            vm.pushStackString(result);
-        }
-        else if (isNumberValue(first))
+        if (isNumberValue(first))
         {
             let result = 0;
             for (let i = 0; i < args.value.length; i++)
@@ -64,16 +58,37 @@ export function createOperatorScope()
                 }
                 else
                 {
-                    throw new Error('Add only works on numbers and strings');
+                    throw new Error('Addition operator expects all numbers');
                 }
             }
             vm.pushStackNumber(result);
+        }
+        else
+        {
+            const result = args.value.map(v => v.toString()).join('');
+            vm.pushStackString(result);
         }
     }));
 
     result.define('-', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackNumber(args.getNumber(0) - args.getNumber(1));
+        if (args.value.length === 0)
+        {
+            throw new Error('Subtraction operator expects at least 1 input');
+        }
+
+        let total = args.getNumber(0);
+        if (args.value.length === 1)
+        {
+            vm.pushStackNumber(-total);
+            return
+        }
+
+        for (let i = 1; i < args.value.length; i++)
+        {
+            total -= args.getNumber(i);
+        }
+        vm.pushStackNumber(total);
     }));
 
     result.define('*', new BuiltinFunctionValue((vm, args) =>
@@ -93,11 +108,26 @@ export function createOperatorScope()
 
     result.define('/', new BuiltinFunctionValue((vm, args) =>
     {
-        vm.pushStackNumber(args.getNumber(0) / args.getNumber(1));
+        if (args.value.length < 2)
+        {
+            throw new Error('Divide operator expects more than 1 input');
+        }
+
+        let total = args.getNumber(0);
+        for (let i = 1; i < args.value.length; i++)
+        {
+            total /= args.getNumber(i);
+        }
+        vm.pushStackNumber(total);
     }));
 
     result.define('%', new BuiltinFunctionValue((vm, args) =>
     {
+        if (args.value.length < 2)
+        {
+            throw new Error('Modulo operator expects 2 inputs');
+        }
+
         vm.pushStackNumber(args.getNumber(0) % args.getNumber(1));
     }));
 

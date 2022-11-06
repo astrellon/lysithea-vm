@@ -5,7 +5,7 @@
             ["Push", 0],
             ":Start",
 
-            ["Step"],
+            ["Call", "Step"],
             ["isDone"],
             ["JumpFalse", ":Start"],
 
