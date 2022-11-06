@@ -135,26 +135,13 @@ namespace SimpleStackVM
                         }
                     }
                     vm.PushStack(min);
-                })},
-
-                {"inc", IncNumber},
-                {"dec", DecNumber},
+                })}
             };
 
             result.Define("math", new ObjectValue(mathFunctions));
 
             return result;
         }
-
-        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>
-        {
-            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value + 1));
-        });
-
-        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, args) =>
-        {
-            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value - 1));
-        });
 
         #endregion
     }
