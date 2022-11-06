@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace SimpleStackVM
 {
@@ -34,7 +35,7 @@ namespace SimpleStackVM
 
             result.Define("print", (vm, args) =>
             {
-                Console.WriteLine(string.Join("", args.Value));
+                Debug.Log(string.Join("", args.Value));
             });
 
             return result;
