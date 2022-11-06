@@ -120,6 +120,52 @@ Variables can be defined, set and retrieved again. These variables will be scope
 
 Internally the assembler sees only the last argument as the code line argument except in the case of the `Run` command which has it's own runs (see below). So all other arguments in between are turned into `Push` commands.
 
+# Architecture
+
+The internals of the virtual machine is quite simple:
+
+## Some concepts
+
+### Operator
+Internal operators that the virtual machine uses:
+- **Unknown**: Usually only used for error situations when assembling or if a code line (see next) does not have an argument.
+- **Push**: Pushes a value onto the data stack.
+```lisp
+(define name "Alan")
+
+(push 5)    ; Puts 5 onto the stack
+(push name) ; Puts a variable value onto the stack, this is *not* the value of the variable, but indicates that it is a variable with the name 'name'.
+```
+- **Call**: Attempts to invoke a function from the top of the stack, the code line is expected to contain a number which has how many arguments to call the function with.
+```lisp
+(push "Hello")
+(get print)
+(call 0)
+```
+- **Return**:
+- **Get**:
+- **GetProperty**:
+- **Define**:
+- **Set**:
+- **Jump**:
+- **JumpTrue**:
+- **JumpFalse**:
+
+These are more advanced operator:
+- **ToArgument**: Turns the value on top of the stack into an argument array, expects the top to be array like in the first place. This is used in situations where we need to distinguish between arrays and argument arrays when unpacking variable length argument calls.
+- **CallDirect**: An optimised version of **Call** where the code_line contains an array `[function_value, num_args]` which side-steps the need to look up the value from the current scope. These operators come from knowing what values that can be found assemble time.
+
+**Note**: Since **CallDirect** operators come from assemble time, it means that if a value is redefined at run time, the operators will still have a reference to the old value from assemble time and will be unaffected.
+
+### Code Line
+### Function
+### Scope
+
+- Program Counter: Current code line.
+- Current Scope: Stores the current functions variables.
+- Global Scope: Start scope, stores variables at the global level.
+- Builtin Scope: Scope for variables that come from outside of the virtual machine. Usually at assemble time. This is separate from the global scope as often the builtin scope will be shared between virtual machines, so it is detached from the usual scope parent system and is read only.
+
 # Keywords
 
 There's not many keywords that are built in and each are used by the assembler to turn into a set of operators that are used by the virtual machine.

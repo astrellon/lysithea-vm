@@ -103,7 +103,9 @@ namespace SimpleStackVM
                         return keywordParse;
                     }
 
+                    var isOpcode = VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode);
                     var result = new List<ITempCodeLine>();
+
                     // Handle general opcode or function call.
                     foreach (var item in arrayValue.Value.Skip(1))
                     {
@@ -111,13 +113,20 @@ namespace SimpleStackVM
                     }
 
                     // If it is not an opcode then it must be a function call
-                    if (!VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode))
+                    if (!isOpcode)
                     {
                         result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue, arrayValue.Length - 1));
                     }
                     else if (opCode != Operator.Push)
                     {
-                        result.Add(new CodeLine(opCode, null));
+                        if (arrayValue.Length > 1)
+                        {
+                            result.Add(new CodeLine(opCode, arrayValue.Value[1]));
+                        }
+                        else
+                        {
+                            result.Add(new CodeLine(opCode, null));
+                        }
                     }
 
                     return result;

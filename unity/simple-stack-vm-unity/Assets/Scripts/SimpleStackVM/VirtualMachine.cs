@@ -210,7 +210,7 @@ namespace SimpleStackVM
                     {
                         if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a num args code line input");
+                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a num args code line input: {codeLine.ToString()}");
                         }
 
                         var top = this.PopStack();
