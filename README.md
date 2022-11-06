@@ -139,8 +139,12 @@ Internal operators that the virtual machine uses:
 - **Call**: Attempts to invoke a function from the top of the stack, the code line is expected to contain a number which has how many arguments to call the function with.
 ```lisp
 (push "Hello")
-(get print)
-(call 0)
+(push " There")
+(get "print")
+(call 2) ; Call the value on top of the stack with two arguments.
+
+; Outputs
+Hello There
 ```
 - **Return**:
 - **Get**:
