@@ -1,20 +1,17 @@
 (define main (function ()
-    (push 0)
-    (:Start)
+    (define total 0)
+    (define counter 0)
 
-    (step)
-    (isDone)
-    (jumpFalse :Start)
+    (loop (lessThan counter 1000000)
+        (set total (add total (step)))
+        (inc counter)
+    )
 
-    (done)
+    (print "Done: " total)
 ))
 
 (define step (function ()
-    (rand)
-    (rand)
-    (add)
-    (add)
-    (return)
+    (return (add (rand) (rand)))
 ))
 
 (main)

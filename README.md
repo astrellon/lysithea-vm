@@ -128,25 +128,20 @@ The internals of the virtual machine is quite simple:
 
 ### Operator
 Internal operators that the virtual machine uses:
-- **Unknown**: Usually only used for error situations when assembling or if a code line (see next) does not have an argument.
-- **Push**: Pushes a value onto the data stack.
-```lisp
-(define name "Alan")
 
-(push 5)    ; Puts 5 onto the stack
-(push name) ; Puts a variable value onto the stack, this is *not* the value of the variable, but indicates that it is a variable with the name 'name'.
-```
-- **Call**: Attempts to invoke a function from the top of the stack, the code line is expected to contain a number which has how many arguments to call the function with.
-```lisp
-(push "Hello")
-(push " There")
-(get "print")
-(call 2) ; Call the value on top of the stack with two arguments.
+#### `(unknown)`
+Usually only used for error situations when assembling or if a code line (see next) does not have an argument.
 
-; Outputs
-Hello There
-```
-- **Return**:
+#### `(push arg)`
+Pushes a value onto the data stack. Can be of any value.
+
+#### `(call numArgs)`
+Attempts to invoke a function from the top of the stack, the code line is expected to contain a number which has how many arguments to call the function with.
+
+#### `(return)`
+Returns from a function call. This is only needed if you want to return early from a function.
+
+Importantly! It does not function as a way to return values from a function, as the system is stack based whatever is put onto the stack can be accessed from the stack by other functions after a function has finished.
 - **Get**:
 - **GetProperty**:
 - **Define**:

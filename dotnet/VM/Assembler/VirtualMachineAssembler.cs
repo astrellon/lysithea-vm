@@ -32,6 +32,8 @@ namespace SimpleStackVM
         private const string DefineKeyword = "define";
         private const string IncKeyword = "inc";
         private const string DecKeyword = "dec";
+        private const string JumpKeyword = "jump";
+        private const string ReturnKeyword = "return";
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
@@ -78,59 +80,6 @@ namespace SimpleStackVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseOpcode(Operator op, ArrayValue arrayValue)
-        {
-            var result = new List<ITempCodeLine>();
-            switch (op)
-            {
-                case Operator.Call:
-                {
-                    result.Add(new CodeLine(op, arrayValue.GetIndex<NumberValue>(1)));
-                    break;
-                }
-                case Operator.CallDirect:
-                {
-                    result.Add(new CodeLine(op, new ArrayValue(new IValue[]
-                    {
-                        arrayValue.GetIndex<IFunctionValue>(1), arrayValue.GetIndex<NumberValue>(2)
-                    })));
-                    break;
-                }
-                case Operator.Push:
-                {
-                    result.Add(new CodeLine(op, arrayValue.GetIndex(1)));
-                    break;
-                }
-
-                default:
-                {
-                    // Most operators will want some parsing of the input
-                    if (arrayValue.Length > 1)
-                    {
-                        var parsedLines = Parse(arrayValue.GetIndex(1));
-                        // If the parsed value is a simple push to stack, these operators
-                        // can take those values directly rather than pushing and then popping.
-                        if (parsedLines.Count == 1 && (parsedLines[0] is CodeLine codeLine) && codeLine.Operator == Operator.Push)
-                        {
-                            result.Add(new CodeLine(op, codeLine.Input));
-                            break;
-                        }
-                        else
-                        {
-                            // Something more complex is happening, let it do what it needs.
-                            result.AddRange(parsedLines);
-                        }
-                    }
-
-                    // Operator either is taking no input or the parse lines above is handling adding to the stack.
-                    result.Add(new CodeLine(op, null));
-                    break;
-                }
-            }
-
-            return result;
-        }
-
         public List<ITempCodeLine> Parse(IValue input)
         {
             if (input is ArrayValue arrayValue)
@@ -157,25 +106,12 @@ namespace SimpleStackVM
                     }
 
                     var result = new List<ITempCodeLine>();
-
-                    // If it is not an opcode then it must be a function call
-                    if (VirtualMachineAssembler.TryParseOperator(firstSymbolValue.Value, out var opCode))
+                    // Handle general opcode or function call.
+                    foreach (var item in arrayValue.Value.Skip(1))
                     {
-                        result.AddRange(ParseOpcode(opCode, arrayValue));
+                        result.AddRange(Parse(item));
                     }
-                    else
-                    {
-                        // Handle general opcode or function call.
-                        foreach (var item in arrayValue.Value.Skip(1))
-                        {
-                            result.AddRange(Parse(item));
-                        }
-                        result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Length - 1));
-                    }
-                    // else if (opCode != Operator.Push)
-                    // {
-                    //     result.Add(new CodeLine(opCode, null));
-                    // }
+                    result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Length - 1));
 
                     return result;
                 }
@@ -341,6 +277,28 @@ namespace SimpleStackVM
             };
         }
 
+        public List<ITempCodeLine> ParseJump(ArrayValue input)
+        {
+            var parse = Parse(input.Value[1]);
+            if (parse.Count == 1 && parse[0] is CodeLine codeLine && codeLine.Operator == Operator.Push)
+            {
+                return new List<ITempCodeLine> { new CodeLine(Operator.Jump, codeLine.Input) };
+            }
+            parse.Add(new CodeLine(Operator.Jump, null));
+            return parse;
+        }
+
+        public List<ITempCodeLine> ParseReturn(ArrayValue input)
+        {
+            var result = new List<ITempCodeLine>();
+            foreach (var item in input.Value.Skip(1))
+            {
+                result.AddRange(Parse(item));
+            }
+            result.Add(new CodeLine(Operator.Return, null));
+            return result;
+        }
+
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             switch (firstSymbol.Value)
@@ -360,6 +318,8 @@ namespace SimpleStackVM
                 case UnlessKeyword: return ParseCond(arrayValue, false);
                 case IncKeyword: return ParseChangeVariable(arrayValue[1], IncNumber);
                 case DecKeyword: return ParseChangeVariable(arrayValue[1], DecNumber);
+                case JumpKeyword: return ParseJump(arrayValue);
+                case ReturnKeyword: return ParseReturn(arrayValue);
             }
 
             return new List<ITempCodeLine>();
@@ -506,17 +466,6 @@ namespace SimpleStackVM
             }
 
             return new Function(code, parameters, labels);
-        }
-
-        private static bool TryParseOperator(string input, out Operator result)
-        {
-            if (!Enum.TryParse<Operator>(input, true, out result))
-            {
-                result = Operator.Unknown;
-                return false;
-            }
-
-            return true;
         }
 
         public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>

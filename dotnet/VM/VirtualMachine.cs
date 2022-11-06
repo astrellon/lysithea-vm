@@ -121,7 +121,7 @@ namespace SimpleStackVM
                 case Operator.Get:
                     {
                         var key = codeLine.Input ?? this.PopStack();
-                        if (!(key is StringValue stringInput))
+                        if (!(key is StringValue))
                         {
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable, input needs to be a string: {key.ToString()}");
                         }

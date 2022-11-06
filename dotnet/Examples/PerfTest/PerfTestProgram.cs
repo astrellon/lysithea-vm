@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 
 namespace SimpleStackVM
@@ -8,7 +7,6 @@ namespace SimpleStackVM
     public static class PerfTestProgram
     {
         private static Random Rand = new Random();
-        private static int Counter = 0;
 
         private static readonly Scope PerfTestScope = CreateScope();
 
@@ -29,7 +27,6 @@ namespace SimpleStackVM
                 Console.WriteLine($"Time taken: {sw.ElapsedMilliseconds}ms");
 
                 vm.Reset();
-                Counter = 0;
                 sw = Stopwatch.StartNew();
 
                 vm.Execute(script);
@@ -56,21 +53,21 @@ namespace SimpleStackVM
 
             result.Define("add", (vm, args) =>
             {
-                var num1 = (NumberValue)vm.PopStack();
-                var num2 = (NumberValue)vm.PopStack();
-                vm.PushStack((num1.Value + num2.Value));
+                var num1 = args.GetIndexDouble(0);
+                var num2 = args.GetIndexDouble(1);
+                vm.PushStack((num1 + num2));
             });
 
-            result.Define("isDone", (vm, args) =>
+            result.Define("lessThan", (vm, args) =>
             {
-                Counter++;
-                vm.PushStack((Counter >= 1_000_000));
+                var left = args.GetIndexDouble(0);
+                var right = args.GetIndexDouble(1);
+                vm.PushStack(left < right);
             });
 
-            result.Define("done", (vm, args) =>
+            result.Define("print", (vm, args) =>
             {
-                var total = (NumberValue)vm.PopStack();
-                Console.WriteLine($"Done: {total.Value}");
+                Console.WriteLine(string.Join("", args.Value));
             });
 
             return result;
