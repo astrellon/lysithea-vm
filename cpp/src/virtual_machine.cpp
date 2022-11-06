@@ -56,7 +56,10 @@ namespace stack_vm
     {
         if (program_counter >= current_code->code.size())
         {
-            running = false;
+            if (!try_return())
+            {
+                running = false;
+            }
             return;
         }
 

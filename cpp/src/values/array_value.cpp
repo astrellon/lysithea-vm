@@ -44,10 +44,10 @@ namespace stack_vm
     {
         if (key == "length")
         {
-            result = stack_vm::value(std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
+            result = value::make_builtin([this](virtual_machine &vm, const array_value &args)
             {
                 vm.push_stack(data.size());
-            }));
+            });
             return true;
         }
 

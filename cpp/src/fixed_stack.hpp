@@ -22,7 +22,7 @@ namespace stack_vm
 
             inline bool pop(T &result)
             {
-                if (stack_size() < max_size)
+                if (stack_size() > 0)
                 {
                     result = data.back();
                     data.pop_back();

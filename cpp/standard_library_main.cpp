@@ -15,7 +15,8 @@ using namespace stack_vm;
 int main()
 {
     std::ifstream input_file;
-    input_file.open("../../examples/testStandardLibrary.lisp");
+    input_file.open("../../examples/benchmark1.lisp");
+    // input_file.open("../../examples/testStandardLibrary.lisp");
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";

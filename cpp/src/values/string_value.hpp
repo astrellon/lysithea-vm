@@ -39,5 +39,15 @@ namespace stack_vm
             {
                 return "string";
             }
+
+            virtual int object_length() const { return 1; }
+            virtual bool is_object() const { return true; }
+            virtual std::vector<std::string> object_keys() const
+            {
+                std::vector<std::string> result;
+                result.push_back("length");
+                return result;
+            }
+            virtual bool try_get(const std::string &key, stack_vm::value &result) const;
     };
 } // stack_vm
