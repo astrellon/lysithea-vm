@@ -7,6 +7,8 @@
 #include "./values/function_value.hpp"
 #include "./values/variable_value.hpp"
 #include "./values/value_property_access.hpp"
+#include "./standard_library/standard_math_library.hpp"
+#include "./virtual_machine.hpp"
 
 namespace stack_vm
 {
@@ -20,6 +22,15 @@ namespace stack_vm
     const std::string assembler::keyword_define("define");
     const std::string assembler::keyword_inc("inc");
     const std::string assembler::keyword_dec("dec");
+
+    const builtin_function_value assembler::inc_number([](virtual_machine &vm, const array_value &args) -> void
+    {
+        vm.push_stack(args.get_number(0) + 1);
+    });
+    const builtin_function_value assembler::dec_number([](virtual_machine &vm, const array_value &args) -> void
+    {
+        vm.push_stack(args.get_number(0) - 1);
+    });
 
     std::string assembler::temp_code_line::to_string() const
     {
@@ -72,7 +83,7 @@ namespace stack_vm
     std::shared_ptr<function> assembler::parse_global_function(const array_value &input)
     {
         std::vector<temp_code_line> temp_code_lines;
-        for (const auto &iter : *input.value)
+        for (const auto &iter : input.data)
         {
             auto lines = parse(iter);
             push_range(temp_code_lines, lines);
@@ -91,40 +102,40 @@ namespace stack_vm
         auto array_input = input.get_complex<array_value>();
         if (array_input)
         {
-            if (array_input->value->size() == 0)
+            if (array_input->data.size() == 0)
             {
                 return result;
             }
 
-            auto first = array_input->value->at(0);
+            auto first = array_input->data[0];
             // If the first item in an array is a symbol we assume that it is a function call or a label
             auto first_symbol_value = first.get_complex<variable_value>();
             if (first_symbol_value)
             {
                 if (first_symbol_value->is_label())
                 {
-                    result.emplace_back(*first_symbol_value->value);
+                    result.emplace_back(first_symbol_value->data);
                     return result;
                 }
 
                 // Check for keywords
-                auto keyword_parse = parse_keyword(*first_symbol_value->value, *array_input);
+                auto keyword_parse = parse_keyword(first_symbol_value->data, *array_input);
                 if (keyword_parse.size() > 0)
                 {
                     return keyword_parse;
                 }
 
                 // Handle general opcode or function call.
-                for (auto iter = array_input->value->cbegin() + 1; iter != array_input->value->cend(); ++iter)
+                for (auto iter = array_input->data.cbegin() + 1; iter != array_input->data.cend(); ++iter)
                 {
                     push_range(result, parse(*iter));
                 }
 
                 // If it is not an opcode then it must be a function call
-                auto op_code = parse_operator(*first_symbol_value->value);
+                auto op_code = parse_operator(first_symbol_value->data);
                 if (op_code == vm_operator::unknown)
                 {
-                    push_range(result, optimise_call_symbol_value(*first_symbol_value->value, array_input->value->size() - 1));
+                    push_range(result, optimise_call_symbol_value(first_symbol_value->data, array_input->data.size() - 1));
                 }
                 else if (op_code != vm_operator::push)
                 {
@@ -139,7 +150,7 @@ namespace stack_vm
             auto symbol_value = input.get_complex<variable_value>();
             if (symbol_value && !symbol_value->is_label())
             {
-                return optimise_get_symbol_value(*symbol_value->value);
+                return optimise_get_symbol_value(symbol_value->data);
             }
         }
 
@@ -149,27 +160,27 @@ namespace stack_vm
 
     std::vector<assembler::temp_code_line> assembler::parse_set(const array_value &input)
     {
-        auto result = parse(input.value->at(2));
-        result.emplace_back(vm_operator::set, input.value->at(1));
+        auto result = parse(input.data[2]);
+        result.emplace_back(vm_operator::set, input.data[1]);
         return result;
     }
 
     std::vector<assembler::temp_code_line> assembler::parse_define(const array_value &input)
     {
-        auto result = parse(input.value->at(2));
-        result.emplace_back(vm_operator::define, input.value->at(1));
+        auto result = parse(input.data[2]);
+        result.emplace_back(vm_operator::define, input.data[1]);
 
         auto is_function = result[0].argument.get_complex<function_value>();
         if (is_function)
         {
-            is_function->value->name = input.value->at(1).to_string();
+            is_function->data->name = input.data[1].to_string();
         }
         return result;
     }
 
     std::vector<assembler::temp_code_line> assembler::parse_loop(const array_value &input)
     {
-        if (input.value->size() < 3)
+        if (input.data.size() < 3)
         {
             throw std::runtime_error("Loop input has too few inputs");
         }
@@ -188,7 +199,7 @@ namespace stack_vm
         std::vector<temp_code_line> result;
         result.emplace_back(ss_label_start.str());
 
-        auto comparison_value = input.value->at(1);
+        auto comparison_value = input.data[1];
         auto comparison_call = comparison_value.get_complex<const array_value>();
         if (!comparison_call)
         {
@@ -198,9 +209,9 @@ namespace stack_vm
         push_range(result, parse(comparison_value));
         result.emplace_back(vm_operator::jump_false, label_end);
 
-        for (auto i = 2; i < input.value->size(); i++)
+        for (auto i = 2; i < input.data.size(); i++)
         {
-            push_range(result, parse(input.value->at(i)));
+            push_range(result, parse(input.data[i]));
         }
 
         result.emplace_back(vm_operator::jump, label_start);
@@ -212,11 +223,11 @@ namespace stack_vm
 
     std::vector<assembler::temp_code_line> assembler::parse_cond(const array_value &input, bool is_if_statement)
     {
-        if (input.value->size() < 3)
+        if (input.data.size() < 3)
         {
             throw std::runtime_error("Condition input has too few inputs");
         }
-        if (input.value->size() < 3)
+        if (input.data.size() < 3)
         {
             throw std::runtime_error("Condition input has too many inputs!");
         }
@@ -231,17 +242,17 @@ namespace stack_vm
         ss_label_end << if_label_num;
         auto label_end = std::make_shared<string_value>(ss_label_end.str());
 
-        auto has_else_call = input.value->size() == 4;
+        auto has_else_call = input.data.size() == 4;
         auto jump_operator = is_if_statement ? vm_operator::jump_false : vm_operator::jump_true;
 
-        auto comparison_value = input.value->at(1);
+        auto comparison_value = input.data[1];
         auto comparison_call = comparison_value.get_complex<const array_value>();
         if (!comparison_call)
         {
             throw std::runtime_error("Condition needs comparison to be an array");
         }
 
-        auto first_block_value = input.value->at(2);
+        auto first_block_value = input.data[2];
         auto first_block_call = first_block_value.get_complex<const array_value>();
         if (!first_block_call)
         {
@@ -264,7 +275,7 @@ namespace stack_vm
             result.emplace_back(ss_label_else.str());
 
             // Second 'else' block of code
-            auto second_block_value = input.value->at(2);
+            auto second_block_value = input.data[2];
             auto second_block_call = second_block_value.get_complex<const array_value>();
             if (!second_block_call)
             {
@@ -291,7 +302,7 @@ namespace stack_vm
         if (is_array)
         {
             auto all_array = true;
-            for (auto iter : *is_array->value)
+            for (auto iter : is_array->data)
             {
                 if (!iter.get_complex<const array_value>())
                 {
@@ -303,7 +314,7 @@ namespace stack_vm
             if (all_array)
             {
                 std::vector<temp_code_line> result;
-                for (auto iter : *is_array->value)
+                for (auto iter : is_array->data)
                 {
                     push_range(result, parse(iter));
                 }
@@ -332,16 +343,16 @@ namespace stack_vm
     std::shared_ptr<function> assembler::parse_function(const array_value &input)
     {
         std::vector<std::string> parameters;
-        auto parameters_array = input.value->at(1).get_complex<const array_value>();
-        for (auto iter : *parameters_array->value)
+        auto parameters_array = input.data[1].get_complex<const array_value>();
+        for (auto iter : parameters_array->data)
         {
             parameters.emplace_back(iter.to_string());
         }
 
         std::vector<temp_code_line> temp_code_lines;
-        for (auto i = 2; i < input.value->size(); i++)
+        for (auto i = 2; i < input.data.size(); i++)
         {
-            push_range(temp_code_lines, parse(input.value->at(i)));
+            push_range(temp_code_lines, parse(input.data[i]));
         }
 
         return process_temp_function(parameters, temp_code_lines);
@@ -383,7 +394,8 @@ namespace stack_vm
         if (keyword == keyword_loop) { return parse_loop(input); }
         if (keyword == keyword_if) { return parse_cond(input, true); }
         if (keyword == keyword_unless) { return parse_cond(input, false); }
-        // if (keyword == keyword_inc) { return parse_change_variable(input.value->at(1), false); }
+        if (keyword == keyword_inc) { return parse_change_variable(input.data[1], inc_number); }
+        if (keyword == keyword_dec) { return parse_change_variable(input.data[1], dec_number); }
 
         return result;
     }
@@ -399,7 +411,7 @@ namespace stack_vm
 
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
         value found_parent;
-        if (builtin_scope.try_get_key(*parent_key->value, found_parent))
+        if (builtin_scope.try_get_key(parent_key->data, found_parent))
         {
             // If the get is for a property? (eg: string.length, length is the property)
             value found_property;
@@ -467,7 +479,7 @@ namespace stack_vm
 
         value found_parent;
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-        if (builtin_scope.try_get_key(*parent_key->value, found_parent))
+        if (builtin_scope.try_get_key(parent_key->data, found_parent))
         {
             // If the get is for a property? (eg: string.length, length is the property)
             if (is_property)

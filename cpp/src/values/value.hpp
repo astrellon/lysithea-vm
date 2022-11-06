@@ -4,6 +4,8 @@
 #include <memory>
 
 #include "./string_value.hpp"
+#include "./builtin_function_value.hpp"
+#include "../utils.hpp"
 
 namespace stack_vm
 {
@@ -122,7 +124,7 @@ namespace stack_vm
 
             int compare_to(const value &other) const
             {
-                if (other.type == type)
+                if (other.type != type)
                 {
                     return 1;
                 }
@@ -171,36 +173,9 @@ namespace stack_vm
                 return "unknown";
             }
 
-            static int compare(double left, double right)
+            inline static value make_builtin(builtin_function_callback input)
             {
-                auto diff = left - right;
-                if (fabs(diff) < 0.0001)
-                {
-                    return 0;
-                }
-
-                return diff < 0 ? -1 : 1;
-            }
-
-            static int compare(std::size_t left, std::size_t right)
-            {
-                if (left == right)
-                {
-                    return 0;
-                }
-
-                return left < right ? -1 : 1;
-            }
-
-            static int compare(int left, int right)
-            {
-                auto diff = left - right;
-                if (diff == 0)
-                {
-                    return 0;
-                }
-
-                return diff < 0 ? -1 : 1;
+                return value(std::make_shared<builtin_function_value>(input));
             }
     };
 } // stack_vm

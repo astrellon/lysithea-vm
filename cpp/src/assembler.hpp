@@ -48,6 +48,8 @@ namespace stack_vm
             static const std::string keyword_define;
             static const std::string keyword_inc;
             static const std::string keyword_dec;
+            static const builtin_function_value inc_number;
+            static const builtin_function_value dec_number;
 
             scope builtin_scope;
 

@@ -1,31 +1,30 @@
 #pragma once
 
 #include <string>
-#include "../value.hpp"
+#include <memory>
+
+#include "../values/value.hpp"
+#include "../values/object_value.hpp"
 
 namespace stack_vm
 {
-    class virtual_machine;
+    class scope;
 
     class standard_object_library
     {
         public:
             // Fields
-            static const std::string &handle_name;
+            static std::shared_ptr<const scope> library_scope;
 
             // Methods
-            static void add_handler(virtual_machine &vm);
-            static void handler(const std::string &command, virtual_machine &vm);
+            static std::shared_ptr<scope> create_scope();
 
-            static value set(const value &target, const std::string &key, const value &input);
-            static value get(const value &target, const std::string &key);
-            static value keys(const object_value &target);
-            static value values(const object_value &target);
-
-            inline static object_ptr copy(const value &target)
-            {
-                return std::make_shared<object_value>(*target.get_object());
-            }
+            static value set(const object_map &target, const std::string &key, const value &input);
+            static value get(const object_map &target, const std::string &key);
+            static value keys(const object_map &target);
+            static value values(const object_map &target);
+            static value removeKey(const value &target, const std::string &key);
+            static value removeValues(const value &target, const value &input);
 
         private:
             // Constructor

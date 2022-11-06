@@ -1,54 +1,59 @@
 #pragma once
 
 #include <string>
-#include "../value.hpp"
+#include <memory>
+#include "../values/value.hpp"
 
 namespace stack_vm
 {
-    class virtual_machine;
+    class scope;
 
-    class standard_comparison_library
+    class standard_operator_library
     {
         public:
             // Fields
-            static const std::string &handle_name;
+            static std::shared_ptr<const scope> library_scope;
 
             // Methods
-            static void add_handler(virtual_machine &vm);
-            static void handler(const std::string &command, virtual_machine &vm);
+            static std::shared_ptr<scope> create_scope();
 
             inline static bool greater(const value &left, const value &right)
             {
-                return left.compare(right) > 0;
+                return left.compare_to(right) > 0;
             }
 
             inline static bool greater_equals(const value &left, const value &right)
             {
-                return left.compare(right) >= 0;
+                return left.compare_to(right) >= 0;
             }
 
             inline static bool equals(const value &left, const value &right)
             {
-                return left.compare(right) == 0;
+                return left.compare_to(right) == 0;
             }
 
             inline static bool not_equals(const value &left, const value &right)
             {
-                return left.compare(right) != 0;
+                return left.compare_to(right) != 0;
             }
 
             inline static bool less(const value &left, const value &right)
             {
-                return left.compare(right) < 0;
+                return left.compare_to(right) < 0;
             }
 
             inline static bool less_equals(const value &left, const value &right)
             {
-                return left.compare(right) <= 0;
+                return left.compare_to(right) <= 0;
+            }
+
+            inline static bool not_bool(const value &input)
+            {
+                return !input.get_bool();
             }
 
         private:
             // Constructor
-            standard_comparison_library() { };
+            standard_operator_library() { };
     };
 } // stack_vm

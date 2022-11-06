@@ -2,8 +2,12 @@
 
 #include <sstream>
 
+#include "../utils.hpp"
+
 namespace stack_vm
 {
+    value object_value::empty(std::make_shared<object_value>());
+
     int object_value::compare_to(const complex_value *input) const
     {
         auto other = dynamic_cast<const object_value *>(input);
@@ -12,16 +16,15 @@ namespace stack_vm
             return 1;
         }
 
-        const auto &this_object = *value.get();
-        const auto &other_object = *other->value.get();
+        const auto &other_object = other->data;
 
-        auto compare_length = value::compare(this_object.size(), other_object.size());
+        auto compare_length = compare(data.size(), other_object.size());
         if (compare_length != 0)
         {
             return compare_length;
         }
 
-        for (auto iter = this_object.begin(); iter != this_object.end(); ++iter)
+        for (auto iter = data.cbegin(); iter != data.cend(); ++iter)
         {
             auto find_other = other_object.find(iter->first);
             if (find_other == other_object.end())
@@ -44,7 +47,7 @@ namespace stack_vm
         std::stringstream ss;
         ss << '{';
         auto first = true;
-        for (const auto &iter : *value.get())
+        for (const auto &iter : data)
         {
             if (!first)
             {

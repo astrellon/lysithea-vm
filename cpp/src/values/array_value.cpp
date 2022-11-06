@@ -3,11 +3,15 @@
 #include <sstream>
 
 #include "./builtin_function_value.hpp"
-#include "../virtual_machine.hpp"
 #include "./value.hpp"
+
+#include "../virtual_machine.hpp"
+#include "../utils.hpp"
 
 namespace stack_vm
 {
+    value array_value::empty(std::make_shared<array_value>(false));
+
     int array_value::compare_to(const complex_value *input) const
     {
         auto other = dynamic_cast<const array_value *>(input);
@@ -16,18 +20,17 @@ namespace stack_vm
             return 1;
         }
 
-        const auto &this_array = *value.get();
-        const auto &other_array = *other->value.get();
+        const auto &other_array = other->data;
 
-        auto compare_length = value::compare(this_array.size(), other_array.size());
+        auto compare_length = compare(data.size(), other_array.size());
         if (compare_length != 0)
         {
             return compare_length;
         }
 
-        for (auto i = 0; i < this_array.size(); i++)
+        for (auto i = 0; i < data.size(); i++)
         {
-            auto compare_value = this_array[i].compare_to(other_array[i]);
+            auto compare_value = data[i].compare_to(other_array[i]);
             if (compare_value != 0)
             {
                 return compare_value;
@@ -43,7 +46,7 @@ namespace stack_vm
         {
             result = stack_vm::value(std::make_shared<builtin_function_value>([this](virtual_machine &vm, const array_value &args)
             {
-                vm.push_stack(this->value->size());
+                vm.push_stack(data.size());
             }));
             return true;
         }
@@ -56,7 +59,7 @@ namespace stack_vm
         std::stringstream ss;
         ss << '(';
         auto first = true;
-        for (const auto &iter : *value.get())
+        for (const auto &iter : data)
         {
             if (!first)
             {

@@ -9,7 +9,7 @@ namespace stack_vm
 {
     bool try_get_property(value current, const array_value &properties, value &result)
     {
-        for (const auto &iter : *properties.value)
+        for (const auto &iter : properties.data)
         {
             int index;
             if (current.is_array() && try_parse_index(iter, index))
@@ -47,8 +47,14 @@ namespace stack_vm
         auto is_string = input.get_complex<const string_value>();
         if (is_string)
         {
-            result = std::stoi(*is_string->value);
-            return result >= 0;
+            try
+            {
+                result = std::stoi(is_string->data);
+                return result >= 0;
+            }
+            catch (std::exception &exp)
+            {
+            }
         }
 
         return false;

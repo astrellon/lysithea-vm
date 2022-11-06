@@ -1,6 +1,6 @@
 #include "standard_misc_library.hpp"
 
-#include <sstream>
+#include <iostream>
 
 #include "../values/complex_value.hpp"
 #include "../values/array_value.hpp"
@@ -15,35 +15,34 @@ namespace stack_vm
 
     std::shared_ptr<scope> standard_misc_library::create_scope()
     {
-        auto result = std::make_shared<stack_vm::scope>();
+        auto result = std::make_shared<scope>();
 
         result->define("typeof", [](virtual_machine &vm, const array_value &args) -> void
         {
-            auto top = args.value->at(0);
+            auto top = args.data[0];
             vm.push_stack(top.type_name());
         });
 
         result->define("toString", [](virtual_machine &vm, const array_value &args) -> void
         {
-            auto top = args.value->at(0);
+            auto top = args.data[0];
             vm.push_stack(top.to_string());
         });
 
         result->define("compareTo", [](virtual_machine &vm, const array_value &args) -> void
         {
-            auto left = args.value->at(0);
-            auto right = args.value->at(1);
+            auto left = args.data[0];
+            auto right = args.data[1];
             vm.push_stack(left.compare_to(right));
         });
 
         result->define("print", [](virtual_machine &vm, const array_value &args) -> void
         {
-            std::stringstream ss;
-            for (auto iter : *args.value)
+            for (auto iter : args.data)
             {
-                ss << iter.to_string();
+                std::cout << iter.to_string();
             }
-            vm.push_stack(ss.str());
+            std::cout << "\n";
         });
 
         return result;

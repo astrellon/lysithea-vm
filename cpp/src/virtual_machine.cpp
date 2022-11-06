@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "./values/value_property_access.hpp"
+#include "./standard_library/standard_array_library.hpp"
 #include "./utils.hpp"
 
 namespace stack_vm
@@ -89,7 +90,7 @@ namespace stack_vm
                     throw std::runtime_error("Unable to convert input to argument");
                 }
 
-                push_stack(std::make_shared<array_value>(top->value, true));
+                push_stack(std::make_shared<array_value>(top->data, true));
                 break;
             }
             case vm_operator::get:
@@ -102,8 +103,8 @@ namespace stack_vm
                 }
 
                 value found_value;
-                if (current_scope->try_get_key(*is_string->value, found_value) ||
-                    (builtin_scope && builtin_scope->try_get_key(*is_string->value, found_value)))
+                if (current_scope->try_get_key(is_string->data, found_value) ||
+                    (builtin_scope && builtin_scope->try_get_key(is_string->data, found_value)))
                 {
                     push_stack(found_value);
                 }
@@ -209,19 +210,19 @@ namespace stack_vm
                 }
 
                 auto array_input = code_line.value.get_complex<const array_value>();
-                if (array_input->value->size() != 2 ||
-                    !array_input->value->at(0).is_function())
+                if (array_input->data.size() != 2 ||
+                    !array_input->data[0].is_function())
                 {
                     throw std::runtime_error("Call direct needs two inputs of func and number");
                 }
 
-                auto num_args = array_input->value->at(1);
+                auto num_args = array_input->data[1];
                 if (!num_args.is_number())
                 {
                     throw std::runtime_error("Call direct needs two inputs of func and number");
                 }
 
-                call_function(*array_input->value->at(0).get_complex(), num_args.get_int(), true);
+                call_function(*array_input->data[0].get_complex(), num_args.get_int(), true);
                 break;
             }
         }
@@ -256,7 +257,7 @@ namespace stack_vm
                 auto is_arg = iter.get_complex<const array_value>();
                 if (is_arg && is_arg->is_arguments_value)
                 {
-                    for (const auto &arg_iter : *is_arg->value)
+                    for (const auto &arg_iter : is_arg->data)
                     {
                         combined.push_back(arg_iter);
                     }
@@ -305,17 +306,17 @@ namespace stack_vm
         current_scope = std::make_shared<scope>(current_scope);
         program_counter = 0;
 
-        auto num_called_args = std::min(args->value->size(), code->parameters.size());
+        auto num_called_args = std::min(args->data.size(), code->parameters.size());
         for (auto i = 0; i < num_called_args; i++)
         {
             const auto &arg_name = code->parameters[i];
             auto is_unpack = starts_with_unpack(arg_name);
             if (is_unpack)
             {
-                // TODO
+                current_scope->define(arg_name.substr(3), standard_array_library::sublist(args->data, i, -1));
                 break;
             }
-            current_scope->define(arg_name, args->value->at(i));
+            current_scope->define(arg_name, args->data[i]);
         }
     }
 
