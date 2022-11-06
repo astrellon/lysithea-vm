@@ -47,7 +47,7 @@ namespace SimpleStackVM.Unity
             return $"Actor: {this.Value.Name}";
         }
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue value)
         {
             if (key == "name")
             {

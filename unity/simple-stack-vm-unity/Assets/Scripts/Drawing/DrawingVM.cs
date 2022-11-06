@@ -44,12 +44,12 @@ namespace SimpleStackVM.Unity
 
             assembler.BuiltinScope.Define("nativeCalcPosition", new BuiltinFunctionValue((vm, args) =>
             {
-                var pos = NativeDrawCircle.CalcPosition(args.Get<NumberValue>(0).IntValue);
+                var pos = NativeDrawCircle.CalcPosition(args.GetIndex<NumberValue>(0).IntValue);
                 vm.PushStack(new Vector3Value(pos));
             }));
             assembler.BuiltinScope.Define("nativeCalcColour", new BuiltinFunctionValue((vm, args) =>
             {
-                var colour = NativeDrawCircle.CalcColour(args.Get<NumberValue>(0).IntValue);
+                var colour = NativeDrawCircle.CalcColour(args.GetIndex<NumberValue>(0).IntValue);
                 vm.PushStack(new ColourValue(colour));
             }));
 

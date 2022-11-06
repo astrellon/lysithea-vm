@@ -17,18 +17,18 @@ namespace SimpleStackVM
     {
         IReadOnlyList<string> ObjectKeys { get; }
 
-        bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value);
+        bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value);
     }
 
     public interface IArrayValue : IValue
     {
         IReadOnlyList<IValue> ArrayValues { get; }
 
-        bool TryGet(int index, [NotNullWhen(true)] out IValue? result);
+        bool TryGetIndex(int index, [NotNullWhen(true)] out IValue? result);
     }
 
     public interface IFunctionValue : IValue
     {
-        void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace);
+        void Invoke(VirtualMachine vm, ArrayValue args, bool pushToStackTrace);
     }
 }

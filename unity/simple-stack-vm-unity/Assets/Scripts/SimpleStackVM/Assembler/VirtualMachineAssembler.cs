@@ -58,6 +58,12 @@ namespace SimpleStackVM
             return ParseFromReader(reader);
         }
 
+        public Script ParseFromFile(string filePath)
+        {
+            using var file = File.OpenRead(filePath);
+            return ParseFromStream(file);
+        }
+
         public Script ParseFromText(string input)
         {
             using var reader = new StringReader(input);
@@ -295,8 +301,8 @@ namespace SimpleStackVM
                 case LoopKeyword: return ParseLoop(arrayValue);
                 case IfKeyword: return ParseCond(arrayValue, true);
                 case UnlessKeyword: return ParseCond(arrayValue, false);
-                case IncKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.IncNumber);
-                case DecKeyword: return ParseChangeVariable(arrayValue[1], StandardMathLibrary.DecNumber);
+                case IncKeyword: return ParseChangeVariable(arrayValue[1], IncNumber);
+                case DecKeyword: return ParseChangeVariable(arrayValue[1], DecNumber);
             }
 
             return new List<ITempCodeLine>();
@@ -369,10 +375,19 @@ namespace SimpleStackVM
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
-                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                if (isProperty)
                 {
-                    // If we found the property then we're done and we can just push that known value onto the stack.
-                    result.Add(new CodeLine(Operator.Push, foundProperty));
+                    if (ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
+                    {
+                        // If we found the property then we're done and we can just push that known value onto the stack.
+                        result.Add(new CodeLine(Operator.Push, foundProperty));
+                    }
+                    else
+                    {
+                        // We didn't find the property at compile time, so look it up at run time.
+                        result.Add(new CodeLine(Operator.Push, foundParent));
+                        result.Add(new CodeLine(Operator.GetProperty, property));
+                    }
                 }
                 else if (!isProperty)
                 {
@@ -445,6 +460,16 @@ namespace SimpleStackVM
 
             return true;
         }
+
+        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value + 1));
+        });
+
+        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value - 1));
+        });
         #endregion
 
         #endregion

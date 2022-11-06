@@ -19,10 +19,10 @@ namespace SimpleStackVM.Unity
             {
                 {"element", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var elementName = args.Get<StringValue>(0);
-                    var position = args.Get(1, Vector3Value.Cast);
-                    var colour = args.Get(2, ColourValue.Cast);
-                    var scale = args.Get(3, Vector3Value.Cast);
+                    var elementName = args.GetIndex<StringValue>(0);
+                    var position = args.GetIndex(1, Vector3Value.Cast);
+                    var colour = args.GetIndex(2, ColourValue.Cast);
+                    var scale = args.GetIndex(3, Vector3Value.Cast);
 
                     DrawingContext.Instance.DrawElement(elementName.Value, position.Value, colour.Value, scale.Value);
                 })},

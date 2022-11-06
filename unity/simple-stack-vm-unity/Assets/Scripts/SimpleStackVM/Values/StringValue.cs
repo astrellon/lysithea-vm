@@ -48,7 +48,7 @@ namespace SimpleStackVM
 
         public override string ToString() => this.Value;
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             if (key == "length")
             {
@@ -60,7 +60,7 @@ namespace SimpleStackVM
             return false;
         }
 
-        public void GetLength(VirtualMachine vm, ArgumentsValue args)
+        public void GetLength(VirtualMachine vm, ArrayValue args)
         {
             vm.PushStack(this.Value.Length);
         }

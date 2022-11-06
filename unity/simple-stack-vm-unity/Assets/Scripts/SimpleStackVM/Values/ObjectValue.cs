@@ -26,14 +26,14 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             return this.Value.TryGetValue(key, out value);
         }
 
-        public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
+        public bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
         {
-            if (this.TryGetValue(key, out var result))
+            if (this.TryGetKey(key, out var result))
             {
                 if (result is T castedValue)
                 {

@@ -12,10 +12,12 @@ namespace SimpleStackVM
         #region Fields
         // Static
         public static ArrayValue Empty = new ArrayValue(new IValue[0]);
+        public static ArrayValue EmptyArgs = new ArrayValue(new IValue[0], true);
+
         private static IReadOnlyList<string> Keys = new [] { "length" };
 
         // IValue
-        public string TypeName => "array";
+        public string TypeName => this.IsArgumentArray ? "arguments" : "array";
 
         // IArrayValue
         public IReadOnlyList<IValue> ArrayValues => this.Value;
@@ -25,22 +27,24 @@ namespace SimpleStackVM
         public IReadOnlyList<string> ObjectKeys => Keys;
 
         // Helper
-        public IValue this[int index] => this.Value[this.GetIndex(index)];
+        public IValue this[int index] => this.Value[this.CalcIndex(index)];
 
         // Internal
         public readonly IReadOnlyList<IValue> Value;
+        public readonly bool IsArgumentArray;
         #endregion
 
         #region Constructor
-        public ArrayValue(IReadOnlyList<IValue> value)
+        public ArrayValue(IReadOnlyList<IValue> value, bool isArgumentArray = false)
         {
             this.Value = value;
+            this.IsArgumentArray = isArgumentArray;
         }
         #endregion
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetIndex(int index)
+        public int CalcIndex(int index)
         {
             if (index < 0)
             {
@@ -50,9 +54,9 @@ namespace SimpleStackVM
             return index;
         }
 
-        public bool TryGet(int index, [NotNullWhen(true)] out IValue result)
+        public bool TryGetIndex(int index, [NotNullWhen(true)] out IValue result)
         {
-            index = this.GetIndex(index);
+            index = this.CalcIndex(index);
             if (index >= 0 && index < this.Value.Count)
             {
                 result = this.Value[index];
@@ -65,9 +69,9 @@ namespace SimpleStackVM
 
         public override string ToString() => StandardArrayLibrary.GeneralToString(this);
         public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
-        public void GetLength(VirtualMachine vm, ArgumentsValue args) => vm.PushStack(this.Value.Count);
+        public void GetLength(VirtualMachine vm, ArrayValue args) => vm.PushStack(this.Value.Count);
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             if (key == "length")
             {

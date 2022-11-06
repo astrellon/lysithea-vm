@@ -33,22 +33,22 @@ namespace SimpleStackVM.Unity
             {
                 {"new", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var red = args.Get<NumberValue>(0).FloatValue;
-                    var green = args.Get<NumberValue>(1).FloatValue;
-                    var blue = args.Get<NumberValue>(2).FloatValue;
+                    var red = args.GetIndex<NumberValue>(0).FloatValue;
+                    var green = args.GetIndex<NumberValue>(1).FloatValue;
+                    var blue = args.GetIndex<NumberValue>(2).FloatValue;
                     var alpha = 1.0f;
                     if (args.Length == 4)
                     {
-                        alpha = args.Get<NumberValue>(3).FloatValue;
+                        alpha = args.GetIndex<NumberValue>(3).FloatValue;
                     }
 
                     vm.PushStack(new ColourValue(new Color(red, green, blue, alpha)));
                 })},
                 {"hsv", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var hue = args.Get<NumberValue>(0).FloatValue;
-                    var saturation = args.Get<NumberValue>(1).FloatValue;
-                    var value = args.Get<NumberValue>(2).FloatValue;
+                    var hue = args.GetIndex<NumberValue>(0).FloatValue;
+                    var saturation = args.GetIndex<NumberValue>(1).FloatValue;
+                    var value = args.GetIndex<NumberValue>(2).FloatValue;
 
                     vm.PushStack(new ColourValue(Color.HSVToRGB(hue, saturation, value)));
                 })}
@@ -61,7 +61,7 @@ namespace SimpleStackVM.Unity
             {
                 {"pick", new BuiltinFunctionValue((vm, args) =>
                 {
-                    if (args.Length == 1 && args.TryGet<ArrayValue>(0, out var list))
+                    if (args.Length == 1 && args.TryGetIndex<ArrayValue>(0, out var list))
                     {
                         var index = Random.Range(0, list.Value.Count);
                         vm.PushStack(list.Value[index]);
@@ -83,8 +83,8 @@ namespace SimpleStackVM.Unity
                 })},
                 {"range", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var lower = args.Get<NumberValue>(0);
-                    var upper = args.Get<NumberValue>(1);
+                    var lower = args.GetIndex<NumberValue>(0);
+                    var upper = args.GetIndex<NumberValue>(1);
                     var newValue = Random.Range(lower.FloatValue, upper.FloatValue);
                     vm.PushStack(newValue);
                 })}
@@ -99,9 +99,9 @@ namespace SimpleStackVM.Unity
                 {"zero", Vector3Zero},
                 {"new", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = args.Get<NumberValue>(0).FloatValue;
-                    var y = args.Get<NumberValue>(1).FloatValue;
-                    var z = args.Get<NumberValue>(2).FloatValue;
+                    var x = args.GetIndex<NumberValue>(0).FloatValue;
+                    var y = args.GetIndex<NumberValue>(1).FloatValue;
+                    var z = args.GetIndex<NumberValue>(2).FloatValue;
                     vm.PushStack(new Vector3Value(new Vector3(x, y, z)));
                 })}
             });

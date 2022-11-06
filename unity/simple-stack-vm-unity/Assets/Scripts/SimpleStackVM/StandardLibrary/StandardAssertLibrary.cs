@@ -18,7 +18,7 @@ namespace SimpleStackVM
             {
                 {"true", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<BoolValue>(0);
+                    var top = args.GetIndex<BoolValue>(0);
                     if (!top.Value)
                     {
                         vm.Running = false;
@@ -29,7 +29,7 @@ namespace SimpleStackVM
 
                 {"false", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = args.Get<BoolValue>(0);
+                    var top = args.GetIndex<BoolValue>(0);
                     if (top.Value)
                     {
                         vm.Running = false;
@@ -40,8 +40,8 @@ namespace SimpleStackVM
 
                 {"equals", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var expected = args.Get(0);
-                    var actual = args.Get(1);
+                    var expected = args.GetIndex(0);
+                    var actual = args.GetIndex(1);
                     if (expected.CompareTo(actual) != 0)
                     {
                         vm.Running = false;
@@ -52,8 +52,8 @@ namespace SimpleStackVM
 
                 {"notEquals", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var expected = args.Get(0);
-                    var actual = args.Get(1);
+                    var expected = args.GetIndex(0);
+                    var actual = args.GetIndex(1);
                     if (expected.CompareTo(actual) == 0)
                     {
                         vm.Running = false;

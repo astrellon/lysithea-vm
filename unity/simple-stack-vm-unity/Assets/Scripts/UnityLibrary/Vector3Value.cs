@@ -54,7 +54,7 @@ namespace SimpleStackVM
             throw new Exception($"Invalid Vector3 cast: {input.ToString()}");
         }
 
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue value)
         {
             switch (key)
             {
