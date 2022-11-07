@@ -115,7 +115,7 @@ namespace SimpleStackVM
                             throw new OperatorException(this.CreateStackTrace(), $"Unable to convert argument value onto stack: {top.ToString()}");
                         }
 
-                        this.PushStack(new ArrayValue(arrayValue.ArrayValues, true));
+                        this.PushStack(new ArgumentsValue(arrayValue.ArrayValues));
                         break;
                     }
                 case Operator.Get:
@@ -252,11 +252,11 @@ namespace SimpleStackVM
         }
 
         #region Function Methods
-        public ArrayValue GetArgs(int numArgs)
+        public ArgumentsValue GetArgs(int numArgs)
         {
             if (numArgs == 0)
             {
-                return ArrayValue.EmptyArgs;
+                return ArgumentsValue.Empty;
             }
 
             var hasArguments = false;
@@ -264,7 +264,7 @@ namespace SimpleStackVM
             for (var i = 0; i < numArgs; i++)
             {
                 var value = this.PopStack();
-                if (value is ArrayValue arrayValue && arrayValue.IsArgumentArray)
+                if (value is ArgumentsValue argValue)
                 {
                     hasArguments = true;
                 }
@@ -273,9 +273,9 @@ namespace SimpleStackVM
 
             if (hasArguments)
             {
-                return new ArrayValue(temp.SelectMany(FlattenTempArgs).ToList(), true);
+                return new ArgumentsValue(temp.SelectMany(FlattenTempArgs).ToList());
             }
-            return new ArrayValue(temp, true);
+            return new ArgumentsValue(temp);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -286,7 +286,7 @@ namespace SimpleStackVM
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(Function function, ArrayValue args, bool pushToStackTrace = false)
+        public void ExecuteFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
         {
             if (pushToStackTrace)
             {
@@ -304,7 +304,7 @@ namespace SimpleStackVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    args = StandardArrayLibrary.SubList(args, i, -1);
+                    args = args.SubList(i);
                     this.CurrentScope.Define(argName.Substring(3), args);
                     i++;
                     break;
@@ -317,7 +317,7 @@ namespace SimpleStackVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    this.CurrentScope.Define(argName.Substring(3), ArrayValue.EmptyArgs);
+                    this.CurrentScope.Define(argName.Substring(3), ArgumentsValue.Empty);
                 }
                 else
                 {
@@ -359,9 +359,9 @@ namespace SimpleStackVM
 
         private static IEnumerable<IValue> FlattenTempArgs(IValue input)
         {
-            if (input is ArrayValue argValue && argValue.IsArgumentArray)
+            if (input is ArgumentsValue argValue)
             {
-                foreach (var item in argValue.ArrayValues)
+                foreach (var item in argValue.Value)
                 {
                     yield return item;
                 }

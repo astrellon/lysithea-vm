@@ -197,11 +197,6 @@ namespace SimpleStackVM
 
             if (index == 0 && length >= self.Value.Count)
             {
-                // Unpack the argument array when getting sub list
-                if (self.IsArgumentArray)
-                {
-                    return new ArrayValue(self.Value);
-                }
                 return self;
             }
 
