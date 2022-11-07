@@ -37,6 +37,8 @@ namespace stack_vm
                 std::string to_string() const;
             };
 
+            using code_line_list = std::vector<temp_code_line>;
+
             // Fields
             static const std::string keyword_function;
             static const std::string keyword_loop;
@@ -48,6 +50,8 @@ namespace stack_vm
             static const std::string keyword_define;
             static const std::string keyword_inc;
             static const std::string keyword_dec;
+            static const std::string keyword_jump;
+            static const std::string keyword_return;
             static const builtin_function_value inc_number;
             static const builtin_function_value dec_number;
 
@@ -60,22 +64,24 @@ namespace stack_vm
             std::shared_ptr<script> parse_from_text(const std::string &input);
             std::shared_ptr<script> parse_from_stream(std::istream &input);
             std::shared_ptr<script> parse_from_value(const array_value &input);
-            std::vector<temp_code_line> parse(value input);
+            code_line_list parse(value input);
 
-            std::vector<temp_code_line> parse_set(const array_value &input);
-            std::vector<temp_code_line> parse_define(const array_value &input);
-            std::vector<temp_code_line> parse_loop(const array_value &input);
-            std::vector<temp_code_line> parse_cond(const array_value &input, bool is_if_statement);
-            std::vector<temp_code_line> parse_flatten(value input);
-            std::vector<temp_code_line> parse_loop_jump(const std::string &keyword, bool jump_to_start);
+            code_line_list parse_set(const array_value &input);
+            code_line_list parse_define(const array_value &input);
+            code_line_list parse_loop(const array_value &input);
+            code_line_list parse_cond(const array_value &input, bool is_if_statement);
+            code_line_list parse_flatten(value input);
+            code_line_list parse_loop_jump(const std::string &keyword, bool jump_to_start);
             std::shared_ptr<function> parse_function(const array_value &input);
-            std::vector<temp_code_line> parse_change_variable(value input, builtin_function_value change_func);
-            std::vector<temp_code_line> parse_keyword(const std::string &keyword, const array_value &input);
+            code_line_list parse_change_variable(value input, builtin_function_value change_func);
+            code_line_list parse_jump(const array_value &input);
+            code_line_list parse_return(const array_value &input);
+            code_line_list parse_keyword(const std::string &keyword, const array_value &input);
 
             std::shared_ptr<function> parse_global_function(const array_value &input);
 
-            std::vector<temp_code_line> optimise_call_symbol_value(const std::string &variable, int num_args);
-            std::vector<temp_code_line> optimise_get_symbol_value(const std::string &variable);
+            code_line_list optimise_call_symbol_value(const std::string &variable, int num_args);
+            code_line_list optimise_get_symbol_value(const std::string &variable);
 
             static bool is_get_property_request(const std::string &variable, std::shared_ptr<string_value> &parent_key, std::shared_ptr<array_value> &property);
 
@@ -95,7 +101,7 @@ namespace stack_vm
             std::stack<loop_labels> loop_stack;
 
             // Methods
-            static std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const std::vector<temp_code_line> &temp_code_lines);
+            static std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines);
 
     };
 } // stack_vm

@@ -22,6 +22,8 @@ namespace stack_vm
     const std::string assembler::keyword_define("define");
     const std::string assembler::keyword_inc("inc");
     const std::string assembler::keyword_dec("dec");
+    const std::string assembler::keyword_jump("jump");
+    const std::string assembler::keyword_return("return");
 
     const builtin_function_value assembler::inc_number([](virtual_machine &vm, const array_value &args) -> void
     {
@@ -82,7 +84,7 @@ namespace stack_vm
 
     std::shared_ptr<function> assembler::parse_global_function(const array_value &input)
     {
-        std::vector<temp_code_line> temp_code_lines;
+        code_line_list temp_code_lines;
         for (const auto &iter : input.data)
         {
             auto lines = parse(iter);
@@ -96,9 +98,9 @@ namespace stack_vm
         return code;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse(value input)
+    assembler::code_line_list assembler::parse(value input)
     {
-        std::vector<temp_code_line> result;
+        code_line_list result;
         auto array_input = input.get_complex<array_value>();
         if (array_input)
         {
@@ -131,17 +133,7 @@ namespace stack_vm
                     push_range(result, parse(*iter));
                 }
 
-                // If it is not an opcode then it must be a function call
-                auto op_code = parse_operator(first_symbol_value->data);
-                if (op_code == vm_operator::unknown)
-                {
-                    push_range(result, optimise_call_symbol_value(first_symbol_value->data, array_input->data.size() - 1));
-                }
-                else if (op_code != vm_operator::push)
-                {
-                    result.emplace_back(op_code);
-                }
-
+                push_range(result, optimise_call_symbol_value(first_symbol_value->data, array_input->data.size() - 1));
                 return result;
             }
         }
@@ -158,14 +150,14 @@ namespace stack_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_set(const array_value &input)
+    assembler::code_line_list assembler::parse_set(const array_value &input)
     {
         auto result = parse(input.data[2]);
         result.emplace_back(vm_operator::set, input.data[1]);
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_define(const array_value &input)
+    assembler::code_line_list assembler::parse_define(const array_value &input)
     {
         auto result = parse(input.data[2]);
         result.emplace_back(vm_operator::define, input.data[1]);
@@ -178,7 +170,7 @@ namespace stack_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_loop(const array_value &input)
+    assembler::code_line_list assembler::parse_loop(const array_value &input)
     {
         if (input.data.size() < 3)
         {
@@ -196,7 +188,7 @@ namespace stack_vm
 
         loop_stack.emplace(label_start, label_end);
 
-        std::vector<temp_code_line> result;
+        code_line_list result;
         result.emplace_back(ss_label_start.str());
 
         auto comparison_value = input.data[1];
@@ -221,7 +213,7 @@ namespace stack_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_cond(const array_value &input, bool is_if_statement)
+    assembler::code_line_list assembler::parse_cond(const array_value &input, bool is_if_statement)
     {
         if (input.data.size() < 3)
         {
@@ -296,7 +288,7 @@ namespace stack_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_flatten(value input)
+    assembler::code_line_list assembler::parse_flatten(value input)
     {
         auto is_array = input.get_complex<const array_value>();
         if (is_array)
@@ -313,7 +305,7 @@ namespace stack_vm
 
             if (all_array)
             {
-                std::vector<temp_code_line> result;
+                code_line_list result;
                 for (auto iter : is_array->data)
                 {
                     push_range(result, parse(iter));
@@ -325,7 +317,7 @@ namespace stack_vm
         return parse(input);
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_loop_jump(const std::string &keyword, bool jump_to_start)
+    assembler::code_line_list assembler::parse_loop_jump(const std::string &keyword, bool jump_to_start)
     {
         if (loop_stack.size() == 0)
         {
@@ -335,7 +327,7 @@ namespace stack_vm
         auto loop_label = loop_stack.top();
         loop_stack.pop();
 
-        std::vector<temp_code_line> result;
+        code_line_list result;
         result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start : loop_label.end);
         return result;
     }
@@ -349,7 +341,7 @@ namespace stack_vm
             parameters.emplace_back(iter.to_string());
         }
 
-        std::vector<temp_code_line> temp_code_lines;
+        code_line_list temp_code_lines;
         for (auto i = 2; i < input.data.size(); i++)
         {
             push_range(temp_code_lines, parse(input.data[i]));
@@ -358,7 +350,7 @@ namespace stack_vm
         return process_temp_function(parameters, temp_code_lines);
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_change_variable(value input, builtin_function_value change_func)
+    assembler::code_line_list assembler::parse_change_variable(value input, builtin_function_value change_func)
     {
         auto var_name = std::make_shared<string_value>(input.to_string());
         value num_args(1);
@@ -368,7 +360,7 @@ namespace stack_vm
         call_array_args.emplace_back(num_args);
         auto call_array_values = std::make_shared<array_value>(call_array_args, false);
 
-        std::vector<temp_code_line> result;
+        code_line_list result;
         result.emplace_back(vm_operator::get, var_name);
         result.emplace_back(vm_operator::call_direct, call_array_values);
         result.emplace_back(vm_operator::set, var_name);
@@ -376,9 +368,33 @@ namespace stack_vm
         return result;
     }
 
+    assembler::code_line_list assembler::parse_jump(const array_value &input)
+    {
+        auto result = parse(input.data[1]);
+        if (result.size() == 1 && result[0].op == vm_operator::push && !result[0].argument.is_null())
+        {
+             code_line_list new_result;
+             new_result.emplace_back(vm_operator::jump, result[0].argument);
+             return new_result;
+        }
+        result.emplace_back(vm_operator::jump);
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_return(const array_value &input)
+    {
+        code_line_list result;
+        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        {
+            push_range(result, parse(*iter));
+        }
+        result.emplace_back(vm_operator::call_return);
+        return result;
+    }
+
     std::vector<assembler::temp_code_line> assembler::parse_keyword(const std::string &keyword, const array_value &input)
     {
-        std::vector<temp_code_line> result;
+        code_line_list result;
         if (keyword == keyword_function)
         {
             auto function = parse_function(input);
@@ -396,13 +412,15 @@ namespace stack_vm
         if (keyword == keyword_unless) { return parse_cond(input, false); }
         if (keyword == keyword_inc) { return parse_change_variable(input.data[1], inc_number); }
         if (keyword == keyword_dec) { return parse_change_variable(input.data[1], dec_number); }
+        if (keyword == keyword_jump) { return parse_jump(input); }
+        if (keyword == keyword_return) { return parse_return(input); }
 
         return result;
     }
 
     std::vector<assembler::temp_code_line> assembler::optimise_call_symbol_value(const std::string &variable, int num_args)
     {
-        std::vector<temp_code_line> result;
+        code_line_list result;
         value num_arg_value(num_args);
 
         std::shared_ptr<string_value> parent_key;
@@ -475,7 +493,7 @@ namespace stack_vm
         std::shared_ptr<array_value> property;
         auto is_property = is_get_property_request(get_name, parent_key, property);
 
-        std::vector<temp_code_line> result;
+        code_line_list result;
 
         value found_parent;
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
@@ -545,7 +563,7 @@ namespace stack_vm
         return false;
     }
 
-    std::shared_ptr<function> assembler::process_temp_function(const std::vector<std::string> &parameters, const std::vector<temp_code_line> &temp_code_lines)
+    std::shared_ptr<function> assembler::process_temp_function(const std::vector<std::string> &parameters, const assembler::code_line_list &temp_code_lines)
     {
         std::unordered_map<std::string, int> labels;
         std::vector<code_line> code;

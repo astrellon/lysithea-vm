@@ -180,7 +180,8 @@ Conditionally jumps to the provided `label`. If the label is not given then it i
 
 After the label is grabbed the next value from the top of the stack is compared with `true` and if they are equal then it will jump to the label.
 
-These are more advanced operator:
+**These are more advanced operator:**
+
 #### `(toArgument value?)`
 Turns the value from the code line or the value from the top of the stack into an argument array, and expects the top to be array like in the first place.
 
@@ -302,12 +303,30 @@ Example of wrapping a code block for single when true block.
 )
 
 ; Outputs
-; Still in progress
-; Please wait...
+Still in progress
+Please wait...
 ```
 
 ### `(unless (conditionalCode) (whenFalseCode) (whenTrueCode?))`
 The conditional code is executed first and if result in a `false` value then the `whenFalseCode` is executed. If another block is provided then that will be executed if the value is not false.
+
+```lisp
+(define progress 0)
+(unless (< progress 100)
+    (
+        (print "100% Progress")
+        (print "All done")
+    )
+    (
+        (print "Still in progress")
+        (print "Please wait...")
+    )
+)
+
+; Outputs
+Still in progress
+Please wait...
+```
 
 ### `(function (parameterList) (codeBody))`
 Creates a new function value, takes a parameter list, the list itself is required but it can be empty.
@@ -366,14 +385,124 @@ Unpack arguments example:
 ```
 
 ### `(loop (conditionalCode) (loopBody))`
+Creates a looping section of the code. This is effectively a `while` found in other languages.
+
+```lisp
+(define i 0)
+(loop (< i 4)
+    (print i)
+    (inc i)
+)
+(print "Done")
+
+; Outputs
+0
+1
+2
+3
+Done
+```
+The loop is closer to syntax sugar and is equivalent to:
+```lisp
+(define i 0)
+(:LoopStart)
+(if (< i 4)
+    (
+        (print i)
+        (inc i)
+        (jump :LoopStart)
+    )
+)
+(:LoopEnd)
+(print "Done")
+
+; Outputs
+0
+1
+2
+3
+Done
+```
+
+Whilst syntax sugar elements have been avoided for the sake of simplicity, in this case loops are very common and having to come up with unique loop start and end labels would definitely become tedious.
 
 ### `(continue)`
+Used inside loops to jump back to the start of the loop.
+
+```lisp
+(define i 0)
+(loop (< i 6)
+    (inc i)
+
+    (if (<= i 3)
+        (continue)
+    )
+    (print i)
+)
+(print "Done")
+
+; Output
+4
+5
+6
+Done
+```
 
 ### `(break)`
+Used inside loops to break out of the loop and jump to the end.
+
+```lisp
+(define i 0)
+(loop (< i 6)
+    (inc i)
+
+    (print i)
+
+    (if (> i 3)
+        (break)
+    )
+)
+(print "Done")
+
+; Output
+1
+2
+3
+4
+Done
+```
 
 ### `(inc varName)`
+Increments the value of a variable. In addition to be simpler to write that a `set` and addition operator it's also more performant since it's internally uses fewer instructions.
+
+```lisp
+(define i 0)
+(print i) ; 0
+(inc i)
+(print i) ; 1
+
+; Equivalent to:
+(define i 0)
+(print i) ; 0
+(set i (+ i 1))
+(print 1) ; 0
+```
 
 ### `(dec varName)`
+Decrements the value of a variable. In addition to be simpler to write that a `set` and subtraction operator it's also more performant since it's internally uses fewer instructions.
+
+```lisp
+(define i 0)
+(print i) ; 0
+(dec i)
+(print i) ; -1
+
+; Equivalent to:
+(define i 0)
+(print i) ; 0
+(set i (- i 1))
+(print i) ; -1
+```
 
 # Standard Library
 

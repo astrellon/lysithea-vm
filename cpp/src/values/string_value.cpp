@@ -9,10 +9,7 @@ namespace stack_vm
     {
         if (key == "length")
         {
-            result = value::make_builtin([this](virtual_machine &vm, const array_value &args)
-            {
-                vm.push_stack(data.size());
-            });
+            result = value(data.size());
             return true;
         }
 

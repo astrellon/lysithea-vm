@@ -310,16 +310,32 @@ namespace stack_vm
         program_counter = 0;
 
         auto num_called_args = std::min(args->data.size(), code->parameters.size());
-        for (auto i = 0; i < num_called_args; i++)
+        auto i = 0;
+        for (; i < num_called_args; i++)
         {
             const auto &arg_name = code->parameters[i];
             auto is_unpack = starts_with_unpack(arg_name);
             if (is_unpack)
             {
                 current_scope->define(arg_name.substr(3), standard_array_library::sublist(args->data, i, -1));
+                i++;
                 break;
             }
             current_scope->define(arg_name, args->data[i]);
+        }
+
+        if (i < code->parameters.size())
+        {
+            const auto &arg_name = code->parameters[i];
+            auto is_unpack = starts_with_unpack(arg_name);
+            if (is_unpack)
+            {
+                current_scope->define(arg_name.substr(3), array_value::empty);
+            }
+            else
+            {
+                throw std::runtime_error("Function called without enough arguments");
+            }
         }
     }
 

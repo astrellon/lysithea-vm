@@ -12,8 +12,6 @@
 std::random_device _rd;
 std::mt19937 _rand(_rd());
 
-int counter = 0;
-
 std::shared_ptr<stack_vm::scope> create_custom_scope()
 {
     auto result = std::make_shared<stack_vm::scope>();
@@ -26,22 +24,25 @@ std::shared_ptr<stack_vm::scope> create_custom_scope()
 
     result->define("add", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
     {
-        auto num1 = vm.pop_stack();
-        auto num2 = vm.pop_stack();
-        vm.push_stack(num1.get_number() + num2.get_number());
+        auto num1 = args.get_number(0);
+        auto num2 = args.get_number(1);
+        vm.push_stack(num1 + num2);
     });
 
-    result->define("isDone", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
+    result->define("lessThan", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
     {
-        counter++;
-        vm.push_stack(counter >= 1000000);
+        auto left = args.get_number(0);
+        auto right = args.get_number(1);
+        vm.push_stack(left < right);
     });
 
-    result->define("done", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
+    result->define("print", [](stack_vm::virtual_machine &vm, const stack_vm::array_value &args) -> void
     {
-        auto total = vm.pop_stack();
-
-        std::cout << "Done: " << total.get_number() << "\n";
+        for (auto iter : args.data)
+        {
+            std::cout << iter.to_string();
+        }
+        std::cout << "\n";
     });
 
     return result;
@@ -66,6 +67,10 @@ int main()
     auto script = assembler.parse_from_value(parsed);
 
     stack_vm::virtual_machine vm(16);
+    stack_vm::value val(true);
+
+    std::cout << "Size vm: " << sizeof(vm) << "\n";
+    std::cout << "Size value: " << sizeof(val) << "\n";
 
     auto start = std::chrono::steady_clock::now();
     vm.execute(script);

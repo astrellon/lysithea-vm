@@ -5,23 +5,44 @@
     (call 2)
 ))
 
-(define example2 (function()
-    (define clamp (function (x lower upper)
-        (if (> x upper)
-            (return upper)
+(define labelExample (function ()
+    (define main (function ()
+        (set x 0)
+        (:start)
+
+        (inc x)
+        (if (< x 10)
+            (
+                (print "Less than 10: " x)
+                (jump :start)
+            )
         )
-        (if (< x lower)
-            (return lower)
-        )
-        (return x)
+        (done)
     ))
 
-    (print "Clamped 5 " (clamp 5 1 2))
-    (print "Clamped 0 " (clamp 0 1 2))
-    (print "Clamped 1.5 " (clamp 1.5 1 2))
+    (main)
 ))
 
-(define ifExample (function ()
+(define variableExample (function ()
+    (define name "Global")
+    (define main (function ()
+        (print "Started main")
+        (print name)
+
+        (set name "Set from scope")
+        (print name)
+
+        (define name "Created in scope")
+        (print name)
+        (print "End main")
+    ))
+
+    (print name)
+    (main)
+    (print name)
+))
+
+(define ifExample1 (function ()
     (define logCounter (function ()
         (if (< counter 10)
             (print "Counter less than 10")
@@ -31,8 +52,37 @@
 
     (define counter 0)
     (logCounter) ; Prints Counter less than 10
+
     (define counter 20)
     (logCounter) ; Prints Counter more than 10
+))
+
+(define ifExample2 (function ()
+    (define progress 0)
+    (if (< progress 100)
+        (
+            (print "Still in progress")
+            (print "Please wait...")
+        )
+        (
+            (print "100% Progress")
+            (print "All done")
+        )
+    )
+))
+
+(define unlessExample (function ()
+    (define progress 0)
+    (unless (< progress 100)
+        (
+            (print "100% Progress")
+            (print "All done")
+        )
+        (
+            (print "Still in progress")
+            (print "Please wait...")
+        )
+    )
 ))
 
 (define functionExample (function ()
@@ -81,3 +131,81 @@
 ))
 
 (functionUnpackExample)
+
+(define loopExample1 (function ()
+    (define i 0)
+    (loop (< i 4)
+        (print i)
+        (inc i)
+    )
+    (print "Done")
+))
+
+(define loopExample2 (function ()
+    (define i 0)
+    (:LoopStart)
+    (if (< i 4)
+        (
+        (print i)
+            (inc i)
+            (jump :LoopStart)
+        )
+    )
+    (:LoopEnd)
+    (print "Done")
+))
+
+(define continueExample (function ()
+    (define i 0)
+    (loop (< i 6)
+        (inc i)
+
+        (if (<= i 3)
+            (continue)
+        )
+        (print i)
+    )
+    (print "Done")
+))
+
+(define breakExample (function ()
+    (define i 0)
+    (loop (< i 6)
+        (inc i)
+
+        (print i)
+
+        (if (> i 3)
+            (break)
+        )
+    )
+    (print "Done")
+))
+
+(define incExample (function ()
+    (define i 0)
+    (print i) ; 0
+    (inc i)
+    (print i) ; 1
+
+    ; Equivalent to:
+    (define i 0)
+    (print i) ; 0
+    (set i (+ i 1))
+    (print 1) ; 0
+))
+
+(define decExample (function ()
+    (define i 0)
+    (print i) ; 0
+    (dec i)
+    (print i) ; -1
+
+    ; Equivalent to:
+    (define i 0)
+    (print i) ; 0
+    (set i (- i 1))
+    (print i) ; -1
+))
+
+(decExample)

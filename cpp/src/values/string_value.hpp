@@ -15,7 +15,7 @@ namespace stack_vm
             std::string data;
 
             // Constructor
-            string_value(const std::string data) : data(data) { }
+            string_value(const std::string &data) : data(data) { }
             string_value(const char *data) : data(data) { }
 
             // Methods
