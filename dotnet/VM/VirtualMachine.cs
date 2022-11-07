@@ -298,16 +298,31 @@ namespace SimpleStackVM
             this.lineCounter = 0;
 
             var numCalledArgs = Math.Min(args.ArrayValues.Count, function.Parameters.Count);
-            for (var i = 0; i < numCalledArgs; i++)
+            var i = 0;
+            for (; i < numCalledArgs; i++)
             {
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
                     args = StandardArrayLibrary.SubList(args, i, -1);
                     this.CurrentScope.Define(argName.Substring(3), args);
+                    i++;
                     break;
                 }
                 this.CurrentScope.Define(argName, args[i]);
+            }
+
+            if (i < function.Parameters.Count)
+            {
+                var argName = function.Parameters[i];
+                if (argName.StartsWith("..."))
+                {
+                    this.CurrentScope.Define(argName.Substring(3), ArrayValue.EmptyArgs);
+                }
+                else
+                {
+                    throw new OperatorException(this.CreateStackTrace(), $"Function called without enough arguments: {function.Name}");
+                }
             }
         }
 

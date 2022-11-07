@@ -52,17 +52,12 @@ namespace SimpleStackVM
         {
             if (key == "length")
             {
-                value = new BuiltinFunctionValue(this.GetLength);
+                value = new NumberValue(this.Value.Length);
                 return true;
             }
 
             value = null;
             return false;
-        }
-
-        public void GetLength(VirtualMachine vm, ArrayValue args)
-        {
-            vm.PushStack(this.Value.Length);
         }
         #endregion
     }

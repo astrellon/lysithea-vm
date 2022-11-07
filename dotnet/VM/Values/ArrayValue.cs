@@ -69,13 +69,12 @@ namespace SimpleStackVM
 
         public override string ToString() => StandardArrayLibrary.GeneralToString(this);
         public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
-        public void GetLength(VirtualMachine vm, ArrayValue args) => vm.PushStack(this.Value.Count);
 
         public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             if (key == "length")
             {
-                value = new BuiltinFunctionValue(this.GetLength);
+                value = new NumberValue(this.Length);
                 return true;
             }
 

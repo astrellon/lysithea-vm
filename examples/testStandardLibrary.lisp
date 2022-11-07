@@ -4,7 +4,7 @@
     (define arr (0 1 2))
     (assert.equals (0 1 2) arr)
 
-    (assert.equals 3 (arr.length))
+    (assert.equals 3 arr.length)
     (assert.equals 3 (array.length arr))
 
     (set arr (array.set arr 1 "b"))
@@ -23,7 +23,7 @@
     (assert.notEquals ("a" "b" "c" "e") arr)
     (assert.equals ("a" "b" "c" "d") arr)
 
-    (assert.equals 4 (arr.length))
+    (assert.equals 4 arr.length)
     (assert.equals 4 (array.length arr))
 
     (assert.equals ("a" "b") (array.sublist arr 0 2))
@@ -52,7 +52,7 @@
     (set str (string.removeAll str "2"))
     (set str (string.insert str -12 "c"))
 
-    (print "Length: " (str.length))
+    (print "Length: " str.length)
     (print "Length: " (string.length str))
 
     (assert.equals str "abc hello there")

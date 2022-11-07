@@ -142,22 +142,63 @@ Attempts to invoke a function from the top of the stack, the code line is expect
 Returns from a function call. This is only needed if you want to return early from a function.
 
 Importantly! It does not function as a way to return values from a function, as the system is stack based whatever is put onto the stack can be accessed from the stack by other functions after a function has finished.
-- **Get**:
-- **GetProperty**:
-- **Define**:
-- **Set**:
-- **Jump**:
-- **JumpTrue**:
-- **JumpFalse**:
+
+#### `(get varName?)`
+Attempts to find a variable based on it's name in the current scope, up to the builtin scope.
+
+The get operator will either lookup the variable based on the code line input or it will grab the value at the top of the stack and use that as the variable name.
+
+#### `(getProperty propertyArray?)`
+Attempts to find a value from the value that is on top of the stack. For example looking up `math.sin` will be broken up into `(get "math") (getProperty ("sin"))`. This also works for arrays `arrayValue.0.name` which will get turned into `(get "arrayValue") (getProperty (0 "name"))`.
+
+The value will have to be something that implements the `IArrayValue` or `IObjectValue` interface.
+
+#### `(define varName?)`
+This will create/set a variable with the `varName` with the next value from the stack.
+
+If `varName` is not provided it will be taken from the top of the stack before getting the value.
+
+The new variable will be created in the current scope.
+
+#### `(set varName?)`
+This like the `define` operator will set the variable `varName` with the next value from the stack.
+
+If `varName` is not provided it will be taken from the top of the stack before getting the value.
+
+Unlike `define` the variable must exist in a scope otherwise an error is thrown. If the variable does not exist in the current scope it will follow the parent scope until it reaches the global scope.
+
+#### `(jump label?)`
+Unconditionally jumps to the provided `label`. If the label is not given then it is taken from the top of the stack.
+
+#### `(jumpFalse label?)`
+Conditionally jumps to the provided `label`. If the label is not given then it is taken from the top of the stack.
+
+After the label is grabbed the next value from the top of the stack is compared with `false` and if they are equal then it will jump to the label.
+
+#### `(jumpTrue label?)`
+Conditionally jumps to the provided `label`. If the label is not given then it is taken from the top of the stack.
+
+After the label is grabbed the next value from the top of the stack is compared with `true` and if they are equal then it will jump to the label.
 
 These are more advanced operator:
-- **ToArgument**: Turns the value on top of the stack into an argument array, expects the top to be array like in the first place. This is used in situations where we need to distinguish between arrays and argument arrays when unpacking variable length argument calls.
-- **CallDirect**: An optimised version of **Call** where the code_line contains an array `[function_value, num_args]` which side-steps the need to look up the value from the current scope. These operators come from knowing what values that can be found assemble time.
+#### `(toArgument value?)`
+Turns the value from the code line or the value from the top of the stack into an argument array, and expects the top to be array like in the first place.
 
-**Note**: Since **CallDirect** operators come from assemble time, it means that if a value is redefined at run time, the operators will still have a reference to the old value from assemble time and will be unaffected.
+This is used in situations where we need to distinguish between arrays and argument arrays when unpacking variable length argument calls.
+
+#### `(callDirect (function numArgs))`
+An optimised version of **Call** where the code_line contains an array `(function_value num_args)` which side-steps the need to look up the value from the current scope. These operators come from knowing what values that can be found assemble time.
+
+**Note**: Since `callDirect` operators come from assemble time, it means that if a value is redefined at run time, the operators will still have a reference to the old value from assemble time and will be unaffected.
 
 ### Code Line
+A code line is a simple pair of **operator** and optionally a single **value**.
+
 ### Function
+A function is made up of a list of **code lines**, a dictionary of **labels** to line numbers used by the jump operators and a list of **parameters**.
+
+When a function is called (using either call operator) the current list of code is replaced with the ones from the new function, the current code is pushed to the call stack and the parameters list is used to create variables in a new scope that match the names from the parameters list.
+
 ### Scope
 
 - Program Counter: Current code line.
@@ -169,19 +210,170 @@ These are more advanced operator:
 
 There's not many keywords that are built in and each are used by the assembler to turn into a set of operators that are used by the virtual machine.
 
-### `define`
+### `(define varName value)`
 Creates a new variable in the current scope. Currently it is allowed that variables can be redefined, as such define will never throw an error.
 
-### `set`
+Simple example:
+```lisp
+(define name "Alan")
+(print "Hello " name) ; Outputs Hello Alan
+```
+
+Scoping example:
+```lisp
+(define name "Global Name")
+(define main (function ()
+    (print name) ; Outputs Global Name
+
+    (define name "Local Name")
+    (print name) ; Outputs Local Name
+))
+
+(print name) ; Outputs Global Name
+(main)
+(print name) ; Outputs Global Name
+```
+
+### `(set varName value)`
 Updates a variable, if that variable does not exist in the current scope it will check the parent scope. Will throw an error if the variable has not been defined.
-### `if`
-### `unless`
-### `function`
-### `loop`
-### `continue`
-### `break`
-### `inc`
-### `dec`
+
+Simple example:
+```lisp
+(define name "Alan")
+(print "Hello " name) ; Outputs Hello Alan
+
+(set name "Lawrey")
+(print "Hello " name) ; Outputs Hello Lawrey
+```
+
+Scoping example:
+```lisp
+(define name "Global Name")
+(define main (function ()
+    (print name) ; Outputs Global Name
+
+    (set name "Local Name")
+    (print name) ; Outputs Local Name
+))
+
+(print name) ; Outputs Global Name
+(main)
+(print name) ; Outputs Local Name
+```
+
+Error example:
+```lisp
+(define name "Name")
+(set name 30) ; Okay to do
+(set age 30)  ; throws an error because
+```
+
+### `(if (conditionalCode) (whenTrueCode) (whenFalseCode?))`
+The conditional code is executed first and if result in a `true` value then the `whenTrueCode` is executed. If another block is provided then that will be executed if the value is not true.
+
+Simple example:
+```lisp
+(define logCounter (function ()
+    (if (< counter 10)
+        (print "Counter less than 10")
+        (print "Counter more than 10")
+    )
+))
+
+(define counter 0)
+(logCounter) ; Prints Counter less than 10
+
+(define counter 20)
+(logCounter) ; Prints Counter more than 10
+```
+
+Example of wrapping a code block for single when true block.
+```lisp
+(define progress 0)
+(if (< progress 100)
+    (
+        (print "Still in progress")
+        (print "Please wait...")
+    )
+    (
+        (print "100% Progress")
+        (print "All done")
+    )
+)
+
+; Outputs
+; Still in progress
+; Please wait...
+```
+
+### `(unless (conditionalCode) (whenFalseCode) (whenTrueCode?))`
+The conditional code is executed first and if result in a `false` value then the `whenFalseCode` is executed. If another block is provided then that will be executed if the value is not false.
+
+### `(function (parameterList) (codeBody))`
+Creates a new function value, takes a parameter list, the list itself is required but it can be empty.
+
+The parameter list itself is parsed only as a list of strings.
+
+```lisp
+(define clamp (function (input lower upper)
+    (if (< input lower)
+        (return lower)
+    )
+    (if (> input upper)
+        (return upper)
+    )
+    (return input)
+))
+
+(print "Clamped 5 " (clamp 5 -1 1))   ; Clamped 5 1
+(print "Clamped -5 " (clamp -5 -1 1)) ; Clamped -5 -1
+(print "Clamped 0 " (clamp 0 -1 1))   ; Clamped 0 0
+```
+Unpack arguments example:
+```lisp
+(define log (function (type ...inputs)
+    (print "[" type "]: " ...inputs)
+))
+
+(define findMin (function (...values)
+    (if (== values.length 0)
+        (return null)
+    )
+
+    (define min values.0)
+    (define i 1)
+    (loop (< i values.length)
+        (define curr (array.get values i))
+        (if (> min curr)
+            (set min curr)
+        )
+        (inc i)
+    )
+
+    (return min)
+))
+
+(log "Info" "Minimum Number: " (findMin 1 2 3))
+(log "Info" "Minimum Number: " (findMin 20 30 10))
+(log "Info" "Minimum Lexical: " (findMin "ABC" "DEF" "ZXC"))
+(log "Info" "Minimum Empty: " (findMin))
+
+; Outputs
+[Info]: Minimum Number: 1
+[Info]: Minimum Number: 20
+[Info]: Minimum Lexical: ABC
+[Info]: Minimum Empty: null
+```
+
+### `(loop (conditionalCode) (loopBody))`
+
+### `(continue)`
+
+### `(break)`
+
+### `(inc varName)`
+
+### `(dec varName)`
 
 # Standard Library
 
