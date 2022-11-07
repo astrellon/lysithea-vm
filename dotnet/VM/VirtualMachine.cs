@@ -304,8 +304,7 @@ namespace SimpleStackVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    args = args.SubList(i);
-                    this.CurrentScope.Define(argName.Substring(3), args);
+                    this.CurrentScope.Define(argName.Substring(3), args.SubList(i));
                     i++;
                     break;
                 }

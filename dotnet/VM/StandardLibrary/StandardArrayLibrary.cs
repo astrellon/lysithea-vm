@@ -215,7 +215,7 @@ namespace SimpleStackVM
                 return 0;
             }
 
-            if (left == null || !(rightInput is IArrayValue right))
+            if (left == null || !(rightInput is IArrayValue right) || left.GetType() != rightInput.GetType())
             {
                 return 1;
             }

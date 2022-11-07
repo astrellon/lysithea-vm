@@ -51,14 +51,14 @@ namespace SimpleStackVM
             return false;
         }
 
-        public ArgumentsValue SubList(int index)
+        public ArrayValue SubList(int index)
         {
             if (index == 0)
             {
-                return this;
+                return new ArrayValue(this.Value);
             }
 
-            return new ArgumentsValue(this.Value.Skip(index).ToList());
+            return new ArrayValue(this.Value.Skip(index).ToList());
         }
 
         public override string ToString() => StandardArrayLibrary.GeneralToString(this);
