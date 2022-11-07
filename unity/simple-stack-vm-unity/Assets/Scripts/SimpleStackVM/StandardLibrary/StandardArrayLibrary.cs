@@ -122,42 +122,42 @@ namespace SimpleStackVM
         {
             var newValue = self.Value.ToList();
             newValue[self.CalcIndex(index)] = input;
-            return new ArrayValue(newValue, self.IsArgumentArray);
+            return new ArrayValue(newValue);
         }
 
         public static ArrayValue Insert(ArrayValue self, int index, IValue input)
         {
             var newValue = self.Value.ToList();
             newValue.Insert(self.CalcIndex(index), input);
-            return new ArrayValue(newValue, self.IsArgumentArray);
+            return new ArrayValue(newValue);
         }
 
         public static ArrayValue InsertFlatten(ArrayValue self, int index, IArrayValue input)
         {
             var newValue = self.Value.ToList();
             newValue.InsertRange(self.CalcIndex(index), input.ArrayValues);
-            return new ArrayValue(newValue, self.IsArgumentArray);
+            return new ArrayValue(newValue);
         }
 
         public static ArrayValue RemoveAt(ArrayValue self, int index)
         {
             var newValue = self.Value.ToList();
             newValue.RemoveAt(self.CalcIndex(index));
-            return new ArrayValue(newValue, self.IsArgumentArray);
+            return new ArrayValue(newValue);
         }
 
         public static ArrayValue Remove(ArrayValue self, IValue input)
         {
             var newValue = self.Value.ToList();
             newValue.Remove(input);
-            return new ArrayValue(newValue, self.IsArgumentArray);
+            return new ArrayValue(newValue);
         }
 
         public static ArrayValue RemoveAll(ArrayValue self, IValue input)
         {
             var newValue = self.Value.ToList();
             newValue.RemoveAll(v => v.CompareTo(input) == 0);
-            return new ArrayValue(newValue, self.IsArgumentArray);
+            return new ArrayValue(newValue);
         }
 
         public static bool Contains(IArrayValue self, IValue input)
@@ -197,6 +197,11 @@ namespace SimpleStackVM
 
             if (index == 0 && length >= self.Value.Count)
             {
+                // Unpack the argument array when getting sub list
+                if (self.IsArgumentArray)
+                {
+                    return new ArrayValue(self.Value);
+                }
                 return self;
             }
 
@@ -205,7 +210,7 @@ namespace SimpleStackVM
             {
                 result[i] = self.Value[i + index];
             }
-            return new ArrayValue(result, self.IsArgumentArray);
+            return new ArrayValue(result);
         }
 
         public static int GeneralCompareTo(IArrayValue left, IValue? rightInput)
