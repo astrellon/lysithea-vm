@@ -42,6 +42,8 @@ namespace stack_vm
             bool paused;
             std::shared_ptr<const scope> builtin_scope;
             std::shared_ptr<function> current_code;
+            std::shared_ptr<scope> current_scope;
+            std::shared_ptr<scope> global_scope;
 
             // Constructor
             virtual_machine(int stackSize);
@@ -163,8 +165,6 @@ namespace stack_vm
             // Fields
             fixed_stack<stack_vm::value> stack;
             fixed_stack<scope_frame> stack_trace;
-            std::shared_ptr<scope> current_scope;
-            std::shared_ptr<scope> global_scope;
 
             static std::shared_ptr<const array_value> empty_args;
 

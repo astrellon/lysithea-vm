@@ -267,7 +267,7 @@ namespace stack_vm
             result.emplace_back(ss_label_else.str());
 
             // Second 'else' block of code
-            auto second_block_value = input.data[2];
+            auto second_block_value = input.data[3];
             auto second_block_call = second_block_value.get_complex<const array_value>();
             if (!second_block_call)
             {

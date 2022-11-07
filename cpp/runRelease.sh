@@ -3,6 +3,7 @@
 if [ $? -eq 0 ]; then
     cd ./Release
     # ./perfTest
-    ./standardLibraryTest
+    # ./standardLibraryTest
+    ./dialogueTree
     cd ../
 fi

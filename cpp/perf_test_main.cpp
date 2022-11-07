@@ -67,10 +67,6 @@ int main()
     auto script = assembler.parse_from_value(parsed);
 
     stack_vm::virtual_machine vm(16);
-    stack_vm::value val(true);
-
-    std::cout << "Size vm: " << sizeof(vm) << "\n";
-    std::cout << "Size value: " << sizeof(val) << "\n";
 
     auto start = std::chrono::steady_clock::now();
     vm.execute(script);
