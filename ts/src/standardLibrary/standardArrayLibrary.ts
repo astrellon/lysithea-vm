@@ -117,7 +117,7 @@ export function set(target: ArrayValue, index: number, input: IValue): ArrayValu
 {
     let result = [...target.value];
     result[target.calcIndex(index)] = input;
-    return new ArrayValue(result, target.isArgumentValue);
+    return new ArrayValue(result);
 }
 
 export function get(target: IArrayValue, index: number): IValue | undefined
@@ -130,7 +130,7 @@ export function insert(target: ArrayValue, index: number, input: IValue): ArrayV
     index = target.calcIndex(index);
     const result = [...target.value];
     result.splice(index, 0, input);
-    return new ArrayValue(result, target.isArgumentValue);
+    return new ArrayValue(result);
 }
 
 export function insertFlatten(target: ArrayValue, index: number, input: IArrayValue): ArrayValue
@@ -138,7 +138,7 @@ export function insertFlatten(target: ArrayValue, index: number, input: IArrayVa
     index = target.calcIndex(index);
     const result = [...target.value];
     result.splice(index, 0, ...input.arrayValues());
-    return new ArrayValue(result, target.isArgumentValue);
+    return new ArrayValue(result);
 }
 
 export function removeAt(target: ArrayValue, index: number): ArrayValue
@@ -146,7 +146,7 @@ export function removeAt(target: ArrayValue, index: number): ArrayValue
     index = target.calcIndex(index);
     const result = [...target.value];
     result.splice(index, 1);
-    return new ArrayValue(result, target.isArgumentValue);
+    return new ArrayValue(result);
 }
 
 export function remove(target: ArrayValue, value: IValue): ArrayValue
@@ -162,7 +162,7 @@ export function remove(target: ArrayValue, value: IValue): ArrayValue
 
 export function removeAll(target: ArrayValue, value: IValue): ArrayValue
 {
-    return new ArrayValue(target.value.filter(v => v.compareTo(value) !== 0), target.isArgumentValue);
+    return new ArrayValue(target.value.filter(v => v.compareTo(value) !== 0));
 }
 
 export function contains(target: IArrayValue, value: IValue): boolean
@@ -180,7 +180,7 @@ export function sublist(target: ArrayValue, index: number, length: number): Arra
     index = target.calcIndex(index);
     if (length < 0)
     {
-        return new ArrayValue(target.value.slice(index), target.isArgumentValue);
+        return new ArrayValue(target.value.slice(index));
     }
-    return new ArrayValue(target.value.slice(index, index + length), target.isArgumentValue);
+    return new ArrayValue(target.value.slice(index, index + length));
 }

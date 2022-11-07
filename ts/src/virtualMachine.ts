@@ -131,7 +131,7 @@ export default class VirtualMachine
                         throw new Error(`${this.getScopeLine()}: Unable to convert argument value onto stack: ${top.toString()}`);
                     }
 
-                    this.pushStack(new ArrayValue(top.arrayValues()));
+                    this.pushStack(new ArrayValue(top.arrayValues(), true));
                     break;
                 }
             case 'get':
@@ -351,16 +351,31 @@ export default class VirtualMachine
         this._lineCounter = 0;
 
         const numCalledArgs = Math.min(args.value.length, func.parameters.length);
-        for (let i = 0; i < numCalledArgs; i++)
+        let i = 0;
+        for (; i < numCalledArgs; i++)
         {
             const argName = func.parameters[i];
             if (argName.startsWith('...'))
             {
                 args = sublist(args, i, -1);
                 this._currentScope.define(argName.substring(3), args);
+                i++;
                 break;
             }
             this._currentScope.define(argName, args.value[i]);
+        }
+
+        if (i < func.parameters.length)
+        {
+            const argName = func.parameters[i];
+            if (argName.startsWith('...'))
+            {
+                this._currentScope.define(argName.substring(3), ArrayValue.Empty);
+            }
+            else
+            {
+                throw new Error('Function called without enough arguments: ' + func.name);
+            }
         }
     }
 

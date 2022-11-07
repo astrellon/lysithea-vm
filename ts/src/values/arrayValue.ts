@@ -1,7 +1,6 @@
 import { isBoolValue } from "./boolValue";
-import BuiltinFunctionValue from "./builtinFunctionValue";
 import { CompareResult, IArrayValue, IObjectValue, IValue } from "./ivalues";
-import { isNumberValue, numberCompareTo } from "./numberValue";
+import NumberValue, { isNumberValue, numberCompareTo } from "./numberValue";
 import { isStringValue } from "./stringValue";
 
 const keys: ReadonlyArray<string> = [ "length" ];
@@ -102,10 +101,7 @@ export default class ArrayValue implements IArrayValue, IObjectValue
     {
         if (key === 'length')
         {
-            return new BuiltinFunctionValue((vm, args) =>
-            {
-                vm.pushStackNumber(this.value.length);
-            });
+            return new NumberValue(this.value.length);
         }
 
         return undefined;

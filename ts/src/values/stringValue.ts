@@ -1,5 +1,5 @@
-import BuiltinFunctionValue from "./builtinFunctionValue";
 import { CompareResult, IObjectValue, IValue } from "./ivalues";
+import NumberValue from "./numberValue";
 
 const keys: ReadonlyArray<string> = [ 'length' ];
 export default class StringValue implements IObjectValue
@@ -41,10 +41,7 @@ export default class StringValue implements IObjectValue
     {
         if (key === 'length')
         {
-            return new BuiltinFunctionValue((vm, args) =>
-            {
-                vm.pushStackNumber(this.value.length);
-            });
+            return new NumberValue(this.value.length);
         }
 
         return undefined;

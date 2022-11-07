@@ -2,30 +2,30 @@ import fs from "fs";
 import VirtualMachineAssembler from "../src/assembler";
 import Scope from "../src/scope";
 import BuiltinFunctionValue from "../src/values/builtinFunctionValue";
-import { isNumberValue } from "../src/values/numberValue";
 import VirtualMachine from "../src/virtualMachine";
 
-let counter = 0;
+// let counter = 0;
 const perfScope = new Scope();
 perfScope.define('add', new BuiltinFunctionValue((vm, args) =>
 {
-    const num1 = vm.popStackCast(isNumberValue).value;
-    const num2 = vm.popStackCast(isNumberValue).value;
+    const num1 = args.getNumber(0);
+    const num2 = args.getNumber(1);
     vm.pushStackNumber(num1+ num2);
 }));
 perfScope.define('rand', new BuiltinFunctionValue((vm, args) =>
 {
     vm.pushStackNumber(Math.random());
 }));
-perfScope.define('isDone', new BuiltinFunctionValue((vm, args) =>
+perfScope.define('lessThan', new BuiltinFunctionValue((vm, args) =>
 {
-    vm.pushStackBool(counter++ > 1000000);
+    const left = args.getNumber(0);
+    const right = args.getNumber(1);
+    vm.pushStackBool(left < right);
 }));
 
-perfScope.define('done', new BuiltinFunctionValue((vm, args) =>
+perfScope.define('print', new BuiltinFunctionValue((vm, args) =>
 {
-    const total = vm.popStackCast(isNumberValue).value;
-    console.log('Total:', total);
+    console.log(args.value.map(c => c.toString()).join(''));
 }));
 
 const file = fs.readFileSync('../examples/perfTest.lisp', {encoding: 'utf-8'});

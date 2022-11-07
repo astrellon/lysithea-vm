@@ -42,6 +42,8 @@ const SetKeyword = 'set';
 const DefineKeyword = 'define';
 const IncKeyword = 'inc';
 const DecKeyword = 'dec';
+const JumpKeyword = 'jump';
+const ReturnKeyword = 'return';
 
 const incNumber = new BuiltinFunctionValue((vm, args) =>
 {
@@ -60,28 +62,6 @@ function codeLine(operator: Operator, value?: IValue): TempCodeLine
 function labelLine(label: string): TempCodeLine
 {
     return { label };
-}
-
-export function parseOperator(input: string): Operator
-{
-    input = input.toLowerCase();
-    switch (input)
-    {
-        case 'push': return 'push';
-        case 'toargument': return 'toArgument';
-        case 'call': return 'call';
-        case 'calldirect': return 'callDirect';
-        case 'return': return 'return';
-        case 'getproperty': return 'getProperty';
-        case 'get': return 'get';
-        case 'set': return 'set';
-        case 'define': return 'define';
-        case 'jump': return 'jump';
-        case 'jumptrue': return 'jumpTrue';
-        case 'jumpfalse': return 'jumpFalse';
-    }
-
-    return 'unknown';
 }
 
 export default class VirtualMachineAssembler
@@ -131,19 +111,7 @@ export default class VirtualMachineAssembler
 
                 // Handle general opcode or function call.
                 let result = input.value.slice(1).map(v => this.parse(v)).flat(1);
-
-                // Attempt to parse as an op code
-                const opCode = parseOperator(firstString);
-
-                // If it is not an opcode then it must be a function call
-                if (opCode === 'unknown')
-                {
-                    result = result.concat(this.optimiseCallSymbolValue(first, input.value.length - 1));
-                }
-                else if (opCode !== 'push')
-                {
-                    result.push(codeLine(opCode));
-                }
+                result = result.concat(this.optimiseCallSymbolValue(first.value, input.value.length - 1));
 
                 return result;
             }
@@ -154,7 +122,7 @@ export default class VirtualMachineAssembler
         {
             if (!input.isLabel)
             {
-                return this.optimiseGetSymbolValue(input);
+                return this.optimiseGetSymbolValue(input.value);
             }
         }
 
@@ -335,6 +303,24 @@ export default class VirtualMachineAssembler
         ];
     }
 
+    public parseJump(input: ArrayValue)
+    {
+        let parse = this.parse(input.value[1]);
+        if (parse.length === 1 && parse[0].operator === 'push' && parse[0].value !== undefined)
+        {
+            return [codeLine('jump', parse[0].value)];
+        }
+        parse.push(codeLine('push'));
+        return parse;
+    }
+
+    public parseReturn(input: ArrayValue)
+    {
+        let result = input.value.slice(1).map(v => this.parse(v)).flat(1);
+        result.push(codeLine('return'));
+        return result;
+    }
+
     public parseKeyword(input: string, arrayValue: ArrayValue): TempCodeLine[]
     {
         switch (input)
@@ -354,12 +340,14 @@ export default class VirtualMachineAssembler
             case UnlessKeyword: return this.parseCond(arrayValue, false);
             case IncKeyword: return this.parseChangeVariable(arrayValue.value[1], incNumber);
             case DecKeyword: return this.parseChangeVariable(arrayValue.value[1], decNumber);
+            case JumpKeyword: return this.parseJump(arrayValue);
+            case ReturnKeyword: return this.parseReturn(arrayValue);
         }
 
         return [];
     }
 
-    private optimiseCallSymbolValue(input: VariableValue, numArgs: number): TempCodeLine[]
+    private optimiseCallSymbolValue(input: string, numArgs: number): TempCodeLine[]
     {
         const numArgsValue = new NumberValue(numArgs);
         const propertyRequestInfo = VirtualMachineAssembler.isGetPropertyRequest(input);
@@ -379,7 +367,7 @@ export default class VirtualMachineAssembler
                     return [codeLine('callDirect', callValue)];
                 }
 
-                throw new Error(`Attempting to call a value that is not a function: ${input.toString()} = ${foundProperty.toString()}`);
+                throw new Error(`Attempting to call a value that is not a function: ${input} = ${foundProperty.toString()}`);
             }
             else if (!propertyRequestInfo.isPropertyRequest)
             {
@@ -390,7 +378,7 @@ export default class VirtualMachineAssembler
                     return [codeLine('callDirect', callValue)];
                 }
 
-                throw new Error(`Attempting to call a value that is not a function: ${input.toString()} = ${foundParent.toString()}`);
+                throw new Error(`Attempting to call a value that is not a function: ${input} = ${foundParent.toString()}`);
             }
         }
 
@@ -407,13 +395,13 @@ export default class VirtualMachineAssembler
         return result;
     }
 
-    private optimiseGetSymbolValue(input: VariableValue): TempCodeLine[]
+    private optimiseGetSymbolValue(input: string): TempCodeLine[]
     {
         let isArgumentUnpack = false;
-        if (input.value.startsWith('...'))
+        if (input.startsWith('...'))
         {
             isArgumentUnpack = true;
-            input = new VariableValue(input.value.substring(3));
+            input = input.substring(3);
         }
 
         const result: TempCodeLine[] = [];
@@ -458,11 +446,11 @@ export default class VirtualMachineAssembler
         return result;
     }
 
-    private static isGetPropertyRequest(input: VariableValue): PropertyRequestInfo
+    private static isGetPropertyRequest(input: string): PropertyRequestInfo
     {
-        if (input.value.includes('.'))
+        if (input.includes('.'))
         {
-            const split = input.value.split('.');
+            const split = input.split('.');
             const parentKey = split[0];
             const property = new ArrayValue(split.slice(1).map(c => new VariableValue(c)));
             return {
@@ -471,7 +459,7 @@ export default class VirtualMachineAssembler
         }
 
         return {
-            isPropertyRequest: false, parentKey: input.value, property: ArrayValue.Empty
+            isPropertyRequest: false, parentKey: input, property: ArrayValue.Empty
         }
     }
 }

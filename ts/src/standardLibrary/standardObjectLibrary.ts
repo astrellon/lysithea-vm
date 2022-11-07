@@ -98,7 +98,7 @@ export function keys(target: ObjectValue): ArrayValue
 
 export function removeKey(target: ObjectValue, key: string): ObjectValue
 {
-    if (!target.hasOwnProperty(key))
+    if (!target.value.hasOwnProperty(key))
     {
         return target;
     }
@@ -111,7 +111,7 @@ export function removeKey(target: ObjectValue, key: string): ObjectValue
 export function removeValues(target: ObjectValue, values: IValue): ObjectValue
 {
     const result: Editable<ObjectValueMap> = {};
-    for (const key in target)
+    for (const key in target.value)
     {
         if (target.value[key].compareTo(values) !== 0)
         {
