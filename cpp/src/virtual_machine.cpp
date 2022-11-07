@@ -75,7 +75,7 @@ namespace stack_vm
             }
             case vm_operator::push:
             {
-                if (!code_line.value.is_null())
+                if (!code_line.value.is_undefined())
                 {
                     stack.push(code_line.value);
                 }
@@ -207,7 +207,7 @@ namespace stack_vm
             case vm_operator::call_direct:
             {
                 auto error = false;
-                if (code_line.value.is_null() || !code_line.value.is_array())
+                if (!code_line.value.is_array())
                 {
                     throw std::runtime_error("Call direct needs an array input");
                 }

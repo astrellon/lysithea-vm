@@ -9,7 +9,7 @@ namespace stack_vm
     {
         std::stringstream result;
         result << stack_vm::to_string(op) << ": ";
-        if (!value.is_null())
+        if (!value.is_undefined())
         {
             result << value.to_string();
         }

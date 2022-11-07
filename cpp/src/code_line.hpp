@@ -18,15 +18,27 @@ namespace stack_vm
             stack_vm::value value;
 
             // Constructor
-            code_line(vm_operator op) : op(op), value(nullptr) { }
-            code_line(vm_operator op, stack_vm::value input) : op(op), value(input) { }
+            code_line(vm_operator op) : op(op)
+            {
+                if (op == vm_operator::push)
+                {
+                    throw std::runtime_error("Cannot create code line of push without arg");
+                }
+            }
+            code_line(vm_operator op, stack_vm::value input) : op(op), value(input)
+            {
+                if (op == vm_operator::push && input.is_undefined())
+                {
+                    throw std::runtime_error("Cannot create code line of push without arg");
+                }
+            }
 
             // Methods
             std::string to_string() const;
 
             inline bool has_value() const
             {
-                return !value.is_null();
+                return !value.is_undefined();
             }
     };
 } // stack_vm

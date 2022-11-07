@@ -15,7 +15,7 @@ namespace stack_vm
 
     enum class value_type
     {
-        null, is_true, is_false, number, complex
+        undefined, null, is_true, is_false, number, complex
     };
 
     class value
@@ -27,7 +27,7 @@ namespace stack_vm
             complex_ptr data;
 
             // Constructor
-            value() : type(value_type::null) { }
+            value() : type(value_type::undefined) { }
             value(bool input) : type(input == true ? value_type::is_true : value_type::is_false) { }
             value(int input) : type(value_type::number), number(static_cast<double>(input)) { }
             value(unsigned int input) : type(value_type::number), number(static_cast<double>(input)) { }
@@ -45,6 +45,10 @@ namespace stack_vm
             inline bool is_number() const
             {
                 return type == value_type::number;
+            }
+            inline bool is_undefined() const
+            {
+                return type == value_type::undefined;
             }
             inline bool is_null() const
             {
@@ -139,6 +143,7 @@ namespace stack_vm
                         return compare(get_number(), other.get_number());
                     case value_type::complex:
                         return get_complex()->compare_to(other.get_complex().get());
+                    default: break;
                 }
 
                 return 1;
@@ -153,6 +158,7 @@ namespace stack_vm
                     case value_type::null: return "null";
                     case value_type::number: return std::to_string(get_number());
                     case value_type::complex: return get_complex()->to_string();
+                    default: break;
                 }
 
                 return "unknown";
@@ -168,6 +174,7 @@ namespace stack_vm
                     case value_type::number: return "number";
                     case value_type::null: return "null";
                     case value_type::complex: return get_complex()->type_name();
+                    default: break;
                 }
 
                 return "unknown";
@@ -177,5 +184,19 @@ namespace stack_vm
             {
                 return value(std::make_shared<builtin_function_value>(input));
             }
+
+            inline static value make_null()
+            {
+                return value(value_type::null);
+            }
+
+            inline static value make_undefined()
+            {
+                return value(value_type::undefined);
+            }
+
+        private:
+            // Constructor
+            value(value_type type) : type(type) { }
     };
 } // stack_vm

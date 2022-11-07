@@ -173,7 +173,7 @@ namespace stack_vm
             // Methods
             inline value get_operator_arg(const code_line &input)
             {
-                if (!input.value.is_null())
+                if (!input.value.is_undefined())
                 {
                     return input.value;
                 }
@@ -185,7 +185,7 @@ namespace stack_vm
             inline const T *get_operator_arg(const code_line &input)
             {
                 auto result = input.value;
-                if (input.value.is_null())
+                if (input.value.is_undefined())
                 {
                     result = pop_stack();
                 }

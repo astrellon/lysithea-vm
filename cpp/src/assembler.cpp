@@ -43,7 +43,7 @@ namespace stack_vm
 
         std::stringstream result;
         result << stack_vm::to_string(op);
-        if (!argument.is_null())
+        if (!argument.is_undefined())
         {
             result << ": " << argument.to_string();
         }
@@ -325,7 +325,6 @@ namespace stack_vm
         }
 
         auto loop_label = loop_stack.top();
-        loop_stack.pop();
 
         code_line_list result;
         result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start : loop_label.end);
@@ -371,7 +370,7 @@ namespace stack_vm
     assembler::code_line_list assembler::parse_jump(const array_value &input)
     {
         auto result = parse(input.data[1]);
-        if (result.size() == 1 && result[0].op == vm_operator::push && !result[0].argument.is_null())
+        if (result.size() == 1 && result[0].op == vm_operator::push && !result[0].argument.is_undefined())
         {
              code_line_list new_result;
              new_result.emplace_back(vm_operator::jump, result[0].argument);

@@ -222,7 +222,7 @@ namespace stack_vm
     {
         if (input.size() == 0 || input == "null")
         {
-            return value();
+            return value::make_null();
         }
 
         double num;
