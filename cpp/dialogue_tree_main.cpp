@@ -2,30 +2,30 @@
 
 #include <random>
 #include <fstream>
-#include <regex>
 
+#include "src/values/values.hpp"
 #include "src/virtual_machine.hpp"
 #include "src/assembler.hpp"
+#include "src/parser.hpp"
+#include "src/standard_library/standard_operator_library.hpp"
+#include "src/standard_library/standard_array_library.hpp"
 
 using namespace stack_vm;
 
 std::random_device _rd;
 std::mt19937 _rand(_rd());
 
-int counter = 0;
 bool is_shop_enabled = false;
-std::string player_name = "<Unset>";
 std::vector<value> choice_buffer;
 
 void say(const value &input)
 {
-    auto text = std::regex_replace(input.to_string(), std::regex("\\{playerName\\}"), player_name);
-    std::cout << "Say: " << text << "\n";
+    std::cout << "Say: " << input.to_string() << "\n";
 }
 
-void random_say(const value &input)
+void random_say(const array_value &input)
 {
-    const auto &array = *input.get_array().get();
+    const auto &array = input.data;
     std::uniform_real_distribution<float> dist(0.0f, static_cast<float>(array.size()));
     auto rand_index = static_cast<int>(dist(_rand));
     say(array[rand_index]);
@@ -47,34 +47,54 @@ bool do_choice(int index, virtual_machine &vm)
 
     auto choice = choice_buffer[index];
     choice_buffer.clear();
-    vm.jump(choice);
+    vm.call_function(*choice.get_complex(), 0, false);
     return true;
 }
 
-void runHandler(const std::string &command, virtual_machine &vm)
+std::shared_ptr<scope> create_dialogue_scope()
 {
-    if (command == "say")
+    auto result = std::make_shared<scope>();
+
+    result->define("say", [](virtual_machine &vm, const array_value &args) -> void
     {
-        say(vm.pop_stack());
-    }
-    else if (command == "getPlayerName")
+        say(args.get_index(0));
+    });
+
+    result->define("getPlayerName", [](virtual_machine &vm, const array_value &args) -> void
     {
+        std::string player_name;
         std::cin >> player_name;
-    }
-    else if (command == "randomSay")
+        vm.global_scope->define("playerName", value(player_name));
+    });
+
+    result->define("randomSay", [](virtual_machine &vm, const array_value &args) -> void
     {
-        random_say(vm.pop_stack());
-    }
-    else if (command == "isShopEnabled")
+        random_say(*args.get_index<const array_value>(0));
+    });
+
+    result->define("isShopEnabled", [](virtual_machine &vm, const array_value &args) -> void
     {
-        vm.push_stack(value(is_shop_enabled));
-    }
-    else if (command == "choice")
+        vm.push_stack(is_shop_enabled);
+    });
+
+    result->define("moveTo", [](virtual_machine &vm, const array_value &args) -> void
     {
-        choice_buffer.push_back(vm.pop_stack());
-        say_choice(vm.pop_stack());
-    }
-    else if (command == "waitForChoice")
+        auto proc = args.get_index(0).get_complex();
+        auto label = args.get_index(1);
+
+        vm.call_function(*proc, 0, false);
+        vm.jump(label.to_string());
+    });
+
+    result->define("choice", [](virtual_machine &vm, const array_value &args) -> void
+    {
+        auto choice_text = args.get_index(0);
+        auto choice_jump = args.get_index(1);
+        choice_buffer.push_back(choice_jump);
+        say_choice(choice_text);
+    });
+
+    result->define("waitForChoice", [](virtual_machine &vm, const array_value &args) -> void
     {
         if (choice_buffer.size() == 0)
         {
@@ -98,41 +118,43 @@ void runHandler(const std::string &command, virtual_machine &vm)
                 std::cout << "Invalid choice\n";
             }
         } while (!choice_valid);
-    }
-    else if (command == "openTheShop")
+    });
+
+    result->define("openTheShop", [](virtual_machine &vm, const array_value &args) -> void
     {
         is_shop_enabled = true;
-    }
-    else if (command == "openShop")
+    });
+
+    result->define("openShop", [](virtual_machine &vm, const array_value &args) -> void
     {
         std::cout << "Opening the shop to the player and quitting dialogue\n";
-    }
+    });
+
+    return result;
 }
 
 int main()
 {
-    std::ifstream json_input;
-    json_input.open("../../examples/testDialogue.json");
-    if (!json_input)
+    std::ifstream input_file;
+    input_file.open("../../examples/testDialogue.lisp");
+    if (!input_file)
     {
         std::cout << "Could not find file to open!\n";
         return -1;
     }
 
-    nlohmann::json json;
-    json_input >> json;
+    auto custom_scope = create_dialogue_scope();
 
-    auto parsed_scopes = assembler::parse_scopes(json);
+    auto parsed = stack_vm::parser::read_from_stream(input_file);
+    stack_vm::assembler assembler;
+    assembler.builtin_scope.combine_scope(*custom_scope);
+    assembler.builtin_scope.combine_scope(*standard_array_library::library_scope);
+    assembler.builtin_scope.combine_scope(*standard_operator_library::library_scope);
 
-    virtual_machine vm(64, runHandler);
-    vm.add_scopes(parsed_scopes);
-    vm.set_current_scope("Main");
-    vm.running = true;
+    auto script = assembler.parse_from_value(parsed);
 
-    while (vm.running && !vm.paused)
-    {
-        vm.step();
-    }
+    stack_vm::virtual_machine vm(16);
+    vm.execute(script);
 
     return 0;
 }

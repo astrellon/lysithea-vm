@@ -54,6 +54,7 @@
     },
     "git.ignoreLimitWarning": true,
     "omnisharp.useGlobalMono": "always",
+    "omnisharp.useModernNet": false,
     "[json]": {
         "editor.tabSize": 2
     },

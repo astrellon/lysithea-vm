@@ -1,10 +1,11 @@
 #pragma once
 
-#include <map>
-#include <vector>
+#include <memory>
 #include <string>
+#include <unordered_map>
 
-#include "code_line.hpp"
+#include "./values/value.hpp"
+#include "./values/builtin_function_value.hpp"
 
 namespace stack_vm
 {
@@ -12,14 +13,20 @@ namespace stack_vm
     {
         public:
             // Fields
-            const std::string name;
-            const std::vector<code_line> code;
-            const std::map<std::string, int> labels;
+            std::unordered_map<std::string, value> values;
+            std::shared_ptr<scope> parent;
 
             // Constructor
-            scope(const std::string &name, const std::vector<code_line> &code) : name(name), code(code) { }
-            scope(const std::string &name, const std::vector<code_line> &code, const std::map<std::string, int> &labels) : name(name), code(code), labels(labels) { }
+            scope();
+            scope(std::shared_ptr<scope> parent);
 
             // Methods
+            void clear();
+            void combine_scope(const scope &input);
+
+            void define(const std::string &key, value input);
+            void define(const std::string &key, builtin_function_callback callback);
+            bool try_set(const std::string &key, value input);
+            bool try_get_key(const std::string &key, value &result) const;
     };
 } // stack_vm

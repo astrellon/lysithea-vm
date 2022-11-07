@@ -1,5 +1,4 @@
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
@@ -8,17 +7,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace SimpleStackVM
 {
-    public struct ObjectValue : IValue, IReadOnlyDictionary<string, IValue>
+    public struct ObjectValue : IObjectValue
     {
         #region Fields
         public readonly IReadOnlyDictionary<string, IValue> Value;
-
-        public IEnumerable<string> Keys => Value.Keys;
-        public IEnumerable<IValue> Values => Value.Values;
-        public int Count => Value.Count;
-        public IValue this[string key] => Value[key];
-
         public string TypeName => "object";
+
+        public IReadOnlyList<string> ObjectKeys => this.Value.Keys.ToList();
+
+        public IValue this[string key] => this.Value[key];
         #endregion
 
         #region Constructor
@@ -29,14 +26,14 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public bool TryGetValue(string key, [NotNullWhen(true)] out IValue? value)
+        public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
             return this.Value.TryGetValue(key, out value);
         }
 
-        public bool TryGetValue<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
+        public bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
         {
-            if (this.TryGetValue(key, out var result))
+            if (this.TryGetKey(key, out var result))
             {
                 if (result is T castedValue)
                 {
@@ -46,32 +43,6 @@ namespace SimpleStackVM
             }
 
             value = default(T);
-            return false;
-        }
-
-        public override bool Equals(object? other)
-        {
-            if (other == null) return false;
-            if (other is ObjectValue otherObject)
-            {
-                if (this.Value.Count != otherObject.Value.Count)
-                {
-                    return false;
-                }
-
-                foreach (var kvp in this.Value)
-                {
-                    if (otherObject.Value.TryGetValue(kvp.Key, out var otherKvp))
-                    {
-                        if (kvp.Value.CompareTo(otherKvp) != 0)
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            }
             return false;
         }
 
@@ -88,7 +59,10 @@ namespace SimpleStackVM
                 }
                 first = false;
 
+                result.Append('"');
                 result.Append(kvp.Key);
+                result.Append('"');
+
                 result.Append(' ');
                 result.Append(kvp.Value.ToString());
             }
@@ -96,43 +70,7 @@ namespace SimpleStackVM
             return result.ToString();
         }
 
-        public int CompareTo(IValue? other)
-        {
-            if (other == null) return 1;
-            if (other is ObjectValue otherObject)
-            {
-                var compareLength = this.Value.Count.CompareTo(otherObject.Value.Count);
-                if (compareLength != 0)
-                {
-                    return compareLength;
-                }
-
-                foreach (var kvp in this.Value)
-                {
-                    if (otherObject.Value.TryGetValue(kvp.Key, out var otherValue))
-                    {
-                        var compare = kvp.Value.CompareTo(otherValue);
-                        if (compare != 0)
-                        {
-                            return compare;
-                        }
-                    }
-                    else
-                    {
-                        return 1;
-                    }
-                }
-
-                return 0;
-            }
-
-            return 1;
-        }
-
-        public override int GetHashCode() => this.Value.GetHashCode();
-        public bool ContainsKey(string key) => Value.ContainsKey(key);
-        public IEnumerator<KeyValuePair<string, IValue>> GetEnumerator() => Value.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Value).GetEnumerator();
+        public int CompareTo(IValue? other) => StandardObjectLibrary.GeneralCompareTo(this, other);
         #endregion
     }
 }

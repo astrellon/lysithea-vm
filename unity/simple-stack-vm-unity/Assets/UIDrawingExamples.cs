@@ -7,13 +7,13 @@ namespace SimpleStackVM.Unity
 {
     public class UIDrawingExamples : MonoBehaviour
     {
-        public List<ExampleDrawingScript> TextExamples;
-        public UIScope UIScope;
+        public List<DrawingScript> TextExamples;
+        public UIDrawingCodeEdit UICodeEdit;
         public TMP_Dropdown PresetDropdown;
 
         void Start()
         {
-            var options = this.TextExamples.Select(t => t.OptionTitle).ToList();
+            var options = this.TextExamples.Select(t => t.name).ToList();
             this.PresetDropdown.AddOptions(options);
         }
 
@@ -25,8 +25,7 @@ namespace SimpleStackVM.Unity
             }
 
             var exampleOption = this.TextExamples[index - 1];
-            this.UIScope.StartScopeName.text = exampleOption.StartScope;
-            this.UIScope.ScopeData.text = exampleOption.JsonText.text;
+            this.UICodeEdit.CodeText.text = exampleOption.CodeText.text;
         }
     }
 }

@@ -1,5 +1,9 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { ArrayValue, isValueArray, isValueNumber, ObjectValue, Value, valueCompareTo } from "../types";
+import ArrayValue, { isArrayValue } from "../values/arrayValue";
+import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import { IArrayValue, isIArrayValue, IValue } from "../values/ivalues";
+import NullValue from "../values/nullValue";
+import ObjectValue, { ObjectValueMap } from "../values/objectValue";
 
 export const arrayScope: IReadOnlyScope = createArrayScope();
 
@@ -7,160 +11,145 @@ export function createArrayScope()
 {
     const result = new Scope();
 
-    const arrayFunctions: ObjectValue =
+    const arrayFunctions: ObjectValueMap =
     {
-        join: (vm, numArgs) =>
+        join: new BuiltinFunctionValue((vm, args) =>
         {
-            const args = vm.getArgs(numArgs);
-            vm.pushStack(args);
-        },
+            vm.pushStack(new ArrayValue(args.value));
+        }),
 
-        length: (vm, numArgs) =>
+        length: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = vm.popStackCast(isValueArray);
-            vm.pushStack(top.length);
-        },
+            const top = args.getIndexCast(0, isArrayValue);
+            vm.pushStackNumber(top.arrayValues().length);
+        }),
 
-        get: (vm, numArgs) =>
+        get: new BuiltinFunctionValue((vm, args) =>
         {
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueArray);
-            vm.pushStack(get(top, index));
-        },
+            const top = args.getIndexCast(0, isArrayValue);
+            const index = args.getNumber(1);
+            const result = get(top, index);
+            if (result !== undefined)
+            {
+                vm.pushStack(result);
+            }
+            else
+            {
+                vm.pushStack(NullValue.Value);
+            }
+        }),
 
-        set: (vm, numArgs) =>
+        set: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const index = args.getNumber(1);
+            const value = args.getIndex(2);
             vm.pushStack(set(top, index, value));
 
-        },
+        }),
 
-        insert: (vm, numArgs) =>
+        insert: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const index = args.getNumber(1);
+            const value = args.getIndex(2);
             vm.pushStack(insert(top, index, value));
-        },
+        }),
 
-        insertFlatten: (vm, numArgs) =>
+        insertFlatten: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStackCast(isValueArray);
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const index = args.getNumber(1);
+            const value = args.getIndexCast(2, isIArrayValue);
             vm.pushStack(insertFlatten(top, index, value));
-        },
+        }),
 
-        remove: (vm, numArgs) =>
+        remove: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const value = args.getIndex(1);
             vm.pushStack(remove(top, value));
-        },
+        }),
 
-        removeAt: (vm, numArgs) =>
+        removeAt: new BuiltinFunctionValue((vm, args) =>
         {
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const index = args.getNumber(1);
             vm.pushStack(removeAt(top, index));
-        },
+        }),
 
-        removeAll: (vm, numArgs) =>
+        removeAll: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const value = args.getIndex(1);
             vm.pushStack(removeAll(top, value));
-        },
+        }),
 
-        contains: (vm, numArgs) =>
+        contains: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const top = vm.popStackCast(isValueArray);
-            vm.pushStack(contains(top, value));
-        },
+            const top = args.getIndexCast(0, isArrayValue);
+            const value = args.getIndex(1);
+            vm.pushStackBool(contains(top, value));
+        }),
 
-        indexOf: (vm, numArgs) =>
+        indexOf: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const top = vm.popStackCast(isValueArray);
-            vm.pushStack(indexOf(top, value));
-        },
+            const top = args.getIndexCast(0, isArrayValue);
+            const value = args.getIndex(1);
+            vm.pushStackNumber(indexOf(top, value));
+        }),
 
-        sublist: (vm, numArgs) =>
+        sublist: new BuiltinFunctionValue((vm, args) =>
         {
-            const length = vm.popStackCast(isValueNumber);
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueArray);
+            const top = args.getIndexCast(0, isArrayValue);
+            const index = args.getNumber(1);
+            const length = args.getNumber(2);
             vm.pushStack(sublist(top, index, length));
-        },
+        }),
     }
 
-    result.define('array', arrayFunctions);
+    result.define('array', new ObjectValue(arrayFunctions));
 
     return result;
 }
 
-export function getIndex(target: ArrayValue, index: number): number
+export function set(target: ArrayValue, index: number, input: IValue): ArrayValue
 {
-    if (index < 0)
-    {
-        return target.length + index;
-    }
-
-    return index;
+    let result = [...target.value];
+    result[target.calcIndex(index)] = input;
+    return new ArrayValue(result);
 }
 
-export function append(target: ArrayValue, input: Value): ArrayValue
+export function get(target: IArrayValue, index: number): IValue | undefined
 {
-    return [...target, input];
+    return target.tryGetIndex(index);
 }
 
-export function prepend(target: ArrayValue, input: Value): ArrayValue
+export function insert(target: ArrayValue, index: number, input: IValue): ArrayValue
 {
-    return [input, ...target];
-}
-
-export function set(target: ArrayValue, index: number, input: Value): ArrayValue
-{
-    index = getIndex(target, index);
-    let result = [...target];
-    result[index] = input;
-    return result;
-}
-
-export function get(target: ArrayValue, index: number): Value
-{
-    index = getIndex(target, index);
-    return target[index];
-}
-
-export function insert(target: ArrayValue, index: number, input: Value): ArrayValue
-{
-    index = getIndex(target, index);
-    const result = [...target];
+    index = target.calcIndex(index);
+    const result = [...target.value];
     result.splice(index, 0, input);
-    return result;
+    return new ArrayValue(result);
 }
 
-export function insertFlatten(target: ArrayValue, index: number, input: ArrayValue): ArrayValue
+export function insertFlatten(target: ArrayValue, index: number, input: IArrayValue): ArrayValue
 {
-    index = getIndex(target, index);
-    const result = [...target];
-    result.splice(index, 0, ...input);
-    return result;
+    index = target.calcIndex(index);
+    const result = [...target.value];
+    result.splice(index, 0, ...input.arrayValues());
+    return new ArrayValue(result);
 }
 
 export function removeAt(target: ArrayValue, index: number): ArrayValue
 {
-    index = getIndex(target, index);
-    const result = [...target];
+    index = target.calcIndex(index);
+    const result = [...target.value];
     result.splice(index, 1);
-    return result;
+    return new ArrayValue(result);
 }
 
-export function remove(target: ArrayValue, value: Value): ArrayValue
+export function remove(target: ArrayValue, value: IValue): ArrayValue
 {
     const index = indexOf(target, value);
     if (index < 0)
@@ -171,27 +160,27 @@ export function remove(target: ArrayValue, value: Value): ArrayValue
     return removeAt(target, index);
 }
 
-export function removeAll(target: ArrayValue, value: Value): ArrayValue
+export function removeAll(target: ArrayValue, value: IValue): ArrayValue
 {
-    return target.filter((v) => valueCompareTo(v, value) != 0)
+    return new ArrayValue(target.value.filter(v => v.compareTo(value) !== 0));
 }
 
-export function contains(target: ArrayValue, value: Value): boolean
+export function contains(target: IArrayValue, value: IValue): boolean
 {
     return indexOf(target, value) >= 0;
 }
 
-export function indexOf(target: ArrayValue, value: Value): number
+export function indexOf(target: IArrayValue, value: IValue): number
 {
-    return target.findIndex(v => valueCompareTo(v, value) == 0);
+    return target.arrayValues().findIndex(v => v.compareTo(value) === 0);
 }
 
 export function sublist(target: ArrayValue, index: number, length: number): ArrayValue
 {
-    index = getIndex(target, index);
+    index = target.calcIndex(index);
     if (length < 0)
     {
-        return target.slice(index);
+        return new ArrayValue(target.value.slice(index));
     }
-    return target.slice(index, index + length);
+    return new ArrayValue(target.value.slice(index, index + length));
 }

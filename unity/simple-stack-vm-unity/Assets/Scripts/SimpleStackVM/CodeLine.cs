@@ -50,5 +50,12 @@ namespace SimpleStackVM
             this.Input = input;
         }
         #endregion
+
+        #region Methods
+        public override string ToString()
+        {
+            return $"{this.Operator}: " + (this.Input != null ? this.Input.ToString() : "<no arg>");
+        }
+        #endregion
     }
 }

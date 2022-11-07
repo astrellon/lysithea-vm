@@ -2,42 +2,36 @@
 
 #include <string>
 #include <memory>
-#include "../value.hpp"
+
+#include "../values/value.hpp"
+#include "../values/array_value.hpp"
 
 namespace stack_vm
 {
-    class virtual_machine;
+    class scope;
 
     class standard_array_library
     {
         public:
             // Fields
-            static const std::string &handle_name;
+            static std::shared_ptr<const scope> library_scope;
 
             // Methods
-            static void add_handler(virtual_machine &vm);
-            static void handler(const std::string &command, virtual_machine &vm);
+            static std::shared_ptr<scope> create_scope();
 
-            static value append(const value &target, const value &input);
-            static value prepend(const value &target, const value &input);
-            static value concat(const value &target, const array_value &input);
-            static value get(const value &target, int index);
-            static value set(const value &target, int index, const value &input);
-            static value insert(const value &target, int index, const value &input);
-            static value insert_flatten(const value &target, int index, const array_value &input);
-            static value remove_at(const value &target, int index);
+            static value concat(const array_vector &target, const array_vector &input);
+            static value get(const array_vector &target, int index);
+            static value set(const array_vector &target, int index, const value &input);
+            static value insert(const array_vector &target, int index, const value &input);
+            static value insert_flatten(const array_vector &target, int index, const array_vector &input);
+            static value remove_at(const array_vector &target, int index);
             static value remove(const value &target, const value &value);
             static value remove_all(const value &target, const value &value);
-            static value contains(const value &target, const value &value);
-            static value index_of(const value &target, const value &value);
-            static value sublist(const value &target, int index, int length);
+            static value contains(const array_vector &target, const value &value);
+            static value index_of(const array_vector &target, const value &value);
+            static value sublist(const array_vector &target, int index, int length);
 
-            inline static array_ptr copy(const value &target)
-            {
-                return std::make_shared<array_value>(*target.get_array());
-            }
-
-            inline static array_value::const_iterator get_iter(const array_value &value, int index)
+            inline static array_vector::const_iterator get_iter(const array_vector &value, int index)
             {
                 if (index < 0)
                 {

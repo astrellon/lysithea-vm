@@ -10,7 +10,7 @@ namespace SimpleStackVM.Unity
         public VMRunnerUI VMRunnerUI;
         public TMP_Text Text;
 
-        private Scope prevScope = null;
+        private Function prevScope = null;
         private int prevProgramCounter = -1;
         private string prefix;
 
@@ -24,60 +24,60 @@ namespace SimpleStackVM.Unity
         // Update is called once per frame
         void Update()
         {
-            // var vm = this.VMRunnerUI.VM;
-            // if (vm.ProgramCounter != this.prevProgramCounter || vm.CurrentScope != this.prevScope)
-            // {
-            //     this.UpdateText();
+            var vm = this.VMRunnerUI.VM;
+            if (vm.LineCounter != this.prevProgramCounter || vm.CurrentCode != this.prevScope)
+            {
+                this.UpdateText();
 
-            //     this.prevProgramCounter = vm.ProgramCounter;
-            //     this.prevScope = vm.CurrentScope;
-            // }
+                this.prevProgramCounter = vm.LineCounter;
+                this.prevScope = vm.CurrentCode;
+            }
         }
 
         private void UpdateText()
         {
-            // var vm = this.VMRunnerUI.VM;
+            var vm = this.VMRunnerUI.VM;
 
-            // var text = "";
-            // var lineText = "";
-            // var programCounter = vm.ProgramCounter;
-            // if (vm.CurrentScope == null || vm.CurrentScope.IsEmpty)
-            // {
-            //     text = "<Empty>";
-            // }
-            // else
-            // {
-            //     text = vm.CurrentScope.ScopeName;
+            var text = "";
+            var lineText = "";
+            var programCounter = vm.LineCounter;
+            if (vm.CurrentCode.IsEmpty)
+            {
+                text = "<Empty>";
+            }
+            else
+            {
+                text = vm.CurrentCode.Name;
 
-            //     if (programCounter >= 0)
-            //     {
-            //         if (programCounter < vm.CurrentScope.Code.Count)
-            //         {
-            //             var line = vm.CurrentScope.Code[programCounter];
-            //             lineText = line.Operator.ToString();
-            //             if (line.Input == null || line.Input.IsNull)
-            //             {
-            //                 lineText += ":<<null>>";
-            //             }
-            //             else
-            //             {
-            //                 lineText += $":{line.Input.ToString()}";
-            //             }
-            //         }
-            //         else
-            //         {
-            //             lineText += ": end of code";
-            //         }
-            //     }
-            // }
+                if (programCounter >= 0)
+                {
+                    if (programCounter < vm.CurrentCode.Code.Count)
+                    {
+                        var line = vm.CurrentCode.Code[programCounter];
+                        lineText = line.Operator.ToString();
+                        if (line.Input == null || line.Input.Equals(NullValue.Value))
+                        {
+                            lineText += ":<<null>>";
+                        }
+                        else
+                        {
+                            lineText += $":{line.Input.ToString()}";
+                        }
+                    }
+                    else
+                    {
+                        lineText += ": end of code";
+                    }
+                }
+            }
 
-            // text += $":{programCounter}";
-            // if (!string.IsNullOrWhiteSpace(lineText))
-            // {
-            //     text += $"\n{lineText}";
-            // }
+            text += $":{programCounter}";
+            if (!string.IsNullOrWhiteSpace(lineText))
+            {
+                text += $"\n{lineText}";
+            }
 
-            // this.Text.text = $"{this.prefix} {text}";
+            this.Text.text = $"{this.prefix} {text}";
         }
     }
 }

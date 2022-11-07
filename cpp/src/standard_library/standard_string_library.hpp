@@ -2,46 +2,35 @@
 
 #include <string>
 #include <memory>
-#include "../value.hpp"
+#include "../values/value.hpp"
 
 namespace stack_vm
 {
-    class virtual_machine;
+    class scope;
 
     class standard_string_library
     {
         public:
             // Fields
-            static const std::string &handle_name;
+            static std::shared_ptr<const scope> library_scope;
 
             // Methods
-            static void add_handler(virtual_machine &vm);
-            static void handler(const std::string &command, virtual_machine &vm);
+            static std::shared_ptr<scope> create_scope();
 
-            static value append(const value &target, const std::string &input);
-            static value prepend(const value &target, const std::string &input);
-            static value get(const value &target, int index);
-            static value set(const value &target, int index, const std::string &input);
-            static value insert(const value &target, int index, const std::string &input);
-            static value substring(const value &target, int index, int length);
-            static value remove_at(const value &target, int index);
-            static value remove_all(const value &target, const std::string &values);
+            static value length(const std::string &target);
+            static value set(const std::string &target, int index, const std::string &input);
+            static value get(const std::string &target, int index);
+            static value insert(const std::string &target, int index, const std::string &input);
+            static value substring(const std::string &target, int index, int length);
+            static value remove_at(const std::string &target, int index);
+            static value remove_all(const std::string &target, const std::string &values);
+            static value join(const std::string &separator, const std::vector<value>::const_iterator begin, const std::vector<value>::const_iterator end);
 
-            inline static int get_index(const string_ptr &input, int index)
+            inline static int get_index(const std::string &input, int index)
             {
                 if (index < 0)
                 {
-                    return input->size() + index;
-                }
-
-                return index;
-            }
-
-            inline static int get_index(const value &input, int index)
-            {
-                if (index < 0)
-                {
-                    return input.get_string()->size() + index;
+                    return input.size() + index;
                 }
 
                 return index;

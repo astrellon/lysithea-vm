@@ -1,77 +1,71 @@
 #include "virtual_machine.hpp"
 
+#include <cmath>
+#include <iostream>
+
+#include "./values/value_property_access.hpp"
+#include "./standard_library/standard_array_library.hpp"
+#include "./utils.hpp"
+
 namespace stack_vm
 {
-    virtual_machine::virtual_machine(int stack_size, stack_vm::run_handler global_run_handler) : stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false), global_run_handler(global_run_handler)
-    {
-    }
+    std::shared_ptr<const array_value> virtual_machine::empty_args(std::make_shared<const array_value>(true));
 
-    void virtual_machine::add_scope(std::shared_ptr<scope> scope)
+    virtual_machine::virtual_machine(int stack_size) :
+        stack(stack_size), stack_trace(stack_size), program_counter(0), running(false), paused(false),
+        global_scope(std::make_shared<scope>())
     {
-        scopes[scope->name] = scope;
-    }
-
-    void virtual_machine::add_scopes(std::vector<std::shared_ptr<scope>> scopes)
-    {
-        for (auto &scope : scopes)
-        {
-            add_scope(scope);
-        }
-    }
-
-    void virtual_machine::add_run_handler(const std::string &handler_name, stack_vm::run_handler handler)
-    {
-        run_handlers[handler_name] = handler;
-    }
-
-    void virtual_machine::set_global_run_handler(stack_vm::run_handler handler)
-    {
-        global_run_handler = handler;
-    }
-
-    void virtual_machine::set_current_scope(const std::string &scope_name)
-    {
-        auto find = scopes.find(scope_name);
-        if (find == scopes.end())
-        {
-            throw std::runtime_error("Unable to find scope");
-        }
-        else
-        {
-            current_scope = find->second;
-        }
+        current_scope = global_scope;
     }
 
     void virtual_machine::reset()
     {
         program_counter = 0;
+        global_scope = std::make_shared<scope>();
+        current_scope = global_scope;
         stack.clear();
         stack_trace.clear();
         running = false;
         paused = false;
     }
 
-    value virtual_machine::get_arg(const code_line &input)
+    void virtual_machine::change_to_script(std::shared_ptr<script> script)
     {
-        if (input.value.has_value())
-        {
-            return input.value.value();
-        }
+        program_counter = 0;
+        stack.clear();
+        stack_trace.clear();
 
-        return pop_stack();
+        builtin_scope = script->builtin_scope;
+        current_code = script->code;
+    }
+
+    void virtual_machine::execute(std::shared_ptr<script> script)
+    {
+        change_to_script(script);
+
+        running = true;
+        paused = false;
+
+        while (running && !paused)
+        {
+            step();
+        }
     }
 
     void virtual_machine::step()
     {
-        if (program_counter >= current_scope->code.size())
+        if (program_counter >= current_code->code.size())
         {
-            running = false;
+            if (!try_return())
+            {
+                running = false;
+            }
             return;
         }
 
         // print_stack_debug();
 
-        const auto &code_line = current_scope->code[program_counter++];
+        const auto &code_line = current_code->code[program_counter++];
 
         switch (code_line.op)
         {
@@ -81,78 +75,110 @@ namespace stack_vm
             }
             case vm_operator::push:
             {
-                if (!code_line.value.has_value())
+                if (!code_line.value.is_undefined())
                 {
-                    auto top = peek_stack();
-                    stack.push(top);
+                    stack.push(code_line.value);
                 }
                 else
                 {
-                    stack.push(code_line.value.value());
+                    throw std::runtime_error("Push needs an input");
                 }
                 break;
             }
-            case vm_operator::pop:
+            case vm_operator::to_argument:
             {
-                pop_stack();
+                auto top = get_operator_arg<array_value>(code_line);
+                if (!top)
+                {
+                    throw std::runtime_error("Unable to convert input to argument");
+                }
+
+                push_stack(std::make_shared<array_value>(top->data, true));
                 break;
             }
-            case vm_operator::swap:
+            case vm_operator::get:
             {
-                const auto &value = get_arg(code_line);
-                if (value.is_number())
+                auto key = get_operator_arg(code_line);
+                auto is_string = key.get_complex<string_value>();
+                if (!is_string)
                 {
-                    swap(static_cast<int>(value.get_number()));
+                    throw std::runtime_error("Unable to get value, input needs to be a string");
+                }
+
+                value found_value;
+                if (current_scope->try_get_key(is_string->data, found_value) ||
+                    (builtin_scope && builtin_scope->try_get_key(is_string->data, found_value)))
+                {
+                    push_stack(found_value);
                 }
                 else
                 {
-                    throw std::runtime_error("Swap operator needs a number value");
+                    throw std::runtime_error("Unable to find value to get");
                 }
                 break;
             }
-            case vm_operator::copy:
+            case vm_operator::get_property:
             {
-                const auto &value = get_arg(code_line);
-                if (value.is_number())
+                auto key = get_operator_arg<array_value>(code_line);
+                if (!key)
                 {
-                    copy(static_cast<int>(value.get_number()));
+                    throw std::runtime_error("Unable to get property, input needs to be an array");
+                }
+
+                auto top = pop_stack();
+                value found;
+                if (try_get_property(top, *key, found))
+                {
+                    push_stack(found);
                 }
                 else
                 {
-                    throw std::runtime_error("Copy operator needs a number value");
+                    throw std::runtime_error("Unable to get property");
                 }
+
                 break;
             }
-            case vm_operator::jump:
+            case vm_operator::define:
             {
-                const auto &label = get_arg(code_line);
-                jump(label);
+                auto key = get_operator_arg(code_line);
+                auto value = pop_stack();
+                current_scope->define(key.to_string(), value);
                 break;
             }
-            case vm_operator::jump_true:
+            case vm_operator::set:
             {
-                const auto &label = get_arg(code_line);
-                const auto &top = pop_stack();
-                if (top.is_true())
+                auto key = get_operator_arg(code_line);
+                auto value = pop_stack();
+                if (!current_scope->try_set(key.to_string(), value))
                 {
-                    jump(label);
+                    throw std::runtime_error("Unable to set variable that has not been defined");
                 }
                 break;
             }
             case vm_operator::jump_false:
             {
-                const auto &label = get_arg(code_line);
-                const auto &top = pop_stack();
+                const auto label = get_operator_arg(code_line);
+                auto top = pop_stack();
                 if (top.is_false())
                 {
-                    jump(label);
+                    jump(label.to_string());
                 }
                 break;
             }
-            case vm_operator::call:
+            case vm_operator::jump_true:
             {
-                const auto &label = get_arg(code_line);
-                call(label);
+                const auto label = get_operator_arg(code_line);
+                auto top = pop_stack();
+                if (top.is_true())
+                {
+                    jump(label.to_string());
+                }
+                break;
+            }
+            case vm_operator::jump:
+            {
+                const auto label = get_operator_arg(code_line);
+                jump(label.to_string());
                 break;
             }
             case vm_operator::call_return:
@@ -160,138 +186,179 @@ namespace stack_vm
                 call_return();
                 break;
             }
-            case vm_operator::run:
+            case vm_operator::call:
             {
-                const auto &top = get_arg(code_line);
-                run_command(top);
+                if (!code_line.value.is_number())
+                {
+                    throw std::runtime_error("Call needs a num args code line input");
+                }
+
+                auto top = pop_stack();
+                if (top.is_function())
+                {
+                    call_function(*top.get_complex(), code_line.value.get_int(), true);
+                }
+                else
+                {
+                    throw std::runtime_error("Call needs a function to run");
+                }
+                break;
+            }
+            case vm_operator::call_direct:
+            {
+                auto error = false;
+                if (!code_line.value.is_array())
+                {
+                    throw std::runtime_error("Call direct needs an array input");
+                }
+
+                auto array_input = code_line.value.get_complex<const array_value>();
+                if (array_input->data.size() != 2 ||
+                    !array_input->data[0].is_function())
+                {
+                    throw std::runtime_error("Call direct needs two inputs of func and number");
+                }
+
+                auto num_args = array_input->data[1];
+                if (!num_args.is_number())
+                {
+                    throw std::runtime_error("Call direct needs two inputs of func and number");
+                }
+
+                call_function(*array_input->data[0].get_complex(), num_args.get_int(), true);
                 break;
             }
         }
     }
 
-    void virtual_machine::run_command(const value &input)
+    std::shared_ptr<const array_value> virtual_machine::get_args(int num_args)
     {
-        if (input.is_array())
+        if (num_args == 0)
         {
-            auto arr = input.get_array();
-            auto ns = arr->at(0).get_string();
-            auto find_ns = run_handlers.find(*ns.get());
-            if (find_ns == run_handlers.end())
+            array_vector empty;
+            return empty_args;
+        }
+
+        auto has_arguments = false;
+        array_vector temp(num_args);
+        for (auto i = 0; i < num_args; i++)
+        {
+            auto value = pop_stack();
+            auto is_arg = value.get_complex<const array_value>();
+            if (is_arg && is_arg->is_arguments_value)
             {
-                std::string message("Unable to find run command namespace: ");
-                message += input.to_string();
-                throw std::runtime_error(message);
+                has_arguments = true;
+            }
+            temp[num_args - i - 1] = value;
+        }
+
+        if (has_arguments)
+        {
+            array_vector combined;
+            for (const auto &iter : temp)
+            {
+                auto is_arg = iter.get_complex<const array_value>();
+                if (is_arg && is_arg->is_arguments_value)
+                {
+                    for (const auto &arg_iter : is_arg->data)
+                    {
+                        combined.push_back(arg_iter);
+                    }
+                }
+                else
+                {
+                    combined.push_back(iter);
+                }
             }
 
-            find_ns->second(arr->at(1).to_string(), *this);
+            return std::make_shared<const array_value>(combined, true);
         }
-        else
-        {
-            global_run_handler(input.to_string(), *this);
-        }
-    }
 
-    void virtual_machine::call(const value &input)
-    {
-        stack_trace.push(scope_frame(program_counter, current_scope));
-        jump(input);
-    }
-
-    void virtual_machine::jump(const value &input)
-    {
-        if (input.is_string())
-        {
-            jump(*input.get_string().get());
-        }
-        else if (input.is_array())
-        {
-            const auto &list = *std::get<std::shared_ptr<array_value>>(input.data);
-            if (list.size() == 0)
-            {
-                throw std::runtime_error("Cannot jump to empty array");
-            }
-
-            const auto &label = list[0].to_string();
-            if (list.size() > 1)
-            {
-                jump(label, list[1].to_string());
-            }
-            else
-            {
-                jump(label, "");
-            }
-        }
+        return std::make_shared<const array_value>(temp, true);
     }
 
     void virtual_machine::jump(const std::string &label)
     {
-        if (label.size() > 0)
+        auto find = current_code->labels.find(label);
+        if (find == current_code->labels.end())
         {
-            if (label[0] == ':')
-            {
-                jump(label, "");
-            }
-            else
-            {
-                jump("", label);
-            }
+            throw std::runtime_error("Unable to jump to label");
         }
-        else
-        {
-            program_counter = 0;
-        }
+
+        program_counter = find->second;
     }
 
-    void virtual_machine::jump(const std::string &label, const std::string &scope_name)
+    void virtual_machine::call_function(const complex_value &value, int num_args, bool push_to_stack_trace)
     {
-        if (scope_name.size() > 0)
+        if (!value.is_function())
         {
-            auto find = scopes.find(scope_name);
-            if (find == scopes.end())
+            throw std::runtime_error("Unable to invoke non function value");
+        }
+        auto args = get_args(num_args);
+        value.invoke(*this, args, push_to_stack_trace);
+    }
+
+    void virtual_machine::execute_function(std::shared_ptr<function> code, std::shared_ptr<const array_value> args, bool push_to_stack_trace)
+    {
+        if (push_to_stack_trace)
+        {
+            push_stack_trace(scope_frame(program_counter, current_code, current_scope));
+        }
+
+        current_code = code;
+        current_scope = std::make_shared<scope>(current_scope);
+        program_counter = 0;
+
+        auto num_called_args = std::min(args->data.size(), code->parameters.size());
+        auto i = 0;
+        for (; i < num_called_args; i++)
+        {
+            const auto &arg_name = code->parameters[i];
+            auto is_unpack = starts_with_unpack(arg_name);
+            if (is_unpack)
             {
-                throw std::runtime_error("Unable to find scope to jump to");
+                current_scope->define(arg_name.substr(3), standard_array_library::sublist(args->data, i, -1));
+                i++;
+                break;
+            }
+            current_scope->define(arg_name, args->data[i]);
+        }
+
+        if (i < code->parameters.size())
+        {
+            const auto &arg_name = code->parameters[i];
+            auto is_unpack = starts_with_unpack(arg_name);
+            if (is_unpack)
+            {
+                current_scope->define(arg_name.substr(3), array_value::empty);
             }
             else
             {
-                current_scope = find->second;
+                throw std::runtime_error("Function called without enough arguments");
             }
         }
-
-        if (label.size() == 0)
-        {
-            program_counter = 0;
-            return;
-        }
-
-        auto find_label = current_scope->labels.find(label);
-        if (find_label == current_scope->labels.end())
-        {
-            throw std::runtime_error("Unable to find label in current scope to jump to");
-        }
-
-        program_counter = find_label->second;
     }
 
-    void virtual_machine::call_return()
+    bool virtual_machine::try_return()
     {
         scope_frame top;
         if (!stack_trace.pop(top))
         {
-            throw std::runtime_error("Unable to pop stack track, empty stack");
+            return false;
         }
 
-        current_scope = top.scope;
+        current_code = top.code;
+        current_scope = top.frame_scope;
         program_counter = top.line_counter;
+        return true;
     }
 
-    void virtual_machine::swap(int top_offset)
+    void virtual_machine::call_return()
     {
-        stack.swap(top_offset);
-    }
-
-    void virtual_machine::copy(int top_offset)
-    {
-        stack.copy(top_offset);
+        if (!try_return())
+        {
+            throw std::runtime_error("Unable to return, call stack empty");
+        }
     }
 
     void virtual_machine::print_stack_debug()

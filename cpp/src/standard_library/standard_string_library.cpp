@@ -3,135 +3,126 @@
 #include <sstream>
 
 #include "../virtual_machine.hpp"
+#include "../values/object_value.hpp"
 #include "../utils.hpp"
+#include "../scope.hpp"
 
 namespace stack_vm
 {
-    const std::string &standard_string_library::handle_name = "string";
+    std::shared_ptr<const scope> standard_string_library::library_scope = create_scope();
 
-    void standard_string_library::add_handler(virtual_machine &vm)
+    std::shared_ptr<scope> standard_string_library::create_scope()
     {
-        vm.add_run_handler(handle_name, handler);
-    }
+        auto result = std::make_shared<scope>();
 
-    void standard_string_library::handler(const std::string &command, virtual_machine &vm)
-    {
-        switch (hash(command))
+        auto functions = std::make_shared<object_value>();
+        functions->data["length"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
         {
-            case hash("append"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                vm.push_stack(append(left, right.to_string()));
-                break;
-            }
-            case hash("prepend"):
-            {
-                const auto &right = vm.pop_stack();
-                const auto &left = vm.pop_stack();
-                vm.push_stack(prepend(left, right.to_string()));
-                break;
-            }
-            case hash("length"):
-            {
-                const auto &top = vm.pop_stack();
-                vm.push_stack(static_cast<double>(top.get_string()->size()));
-                break;
-            }
-            case hash("get"):
-            {
-                const auto &index = vm.pop_stack();
-                const auto &top = vm.pop_stack();
-                vm.push_stack(get(top, index.get_int()));
-                break;
-            }
-            case hash("set"):
-            {
-                const auto &value = vm.pop_stack();
-                const auto &index = vm.pop_stack();
-                const auto &top = vm.pop_stack();
-                vm.push_stack(set(top, index.get_int(), value.to_string()));
-                break;
-            }
-            case hash("insert"):
-            {
-                const auto &value = vm.pop_stack();
-                const auto &index = vm.pop_stack();
-                const auto &top = vm.pop_stack();
-                vm.push_stack(insert(top, index.get_int(), value.to_string()));
-                break;
-            }
-            case hash("substring"):
-            {
-                const auto &length = vm.pop_stack();
-                const auto &index = vm.pop_stack();
-                const auto &top = vm.pop_stack();
-                vm.push_stack(substring(top, index.get_int(), length.get_int()));
-                break;
-            }
-            case hash("removeAt"):
-            {
-                const auto &index = vm.pop_stack();
-                const auto &top = vm.pop_stack();
-                vm.push_stack(remove_at(top, index.get_int()));
-                break;
-            }
-            case hash("removeAll"):
-            {
-                const auto &values = vm.pop_stack();
-                const auto &top = vm.pop_stack();
-                vm.push_stack(remove_all(top, values.to_string()));
-                break;
-            }
-        }
+            auto top = args.get_index<string_value>(0);
+            vm.push_stack(top->data.size());
+        });
+        functions->data["get"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.get_index(0).to_string();
+            auto index = args.get_int(1);
+            vm.push_stack(get(top, index));
+        });
+        functions->data["set"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.get_index(0).to_string();
+            auto index = args.get_int(1);
+            auto value = args.get_index(2).to_string();
+            vm.push_stack(set(top, index, value));
+        });
+        functions->data["insert"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.get_index(0).to_string();
+            auto index = args.get_int(1);
+            auto value = args.get_index(2).to_string();
+            vm.push_stack(insert(top, index, value));
+        });
+        functions->data["substring"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.get_index(0).to_string();
+            auto index = args.get_int(1);
+            auto length = args.get_int(2);
+            vm.push_stack(substring(top, index, length));
+        });
+        functions->data["removeAt"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.get_index(0).to_string();
+            auto index = args.get_int(1);
+            vm.push_stack(remove_at(top, index));
+        });
+        functions->data["removeAll"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.get_index(0).to_string();
+            auto values = args.get_index(1).to_string();
+            vm.push_stack(remove_all(top, values));
+        });
+        functions->data["join"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto separator = args.get_index(0).to_string();
+            vm.push_stack(join(separator, args.data.cbegin() + 1, args.data.cend()));
+        });
+
+        result->define("string", value(functions));
+
+        return result;
     }
 
-    value standard_string_library::append(const value &target, const std::string &input)
+    value standard_string_library::get(const std::string &target, int index)
     {
-        return target.to_string() + input;
+        auto ch = target[get_index(target, index)];
+        return value(std::make_shared<string_value>(std::string(ch, 1)));
     }
-    value standard_string_library::prepend(const value &target, const std::string &input)
-    {
-        return input + target.to_string();
-    }
-    value standard_string_library::get(const value &target, int index)
-    {
-        const auto &str = target.get_string();
-        auto ch = str->at(get_index(str, index));
-        return std::make_shared<std::string>(ch, 1);
-    }
-    value standard_string_library::set(const value &target, int index, const std::string &input)
+    value standard_string_library::set(const std::string &target, int index, const std::string &input)
     {
         std::stringstream ss;
-        const auto &str = target.get_string();
-        index = get_index(str, index);
-        ss << str->substr(0, index) << input << str->substr(index + 1);
-        return ss.str();
+        index = get_index(target, index);
+        ss << target.substr(0, index) << input << target.substr(index + 1);
+        return value(ss.str());
     }
-    value standard_string_library::insert(const value &target, int index, const std::string &input)
+    value standard_string_library::insert(const std::string &target, int index, const std::string &input)
     {
-        return target.to_string().insert(get_index(target, index), input);
+        std::string copy(target);
+        return value(copy.insert(get_index(target, index), input));
     }
-    value standard_string_library::substring(const value &target, int index, int length)
+    value standard_string_library::substring(const std::string &target, int index, int length)
     {
-        const auto &str = target.get_string();
-        return str->substr(get_index(str, index), length);
+        return target.substr(get_index(target, index), length);
     }
-    value standard_string_library::remove_at(const value &target, int index)
+    value standard_string_library::remove_at(const std::string &target, int index)
     {
-        auto str = target.to_string();
-        str.erase(get_index(target, index), 1);
-        return str;
+        std::string copy(target);
+        copy.erase(get_index(target, index), 1);
+        return copy;
     }
-    value standard_string_library::remove_all(const value &target, const std::string &values)
+    value standard_string_library::remove_all(const std::string &target, const std::string &values)
     {
-        auto str = target.to_string();
-        auto i = str.find(values);
+        std::string copy(target);
+        auto i = copy.find(values);
         while (i != std::string::npos)
         {
-            str.erase(i, values.length());
-            i = str.find(values, i);
+            copy.erase(i, values.length());
+            i = copy.find(values, i);
         }
-        return str;
+        return copy;
+    }
+
+    value standard_string_library::join(const std::string &separator, const std::vector<value>::const_iterator begin, const std::vector<value>::const_iterator end)
+    {
+        auto first = true;
+        std::stringstream ss;
+        for (auto iter = begin; iter != end; ++iter)
+        {
+            if (!first)
+            {
+                ss << separator;
+            }
+            first = false;
+            ss << iter->to_string();
+        }
+        return value(ss.str());
     }
 } // stack_vm

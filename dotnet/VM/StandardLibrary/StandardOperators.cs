@@ -1,4 +1,3 @@
-
 using System;
 using System.Linq;
 
@@ -15,111 +14,125 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define(">", (vm, numArgs) =>
+            result.Define(">", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) > 0);
+                vm.PushStack(args[0].CompareTo(args[1]) > 0);
             });
 
-            result.Define(">=", (vm, numArgs) =>
+            result.Define(">=", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) >= 0);
+                vm.PushStack(args[0].CompareTo(args[1]) >= 0);
             });
 
-            result.Define("==", (vm, numArgs) =>
+            result.Define("==", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) == 0);
+                vm.PushStack(args[0].CompareTo(args[1]) == 0);
             });
 
-            result.Define("!=", (vm, numArgs) =>
+            result.Define("!=", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) != 0);
+                vm.PushStack(args[0].CompareTo(args[1]) != 0);
             });
 
-            result.Define("<", (vm, numArgs) =>
+            result.Define("<", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) < 0);
+                vm.PushStack(args[0].CompareTo(args[1]) < 0);
             });
 
-            result.Define("<=", (vm, numArgs) =>
+            result.Define("<=", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
-                vm.PushStack(left.CompareTo(right) <= 0);
+                vm.PushStack(args[0].CompareTo(args[1]) <= 0);
             });
 
-            result.Define("!", (vm, numArgs) =>
+            result.Define("!", (vm, args) =>
             {
-                var top = vm.PopStack<BoolValue>();
-                vm.PushStack(!top.Value);
+                var value = args.GetIndex<BoolValue>(0).Value;
+                vm.PushStack(!value);
             });
 
-            result.Define("+", (vm, numArgs) =>
+            result.Define("+", (vm, args) =>
             {
-                if (numArgs == 0)
+                if (args.Length == 0)
                 {
-                    return;
+                    throw new Exception("Addition operator expects at least 1 input");
                 }
 
-                var args = vm.GetArgs(numArgs);
-                if (args[0] is StringValue)
+                if (args.TryGetIndex<NumberValue>(0, out var firstNumber))
                 {
-                    var result = string.Join("", args);
+                    var result = 0.0;
+                    foreach (NumberValue num in args.Value)
+                    {
+                        result += num.Value;
+                    }
                     vm.PushStack(result);
                 }
                 else
                 {
-                    var result = 0.0;
-                    for (var i = 0; i < args.Count; i++)
-                    {
-                        if (args[i] is NumberValue argNum)
-                        {
-                            result += argNum.Value;
-                        }
-                        else
-                        {
-                            throw new Exception("Add only works on numbers and strings");
-                        }
-                    }
+                    var result = string.Join("", args.Value);
                     vm.PushStack(result);
                 }
             });
 
-            result.Define("-", (vm, numArgs) =>
+            result.Define("-", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value - right.Value);
+                if (args.Length == 0)
+                {
+                    throw new Exception("Subtract operator expects at least 1 input");
+                }
+
+                var total = args.GetIndex<NumberValue>(0).Value;
+                if (args.Length == 1)
+                {
+                    vm.PushStack(-total);
+                    return;
+                }
+
+                foreach (NumberValue num in args.Value.Skip(1))
+                {
+                    total -= num.Value;
+                }
+                vm.PushStack(total);
             });
 
-            result.Define("*", (vm, numArgs) =>
+            result.Define("*", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value * right.Value);
+                if (args.Length < 2)
+                {
+                    throw new Exception("Multiply operator expects more than 1 input");
+                }
+
+                var total = 1.0;
+                foreach (NumberValue num in args.ArrayValues)
+                {
+                    total *= num.Value;
+                }
+
+                vm.PushStack(total);
             });
 
-            result.Define("/", (vm, numArgs) =>
+            result.Define("/", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value / right.Value);
+                if (args.Length < 2)
+                {
+                    throw new Exception("Divide operator expects more than 1 input");
+                }
+
+                var total = args.GetIndex<NumberValue>(0).Value;
+                foreach (NumberValue num in args.ArrayValues.Skip(1))
+                {
+                    total /= num.Value;
+                }
+
+                vm.PushStack(total);
             });
 
-            result.Define("%", (vm, numArgs) =>
+            result.Define("%", (vm, args) =>
             {
-                var right = vm.PopStack<NumberValue>();
-                var left = vm.PopStack<NumberValue>();
-                vm.PushStack(left.Value % right.Value);
+                if (args.Length != 2)
+                {
+                    throw new Exception("Modulo operator expects 2 inputs");
+                }
+                vm.PushStack(args.GetIndex<NumberValue>(0).Value % args.GetIndex<NumberValue>(1).Value);
             });
 
             return result;

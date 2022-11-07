@@ -1,5 +1,6 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { isValueBoolean, ObjectValue, valueCompareTo, valueToString } from "../types";
+import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import ObjectValue, { ObjectValueMap } from "../values/objectValue";
 
 export const assertScope: IReadOnlyScope = createAssertScope();
 
@@ -7,56 +8,56 @@ export function createAssertScope()
 {
     const result: Scope = new Scope();
 
-    const assertFunctions: ObjectValue =
+    const assertFunctions: ObjectValueMap =
     {
-        true: (vm, numArgs) =>
+        true: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = vm.popStackCast(isValueBoolean);
+            const top = args.getBool(0);
             if (!top)
             {
                 vm.running = false;
                 console.error(vm.createStackTrace().join('\n'));
                 console.error('Assert expected true');
             }
-        },
+        }),
 
-        false: (vm, numArgs) =>
+        false: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = vm.popStackCast(isValueBoolean);
+            const top = args.getBool(0);
             if (top)
             {
                 vm.running = false;
                 console.error(vm.createStackTrace().join('\n'));
                 console.error('Assert expected false');
             }
-        },
+        }),
 
-        equals: (vm, numArgs) =>
+        equals: new BuiltinFunctionValue((vm, args) =>
         {
-            const actual = vm.popStack();
-            const expected = vm.popStack();
-            if (valueCompareTo(expected, actual) != 0)
+            const expected = args.getIndex(0);
+            const actual = args.getIndex(1);
+            if (expected.compareTo(actual) !== 0)
             {
                 vm.running = false;
                 console.error(vm.createStackTrace().join('\n'));
-                console.error(`Assert expected equals:\nExpected: ${valueToString(expected)}\nActual: ${valueToString(actual)}`);
+                console.error(`Assert expected equals:\nExpected: ${expected.toString()}\nActual: ${actual.toString()}`);
             }
-        },
+        }),
 
-        notEquals: (vm, numArgs) =>
+        notEquals: new BuiltinFunctionValue((vm, args) =>
         {
-            const actual = vm.popStack();
-            const expected = vm.popStack();
-            if (valueCompareTo(expected, actual) == 0)
+            const expected = args.getIndex(0);
+            const actual = args.getIndex(1);
+            if (expected.compareTo(actual) === 0)
             {
                 vm.running = false;
                 console.error(vm.createStackTrace().join('\n'));
-                console.error(`Assert expected not equals:\nActual: ${valueToString(actual)}`);
+                console.error(`Assert expected not equals:\nActual: ${actual.toString()}`);
             }
-        }
+        })
     };
 
-    result.define('assert', assertFunctions);
+    result.define('assert', new ObjectValue(assertFunctions));
 
     return result;
 }

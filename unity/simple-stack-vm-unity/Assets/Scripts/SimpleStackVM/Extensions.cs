@@ -1,5 +1,8 @@
 using System;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
+#nullable enable
 
 namespace SimpleStackVM
 {
@@ -26,56 +29,79 @@ namespace SimpleStackVM
         {
             vm.PushStack(new StringValue(value));
         }
-        public static void PushStack(this VirtualMachine vm, IReadOnlyList<IValue> value)
-        {
-            vm.PushStack(new ArrayValue(value));
-        }
-        public static void PushStack(this VirtualMachine vm, IReadOnlyDictionary<string, IValue> value)
-        {
-            vm.PushStack(new ObjectValue(value));
-        }
-        public static void PushStack(this VirtualMachine vm, BuiltinFunctionValue.BuiltinFunctionDelegate value)
-        {
-            vm.PushStack(new BuiltinFunctionValue(value));
-        }
         #endregion
     }
 
-    public static class ScopeExtensions
+    public static class IArrayValueExtensions
     {
-        #region Methods
-        public static void Define(this Scope vm, string key, bool value)
+        public static bool TryGetIndex<T>(this IArrayValue self, int index, [NotNullWhen(true)] out T? result) where T : IValue
         {
-            vm.Define(key, new BoolValue(value));
+            if (self.TryGetIndex(index, out var foundValue))
+            {
+                if (foundValue is T foundCasted)
+                {
+                    result = foundCasted;
+                    return true;
+                }
+            }
+
+            result = default(T);
+            return false;
         }
-        public static void Define(this Scope vm, string key, int value)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IValue GetIndex(this IArrayValue self, int index)
         {
-            vm.Define(key, new NumberValue(value));
+            if (self.TryGetIndex(index, out var value))
+            {
+                return value;
+            }
+
+            throw new System.IndexOutOfRangeException();
         }
-        public static void Define(this Scope vm, string key, float value)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T GetIndex<T>(this IArrayValue self, int index) where T : IValue
         {
-            vm.Define(key, new NumberValue(value));
+            if (self.TryGetIndex(index, out var value))
+            {
+                if (value is T result)
+                {
+                    return result;
+                }
+                throw new System.Exception($"Unable to cast argument to: {typeof(T).FullName} for {value.ToString()}");
+            }
+
+            throw new System.IndexOutOfRangeException();
         }
-        public static void Define(this Scope vm, string key, double value)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T GetIndex<T>(this IArrayValue self, int index, VirtualMachine.CastValueDelegate<T> cast) where T : IValue
         {
-            vm.Define(key, new NumberValue(value));
+            if (self.TryGetIndex(index, out var value))
+            {
+                return cast(value);
+            }
+
+            throw new System.IndexOutOfRangeException();
         }
-        public static void Define(this Scope vm, string key, string value)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetIndexInt(this IArrayValue self, int index)
         {
-            vm.Define(key, new StringValue(value));
+            return self.GetIndex<NumberValue>(index).IntValue;
         }
-        public static void Define(this Scope vm, string key, IReadOnlyList<IValue> value)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float GetIndexFloat(this IArrayValue self, int index)
         {
-            vm.Define(key, new ArrayValue(value));
+            return self.GetIndex<NumberValue>(index).FloatValue;
         }
-        public static void Define(this Scope vm, string key, IReadOnlyDictionary<string, IValue> value)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double GetIndexDouble(this IArrayValue self, int index)
         {
-            vm.Define(key, new ObjectValue(value));
+            return self.GetIndex<NumberValue>(index).Value;
         }
-        public static void Define(this Scope vm, string key, BuiltinFunctionValue.BuiltinFunctionDelegate value)
-        {
-            vm.Define(key, new BuiltinFunctionValue(value));
-        }
-        #endregion
     }
 }

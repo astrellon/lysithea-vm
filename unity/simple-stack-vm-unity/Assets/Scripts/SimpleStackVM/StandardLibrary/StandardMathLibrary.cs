@@ -7,7 +7,7 @@ namespace SimpleStackVM
     public static class StandardMathLibrary
     {
         #region Fields
-        private const double DegToRad = System.Math.PI / 180.0;
+        public const double DegToRad = System.Math.PI / 180.0;
 
         public static readonly IReadOnlyScope Scope = CreateScope();
         #endregion
@@ -23,108 +23,126 @@ namespace SimpleStackVM
                 {"PI", new NumberValue(Math.PI)},
                 {"DegToRad", new NumberValue(DegToRad)},
 
-                {"sin", new BuiltinFunctionValue((vm, numArgs) =>
+                {"sin", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<NumberValue>();
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Sin(top.Value));
                 })},
-                {"cos", new BuiltinFunctionValue((vm, numArgs) =>
+
+                {"cos", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<NumberValue>();
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Cos(top.Value));
                 })},
-                {"tan", new BuiltinFunctionValue((vm, numArgs) =>
+
+                {"tan", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<NumberValue>();
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Tan(top.Value));
                 })},
 
-                {"pow", new BuiltinFunctionValue((vm, numArgs) =>
+                {"pow", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var y = vm.PopStack<NumberValue>();
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
+                    var y = args.GetIndex<NumberValue>(1);
                     vm.PushStack(Math.Pow(x.Value, y.Value));
                 })},
 
-                {"exp", new BuiltinFunctionValue((vm, numArgs) =>
+                {"exp", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Exp(x.Value));
                 })},
 
-                {"floor", new BuiltinFunctionValue((vm, numArgs) =>
+                {"floor", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Floor(x.Value));
                 })},
 
-                {"ceil", new BuiltinFunctionValue((vm, numArgs) =>
+                {"ceil", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Ceiling(x.Value));
                 })},
 
-                {"round", new BuiltinFunctionValue((vm, numArgs) =>
+                {"round", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Round(x.Value));
                 })},
 
-                {"isFinite", new BuiltinFunctionValue((vm, numArgs) =>
+                {"isFinite", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(double.IsFinite(x.Value));
                 })},
 
-                {"isNaN", new BuiltinFunctionValue((vm, numArgs) =>
+                {"isNaN", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var x = vm.PopStack<NumberValue>();
+                    var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(double.IsNaN(x.Value));
                 })},
 
-                {"parse", new BuiltinFunctionValue((vm, numArgs) =>
+                {"parse", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PeekStack();
+                    var top = args.GetIndex(0);
                     if (top is NumberValue)
                     {
-                        return;
+                        vm.PushStack(top);
                     }
-
-                    top = vm.PopStack();
-                    vm.PushStack(double.Parse(top.ToString()));
+                    else
+                    {
+                        vm.PushStack(double.Parse(top.ToString()));
+                    }
                 })},
 
-                {"log", new BuiltinFunctionValue((vm, numArgs) =>
+                {"log", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<NumberValue>();
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Log(top.Value));
                 })},
 
-                {"abs", new BuiltinFunctionValue((vm, numArgs) =>
+                {"abs", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<NumberValue>();
+                    var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Abs(top.Value));
                 })},
 
-                {"max", new BuiltinFunctionValue((vm, numArgs) =>
+                {"max", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var right = vm.PopStack();
-                    var left = vm.PopStack();
-                    vm.PushStack(left.CompareTo(right) > 0 ? left : right);
+                    var max = args.GetIndex(0);
+                    for (var i = 1; i < args.Length; i++)
+                    {
+                        var next = args[i];
+                        if (next.CompareTo(max) > 0)
+                        {
+                            max = next;
+                        }
+                    }
+                    vm.PushStack(max);
                 })},
 
-                {"min", new BuiltinFunctionValue((vm, numArgs) =>
+                {"min", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var right = vm.PopStack();
-                    var left = vm.PopStack();
-                    vm.PushStack(left.CompareTo(right) < 0 ? left : right);
-                })},
+                    var min = args.GetIndex(0);
+                    for (var i = 1; i < args.Length; i++)
+                    {
+                        var next = args[i];
+                        if (next.CompareTo(min) < 0)
+                        {
+                            min = next;
+                        }
+                    }
+                    vm.PushStack(min);
+                })}
             };
 
-            result.Define("math", mathFunctions);
+            result.Define("math", new ObjectValue(mathFunctions));
 
             return result;
         }
+
         #endregion
     }
 }

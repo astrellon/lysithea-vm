@@ -16,12 +16,5 @@ namespace SimpleStackVM.Unity
             this.Script = script;
         }
         #endregion
-
-        #region Methods
-        public void Awake()
-        {
-            // No need to prepare the scope data.
-        }
-        #endregion
     }
 }

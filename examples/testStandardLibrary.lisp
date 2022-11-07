@@ -4,6 +4,9 @@
     (define arr (0 1 2))
     (assert.equals (0 1 2) arr)
 
+    (assert.equals 3 arr.length)
+    (assert.equals 3 (array.length arr))
+
     (set arr (array.set arr 1 "b"))
     (assert.equals (0 "b" 2) arr)
 
@@ -19,6 +22,9 @@
     (set arr (array.remove arr 2))
     (assert.notEquals ("a" "b" "c" "e") arr)
     (assert.equals ("a" "b" "c" "d") arr)
+
+    (assert.equals 4 arr.length)
+    (assert.equals 4 (array.length arr))
 
     (assert.equals ("a" "b") (array.sublist arr 0 2))
     (assert.equals ("a" "b" "c" "d") (array.sublist arr 0 -1))
@@ -45,6 +51,9 @@
     (set str (string.removeAt str 0))
     (set str (string.removeAll str "2"))
     (set str (string.insert str -12 "c"))
+
+    (print "Length: " str.length)
+    (print "Length: " (string.length str))
 
     (assert.equals str "abc hello there")
     (assert.notEquals str "012 hello there")
@@ -109,6 +118,17 @@
 
     (print "Object tests passed!")
 ))
+
+(define testUnpack (function (firstArg ...inputs)
+    (print "First arg: " firstArg)
+    (print "Second arg: " inputs)
+    (print "Unpacked args: " (string.join "|" ...inputs))
+))
+
+(testUnpack "Hello" "There" "How" 5 "you?")
+(define values ("abc" 567 "hello there"))
+(print "Values1: " values)
+(print "Values2: " ...values)
 
 (testArray)
 (testString)

@@ -1,5 +1,7 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { isValueNumber, ObjectValue, valueCompareTo, valueToString } from "../types";
+import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import NumberValue, { isNumberValue } from "../values/numberValue";
+import ObjectValue, { ObjectValueMap } from "../values/objectValue";
 
 const degToRad = Math.PI / 180.0;
 
@@ -9,83 +11,97 @@ export function createMathScope()
 {
     const result = new Scope();
 
-    const mathFunctions: ObjectValue =
+    const mathFunctions: ObjectValueMap =
     {
-        E: Math.E,
-        PI: Math.PI,
-        DegToRad: degToRad,
+        E: new NumberValue(Math.E),
+        PI: new NumberValue(Math.PI),
+        DegToRad: new NumberValue(degToRad),
 
-        sin: (vm, numArgs) =>
+        sin: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.sin(vm.popStackCast(isValueNumber)));
-        },
-        cos: (vm, numArgs) =>
+            vm.pushStackNumber(Math.sin(args.getNumber(0)));
+        }),
+        cos: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.cos(vm.popStackCast(isValueNumber)));
-        },
-        tan: (vm, numArgs) =>
+            vm.pushStackNumber(Math.cos(args.getNumber(0)));
+        }),
+        tan: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.tan(vm.popStackCast(isValueNumber)));
-        },
-        exp: (vm, numArgs) =>
+            vm.pushStackNumber(Math.tan(args.getNumber(0)));
+        }),
+        exp: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.exp(vm.popStackCast(isValueNumber)));
-        },
-        ceil: (vm, numArgs) =>
+            vm.pushStackNumber(Math.exp(args.getNumber(0)));
+        }),
+        ceil: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.ceil(vm.popStackCast(isValueNumber)));
-        },
-        floor: (vm, numArgs) =>
+            vm.pushStackNumber(Math.ceil(args.getNumber(0)));
+        }),
+        floor: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.floor(vm.popStackCast(isValueNumber)));
-        },
-        round: (vm, numArgs) =>
+            vm.pushStackNumber(Math.floor(args.getNumber(0)));
+        }),
+        round: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.round(vm.popStackCast(isValueNumber)));
-        },
-        isFinite: (vm, numArgs) =>
+            vm.pushStackNumber(Math.round(args.getNumber(0)));
+        }),
+        isFinite: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Number.isFinite(vm.popStackCast(isValueNumber)));
-        },
-        isNaN: (vm, numArgs) =>
+            vm.pushStackBool(Number.isFinite(args.getNumber(0)));
+        }),
+        isNaN: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(isNaN(vm.popStackCast(isValueNumber)));
-        },
-        parse: (vm, numArgs) =>
+            vm.pushStackBool(isNaN(args.getNumber(0)));
+        }),
+        parse: new BuiltinFunctionValue((vm, args) =>
         {
-            let top = vm.peekStack();
-            if (isValueNumber(top))
+            const top = args.getIndex(0);
+            if (isNumberValue(top))
             {
-                return;
+                vm.pushStack(top);
             }
-
-            top = vm.popStack();
-            const num = parseFloat(valueToString(top));
-            vm.pushStack(num);
-        },
-        log: (vm, numArgs) =>
+            else
+            {
+                vm.pushStackNumber(parseFloat(top.toString()));
+            }
+        }),
+        log: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.log(vm.popStackCast(isValueNumber)));
-        },
-        abs: (vm, numArgs) =>
+            vm.pushStackNumber(Math.log(args.getNumber(0)));
+        }),
+        abs: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(Math.abs(vm.popStackCast(isValueNumber)));
-        },
-        max: (vm, numArgs) =>
+            vm.pushStackNumber(Math.abs(args.getNumber(0)));
+        }),
+        max: new BuiltinFunctionValue((vm, args) =>
         {
-            const right = vm.popStack();
-            const left = vm.popStack();
-            vm.pushStack(valueCompareTo(left, right) > 0 ? left : right);
-        },
-        min: (vm, numArgs) =>
+            let max = args.value[0];
+            for (let i = 1; i < args.value.length; i++)
+            {
+                const next = args.value[i];
+                if (next.compareTo(max) > 0)
+                {
+                    max = next;
+                }
+            }
+            vm.pushStack(max);
+        }),
+        min: new BuiltinFunctionValue((vm, args) =>
         {
-            const right = vm.popStack();
-            const left = vm.popStack();
-            vm.pushStack(valueCompareTo(left, right) < 0 ? left : right);
-        }
+            let min = args.value[0];
+            for (let i = 1; i < args.value.length; i++)
+            {
+                const next = args.value[i];
+                if (next.compareTo(min) < 0)
+                {
+                    min = next;
+                }
+            }
+            vm.pushStack(min);
+        })
     };
 
-    result.define('math', mathFunctions);
+    result.define('math', new ObjectValue(mathFunctions));
 
     return result;
 }

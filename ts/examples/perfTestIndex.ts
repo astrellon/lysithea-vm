@@ -1,39 +1,41 @@
 import fs from "fs";
 import VirtualMachineAssembler from "../src/assembler";
 import Scope from "../src/scope";
+import BuiltinFunctionValue from "../src/values/builtinFunctionValue";
 import VirtualMachine from "../src/virtualMachine";
 
-let counter = 0;
+// let counter = 0;
 const perfScope = new Scope();
-perfScope.define('add', (vm, numArgs) =>
+perfScope.define('add', new BuiltinFunctionValue((vm, args) =>
 {
-    const num1 = vm.popStack() as number;
-    const num2 = vm.popStack() as number;
-    vm.pushStack(num1 + num2);
-});
-perfScope.define('rand', (vm, numArgs) =>
+    const num1 = args.getNumber(0);
+    const num2 = args.getNumber(1);
+    vm.pushStackNumber(num1+ num2);
+}));
+perfScope.define('rand', new BuiltinFunctionValue((vm, args) =>
 {
-    vm.pushStack(Math.random());
-});
-perfScope.define('isDone', (vm, numArgs) =>
+    vm.pushStackNumber(Math.random());
+}));
+perfScope.define('lessThan', new BuiltinFunctionValue((vm, args) =>
 {
-    vm.pushStack(counter++ > 1000000);
-});
+    const left = args.getNumber(0);
+    const right = args.getNumber(1);
+    vm.pushStackBool(left < right);
+}));
 
-perfScope.define('done', (vm, numArgs) =>
+perfScope.define('print', new BuiltinFunctionValue((vm, args) =>
 {
-    const total = vm.popStack() as number;
-    console.log('Total:', total);
-});
+    console.log(args.value.map(c => c.toString()).join(''));
+}));
 
 const file = fs.readFileSync('../examples/perfTest.lisp', {encoding: 'utf-8'});
 
 const assembler = new VirtualMachineAssembler();
 assembler.builtinScope.combineScope(perfScope);
-const code = assembler.parseFromText(file);
+const script = assembler.parseFromText(file);
 
 const vm = new VirtualMachine(16);
-vm.currentCode = code;
+vm.changeToScript(script);
 vm.running = true;
 
 let before = Date.now();

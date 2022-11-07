@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SimpleStackVM.Unity
@@ -9,24 +8,21 @@ namespace SimpleStackVM.Unity
         #region Fields
         public TextAsset CodeText;
 
-        public Script Script { get; private set; } = Script.Empty;
-        #endregion
-
-        #region Methods
-        public void Awake()
+        private Script script = Script.Empty;
+        public Script Script
         {
-            if (this.Script.Code.IsEmpty)
+            get
             {
-                return;
+                if (!this.script.Code.IsEmpty)
+                {
+                    return this.script;
+                }
+
+                var codeString = this.CodeText.text;
+                this.script = DrawingVM.Instance.AssembleScript(codeString);
+                return this.script;
             }
-
-            // var jsonStr = this.JsonText.text;
-            // var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
-
-            // this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
         }
         #endregion
-
-
     }
 }

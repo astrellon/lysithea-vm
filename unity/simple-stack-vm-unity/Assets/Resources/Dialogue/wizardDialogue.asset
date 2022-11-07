@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af8847d63772c93c6a25646537f9328c, type: 3}
   m_Name: wizardDialogue
   m_EditorClassIdentifier: 
-  JsonText: {fileID: 4900000, guid: 3d83688a274938561a458e130cad834f, type: 3}
+  CodeText: {fileID: 2811297602134710623, guid: bc6a698317d4f8e88afada94a3539340, type: 3}

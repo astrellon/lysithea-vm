@@ -1,115 +1,133 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { ArrayValue, Editable, isValueNull, isValueNumber, isValueObject, isValueString, ObjectValue, Value, valueCompareTo } from "../types";
+import ArrayValue from "../values/arrayValue";
+import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import { IValue } from "../values/ivalues";
+import NullValue from "../values/nullValue";
+import ObjectValue, { isObjectValue, ObjectValueMap } from "../values/objectValue";
+import StringValue from "../values/stringValue";
 
 export const objectScope: IReadOnlyScope = createObjectScope();
+
+export type Editable<T> =
+{
+    -readonly [P in keyof T]: T[P];
+};
 
 export function createObjectScope()
 {
     const result = new Scope();
 
-    const objectFunctions: ObjectValue =
+    const objectFunctions: ObjectValueMap =
     {
-        'set': (vm, numArgs) =>
+        set: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const key = vm.popStackCast(isValueString);
-            const top = vm.popStackCast(isValueObject);
+            const top = args.getIndexCast(0, isObjectValue);
+            const key = args.getString(1);
+            const value = args.getIndex(2);
             vm.pushStack(set(top, key, value));
-        },
+        }),
 
-        'get': (vm, numArgs) =>
+        get: new BuiltinFunctionValue((vm, args) =>
         {
-            const key = vm.popStackCast(isValueString);
-            const top = vm.popStackCast(isValueObject);
-            vm.pushStack(get(top, key));
-        },
+            const top = args.getIndexCast(0, isObjectValue);
+            const key = args.getString(1);
+            const found = get(top, key);
+            if (found !== undefined)
+            {
+                vm.pushStack(found);
+            }
+            else
+            {
+                vm.pushStack(NullValue.Value);
+            }
+        }),
 
-        'removeKey': (vm, numArgs) =>
+        removeKey: new BuiltinFunctionValue((vm, args) =>
         {
-            const key = vm.popStackCast(isValueString);
-            const obj = vm.popStackCast(isValueObject);
+            const obj = args.getIndexCast(0, isObjectValue);
+            const key = args.getString(1);
             vm.pushStack(removeKey(obj, key));
-        },
+        }),
 
-        'removeValues': (vm, numArgs) =>
+        removeValues: new BuiltinFunctionValue((vm, args) =>
         {
-            const values = vm.popStack();
-            const obj = vm.popStackCast(isValueObject);
+            const obj = args.getIndexCast(0, isObjectValue);
+            const values = args.getIndex(1);
             vm.pushStack(removeValues(obj, values));
-        },
+        }),
 
-        'keys': (vm, numArgs) =>
+        keys: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = vm.popStackCast(isValueObject);
+            const top = args.getIndexCast(0, isObjectValue);
             vm.pushStack(keys(top));
-        },
+        }),
 
-        'values': (vm, numArgs) =>
+        values: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = vm.popStackCast(isValueObject);
+            const top = args.getIndexCast(0, isObjectValue);
             vm.pushStack(values(top));
-        },
+        }),
 
-        'length': (vm, numArgs) =>
+        length: new BuiltinFunctionValue((vm, args) =>
         {
-            const top = vm.popStackCast(isValueObject);
-            vm.pushStack(length(top));
-        }
+            const top = args.getIndexCast(0, isObjectValue);
+            vm.pushStackNumber(length(top));
+        })
     }
 
-    result.define('object', objectFunctions);
+    result.define('object', new ObjectValue(objectFunctions));
 
     return result;
 }
 
-export function set(target: ObjectValue, key: string, value: Value)
+export function set(target: ObjectValue, key: string, value: IValue)
 {
-    return { ...target, [key]: value };
+    return new ObjectValue({ ...target.value, [key]: value });
 }
 
-export function get(target: ObjectValue, key: string)
+export function get(target: ObjectValue, key: string) : IValue | undefined
 {
-    const result = target[key];
-    return result != null ? result : null;
+    const result = target.value[key];
+    return result != null ? result : undefined;
 }
 
 export function keys(target: ObjectValue): ArrayValue
 {
-    return Object.keys(target);
+    return new ArrayValue(target.keys.map(s => new StringValue(s)));
 }
 
 export function removeKey(target: ObjectValue, key: string): ObjectValue
 {
-    if (!target.hasOwnProperty(key))
+    if (!target.value.hasOwnProperty(key))
     {
         return target;
     }
 
-    const result = { ...target };
+    const result = { ...target.value };
     delete result[key];
-    return result;
+    return new ObjectValue(result);
 }
 
-export function removeValues(target: ObjectValue, values: Value): ObjectValue
+export function removeValues(target: ObjectValue, values: IValue): ObjectValue
 {
-    const result: Editable<ObjectValue> = {};
-    for (const key in target)
+    const result: Editable<ObjectValueMap> = {};
+    for (const key in target.value)
     {
-        if (valueCompareTo(target[key], values) !== 0)
+        if (target.value[key].compareTo(values) !== 0)
         {
-            result[key] = target[key];
+            result[key] = target.value[key];
         }
     }
 
-    return result;
+    return new ObjectValue(result);
 }
 
 export function values(target: ObjectValue): ArrayValue
 {
-    return Object.values(target);
+    return new ArrayValue(Object.values(target.value));
 }
 
 export function length(target: ObjectValue)
 {
-    return Object.keys(target).length;
+    return target.keys.length;
 }

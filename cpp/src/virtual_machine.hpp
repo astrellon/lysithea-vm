@@ -4,29 +4,32 @@
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include <stdexcept>
 
 #include "operator.hpp"
 #include "code_line.hpp"
 #include "scope.hpp"
-#include "value.hpp"
+#include "script.hpp"
+#include "function.hpp"
 #include "fixed_stack.hpp"
+#include "./values/value.hpp"
+#include "./values/complex_value.hpp"
+#include "./values/array_value.hpp"
+#include "./values/string_value.hpp"
 
 namespace stack_vm
 {
-    class virtual_machine;
-
-    using run_handler = std::function<void (const std::string &, virtual_machine &)>;
-
     class scope_frame
     {
         public:
             // Fields
             int line_counter;
-            std::shared_ptr<stack_vm::scope> scope;
+            std::shared_ptr<function> code;
+            std::shared_ptr<scope> frame_scope;
 
             // Constructor
-            scope_frame() : line_counter(0), scope(nullptr) { }
-            scope_frame(int line_counter, std::shared_ptr<stack_vm::scope> scope) : line_counter(line_counter), scope(scope) { }
+            scope_frame() : line_counter(0), code(nullptr), frame_scope(nullptr) { }
+            scope_frame(int line_counter, std::shared_ptr<function> code, std::shared_ptr<scope> frame_scope) : line_counter(line_counter), code(code), frame_scope(frame_scope) { }
 
             // Methods
     };
@@ -37,30 +40,53 @@ namespace stack_vm
             // Fields
             bool running;
             bool paused;
+            std::shared_ptr<const scope> builtin_scope;
+            std::shared_ptr<function> current_code;
+            std::shared_ptr<scope> current_scope;
+            std::shared_ptr<scope> global_scope;
 
             // Constructor
-            virtual_machine(int stackSize, run_handler global_run_handler);
+            virtual_machine(int stackSize);
 
             // Methods
-            void add_scope(std::shared_ptr<scope> scope);
-            void add_scopes(const std::vector<std::shared_ptr<scope>> scopes);
-            void set_current_scope(const std::string &scope_name);
-            void add_run_handler(const std::string &handler_name, run_handler handler);
-            void set_global_run_handler(run_handler handler);
             void reset();
+            void change_to_script(std::shared_ptr<script> input);
+            void execute(std::shared_ptr<script> input);
             void step();
-
-            void call(const value &label);
-            void call_return();
-
-            void jump(const value &label);
             void jump(const std::string &label);
-            void jump(const std::string &label, const std::string &scope_name);
 
-            void run_command(const value &label);
+            // Function methods
+            std::shared_ptr<const array_value> get_args(int num_args);
+            void call_function(const complex_value &value, int num_args, bool push_to_stack_trace);
+            bool try_return();
+            void call_return();
+            void execute_function(std::shared_ptr<function> func, std::shared_ptr<const array_value> args, bool push_to_stack_trace);
 
-            void swap(int top_offset);
-            void copy(int top_offset);
+            // Stack methods
+            inline void push_stack_trace(const scope_frame &frame)
+            {
+                if (!stack_trace.push(frame))
+                {
+                    throw std::runtime_error("Unable to push to stack trace, stack full");
+                }
+            }
+
+            template <typename T>
+            inline std::shared_ptr<T> pop_stack()
+            {
+                value result;
+                if (!stack.pop(result))
+                {
+                    throw std::runtime_error("Unable to pop stack, empty stack");
+                }
+
+                auto casted = std::dynamic_pointer_cast<T>(result);
+                if (!casted)
+                {
+                    throw std::bad_cast();
+                }
+                return casted;
+            }
 
             inline value pop_stack()
             {
@@ -72,7 +98,50 @@ namespace stack_vm
                 return result;
             }
 
+            inline void push_stack(bool input)
+            {
+                push_stack(value(input));
+            }
+
+            inline void push_stack(int input)
+            {
+                push_stack(value(input));
+            }
+
+            inline void push_stack(float input)
+            {
+                push_stack(value(input));
+            }
+
+            inline void push_stack(double input)
+            {
+                push_stack(value(input));
+            }
+
+            inline void push_stack(std::size_t input)
+            {
+                push_stack(value(input));
+            }
+
+            inline void push_stack(const char *input)
+            {
+                push_stack(value(std::make_shared<string_value>(input)));
+            }
+
+            inline void push_stack(const std::string &input)
+            {
+                push_stack(std::make_shared<string_value>(input));
+            }
+
             inline void push_stack(value input)
+            {
+                if (!stack.push(input))
+                {
+                    throw std::runtime_error("Unable to push stack, stack full");
+                }
+            }
+
+            inline void push_stack(std::shared_ptr<complex_value> input)
             {
                 if (!stack.push(input))
                 {
@@ -94,15 +163,38 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<value> stack;
+            fixed_stack<stack_vm::value> stack;
             fixed_stack<scope_frame> stack_trace;
-            std::unordered_map<std::string, std::shared_ptr<scope>> scopes;
-            std::shared_ptr<scope> current_scope;
+
+            static std::shared_ptr<const array_value> empty_args;
+
             int program_counter;
-            std::unordered_map<std::string, stack_vm::run_handler> run_handlers;
-            stack_vm::run_handler global_run_handler;
 
             // Methods
-            value get_arg(const code_line &input);
+            inline value get_operator_arg(const code_line &input)
+            {
+                if (!input.value.is_undefined())
+                {
+                    return input.value;
+                }
+
+                return pop_stack();
+            }
+
+            template <typename T>
+            inline const T *get_operator_arg(const code_line &input)
+            {
+                auto result = input.value;
+                if (input.value.is_undefined())
+                {
+                    result = pop_stack();
+                }
+
+                if (result.is_complex())
+                {
+                    return dynamic_cast<const T *>(result.get_complex().get());
+                }
+                return nullptr;
+            }
     };
 } // stack_vm

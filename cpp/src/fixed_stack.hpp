@@ -22,7 +22,7 @@ namespace stack_vm
 
             inline bool pop(T &result)
             {
-                if (stack_size() < max_size)
+                if (stack_size() > 0)
                 {
                     result = data.back();
                     data.pop_back();
@@ -51,31 +51,6 @@ namespace stack_vm
                 }
 
                 result = data.back();
-                return true;
-            }
-
-            bool swap(int top_offset)
-            {
-                auto size = stack_size();
-                auto new_index = size - top_offset - 1;
-                if (new_index < 0 || new_index > size)
-                {
-                    return false;
-                }
-
-                std::iter_swap(data.rbegin(), data.begin() + new_index);
-                return true;
-            }
-
-            bool copy(int top_offset)
-            {
-                auto size = stack_size();
-                auto new_index = stack_size() - top_offset - 1;
-                if (new_index < 0 || new_index > size)
-                {
-                    return false;
-                }
-                data.emplace_back(data[new_index]);
                 return true;
             }
 

@@ -19,19 +19,19 @@ namespace SimpleStackVM
 
             var objectFunctions = new Dictionary<string, IValue>
             {
-                {"set", new BuiltinFunctionValue((vm, numArgs) =>
+                {"set", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var value = vm.PopStack();
-                    var key = vm.PopStack<StringValue>();
-                    var obj = vm.PopStack<ObjectValue>();
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var key = args.GetIndex<StringValue>(1);
+                    var value = args.GetIndex(2);
                     vm.PushStack(Set(obj, key.Value, value));
                 })},
 
-                {"get", new BuiltinFunctionValue((vm, numArgs) =>
+                {"get", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var key = vm.PopStack<StringValue>();
-                    var obj = vm.PopStack<ObjectValue>();
-                    if (obj.TryGetValue(key.Value, out var value))
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var key = args.GetIndex<StringValue>(1);
+                    if (obj.TryGetKey(key.Value, out var value))
                     {
                         vm.PushStack(value);
                     }
@@ -41,40 +41,40 @@ namespace SimpleStackVM
                     }
                 })},
 
-                {"removeKey", new BuiltinFunctionValue((vm, numArgs) =>
+                {"removeKey", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var key = vm.PopStack<StringValue>();
-                    var obj = vm.PopStack<ObjectValue>();
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var key = args.GetIndex<StringValue>(1);
                     vm.PushStack(RemoveKey(obj, key.Value));
                 })},
 
-                {"removeValues", new BuiltinFunctionValue((vm, numArgs) =>
+                {"removeValues", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var values = vm.PopStack();
-                    var obj = vm.PopStack<ObjectValue>();
+                    var obj = args.GetIndex<ObjectValue>(0);
+                    var values = args.GetIndex(1);
                     vm.PushStack(RemoveValues(obj, values));
                 })},
 
-                {"keys", new BuiltinFunctionValue((vm, numArgs) =>
+                {"keys", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<ObjectValue>();
+                    var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(Keys(top));
                 })},
 
-                {"values", new BuiltinFunctionValue((vm, numArgs) =>
+                {"values", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<ObjectValue>();
+                    var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(Values(top));
                 })},
 
-                {"length", new BuiltinFunctionValue((vm, numArgs) =>
+                {"length", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<ObjectValue>();
+                    var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(top.Value.Count);
                 })}
             };
 
-            result.Define("object", objectFunctions);
+            result.Define("object", new ObjectValue(objectFunctions));
 
             return result;
         }
@@ -112,6 +112,50 @@ namespace SimpleStackVM
         {
             var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
+        }
+
+        public static int GeneralCompareTo(IObjectValue left, IValue? rightInput)
+        {
+            if (left == rightInput)
+            {
+                return 0;
+            }
+
+            if (left == null || !(rightInput is IObjectValue right))
+            {
+                return 1;
+            }
+
+            var leftKeys = left.ObjectKeys;
+            var rightKeys = right.ObjectKeys;
+            var compareLength = leftKeys.Count.CompareTo(rightKeys.Count);
+            if (compareLength != 0)
+            {
+                return compareLength;
+            }
+
+            foreach (var key in leftKeys)
+            {
+                if (!left.TryGetKey(key, out var leftValue))
+                {
+                    throw new Exception($"Object key: {key} not present in the object!: {left.ToString()}");
+                }
+
+                if (right.TryGetKey(key, out var rightValue))
+                {
+                    var compare = leftValue.CompareTo(rightValue);
+                    if (compare != 0)
+                    {
+                        return compare;
+                    }
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+
+            return 0;
         }
         #endregion
     }

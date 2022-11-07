@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +7,7 @@ namespace SimpleStackVM.Unity
     {
         #region Fields
         public List<DrawingScript> CommonScripts;
-        public UIScope UIScope;
+        public UIDrawingCodeEdit UICodeEdit;
         #endregion
 
         #region Methods
@@ -16,11 +15,8 @@ namespace SimpleStackVM.Unity
         {
             try
             {
-                var scopes = this.UIScope.CreateScopes();
-                // var script = new DynamicDrawingScript(scopes);
-
-                // var combinedScripts = this.CommonScripts.Cast<IDrawingScript>().Append(script);
-                // DrawingVM.Instance.StartDrawing(combinedScripts, this.UIScope.StartScopeName.text);
+                var script = this.UICodeEdit.CreateScript();
+                DrawingVM.Instance.StartDrawing(this.CommonScripts, script);
             }
             catch (System.Exception exp)
             {

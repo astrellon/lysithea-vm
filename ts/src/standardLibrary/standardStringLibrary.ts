@@ -1,6 +1,7 @@
 import Scope, { IReadOnlyScope } from "../scope";
-import { isValueNumber, isValueString, ObjectValue, Value, valueToString } from "../types";
-import VirtualMachine from "../virtualMachine";
+import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import ObjectValue, { ObjectValueMap } from "../values/objectValue";
+import StringValue, { isStringValue } from "../values/stringValue";
 
 export const stringScope: IReadOnlyScope = createStringScope();
 
@@ -8,122 +9,102 @@ export function createStringScope()
 {
     const result = new Scope();
 
-    const stringFunctions: ObjectValue =
+    const stringFunctions: ObjectValueMap =
     {
-        'join': (vm, numArgs) =>
+        join: new BuiltinFunctionValue((vm, args) =>
         {
-            if (numArgs < 2)
+            if (args.value.length < 2)
             {
                 throw new Error('Not enough arguments for string join');
             }
-            const args = vm.getArgs(numArgs);
-            const separator = args[0];
-            const result = args.slice(1).join(valueToString(separator));
-            vm.pushStack(result);
-        },
 
-        'length': (vm, numArgs) =>
-        {
-            const top = vm.popStackCast(isValueString);
-            vm.pushStack(top.length);
-        },
+            const separator = args.value[0];
+            const result = args.value.slice(1).join(separator.toString());
+            vm.pushStackString(result);
+        }),
 
-        'get': (vm, numArgs) =>
+        length: new BuiltinFunctionValue((vm, args) =>
         {
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueString);
-            vm.pushStack(top[index]);
-        },
+            const top = args.getString(0);
+            vm.pushStackNumber(top.length);
+        }),
 
-        'set': (vm, numArgs) =>
+        get: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueString);
-            vm.pushStack(set(top, index, valueToString(value)));
-        },
+            const top = args.getIndexCast(0, isStringValue);
+            const index = args.getNumber(1);
+            vm.pushStackString(top.value[top.getIndex(index)]);
+        }),
 
-        'insert': (vm, numArgs) =>
+        set: new BuiltinFunctionValue((vm, args) =>
         {
-            const value = vm.popStack();
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueString);
-            vm.pushStack(insert(top, index, valueToString(value)));
-        },
+            const top = args.getIndexCast(0, isStringValue);
+            const index = args.getNumber(1);
+            const value = args.getIndex(2).toString();
+            vm.pushStack(set(top, index, value));
+        }),
 
-        'substring': (vm, numArgs) =>
+        insert: new BuiltinFunctionValue((vm, args) =>
         {
-            const length = vm.popStackCast(isValueNumber);
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueString);
+            const top = args.getIndexCast(0, isStringValue);
+            const index = args.getNumber(1);
+            const value = args.getIndex(2).toString();
+            vm.pushStack(insert(top, index, value));
+        }),
+
+        substring: new BuiltinFunctionValue((vm, args) =>
+        {
+            const top = args.getIndexCast(0, isStringValue);
+            const index = args.getNumber(1);
+            const length = args.getNumber(2);
             vm.pushStack(substring(top, index, length));
-        },
+        }),
 
-        'removeAt': (vm, numArgs) =>
+        removeAt: new BuiltinFunctionValue((vm, args) =>
         {
-            const index = vm.popStackCast(isValueNumber);
-            const top = vm.popStackCast(isValueString);
+            const top = args.getIndexCast(0, isStringValue);
+            const index = args.getNumber(1);
             vm.pushStack(removeAt(top, index));
-        },
+        }),
 
-        'removeAll': (vm, numArgs) =>
+        removeAll: new BuiltinFunctionValue((vm, args) =>
         {
-            const values = vm.popStackCast(isValueString);
-            const top = vm.popStackCast(isValueString);
+            const top = args.getIndexCast(0, isStringValue);
+            const values = args.getIndex(1).toString();
             vm.pushStack(removeAll(top, values));
-        }
+        })
     }
 
-    result.define('string', stringFunctions);
+    result.define('string', new ObjectValue(stringFunctions));
 
     return result;
 }
 
-export function getIndex(input: string, index: number): number
+export function set(input: StringValue, index: number, value: string): StringValue
 {
-    if (index < 0)
-    {
-        return input.length + index;
-    }
-
-    return index;
+    index = input.getIndex(index);
+    return new StringValue(`${input.value.substring(0, index)}${value}${input.value.substring(index + 1)}`);
 }
 
-export function append(left: Value, right: Value): string
+export function insert(input: StringValue, index: number, value: string): StringValue
 {
-    return valueToString(left) + valueToString(right);
+    index = input.getIndex(index);
+    return new StringValue(`${input.value.substring(0, index)}${value}${input.value.substring(index)}`);
 }
 
-export function prepend(left: Value, right: Value): string
+export function removeAt(input: StringValue, index: number): StringValue
 {
-    return valueToString(right) + valueToString(left);
+    index = input.getIndex(index);
+    return new StringValue(`${input.value.substring(0, index)}${input.value.substring(index + 1)}`);
 }
 
-export function set(input: string, index: number, value: string): string
+export function removeAll(input: StringValue, values: string): StringValue
 {
-    index = getIndex(input, index);
-    return `${input.substring(0, index)}${value}${input.substring(index + 1)}`;
+    return new StringValue(input.value.replace(values, ''));
 }
 
-export function insert(input: string, index: number, value: string): string
+export function substring(input: StringValue, index: number, length: number): StringValue
 {
-    index = getIndex(input, index);
-    return `${input.substring(0, index)}${value}${input.substring(index)}`;
-}
-
-export function removeAt(input: string, index: number): string
-{
-    index = getIndex(input, index);
-    return `${input.substring(0, index)}${input.substring(index + 1)}`;
-}
-
-export function removeAll(input: string, values: string): string
-{
-    return input.replace(values, '');
-}
-
-export function substring(input: string, index: number, length: number)
-{
-    index = getIndex(input, index);
-    return input.substring(index, index + length);
+    index = input.getIndex(index);
+    return new StringValue(input.value.substring(index, index + length));
 }

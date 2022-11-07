@@ -16,9 +16,9 @@ namespace SimpleStackVM
 
             var assertFunctions = new Dictionary<string, IValue>
             {
-                {"true", new BuiltinFunctionValue((vm, numArgs) =>
+                {"true", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<BoolValue>();
+                    var top = args.GetIndex<BoolValue>(0);
                     if (!top.Value)
                     {
                         vm.Running = false;
@@ -27,9 +27,9 @@ namespace SimpleStackVM
                     }
                 })},
 
-                {"false", new BuiltinFunctionValue((vm, numArgs) =>
+                {"false", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var top = vm.PopStack<BoolValue>();
+                    var top = args.GetIndex<BoolValue>(0);
                     if (top.Value)
                     {
                         vm.Running = false;
@@ -38,10 +38,10 @@ namespace SimpleStackVM
                     }
                 })},
 
-                {"equals", new BuiltinFunctionValue((vm, numArgs) =>
+                {"equals", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var actual = vm.PopStack();
-                    var expected = vm.PopStack();
+                    var expected = args.GetIndex(0);
+                    var actual = args.GetIndex(1);
                     if (expected.CompareTo(actual) != 0)
                     {
                         vm.Running = false;
@@ -50,10 +50,10 @@ namespace SimpleStackVM
                     }
                 })},
 
-                {"notEquals", new BuiltinFunctionValue((vm, numArgs) =>
+                {"notEquals", new BuiltinFunctionValue((vm, args) =>
                 {
-                    var actual = vm.PopStack();
-                    var expected = vm.PopStack();
+                    var expected = args.GetIndex(0);
+                    var actual = args.GetIndex(1);
                     if (expected.CompareTo(actual) == 0)
                     {
                         vm.Running = false;
@@ -63,7 +63,7 @@ namespace SimpleStackVM
                 })}
             };
 
-            result.Define("assert", assertFunctions);
+            result.Define("assert", new ObjectValue(assertFunctions));
 
             return result;
         }

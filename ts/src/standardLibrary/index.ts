@@ -4,7 +4,7 @@ import { mathScope } from "./standardMathLibrary";
 import { stringScope } from "./standardStringLibrary";
 import { arrayScope } from "./standardArrayLibrary";
 import { objectScope } from "./standardObjectLibrary";
-import { miscScope } from "./standardValueLibrary";
+import { miscScope } from "./standardMiscLibrary";
 
 export enum LibraryType {
     operator = 1 << 0,

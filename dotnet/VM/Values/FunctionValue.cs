@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Runtime.CompilerServices;
+
 namespace SimpleStackVM
 {
     public struct FunctionValue : IFunctionValue
@@ -18,22 +20,11 @@ namespace SimpleStackVM
         #endregion
 
         #region Methods
-        public override bool Equals(object? other)
-        {
-            if (other == null) return false;
-            if (other is FunctionValue otherProc)
-            {
-                return this.Value == otherProc.Value;
-            }
-
-            return false;
-        }
-
         public int CompareTo(IValue? other)
         {
             if (other == null || !(other is FunctionValue otherProcedure))
             {
-                return -1;
+                return 1;
             }
 
             if (this.Value == otherProcedure.Value)
@@ -45,7 +36,12 @@ namespace SimpleStackVM
         }
 
         public override string ToString() => $"function:{this.Value.Name}";
-        public override int GetHashCode() => this.Value.GetHashCode();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace)
+        {
+            vm.ExecuteFunction(this.Value, args, pushToStackTrace);
+        }
         #endregion
     }
 }

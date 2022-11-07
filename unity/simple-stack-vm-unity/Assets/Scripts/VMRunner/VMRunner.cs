@@ -15,9 +15,10 @@ namespace SimpleStackVM.Unity
 
         public float WaitUntil = -1.0f;
         public float VMStepTiming = -1.0f;
-        public int MaxStepsPerFrame = 100_000;
+        public int BreakStepsPerFrame = 1_000_000;
+        public int MaxStepsPerFrame = 10_000;
 
-        public bool IsWaiting => this.WaitUntil > 0.0f;
+        public bool IsWaiting => this.Running && this.WaitUntil > 0.0f;
         #endregion
 
         #region Unity Methods
@@ -25,7 +26,7 @@ namespace SimpleStackVM.Unity
         {
             if (this.VM != null && this.Running)
             {
-                var maxCount = this.MaxStepsPerFrame;
+                var count = 0;
                 var runOnce = false;
                 while (this.VM.Running && !this.VM.Paused)
                 {
@@ -51,9 +52,13 @@ namespace SimpleStackVM.Unity
                     // Debug.Log(string.Join('\n', this.VM.PrintStackDebug()));
 
                     this.VM.Step();
-                    maxCount--;
+                    count++;
 
-                    if (maxCount < 0)
+                    if (this.MaxStepsPerFrame > 0 && count > this.MaxStepsPerFrame)
+                    {
+                        break;
+                    }
+                    if (this.BreakStepsPerFrame > 0 && count > this.BreakStepsPerFrame)
                     {
                         this.Running = false;
                         Debug.Log("Max step count reached! Breaking!");
@@ -71,9 +76,17 @@ namespace SimpleStackVM.Unity
         #endregion
 
         #region Methods
-        public void Init(int stackSize, Action<string, VirtualMachine> runHandler)
+        public void Init(int stackSize)
         {
             this.VM = new VirtualMachine(stackSize);
+        }
+
+        public void StartScript(Script script)
+        {
+            this.Running = true;
+            this.VM.Running = true;
+            this.VM.Paused = false;
+            this.VM.ChangeToScript(script);
         }
 
         public void Wait(TimeSpan timespan)

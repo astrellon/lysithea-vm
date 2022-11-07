@@ -13,35 +13,28 @@ namespace SimpleStackVM
         {
             var result = new Scope();
 
-            result.Define("toString", (vm, numArgs) =>
+            result.Define("toString", (vm, args) =>
             {
-                var top = vm.PeekStack();
-                if (top is StringValue || top is VariableValue)
-                {
-                    return;
-                }
-
-                top = vm.PopStack();
+                var top = args.GetIndex(0);
                 vm.PushStack(top.ToString());
             });
 
-            result.Define("typeof", (vm, numArgs) =>
+            result.Define("typeof", (vm, args) =>
             {
-                var top = vm.PopStack();
+                var top = args.GetIndex(0);
                 vm.PushStack(top.TypeName);
             });
 
-            result.Define("compareTo", (vm, numArgs) =>
+            result.Define("compareTo", (vm, args) =>
             {
-                var right = vm.PopStack();
-                var left = vm.PopStack();
+                var left = args.GetIndex(0);
+                var right = args.GetIndex(1);
                 vm.PushStack(left.CompareTo(right));
             });
 
-            result.Define("print", (vm, numArgs) =>
+            result.Define("print", (vm, args) =>
             {
-                var args = vm.GetArgs(numArgs);
-                Console.WriteLine(string.Join("", args));
+                Console.WriteLine(string.Join("", args.Value));
             });
 
             return result;

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace SimpleStackVM.Unity
@@ -7,26 +6,23 @@ namespace SimpleStackVM.Unity
     public class DialogueScript : ScriptableObject
     {
         #region Fields
-        public TextAsset JsonText;
+        public TextAsset CodeText;
 
-        public List<Function> Procedures;
-        #endregion
-
-        #region Methods
-        public void Awake()
+        private Script script = Script.Empty;
+        public Script Script
         {
-            if (this.Procedures != null && this.Procedures.Count > 0)
+            get
             {
-                return;
+                if (!this.script.Code.IsEmpty)
+                {
+                    return this.script;
+                }
+
+                var codeString = this.CodeText.text;
+                this.script = DialogueVM.Instance.AssembleScript(codeString);
+                return this.script;
             }
-
-            // var jsonStr = this.JsonText.text;
-            // var json = SimpleJSON.JSONArray.Parse(jsonStr).AsArray;
-
-            // this.Procedures = VirtualMachineAssembler.ParseProcedures(json);
         }
         #endregion
-
-
     }
 }
