@@ -10,128 +10,70 @@ namespace SimpleStackVM
     public class BenchmarkPerfTest
     {
         #region Fields
-        private static Random Rand = new Random();
-        private static int Counter = 0;
-        private static double Total = 0.0;
-        private static string CodeText = File.ReadAllText("/home/alan/git/simple-stack-vm/examples/perfTest.lisp");
-
-        private static readonly Scope CustomScope = CreateScope();
-        private static readonly VirtualMachineAssembler Assembler = CreateAssembler();
-        private static readonly Script Code = Assembler.ParseFromText(CodeText);
-        private static readonly VirtualMachine SharedVM = new VirtualMachine(8);
+        private static readonly Random Rand = new Random();
+        private const string PathOffset = "../../../../../../../";
+        private static readonly string VMCodeText = File.ReadAllText(PathOffset + "perfTest.lisp");
+        private static readonly string LuaCodeText = File.ReadAllText(PathOffset + "perfTest.lua");
+        private static readonly PerfTestVM PerfVM = new PerfTestVM();
+        private static readonly Script PreAssembledScript = AssembleScript();
+        private static readonly PerfNLua PerfLuaVM = new PerfNLua();
+        private static readonly NLua.LuaFunction PreCompiledLua = PerfLuaVM.Compile(LuaCodeText);
+        private static MoonSharp.Interpreter.DynValue MoonSharpMainFunc;
+        private static MoonSharp.Interpreter.Script MoonSharpScript = PerfMoonSharp.Compile(LuaCodeText, out MoonSharpMainFunc);
         #endregion
 
         #region Methods
-        private static VirtualMachineAssembler CreateAssembler()
+        private static Script AssembleScript()
         {
-            var assembler = new VirtualMachineAssembler();
-            assembler.BuiltinScope.CombineScope(CustomScope);
-            return assembler;
+            return PerfVM.Assembler.ParseFromText(VMCodeText);
         }
 
-        // [Benchmark]
+        [Benchmark]
         public void TestControl()
         {
-            Counter = 0;
-            Total = 0.0;
-
-            do
-            {
-                DoStep();
-            }
-            while (!DoIsDone());
-            DoDone();
-        }
-
-        private static void DoStep()
-        {
-            var num1 = Rand.NextDouble();
-            var num2 = Rand.NextDouble();
-            Total += num1 + num2;
-        }
-
-        private static bool DoIsDone()
-        {
-            Counter++;
-            return Counter >= 1_000_000;
-        }
-
-        private static void DoDone()
-        {
-            // Console.WriteLine($"Done: {Total}");
+            var controlPerf = new PerfControl();
+            controlPerf.Run();
         }
 
         [Benchmark]
-        public void TestCreateAndExecute()
+        public void TestCreateAndExecuteVM()
         {
-            Counter = 0;
-
-            var vm = new VirtualMachine(8);
-            vm.Execute(Code);
-            // try
-            // {
-            //     vm.Execute(Code);
-            // }
-            // catch (VirtualMachineException exp)
-            // {
-            //     Console.WriteLine(exp.Message);
-            //     var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
-            //     Console.WriteLine($"VM Stack: {stackTrace}");
-            //     Console.WriteLine(exp.StackTrace);
-            // }
+            var vm = new PerfTestVM();
+            var script = vm.Assembler.ParseFromText(VMCodeText);
+            vm.VM.Execute(script);
         }
 
         [Benchmark]
-        public void TestExecute()
+        public void TestExecuteVM()
         {
-            Counter = 0;
-
-            SharedVM.Reset();
-                SharedVM.Execute(Code);
-
-            // try
-            // {
-            //     SharedVM.Execute(Code);
-            // }
-            // catch (VirtualMachineException exp)
-            // {
-            //     Console.WriteLine(exp.Message);
-            //     var stackTrace = string.Join("", exp.VirtualMachineStackTrace.Select(t => $"\n- {t}"));
-            //     Console.WriteLine($"VM Stack: {stackTrace}");
-            //     Console.WriteLine(exp.StackTrace);
-            // }
+            PerfVM.VM.Reset();
+            PerfVM.VM.Execute(PreAssembledScript);
         }
 
-        private static Scope CreateScope()
+        [Benchmark]
+        public void TestExecuteNLua()
         {
-            var result = new Scope();
+            PerfLuaVM.Execute(PreCompiledLua);
+        }
 
-            result.Define("rand", (vm, numArgs) =>
-            {
-                // vm.PushStack(Rand.NextDouble());
-                vm.PushStack(5);
-            });
+        [Benchmark]
+        public void TestCreateAndExecuteNLua()
+        {
+            var lua = new PerfNLua();
+            lua.Execute(LuaCodeText);
+        }
 
-            result.Define("add", (vm, numArgs) =>
-            {
-                var num1 = (NumberValue)vm.PopStack();
-                var num2 = (NumberValue)vm.PopStack();
-                vm.PushStack((num1.Value + num2.Value));
-            });
+        [Benchmark]
+        public void TestExecuteMoonSharp()
+        {
+            MoonSharpScript.Call(MoonSharpMainFunc);
+        }
 
-            result.Define("isDone", (vm, numArgs) =>
-            {
-                Counter++;
-                vm.PushStack((Counter >= 1_000_000));
-            });
-
-            result.Define("done", (vm, numArgs) =>
-            {
-                var total = (NumberValue)vm.PopStack();
-                // Console.WriteLine($"Done: {total.Value}");
-            });
-
-            return result;
+        [Benchmark]
+        public void TestCreateAndExecuteMoonSharp()
+        {
+            var script = PerfMoonSharp.Compile(LuaCodeText, out var mainFunc);
+            script.Call(mainFunc);
         }
         #endregion
     }
