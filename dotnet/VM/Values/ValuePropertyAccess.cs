@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class ValuePropertyAccess
     {

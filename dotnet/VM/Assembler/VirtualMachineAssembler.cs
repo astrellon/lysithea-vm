@@ -5,7 +5,7 @@ using System.Linq;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public class VirtualMachineAssembler
     {

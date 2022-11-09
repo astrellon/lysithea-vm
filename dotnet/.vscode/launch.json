@@ -38,13 +38,13 @@
             "stopAtEntry": false
         },
         {
-            "name": "Run Test Program",
+            "name": "Run More Complex Program",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build-test-program",
-            "program": "${workspaceFolder}/Examples/TestProgram/bin/Debug/net6.0/testProgram.dll",
+            "preLaunchTask": "build-more-complex-program",
+            "program": "${workspaceFolder}/Examples/MoreComplexTypes/bin/Debug/net6.0/moreComplexTypes.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Examples/TestProgram",
+            "cwd": "${workspaceFolder}/Examples/MoreComplexTypes",
             "console": "internalConsole",
             "stopAtEntry": false
         },

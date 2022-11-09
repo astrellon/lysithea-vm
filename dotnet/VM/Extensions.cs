@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class VirtualMachineExtensions
     {

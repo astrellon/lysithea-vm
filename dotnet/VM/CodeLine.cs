@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public interface ITempCodeLine { }
 

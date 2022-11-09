@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using NLua;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public class PerfNLua : IDisposable
     {

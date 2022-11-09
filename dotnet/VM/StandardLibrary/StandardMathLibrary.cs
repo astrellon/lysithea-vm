@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class StandardMathLibrary
     {

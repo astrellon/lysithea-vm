@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public class PerfControl
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     [MemoryDiagnoser]
     public class BenchmarkPerfTest

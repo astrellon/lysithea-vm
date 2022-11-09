@@ -2,7 +2,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public struct BuiltinFunctionValue : IFunctionValue
     {

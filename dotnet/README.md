@@ -1,33 +1,53 @@
-Simple Stack Virtual Machine C#
-=
-The C# version of the simple stack VM. This is the original version and likely to have the best support.
+# C#
 
-Examples
--
+The C# version of the Lysithea VM. This is the original version and likely to have the best support.
 
-Each example has its own `.csproj` file to prevent the `Main` methods clashing. Running each sometimes seems to need clearing the `bin` and `obj` folders as running the next one will pull up the currently built one.
+## Examples
+Each of these examples just run in the console and don't have any additional dependencies.
 
-Performance Test:
-```sh
-dotnet run --project ./perfTest.csproj
-```
+### Performance Test
+A fairly limited performance test that does not make use of the standard library. Designed mostly just to test loops and builtin function calls. Also designed to be simple enough to be used as a very limited comparison to other scripting languages.
 
-Dialogue Tree:
-```sh
-dotnet run --project ./dialogueTree.csproj
-```
-
-Run Commands Test:
-```sh
-dotnet run --project ./runCommands.csproj
-```
-
-The performance test definitely benefits from running in Release mode:
+It doesn't *have* to be run in Release mode, but it does make a difference to the run time.
 
 ```sh
-dotnet run -c Release --project ./perfTest.csproj
+$ cd ./Examples/PerfTest
+$ dotnet run -c Release
 ```
 
-Assembler
--
-The assembler parses the Lisp like code. Currently it is a bit limited in terms of debugging, as it tokenises using a regex which loses line number and column number.
+### Dialogue Tree
+A larger example showing off a simple dialogue system.
+
+```sh
+$ cd ./Examples/DialogueTree
+$ dotnet run
+```
+
+### Standard Library Test
+Makes use of the standard library and runs a bunch of tests.
+
+```sh
+$ cd ./Examples/StandardLibraryTest
+$ dotnet run
+```
+
+### More Complex Types
+An example of some more complex types being used.
+
+Shows off a *Vector* type and a *Person* type.
+
+```sh
+$ cd ./Examples/MoreComplexTypes
+$ dotnet run
+```
+
+### Benchmark
+Runs a few different benchmarks, this one does make use of dependencies in the form of **NLua**, **MoonSharp** and **BenchmarkDotNet**.
+
+```sh
+$ cd ./Examples/Benchmark
+$ sudo dotnet run -c Release
+```
+
+## Assembler
+The assembler parses the Lisp like code. Currently it is a bit limited in terms of debugging.

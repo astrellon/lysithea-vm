@@ -1,6 +1,6 @@
-# Simple Stack Virtual Machine
+# Lysithea Scripting Language
 
-This repository contains code for a simple stack based virtual machine. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. It does come with a standard library which a few of the internal calls make use of, however the standard library does not need to be made available to any given script in order to run.
+This repository contains code for a simple stack based virtual machine called Lysithea. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. It does come with a standard library which a few of the internal calls make use of, however the standard library does not need to be made available to any given script in order to run.
 
 A list of the builtin types:
 - **Null**: An empty value, not really intended to be pushed around, but if a command does not have a value (because the operator is taking a value from the stack) then the code line value will be null.
@@ -505,77 +505,17 @@ Decrements the value of a variable. In addition to be simpler to write that a `s
 ```
 
 # Standard Library
+By default there's basically no builtin functionality to manipulate data. So there is a minimal standard library offered.
 
-The standard library covers a lot of the basics.
-
-## Misc
-
-A handful of generic functions that aren't operators.
-
-### `(print ...args)`
-```lisp
-; Prints all function arguments to the console.
-; @param ...args value[]
-; @returns nothing
-
-(define name "Alan")
-(print "Hello " 5 ": " name)
-
-; Outputs
-Hello 5: Alan
-```
-
-### `(typeof value)`
-```lisp
-; Returns the type name of the value
-; @param input value
-; @returns string
-
-(define name "Alan")
-(define year 2022)
-(print (typeof name) ": " (typeof year))
-
-; Outputs
-string: number
-```
-
-### `(toString value)`
-```lisp
-; Turns the argument into a string
-; @param input value
-; @returns string
-
-(define year 2022)
-(print year ": " (typeof year))
-
-(define yearStr (toString year))
-(print yearStr ": " (typeof yearStr))
-
-; Outputs
-2022: number
-2022: string
-```
-
-### `(compareTo value1 value2)`
-```lisp
-; Compares two values returning either -1, 0 or 1.
-; Can be used for sorting and checking if two values are the same.
-; @param value1 value
-; @param value2 value
-; @returns number
-
-(print (compareTo 5 10))
-(print (compareTo 10 5))
-(print (compareTo 10 10))
-
-; Outputs
--1
-1
-0
-```
+- **Operators**: Usual operators for basic math (+, -, *, /), string concatenation (+) and equality operators (==, !=, etc)
+- **Misc**: A handful of general functions: toString, print, compareTo and typeof.
+- **String**: Basic string manipulation: get, set, substring, join, remove, etc.
+- **Array**: Basic array manipulation: get, set, sublist, join, remove, etc.
+- **Object**:Basic object manipulation: get, set, keys, values, remove, etc.
+- **Math**: Basic math operations: trigonometry, log, exp, pow, min, max, etc.
+- **Assert**: A very basic asserting library which will check if two values are equal or not equal, or true/false and will stop the VM if the assert fails.
 
 # Ports
-
 Current ports are for C++11, .Net 6, Unity and TypeScript. The .Net version could be downgraded if need be.
 
 Author

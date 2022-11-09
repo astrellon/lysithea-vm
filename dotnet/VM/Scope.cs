@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public interface IReadOnlyScope
     {

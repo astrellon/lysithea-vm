@@ -1,4 +1,4 @@
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public struct ScopeFrame
     {
