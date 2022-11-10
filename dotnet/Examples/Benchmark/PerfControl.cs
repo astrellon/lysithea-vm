@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace LysitheaVM
 {
+    /// A C# implementation of the PerfTest script.
+    /// In theory this is the best case performance for that script, which of course it'll never reach
+    /// without doing some script -> C# transpiling.
     public class PerfControl
     {
         #region Fields

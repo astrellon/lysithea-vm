@@ -10,8 +10,8 @@ namespace LysitheaVM
     public class BenchmarkStdLib
     {
         #region Fields
-        private const string FilePath = "/home/alan/git/simple-stack-vm/examples/testStandardLibraryNoAssert2.lisp";
-        private static string CodeText = File.ReadAllText(FilePath);
+        private const string PathOffset = "../../../../../../../";
+        private static string CodeText = File.ReadAllText(Path.Combine(PathOffset, "testStandardLibraryNoAssert.lisp"));
         private static readonly VirtualMachineAssembler Assembler = CreateAssembler();
         private static readonly Script Code = Assembler.ParseFromText(CodeText);
         private static readonly VirtualMachine SharedVM = new VirtualMachine(8);
