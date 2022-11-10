@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
-namespace SimpleStackVM.Example
+namespace LysitheaVM.Example
 {
     public class VectorValue : IObjectValue
     {
@@ -70,7 +70,7 @@ namespace SimpleStackVM.Example
             return false;
         }
 
-        public void Add(VirtualMachine vm, ArrayValue args)
+        public void Add(VirtualMachine vm, ArgumentsValue args)
         {
             var other = args.GetIndex<VectorValue>(0);
             var x = this.X + other.X;

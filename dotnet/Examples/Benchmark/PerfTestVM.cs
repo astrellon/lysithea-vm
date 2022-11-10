@@ -1,6 +1,6 @@
 using System;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public class PerfTestVM
     {

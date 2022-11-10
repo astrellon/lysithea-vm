@@ -8,7 +8,7 @@
 #include "./complex_value.hpp"
 #include "./value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     using array_vector = std::vector<value>;
 
@@ -79,7 +79,7 @@ namespace stack_vm
                 throw std::bad_cast();
             }
 
-            inline stack_vm::value get_index(int index) const
+            inline lysithea_vm::value get_index(int index) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= data.size())
@@ -90,9 +90,9 @@ namespace stack_vm
                 return data[index];
             }
 
-            static inline stack_vm::value make_value(const array_vector &input, bool is_argument_value = false)
+            static inline lysithea_vm::value make_value(const array_vector &input, bool is_argument_value = false)
             {
-                return stack_vm::value(std::make_shared<array_value>(input, is_argument_value));
+                return lysithea_vm::value(std::make_shared<array_value>(input, is_argument_value));
             }
 
             // Value Methods
@@ -107,7 +107,7 @@ namespace stack_vm
             virtual bool is_array() const { return true; }
             virtual int array_length() const { return static_cast<int>(data.size()); }
 
-            virtual bool try_get(int index, stack_vm::value &result) const
+            virtual bool try_get(int index, lysithea_vm::value &result) const
             {
                 index = calc_index(index);
                 if (index < 0 || index >= data.size())
@@ -138,7 +138,7 @@ namespace stack_vm
                 result.push_back("length");
                 return result;
             }
-            virtual bool try_get(const std::string &key, stack_vm::value &result) const;
+            virtual bool try_get(const std::string &key, lysithea_vm::value &result) const;
 
     };
-} // stack_vm
+} // lysithea_vm

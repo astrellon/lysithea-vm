@@ -1,6 +1,6 @@
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public struct NumberValue : IValue
     {

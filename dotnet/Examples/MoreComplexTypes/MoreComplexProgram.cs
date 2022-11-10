@@ -3,21 +3,15 @@ using System.IO;
 using System.Diagnostics;
 using System.Linq;
 
-namespace SimpleStackVM.Example
+namespace LysitheaVM.Example
 {
-    public static class TestProgram
+    public static class MoreComplexProgram
     {
         private static readonly Random Rand = new Random();
         private static readonly Scope CustomScope = CreateScope();
         #region Methods
-        public static void Main(string[] args)
-        {
-            using var file = File.OpenRead("../../../examples/testObject.lisp");
-            using var reader = new StreamReader(file);
-            var result = VirtualMachineParser.ReadAllTokens(reader);
-        }
 
-        public static void MainOld(string[] args)
+        public static void Main(string[] args)
         {
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
@@ -61,7 +55,9 @@ namespace SimpleStackVM.Example
                 var name = args.GetIndex<StringValue>(0);
                 var age = args.GetIndex<NumberValue>(1);
                 var location = args.GetIndex<ArrayValue>(2);
-                vm.PushStack(new PersonValue(name, age, location));
+
+                var locationList = location.Value.Select(c => c.ToString()).ToList();
+                vm.PushStack(new PersonValue(name.Value, age.IntValue, locationList));
             });
 
             result.Define("newVector", (vm, args) =>
@@ -77,9 +73,9 @@ namespace SimpleStackVM.Example
                 var left = args.GetIndex<PersonValue>(0);
                 var right = args.GetIndex<PersonValue>(1);
 
-                var name = new StringValue($"{left.Name} - {right.Name}");
-                var age = new NumberValue(left.Age.Value + right.Age.Value);
-                var location = new ArrayValue(left.Address.Value.Concat(right.Address.Value).ToList());
+                var name = $"{left.Name} - {right.Name}";
+                var age = left.Age + right.Age;
+                var location = left.Address.Concat(right.Address).ToList();
 
                 vm.PushStack(new PersonValue(name, age, location));
             });

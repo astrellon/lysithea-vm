@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class value;
     class virtual_machine;
@@ -52,4 +52,4 @@ namespace stack_vm
             // Fields
             static const std::vector<std::string> empty_object_keys;
     };
-} // stack_vm
+} // lysithea_vm

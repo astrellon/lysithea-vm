@@ -3,7 +3,7 @@
 #include <vector>
 #include <exception>
 
-namespace stack_vm
+namespace lysithea_vm
 {
     template <typename T>
     class fixed_stack
@@ -68,4 +68,4 @@ namespace stack_vm
 
             // Methods
     };
-} // stack_vm
+} // lysithea_vm

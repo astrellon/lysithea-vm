@@ -6,7 +6,7 @@
 
 #include "./complex_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class variable_value : public complex_value
     {
@@ -45,4 +45,4 @@ namespace stack_vm
                 return "variable";
             }
     };
-} // stack_vm
+} // lysithea_vm

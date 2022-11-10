@@ -7,7 +7,7 @@
 #include "./builtin_function_value.hpp"
 #include "../utils.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class complex_value;
 
@@ -199,4 +199,4 @@ namespace stack_vm
             // Constructor
             value(value_type type) : type(type) { }
     };
-} // stack_vm
+} // lysithea_vm

@@ -1,11 +1,11 @@
-using System.Text;
+using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public struct ArrayValue : IArrayValue, IObjectValue
     {
@@ -36,6 +36,10 @@ namespace SimpleStackVM
         public ArrayValue(IReadOnlyList<IValue> value)
         {
             this.Value = value;
+        }
+        public ArrayValue(IEnumerable<IValue> value)
+        {
+            this.Value = value.ToList();
         }
         #endregion
 

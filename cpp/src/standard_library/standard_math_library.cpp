@@ -9,7 +9,7 @@
 
 #define M_DEG_TO_RAD M_PI / 180.0
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::shared_ptr<const scope> standard_math_library::library_scope = create_scope();
 
@@ -138,4 +138,4 @@ namespace stack_vm
 
         return result;
     }
-} // stack_vm
+} // lysithea_vm

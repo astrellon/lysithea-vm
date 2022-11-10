@@ -8,7 +8,7 @@
 #include "../utils.hpp"
 #include "../scope.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::shared_ptr<const scope> standard_assert_library::library_scope = create_scope();
 

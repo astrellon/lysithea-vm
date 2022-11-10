@@ -17,7 +17,7 @@
 #include "./values/array_value.hpp"
 #include "./values/string_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope_frame
     {
@@ -163,7 +163,7 @@ namespace stack_vm
 
         private:
             // Fields
-            fixed_stack<stack_vm::value> stack;
+            fixed_stack<lysithea_vm::value> stack;
             fixed_stack<scope_frame> stack_trace;
 
             static std::shared_ptr<const array_value> empty_args;
@@ -197,4 +197,4 @@ namespace stack_vm
                 return nullptr;
             }
     };
-} // stack_vm
+} // lysithea_vm

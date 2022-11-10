@@ -1,6 +1,6 @@
 #pragma once
 
-namespace stack_vm
+namespace lysithea_vm
 {
     enum class vm_operator
     {
@@ -10,4 +10,4 @@ namespace stack_vm
         get_property, get, set, define,
         jump, jump_true, jump_false
     };
-} // namespace stack_vm
+} // namespace lysithea_vm

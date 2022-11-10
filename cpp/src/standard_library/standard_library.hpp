@@ -7,7 +7,7 @@
 #include "standard_object_library.hpp"
 #include "standard_misc_library.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
 
@@ -36,4 +36,4 @@ namespace stack_vm
             standard_library() { }
 
     };
-} // stack_vm
+} // lysithea_vm

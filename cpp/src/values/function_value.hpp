@@ -5,7 +5,7 @@
 #include "./complex_value.hpp"
 #include "../function.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     using function_ptr = std::shared_ptr<function>;
 
@@ -38,4 +38,4 @@ namespace stack_vm
             virtual void invoke(virtual_machine &vm, std::shared_ptr<const array_value> args, bool push_to_stack_trace) const;
     };
 
-} // stack_vm
+} // lysithea_vm

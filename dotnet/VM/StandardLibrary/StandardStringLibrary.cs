@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class StandardStringLibrary
     {

@@ -1,7 +1,6 @@
-; A comment!
-(define testPerson (function ()
-    ; A second comment
-    (define personObj { ; A third comment
+(define personObjects (function ()
+    (print "Testing person objects")
+    (define personObj {
         name "Alan"
         age 33
         address ("location 1" "location 2")
@@ -22,7 +21,8 @@
     (print (toString person3))
 ))
 
-(define main (function()
+(define vectorObjects (function()
+    (print "Testing vector objects")
     (define pos (newVector 1 2 3))
     (define offset (newVector 5 10 15))
 
@@ -36,4 +36,5 @@
     (print "Result2: " result2)
 ))
 
-(main)
+(personObjects)
+(vectorObjects)

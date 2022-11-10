@@ -4,7 +4,7 @@
 
 #include "../utils.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     value object_value::empty(std::make_shared<object_value>());
 
@@ -63,4 +63,4 @@ namespace stack_vm
         ss << '}';
         return ss.str();
     }
-} // stack_vm
+} // lysithea_vm

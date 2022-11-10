@@ -1,0 +1,25 @@
+{
+  "name": "lysithea-language-support",
+  "displayName": "Lysithea Language Support",
+  "description": "Adds support for Lysithea language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.72.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "lysithea",
+      "aliases": ["Lysithea", "lysithea"],
+      "extensions": [".lys", ".lysithea"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "lysithea",
+      "scopeName": "source.lysithea",
+      "path": "./syntaxes/lysithea.tmLanguage.json"
+    }]
+  }
+}

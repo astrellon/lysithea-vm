@@ -4,7 +4,7 @@ using System.Linq;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     [MemoryDiagnoser]
     public class BenchmarkPerfTest
@@ -12,8 +12,8 @@ namespace SimpleStackVM
         #region Fields
         private static readonly Random Rand = new Random();
         private const string PathOffset = "../../../../../../../";
-        private static readonly string VMCodeText = File.ReadAllText(PathOffset + "perfTest.lisp");
-        private static readonly string LuaCodeText = File.ReadAllText(PathOffset + "perfTest.lua");
+        private static readonly string VMCodeText = File.ReadAllText(Path.Combine(PathOffset, "perfTest.lisp"));
+        private static readonly string LuaCodeText = File.ReadAllText(Path.Combine(PathOffset, "perfTest.lua"));
         private static readonly PerfTestVM PerfVM = new PerfTestVM();
         private static readonly Script PreAssembledScript = AssembleScript();
         private static readonly PerfNLua PerfLuaVM = new PerfNLua();

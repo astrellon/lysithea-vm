@@ -3,9 +3,9 @@
 #include "./values.hpp"
 #include "../virtual_machine.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
-    bool string_value::try_get(const std::string &key, stack_vm::value &result) const
+    bool string_value::try_get(const std::string &key, lysithea_vm::value &result) const
     {
         if (key == "length")
         {
@@ -15,4 +15,4 @@ namespace stack_vm
 
         return false;
     }
-} // stack_vm
+} // lysithea_vm

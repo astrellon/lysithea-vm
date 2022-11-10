@@ -1,6 +1,6 @@
 #include "scope.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     scope::scope() { }
     scope::scope(std::shared_ptr<scope> parent): parent(parent) { }
@@ -61,4 +61,4 @@ namespace stack_vm
 
         return false;
     }
-} // stack_vm
+} // lysithea_vm

@@ -38,12 +38,12 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "build-test-program",
+            "label": "build-more-complex-program",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Examples/TestProgram/testProgram.csproj",
+                "${workspaceFolder}/Examples/MoreComplexTypes/moreComplexTypes.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

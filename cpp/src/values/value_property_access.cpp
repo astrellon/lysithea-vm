@@ -5,7 +5,7 @@
 #include "./object_value.hpp"
 #include "./string_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     bool try_get_property(value current, const array_value &properties, value &result)
     {
@@ -59,4 +59,4 @@ namespace stack_vm
 
         return false;
     }
-} // stack_vm
+} // lysithea_vm

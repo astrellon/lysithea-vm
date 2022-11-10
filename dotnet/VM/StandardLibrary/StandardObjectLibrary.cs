@@ -4,7 +4,7 @@ using System.Linq;
 
 #nullable enable
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class StandardObjectLibrary
     {

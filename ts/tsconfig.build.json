@@ -4,7 +4,7 @@
     "module": "AMD",
     "rootDir": "./src",
     "sourceMap": true,
-    "outFile": "./simple-stack-vm.js"
+    "outFile": "./lysithea-vm.js"
   },
   "include": ["src/**/*"]
 }

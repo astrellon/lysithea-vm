@@ -10,7 +10,7 @@
 #include "./standard_library/standard_math_library.hpp"
 #include "./virtual_machine.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     const std::string assembler::keyword_function("function");
     const std::string assembler::keyword_loop("loop");
@@ -42,7 +42,7 @@ namespace stack_vm
         }
 
         std::stringstream result;
-        result << stack_vm::to_string(op);
+        result << lysithea_vm::to_string(op);
         if (!argument.is_undefined())
         {
             result << ": " << argument.to_string();
@@ -397,7 +397,7 @@ namespace stack_vm
         if (keyword == keyword_function)
         {
             auto function = parse_function(input);
-            auto function_value = std::make_shared<stack_vm::function_value>(function);
+            auto function_value = std::make_shared<lysithea_vm::function_value>(function);
 
             result.emplace_back(vm_operator::push, function_value);
             return result;
@@ -581,4 +581,4 @@ namespace stack_vm
 
         return std::make_shared<function>(code, parameters, labels);
     }
-} // stack_vm
+} // lysithea_vm

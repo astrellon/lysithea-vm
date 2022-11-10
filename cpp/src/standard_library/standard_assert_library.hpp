@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
 
@@ -20,4 +20,4 @@ namespace stack_vm
             // Constructor
             standard_assert_library() { };
     };
-} // stack_vm
+} // lysithea_vm

@@ -6,7 +6,7 @@
 #include "../values/value.hpp"
 #include "../values/array_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
 
@@ -44,4 +44,4 @@ namespace stack_vm
             // Constructor
             standard_array_library() { };
     };
-} // stack_vm
+} // lysithea_vm

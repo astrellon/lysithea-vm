@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
     class function;
@@ -19,4 +19,4 @@ namespace stack_vm
 
             // Methods
     };
-} // stack_vm
+} // lysithea_vm

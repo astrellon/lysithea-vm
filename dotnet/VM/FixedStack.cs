@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public interface IReadOnlyFixedStack<T>
     {

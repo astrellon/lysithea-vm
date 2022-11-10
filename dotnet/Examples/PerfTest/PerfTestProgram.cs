@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class PerfTestProgram
     {

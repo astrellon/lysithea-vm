@@ -1,10 +1,11 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
-namespace SimpleStackVM.Example
+namespace LysitheaVM.Example
 {
     public class PersonValue : IObjectValue
     {
@@ -13,13 +14,13 @@ namespace SimpleStackVM.Example
         public IReadOnlyList<string> ObjectKeys => Keys;
         public string TypeName => "person";
 
-        public readonly StringValue Name;
-        public readonly NumberValue Age;
-        public readonly ArrayValue Address;
+        public readonly string Name;
+        public readonly int Age;
+        public readonly IReadOnlyList<string> Address;
         #endregion
 
         #region Constructor
-        public PersonValue(StringValue name, NumberValue age, ArrayValue address)
+        public PersonValue(string name, int age, IReadOnlyList<string> address)
         {
             this.Name = name;
             this.Age = age;
@@ -30,7 +31,7 @@ namespace SimpleStackVM.Example
         #region Methods
         public override string ToString()
         {
-            return $"Person: {this.Name} {this.Age} {this.Address}";
+            return $"Person: {this.Name} {this.Age} [{string.Join(", ", this.Address)}]";
         }
 
         public int CompareTo(IValue? other)
@@ -44,17 +45,17 @@ namespace SimpleStackVM.Example
             {
                 case "name":
                 {
-                    value = this.Name;
+                    value = new StringValue(this.Name);
                     return true;
                 }
                 case "age":
                 {
-                    value = this.Age;
+                    value = new NumberValue(this.Age);
                     return true;
                 }
                 case "address":
                 {
-                    value = this.Address;
+                    value = new ArrayValue(this.Address.Select(c => new StringValue(c) as IValue));
                     return true;
                 }
             }

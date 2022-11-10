@@ -3,7 +3,7 @@
 #include "../values/array_value.hpp"
 #include "../virtual_machine.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::shared_ptr<const scope> standard_object_library::library_scope = create_scope();
 
@@ -127,4 +127,4 @@ namespace stack_vm
         }
         return object_value::make_value(obj);
     }
-} // stack_vm
+} // lysithea_vm

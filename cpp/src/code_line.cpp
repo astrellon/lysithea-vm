@@ -3,12 +3,12 @@
 #include "./values/complex_value.hpp"
 #include "./utils.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::string code_line::to_string() const
     {
         std::stringstream result;
-        result << stack_vm::to_string(op) << ": ";
+        result << lysithea_vm::to_string(op) << ": ";
         if (!value.is_undefined())
         {
             result << value.to_string();
@@ -19,4 +19,4 @@ namespace stack_vm
         }
         return result.str();
     }
-} // stack_vm
+} // lysithea_vm

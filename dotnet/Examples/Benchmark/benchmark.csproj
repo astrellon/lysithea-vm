@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\VM\VM.csproj" />
+    <ProjectReference Include="..\..\VM\lysitheaVM.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

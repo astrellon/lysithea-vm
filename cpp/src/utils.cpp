@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace stack_vm
+namespace lysithea_vm
 {
     vm_operator parse_operator(const std::string &input)
     {
@@ -115,4 +115,4 @@ namespace stack_vm
 
         return result;
     }
-} // stack_vm
+} // lysithea_vm

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SimpleStackVM
+namespace LysitheaVM
 {
     public static class DialogueTreeProgram
     {

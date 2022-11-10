@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VM", "VM\VM.csproj", "{23131F83-57F4-4797-B2D0-CA93CC85CD45}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lysitheaVM", "VM\lysitheaVM.csproj", "{23131F83-57F4-4797-B2D0-CA93CC85CD45}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{E51DDF88-3C3B-42D9-A838-1B1C4FAC127A}"
 EndProject
@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "perfTest", "Examples\PerfTe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dialogueTree", "Examples\DialogueTree\dialogueTree.csproj", "{4C4E448F-888C-4CD4-BEA6-C15A44E987C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testProgram", "Examples\TestProgram\testProgram.csproj", "{5257AAAA-5667-47A8-A7F2-28AE5F7EDA99}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "moreComplexTypes", "Examples\MoreComplexTypes\moreComplexTypes.csproj", "{5257AAAA-5667-47A8-A7F2-28AE5F7EDA99}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
