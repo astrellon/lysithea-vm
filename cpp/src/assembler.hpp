@@ -14,7 +14,7 @@
 #include "./operator.hpp"
 #include "./function.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class assembler
     {
@@ -104,4 +104,4 @@ namespace stack_vm
             static std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines);
 
     };
-} // stack_vm
+} // lysithea_vm

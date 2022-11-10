@@ -6,7 +6,7 @@
 #include "../values/value.hpp"
 #include "../values/object_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
 

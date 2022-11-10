@@ -10,7 +10,7 @@
 #include "src/standard_library/standard_operator_library.hpp"
 #include "src/standard_library/standard_array_library.hpp"
 
-using namespace stack_vm;
+using namespace lysithea_vm;
 
 std::random_device _rd;
 std::mt19937 _rand(_rd());
@@ -145,15 +145,15 @@ int main()
 
     auto custom_scope = create_dialogue_scope();
 
-    auto parsed = stack_vm::parser::read_from_stream(input_file);
-    stack_vm::assembler assembler;
+    auto parsed = lysithea_vm::parser::read_from_stream(input_file);
+    lysithea_vm::assembler assembler;
     assembler.builtin_scope.combine_scope(*custom_scope);
     assembler.builtin_scope.combine_scope(*standard_array_library::library_scope);
     assembler.builtin_scope.combine_scope(*standard_operator_library::library_scope);
 
     auto script = assembler.parse_from_value(parsed);
 
-    stack_vm::virtual_machine vm(16);
+    lysithea_vm::virtual_machine vm(16);
     vm.execute(script);
 
     return 0;

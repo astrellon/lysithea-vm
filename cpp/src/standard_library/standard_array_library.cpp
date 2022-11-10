@@ -7,7 +7,7 @@
 #include "../utils.hpp"
 #include "../scope.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::shared_ptr<const scope> standard_array_library::library_scope = create_scope();
 
@@ -187,11 +187,11 @@ namespace stack_vm
         {
             if (target[i].compare_to(input) == 0)
             {
-                return stack_vm::value(true);
+                return lysithea_vm::value(true);
             }
         }
 
-        return stack_vm::value(false);
+        return lysithea_vm::value(false);
     }
 
     value standard_array_library::index_of(const array_vector &target, const value &input)
@@ -200,11 +200,11 @@ namespace stack_vm
         {
             if (target[i].compare_to(input) == 0)
             {
-                return stack_vm::value(i);
+                return lysithea_vm::value(i);
             }
         }
 
-        return stack_vm::value(-1);
+        return lysithea_vm::value(-1);
     }
     value standard_array_library::sublist(const array_vector &target, int index, int length)
     {

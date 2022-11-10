@@ -7,7 +7,7 @@
 #include "../utils.hpp"
 #include "../scope.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::shared_ptr<const scope> standard_string_library::library_scope = create_scope();
 
@@ -125,4 +125,4 @@ namespace stack_vm
         }
         return value(ss.str());
     }
-} // stack_vm
+} // lysithea_vm

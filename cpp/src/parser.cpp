@@ -5,7 +5,7 @@
 #include "./values/string_value.hpp"
 #include "./values/variable_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     parser::parser(std::istream &input) : in_quote('\0'), return_symbol('\0'),
         escaped(false), in_comment(false), accumulator(), input(input)
@@ -249,4 +249,4 @@ namespace stack_vm
 
         return value(std::make_shared<variable_value>(input));
     }
-} // stack_vm
+} // lysithea_vm

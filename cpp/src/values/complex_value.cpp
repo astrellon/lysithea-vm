@@ -1,6 +1,6 @@
 #include "complex_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     const std::vector<std::string> complex_value::empty_object_keys;
-} // stack_vm
+} // lysithea_vm

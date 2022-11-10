@@ -2,7 +2,7 @@
 
 #include "../scope.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     void standard_library::add_to_scope(scope &input, standard_library::library_type libraries)
     {
@@ -31,4 +31,4 @@ namespace stack_vm
             input.combine_scope(*standard_misc_library::library_scope);
         }
     }
-} // stack_vm
+} // lysithea_vm

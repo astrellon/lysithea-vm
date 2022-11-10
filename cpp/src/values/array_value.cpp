@@ -8,7 +8,7 @@
 #include "../virtual_machine.hpp"
 #include "../utils.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     value array_value::empty(std::make_shared<array_value>(false));
 
@@ -40,7 +40,7 @@ namespace stack_vm
         return 0;
     }
 
-    bool array_value::try_get(const std::string &key, stack_vm::value &result) const
+    bool array_value::try_get(const std::string &key, lysithea_vm::value &result) const
     {
         if (key == "length")
         {
@@ -69,4 +69,4 @@ namespace stack_vm
         ss << ')';
         return ss.str();
     }
-} // stack_vm
+} // lysithea_vm

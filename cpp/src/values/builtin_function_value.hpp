@@ -5,7 +5,7 @@
 
 #include "./complex_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class virtual_machine;
 
@@ -41,4 +41,4 @@ namespace stack_vm
                 data(vm, *args);
             }
     };
-} // stack_vm
+} // lysithea_vm

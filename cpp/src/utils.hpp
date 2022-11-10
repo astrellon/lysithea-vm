@@ -6,7 +6,7 @@
 
 #include "operator.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     vm_operator parse_operator(const std::string &input);
     std::string to_string(vm_operator input);
@@ -24,4 +24,4 @@ namespace stack_vm
         target.insert(std::end(target), std::begin(input), std::end(input));
     }
 
-} // namespace stack_vm
+} // namespace lysithea_vm

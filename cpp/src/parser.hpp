@@ -7,7 +7,7 @@
 #include "./values/value.hpp"
 #include "./values/array_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class parser
     {
@@ -37,4 +37,4 @@ namespace stack_vm
 
             // Methods
     };
-} // stack_vm
+} // lysithea_vm

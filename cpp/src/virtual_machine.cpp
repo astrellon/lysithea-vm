@@ -7,7 +7,7 @@
 #include "./standard_library/standard_array_library.hpp"
 #include "./utils.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     std::shared_ptr<const array_value> virtual_machine::empty_args(std::make_shared<const array_value>(true));
 
@@ -370,4 +370,4 @@ namespace stack_vm
             std::cout << "- " << iter.to_string() << "\n";
         }
     }
-} // namespace stack_vm
+} // namespace lysithea_vm

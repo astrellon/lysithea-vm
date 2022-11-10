@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -m64 -DRELEASE")
 
-project(simple-stack-vm)
+project(lysithea-vm)
 
 file(GLOB FILE_SRC
     "src/*.hpp"
@@ -22,4 +22,4 @@ file(GLOB FILE_SRC
 add_executable(perfTest ${FILE_SRC} perf_test_main.cpp)
 add_executable(dialogueTree ${FILE_SRC} dialogue_tree_main.cpp)
 add_executable(standardLibraryTest ${FILE_SRC} standard_library_main.cpp)
-# add_executable(controlApp control_main.cpp)
+add_executable(controlApp control_main.cpp)

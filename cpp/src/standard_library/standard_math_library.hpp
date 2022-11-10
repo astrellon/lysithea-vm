@@ -5,7 +5,7 @@
 
 #include "../values/builtin_function_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
 
@@ -23,4 +23,4 @@ namespace stack_vm
             // Constructor
             standard_math_library() { };
     };
-} // stack_vm
+} // lysithea_vm

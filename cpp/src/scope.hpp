@@ -7,7 +7,7 @@
 #include "./values/value.hpp"
 #include "./values/builtin_function_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope
     {
@@ -29,4 +29,4 @@ namespace stack_vm
             bool try_set(const std::string &key, value input);
             bool try_get_key(const std::string &key, value &result) const;
     };
-} // stack_vm
+} // lysithea_vm

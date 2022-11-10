@@ -6,7 +6,7 @@
 
 #include "code_line.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class function
     {
@@ -26,4 +26,4 @@ namespace stack_vm
 
             // Methods
     };
-} // stack_vm
+} // lysithea_vm

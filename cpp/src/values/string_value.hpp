@@ -6,7 +6,7 @@
 
 #include "./complex_value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class string_value : public complex_value
     {
@@ -48,6 +48,6 @@ namespace stack_vm
                 result.push_back("length");
                 return result;
             }
-            virtual bool try_get(const std::string &key, stack_vm::value &result) const;
+            virtual bool try_get(const std::string &key, lysithea_vm::value &result) const;
     };
-} // stack_vm
+} // lysithea_vm

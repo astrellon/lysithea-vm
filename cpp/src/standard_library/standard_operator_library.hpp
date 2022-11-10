@@ -4,7 +4,7 @@
 #include <memory>
 #include "../values/value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     class scope;
 
@@ -56,4 +56,4 @@ namespace stack_vm
             // Constructor
             standard_operator_library() { };
     };
-} // stack_vm
+} // lysithea_vm

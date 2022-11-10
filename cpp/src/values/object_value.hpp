@@ -7,7 +7,7 @@
 #include "./complex_value.hpp"
 #include "./value.hpp"
 
-namespace stack_vm
+namespace lysithea_vm
 {
     using object_map = std::unordered_map<std::string, value>;
 
@@ -41,7 +41,7 @@ namespace stack_vm
                 return result;
             }
 
-            virtual bool try_get(const std::string &key, stack_vm::value &result) const
+            virtual bool try_get(const std::string &key, lysithea_vm::value &result) const
             {
                 auto find = data.find(key);
                 if (find == data.end())
@@ -53,9 +53,9 @@ namespace stack_vm
                 return true;
             }
 
-            static inline stack_vm::value make_value(const object_map &input)
+            static inline lysithea_vm::value make_value(const object_map &input)
             {
-                return stack_vm::value(std::make_shared<object_value>(input));
+                return lysithea_vm::value(std::make_shared<object_value>(input));
             }
     };
-} // stack_vm
+} // lysithea_vm
