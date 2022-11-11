@@ -24,6 +24,12 @@ namespace LysitheaVM.Unity
             result.Define("random", CreateRandomFunctions());
             result.Define("vector3", CreateVector3Functions());
 
+            // Override the default print with a Unity specific one.
+            result.Define("print", (vm, args) =>
+            {
+                Debug.Log(string.Join("", args.Value));
+            });
+
             return result;
         }
 

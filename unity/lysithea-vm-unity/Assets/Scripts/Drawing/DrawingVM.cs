@@ -42,16 +42,16 @@ namespace LysitheaVM.Unity
             assembler.BuiltinScope.CombineScope(DrawingLibrary.Scope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
 
-            assembler.BuiltinScope.Define("nativeCalcPosition", new BuiltinFunctionValue((vm, args) =>
+            assembler.BuiltinScope.Define("nativeCalcPosition", (vm, args) =>
             {
                 var pos = NativeDrawCircle.CalcPosition(args.GetIndex<NumberValue>(0).IntValue);
                 vm.PushStack(new Vector3Value(pos));
-            }));
-            assembler.BuiltinScope.Define("nativeCalcColour", new BuiltinFunctionValue((vm, args) =>
+            });
+            assembler.BuiltinScope.Define("nativeCalcColour", (vm, args) =>
             {
                 var colour = NativeDrawCircle.CalcColour(args.GetIndex<NumberValue>(0).IntValue);
                 vm.PushStack(new ColourValue(colour));
-            }));
+            });
 
             return assembler;
         }
