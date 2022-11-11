@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af8847d63772c93c6a25646537f9328c, type: 3}
   m_Name: wizardDialogue
   m_EditorClassIdentifier: 
-  CodeText: {fileID: 2811297602134710623, guid: bc6a698317d4f8e88afada94a3539340, type: 3}
+  CodeText: {fileID: 2811297602134710623, guid: 0c20a2c6d6d6ceec988116ef913ca311, type: 3}

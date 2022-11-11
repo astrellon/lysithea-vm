@@ -5,8 +5,8 @@ using System.IO;
 
 namespace LysitheaVM.Unity
 {
-    [UnityEditor.AssetImporters.ScriptedImporter(1, "lisp")]
-    public class LispTextImporter : UnityEditor.AssetImporters.ScriptedImporter
+    [UnityEditor.AssetImporters.ScriptedImporter(1, "lys")]
+    public class LysitheaTextImporter : UnityEditor.AssetImporters.ScriptedImporter
     {
         public override void OnImportAsset(UnityEditor.AssetImporters.AssetImportContext ctx)
         {

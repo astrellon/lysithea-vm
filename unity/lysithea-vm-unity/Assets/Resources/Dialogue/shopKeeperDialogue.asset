@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af8847d63772c93c6a25646537f9328c, type: 3}
   m_Name: shopKeeperDialogue
   m_EditorClassIdentifier: 
-  CodeText: {fileID: 2811297602134710623, guid: 13d799848ba6a4f0dae4d7895622af61, type: 3}
+  CodeText: {fileID: 2811297602134710623, guid: 48e246a2e2675d908a196348ca011376, type: 3}

@@ -3,10 +3,13 @@
 	"name": "Lysithea",
 	"patterns": [
 		{
+			"include": "#keywords"
+		},
+		{
 			"include": "#function-call"
 		},
 		{
-			"include": "#keywords"
+			"include": "#labels"
 		},
 		{
 			"include": "#string"
@@ -22,19 +25,25 @@
 		"comments": {
 			"patterns": [{
 				"name": "comment.line.lysithea",
-				"match": "^\\s*;.*$"
-			}]
-		},
-		"keywords": {
-			"patterns": [{
-				"name": "keyword.control.lysithea",
-				"match": "\\b(function|if|unless|define|loop|continue|break|set|inc|dec|jump|return|true|false)\\b"
+				"match": ";.*$"
 			}]
 		},
 		"function-call": {
 			"patterns": [{
-				"name": "entity.name.function",
-				"match": "\\([^(function|if|unless|define|loop|continue|break|set|return|jump|true|false)]([^\\s\"']+)"
+				"name": "entity.name.function.lysithea",
+				"match": "\\(\\s*[a-zA-Z][^\\s]+(\\.[^\\s]+)*"
+			}]
+		},
+		"labels": {
+			"patterns": [{
+				"name": "entity.name.selector.lysithea",
+				"match": ":[^\\s]+(?=\\s|\\))"
+			}]
+		},
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.lysithea",
+                "match": "\\(\\s*(function|if|unless|define|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b"
 			}]
 		},
 		"numbers": {
