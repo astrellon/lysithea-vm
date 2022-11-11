@@ -1,16 +1,12 @@
-# lysithea-language-support README
+# Lysithea Language Support
 
-This is the README for your extension "lysithea-language-support". After writing up a brief description, we recommend including the following sections.
+Adds basic Lysithea script support for VSCode. Check out the [Lysithea Github](https://github.com/astrellon/lysithea-vm) for more information about the scripting language.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+Highlights function calls, keywords, numbers, labels and comments.
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+![Example of Lysithea code with syntax highlighting](images/code.png)
 
 ## Requirements
 

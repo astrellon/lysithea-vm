@@ -24,27 +24,45 @@
 	"repository": {
 		"comments": {
 			"patterns": [{
-				"name": "comment.line.lysithea",
+				"name": "comment.lysithea",
 				"match": ";.*$"
 			}]
 		},
 		"function-call": {
 			"patterns": [{
-				"name": "entity.name.function.lysithea",
-				"match": "\\(\\s*[a-zA-Z][^\\s]+(\\.[^\\s]+)*"
+				"match": "\\(\\s*([a-zA-Z][^\\s|\\)]+(\\.[^\\s|\\)]+)*)\\)?",
+				"captures": {
+					"1": {
+						"name": "entity.name.function.lysithea"
+					},
+					"2": {
+						"name": "entity.name.function.lysithea"
+					}
+				}
 			}]
 		},
 		"labels": {
 			"patterns": [{
-				"name": "entity.name.selector.lysithea",
-				"match": ":[^\\s]+(?=\\s|\\))"
+				"match": "(:[^\\s|\\)]+)\\)?",
+				"captures": {
+					"1": {
+						"name": "entity.name.selector.lysithea"
+					}
+				}
 			}]
 		},
 		"keywords": {
 			"patterns": [{
-				"name": "keyword.lysithea",
-                "match": "\\(\\s*(function|if|unless|define|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b"
-			}]
+				"match": "\\(\\s*(function|if|unless|define|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b",
+				"captures": {
+						"1": {
+							"name": "keyword.lysithea"
+						},
+						"2": {
+							"name": "keyword.lysithea"
+						}
+					}
+				}]
 		},
 		"numbers": {
 			"patterns": [

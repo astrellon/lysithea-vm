@@ -1,3 +1,4 @@
+; A simple performance test script.
 (define main (function ()
     (define total 0)
     (define counter 0)
