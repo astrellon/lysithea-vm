@@ -6,7 +6,7 @@ Adds basic Lysithea script support for VSCode. Check out the [Lysithea Github](h
 
 Highlights function calls, keywords, numbers, labels and comments.
 
-![Example of Lysithea code with syntax highlighting](images/code.png)
+![Example of Lysithea code with syntax highlighting](vscode-language-support/images/code.png)
 
 ## Requirements
 
