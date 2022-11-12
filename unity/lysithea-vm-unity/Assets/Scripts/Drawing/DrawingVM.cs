@@ -6,7 +6,9 @@ namespace LysitheaVM.Unity
     public class DrawingVM : MonoBehaviour
     {
         public static DrawingVM Instance { get; private set; }
-        private readonly VirtualMachineAssembler assembler = CreateAssembler();
+        private VirtualMachineAssembler assembler;
+
+        public InputLibrary InputLibrary;
 
         public VMRunner VMRunner;
 
@@ -16,6 +18,9 @@ namespace LysitheaVM.Unity
         {
             Instance = this;
             this.VMRunner.Init(32);
+
+            this.InputLibrary.VM = this.VMRunner;
+            this.assembler = CreateAssembler();
         }
 
         public Script AssembleScript(string text)
@@ -25,6 +30,7 @@ namespace LysitheaVM.Unity
 
         public void StartDrawing(IEnumerable<IDrawingScript> includeScripts, IDrawingScript mainScript)
         {
+            this.InputLibrary.Reset();
             this.vm.Reset();
 
             foreach (var drawingScript in includeScripts)
@@ -35,12 +41,13 @@ namespace LysitheaVM.Unity
             this.VMRunner.StartScript(mainScript.Script);
         }
 
-        private static VirtualMachineAssembler CreateAssembler()
+        private VirtualMachineAssembler CreateAssembler()
         {
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(DrawingLibrary.Scope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
+            assembler.BuiltinScope.CombineScope(InputLibrary.GetScope());
 
             assembler.BuiltinScope.Define("nativeCalcPosition", (vm, args) =>
             {

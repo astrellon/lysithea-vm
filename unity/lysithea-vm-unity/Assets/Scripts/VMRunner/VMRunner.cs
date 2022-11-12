@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LysitheaVM.Unity
@@ -19,6 +20,8 @@ namespace LysitheaVM.Unity
         public int MaxStepsPerFrame = 10_000;
 
         public bool IsWaiting => this.Running && this.WaitUntil > 0.0f;
+
+        private Queue<IFunctionValue> queuedFunctions = new Queue<IFunctionValue>();
         #endregion
 
         #region Unity Methods
@@ -68,14 +71,29 @@ namespace LysitheaVM.Unity
 
                 if (!this.VM.Running)
                 {
-                    this.Running = false;
-                    this.OnComplete?.Invoke(this);
+                    if (this.queuedFunctions.Count > 0)
+                    {
+                        this.VM.CallFunction(this.queuedFunctions.Dequeue(), 0, false);
+                        this.VM.Running = true;
+                    }
+                    else
+                    {
+                        this.Running = false;
+                        this.OnComplete?.Invoke(this);
+                    }
                 }
             }
         }
         #endregion
 
         #region Methods
+        public void QueueFunction(IFunctionValue func)
+        {
+            this.queuedFunctions.Enqueue(func);
+            this.VM.Running = true;
+            this.Running = true;
+        }
+
         public void Init(int stackSize)
         {
             this.VM = new VirtualMachine(stackSize);

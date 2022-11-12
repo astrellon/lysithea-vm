@@ -2,26 +2,40 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LysitheaVM.Unity
 {
-    public static class InputLibrary
+    public class InputLibrary : MonoBehaviour
     {
         #region Fields
-        public static readonly IReadOnlyScope Scope = CreateScope();
+        private IReadOnlyScope scope;
+        public VMRunner VM;
+        private readonly List<IFunctionValue> onClickHandlers = new List<IFunctionValue>();
         #endregion
 
         #region Methods
-        public static Scope CreateScope()
+        public IReadOnlyScope GetScope()
         {
+            if (this.scope != null)
+            {
+                return this.scope;
+            }
+
             var result = new Scope();
 
             result.Define("input", CreateInteractionFunctions());
 
+            this.scope = result;
             return result;
         }
 
-        private static ObjectValue CreateInteractionFunctions()
+        public void Reset()
+        {
+            this.onClickHandlers.Clear();
+        }
+
+        private ObjectValue CreateInteractionFunctions()
         {
             return new ObjectValue(new Dictionary<string, IValue>
             {
@@ -33,8 +47,22 @@ namespace LysitheaVM.Unity
                 {"onClick", new BuiltinFunctionValue((vm, args) =>
                 {
                     var func = args.GetIndex<IFunctionValue>(0);
+                    this.onClickHandlers.Add(func);
                 })}
             });
+        }
+        #endregion
+
+        #region Unity Methods
+        void Update()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                foreach (var func in this.onClickHandlers)
+                {
+                    this.VM.QueueFunction(func);
+                }
+            }
         }
         #endregion
     }

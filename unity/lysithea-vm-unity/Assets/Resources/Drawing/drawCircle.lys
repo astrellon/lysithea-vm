@@ -19,3 +19,7 @@
     (draw.element "Box" (calcPosition i) (calcColour i) 1)
     (inc i)
 )
+
+(input.onClick (function ()
+    (print "Mouse Pos: " (input.mousePosition))
+))
