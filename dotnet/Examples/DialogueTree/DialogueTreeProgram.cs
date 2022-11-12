@@ -22,7 +22,7 @@ namespace LysitheaVM
             assembler.BuiltinScope.CombineScope(StandardOperators.Scope);
             assembler.BuiltinScope.CombineScope(StandardArrayLibrary.Scope);
 
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testDialogue.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testDialogue.lys"));
 
             var vm = new VirtualMachine(8);
 

@@ -37,6 +37,7 @@ namespace LysitheaVM
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
+        private List<string> keywordParsingStack = new List<string>();
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
 
@@ -75,8 +76,7 @@ namespace LysitheaVM
         public Function ParseGlobalFunction(ArrayValue input)
         {
             var tempCodeLines = input.Value.SelectMany(Parse).ToList();
-            var result = VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines);
-            result.Name = "global";
+            var result = VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
             return result;
         }
 
@@ -105,6 +105,8 @@ namespace LysitheaVM
                         return keywordParse;
                     }
 
+                    this.keywordParsingStack.Add("func-call");
+
                     var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
                     foreach (var item in arrayValue.Value.Skip(1))
@@ -112,6 +114,8 @@ namespace LysitheaVM
                         result.AddRange(Parse(item));
                     }
                     result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Length - 1));
+
+                    this.keywordParsingStack.RemoveAt(this.keywordParsingStack.Count - 1);
 
                     return result;
                 }
@@ -131,24 +135,17 @@ namespace LysitheaVM
         #endregion
 
         #region Keyword Parsing
-        public List<ITempCodeLine> ParseSet(ArrayValue input)
+        public List<ITempCodeLine> ParseDefineSet(ArrayValue input, bool isDefine)
         {
-            var result = this.Parse(input[2]);
-            result.Add(new CodeLine(Operator.Set, input[1]));
-            return result;
-        }
+            var opCode = isDefine ? Operator.Define : Operator.Set;
+            // Parse the last value as the definable/set-able value.
+            var result = this.Parse(input.Value.Last());
 
-        public List<ITempCodeLine> ParseDefine(ArrayValue input)
-        {
-            var result = this.Parse(input[2]);
-            result.Add(new CodeLine(Operator.Define, input[1]));
-
-            if (result[0] is CodeLine parsedCodeLine)
+            // Loop over all the middle inputs as the values to set.
+            // Multiple variables can be set when a function returns multiple results.
+            for (var i = input.Length - 2; i >= 1; i--)
             {
-                if (parsedCodeLine.Input is FunctionValue procValue)
-                {
-                    procValue.Value.Name = input[1].ToString();
-                }
+                result.Add(new CodeLine(opCode, input[i]));
             }
             return result;
         }
@@ -260,10 +257,17 @@ namespace LysitheaVM
 
         public Function ParseFunction(ArrayValue input)
         {
-            var parameters = ((ArrayValue)input[1]).Value.Select(arg => arg.ToString()).ToList();
-            var tempCodeLines = input.Value.Skip(2).SelectMany(Parse).ToList();
+            string? name = null;
+            var offset = 0;
+            if (input[1] is VariableValue nameValue)
+            {
+                name = nameValue.Value;
+                offset = 1;
+            }
+            var parameters = ((ArrayValue)input[1 + offset]).Value.Select(arg => arg.ToString()).ToList();
+            var tempCodeLines = input.Value.Skip(2 + offset).SelectMany(Parse).ToList();
 
-            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines);
+            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines, name);
         }
 
         public List<ITempCodeLine> ParseChangeVariable(IValue input, BuiltinFunctionValue changeFunc)
@@ -299,30 +303,43 @@ namespace LysitheaVM
             return result;
         }
 
+        public List<ITempCodeLine> ParseFunctionKeyword(ArrayValue arrayValue)
+        {
+            var function = ParseFunction(arrayValue);
+            var functionValue = new FunctionValue(function);
+            var result = new List<ITempCodeLine> { new CodeLine(Operator.Push, functionValue) };
+            var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : "";
+            if (function.HasName && currentKeyword != "func-call")
+            {
+                Console.WriteLine("Calling define for func: " + function.Name);
+                result.Add(new CodeLine(Operator.Define, new StringValue(function.Name)));
+            }
+            return result;
+        }
+
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
+            List<ITempCodeLine>? result = null;
+            this.keywordParsingStack.Add(firstSymbol.Value);
             switch (firstSymbol.Value)
             {
-                case FunctionKeyword:
-                    {
-                        var function = ParseFunction(arrayValue);
-                        var functionValue = new FunctionValue(function);
-                        return new List<ITempCodeLine>{ new CodeLine(Operator.Push, functionValue) };
-                    }
-                case ContinueKeyword: return this.ParseLoopJump(ContinueKeyword, true);
-                case BreakKeyword: return this.ParseLoopJump(BreakKeyword, false);
-                case SetKeyword: return ParseSet(arrayValue);
-                case DefineKeyword: return ParseDefine(arrayValue);
-                case LoopKeyword: return ParseLoop(arrayValue);
-                case IfKeyword: return ParseCond(arrayValue, true);
-                case UnlessKeyword: return ParseCond(arrayValue, false);
-                case IncKeyword: return ParseChangeVariable(arrayValue[1], IncNumber);
-                case DecKeyword: return ParseChangeVariable(arrayValue[1], DecNumber);
-                case JumpKeyword: return ParseJump(arrayValue);
-                case ReturnKeyword: return ParseReturn(arrayValue);
+                case FunctionKeyword: result = this.ParseFunctionKeyword(arrayValue); break;
+                case ContinueKeyword: result = this.ParseLoopJump(ContinueKeyword, true); break;
+                case BreakKeyword: result = this.ParseLoopJump(BreakKeyword, false); break;
+                case SetKeyword: result = this.ParseDefineSet(arrayValue, false); break;
+                case DefineKeyword: result = this.ParseDefineSet(arrayValue, true); break;
+                case LoopKeyword: result = this.ParseLoop(arrayValue); break;
+                case IfKeyword: result = this.ParseCond(arrayValue, true); break;
+                case UnlessKeyword: result = this.ParseCond(arrayValue, false); break;
+                case IncKeyword: result = this.ParseChangeVariable(arrayValue[1], IncNumber); break;
+                case DecKeyword: result = this.ParseChangeVariable(arrayValue[1], DecNumber); break;
+                case JumpKeyword: result = this.ParseJump(arrayValue); break;
+                case ReturnKeyword: result = this.ParseReturn(arrayValue); break;
             }
 
-            return new List<ITempCodeLine>();
+            this.keywordParsingStack.RemoveAt(this.keywordParsingStack.Count - 1);
+
+            return result ?? new List<ITempCodeLine>();
         }
         #endregion
 
@@ -448,7 +465,7 @@ namespace LysitheaVM
             return false;
         }
 
-        private static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines)
+        private static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines, string? name = null)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
@@ -465,7 +482,7 @@ namespace LysitheaVM
                 }
             }
 
-            return new Function(code, parameters, labels);
+            return new Function(code, parameters, labels, name);
         }
 
         public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>

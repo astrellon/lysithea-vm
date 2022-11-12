@@ -15,18 +15,18 @@ namespace LysitheaVM
         public readonly IReadOnlyList<CodeLine> Code;
         public readonly IReadOnlyDictionary<string, int> Labels;
         public readonly IReadOnlyList<string> Parameters;
-
-        public string Name = "anonymous";
+        public readonly string Name;
 
         public bool IsEmpty => this.Code.Count == 0;
         #endregion
 
         #region Constructor
-        public Function(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null)
+        public Function(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null, string name = "anonymous")
         {
             this.Code = code;
             this.Parameters = parameters ?? EmptyParameters;
             this.Labels = labels ?? EmptyLabels;
+            this.Name = name;
         }
         #endregion
     }

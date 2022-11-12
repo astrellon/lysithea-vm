@@ -1,0 +1,21 @@
+
+(function main ()
+    (print "Hello!")
+)
+
+(define tryGet (function tryGet(x)
+    (if (== x "size")
+        (return true 5)
+        (return false -1)
+    )
+))
+
+(define tryGetOld tryGet)
+
+(define getResult getSize (tryGetOld "size"))
+(print "Result1: " getResult " = " getSize)
+(define getResult getSize (tryGetOld "other"))
+(print "Result2: " getResult " = " getSize)
+
+(print "Func: " (function testFunc () (define x 5)))
+(print "isDefined? " (isDefined "testFunc"))

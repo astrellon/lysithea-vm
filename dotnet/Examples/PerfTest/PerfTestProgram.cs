@@ -15,7 +15,7 @@ namespace LysitheaVM
         {
             var assembler = new VirtualMachineAssembler();
             assembler.BuiltinScope.CombineScope(PerfTestScope);
-            var script = assembler.ParseFromFile("../../../examples/perfTest.lisp");
+            var script = assembler.ParseFromFile("../../../examples/perfTest.lys");
 
             var vm = new VirtualMachine(8);
 

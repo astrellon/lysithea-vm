@@ -16,7 +16,7 @@ namespace LysitheaVM.Example
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(CustomScope);
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testObject.lisp"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testObject.lys"));
 
             var vm = new VirtualMachine(16);
 

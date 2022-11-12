@@ -11,7 +11,7 @@ namespace LysitheaVM
     {
         #region Fields
         private const string PathOffset = "../../../../../../../";
-        private static string CodeText = File.ReadAllText(Path.Combine(PathOffset, "testStandardLibraryNoAssert.lisp"));
+        private static string CodeText = File.ReadAllText(Path.Combine(PathOffset, "testStandardLibraryNoAssert.lys"));
         private static readonly VirtualMachineAssembler Assembler = CreateAssembler();
         private static readonly Script Code = Assembler.ParseFromText(CodeText);
         private static readonly VirtualMachine SharedVM = new VirtualMachine(8);
