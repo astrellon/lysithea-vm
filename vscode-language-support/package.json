@@ -2,6 +2,7 @@
   "name": "lysithea-language-support",
   "displayName": "Lysithea Language Support",
   "description": "Adds support for Lysithea language",
+  "publisher": "astrellon",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.72.0"
@@ -21,5 +22,9 @@
       "scopeName": "source.lysithea",
       "path": "./syntaxes/lysithea.tmLanguage.json"
     }]
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/astrellon/lysithea-vm.git"
+  },
 }
