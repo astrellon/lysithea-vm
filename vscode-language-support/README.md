@@ -24,6 +24,10 @@ Does not make use of a language server, so it cannot highlight builtin functions
 
 Basic handling of language, highlights value types and keywords.
 
-### 1.0.0
+### 0.0.3
+
+Mostly fixes to the market place entry.
+
+### 0.0.1
 
 Initial release of Lysithea language support.

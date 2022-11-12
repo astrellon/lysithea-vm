@@ -3,9 +3,9 @@
   "displayName": "Lysithea Language Support",
   "description": "Adds support for Lysithea language",
   "publisher": "astrellon",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "engines": {
-    "vscode": "^1.72.0"
+    "vscode": "^1.22.0"
   },
   "categories": [
     "Programming Languages"
