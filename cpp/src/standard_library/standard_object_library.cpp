@@ -73,7 +73,7 @@ namespace lysithea_vm
         }
         else
         {
-            return value();
+            return value::make_null();
         }
     }
 
@@ -116,7 +116,7 @@ namespace lysithea_vm
         object_map obj(obj_target->data);
         for (auto iter = obj.begin(); iter != obj.end();)
         {
-            if (iter->second.compare_to(input))
+            if (iter->second.compare_to(input) == 0)
             {
                 obj.erase(iter++);
             }

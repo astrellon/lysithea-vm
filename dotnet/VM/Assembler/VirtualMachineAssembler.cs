@@ -115,7 +115,7 @@ namespace LysitheaVM
                     }
                     result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Length - 1));
 
-                    this.keywordParsingStack.RemoveAt(this.keywordParsingStack.Count - 1);
+                    this.keywordParsingStack.PopBack();
 
                     return result;
                 }
@@ -135,6 +135,19 @@ namespace LysitheaVM
         #endregion
 
         #region Keyword Parsing
+        public List<ITempCodeLine> ParseFunctionKeyword(ArrayValue arrayValue)
+        {
+            var function = ParseFunction(arrayValue);
+            var functionValue = new FunctionValue(function);
+            var result = new List<ITempCodeLine> { new CodeLine(Operator.Push, functionValue) };
+            var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : FunctionKeyword;
+            if (function.HasName && currentKeyword == FunctionKeyword)
+            {
+                result.Add(new CodeLine(Operator.Define, new StringValue(function.Name)));
+            }
+            return result;
+        }
+
         public List<ITempCodeLine> ParseDefineSet(ArrayValue input, bool isDefine)
         {
             var opCode = isDefine ? Operator.Define : Operator.Set;
@@ -259,11 +272,12 @@ namespace LysitheaVM
         {
             string? name = null;
             var offset = 0;
-            if (input[1] is VariableValue nameValue)
+            if (input[1] is VariableValue || input[1] is StringValue)
             {
-                name = nameValue.Value;
+                name = input[1].ToString();
                 offset = 1;
             }
+
             var parameters = ((ArrayValue)input[1 + offset]).Value.Select(arg => arg.ToString()).ToList();
             var tempCodeLines = input.Value.Skip(2 + offset).SelectMany(Parse).ToList();
 
@@ -303,20 +317,6 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseFunctionKeyword(ArrayValue arrayValue)
-        {
-            var function = ParseFunction(arrayValue);
-            var functionValue = new FunctionValue(function);
-            var result = new List<ITempCodeLine> { new CodeLine(Operator.Push, functionValue) };
-            var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : "";
-            if (function.HasName && currentKeyword != "func-call")
-            {
-                Console.WriteLine("Calling define for func: " + function.Name);
-                result.Add(new CodeLine(Operator.Define, new StringValue(function.Name)));
-            }
-            return result;
-        }
-
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             List<ITempCodeLine>? result = null;
@@ -337,7 +337,7 @@ namespace LysitheaVM
                 case ReturnKeyword: result = this.ParseReturn(arrayValue); break;
             }
 
-            this.keywordParsingStack.RemoveAt(this.keywordParsingStack.Count - 1);
+            this.keywordParsingStack.PopBack();
 
             return result ?? new List<ITempCodeLine>();
         }

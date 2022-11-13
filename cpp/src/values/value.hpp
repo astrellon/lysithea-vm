@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <memory>
+#include <sstream>
 
 #include "./string_value.hpp"
 #include "./builtin_function_value.hpp"
@@ -156,7 +157,12 @@ namespace lysithea_vm
                     case value_type::is_true: return "true";
                     case value_type::is_false: return "false";
                     case value_type::null: return "null";
-                    case value_type::number: return std::to_string(get_number());
+                    case value_type::number:
+                    {
+                        std::stringstream ss;
+                        ss << std::noshowpoint << get_number();
+                        return ss.str();
+                    }
                     case value_type::complex: return get_complex()->to_string();
                     default: break;
                 }

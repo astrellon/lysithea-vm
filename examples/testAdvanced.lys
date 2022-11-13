@@ -1,6 +1,10 @@
 
 (function main ()
-    (print "Hello!")
+    (function inner ()
+        (return " There")
+
+    )
+    (print "Hello!" (inner))
 )
 
 (define tryGet (function tryGet(x)
@@ -9,6 +13,8 @@
         (return false -1)
     )
 ))
+
+(main)
 
 (define tryGetOld tryGet)
 

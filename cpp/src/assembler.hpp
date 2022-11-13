@@ -66,8 +66,8 @@ namespace lysithea_vm
             std::shared_ptr<script> parse_from_value(const array_value &input);
             code_line_list parse(value input);
 
-            code_line_list parse_set(const array_value &input);
-            code_line_list parse_define(const array_value &input);
+            code_line_list parse_function_keyword(const array_value &input);
+            code_line_list parse_define_set(const array_value &input, bool is_define);
             code_line_list parse_loop(const array_value &input);
             code_line_list parse_cond(const array_value &input, bool is_if_statement);
             code_line_list parse_flatten(value input);
@@ -99,9 +99,10 @@ namespace lysithea_vm
             // Fields
             int label_count;
             std::stack<loop_labels> loop_stack;
+            std::vector<std::string> keyword_parsing_stack;
 
             // Methods
-            static std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines);
+            static std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines, const std::string &name);
 
     };
 } // lysithea_vm

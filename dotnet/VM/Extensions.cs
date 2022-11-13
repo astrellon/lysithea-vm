@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
@@ -30,6 +32,16 @@ namespace LysitheaVM
             vm.PushStack(new StringValue(value));
         }
         #endregion
+    }
+
+    public static class ListExtensions
+    {
+        public static T PopBack<T>(this IList<T> self)
+        {
+            var result = self.Last();
+            self.RemoveAt(self.Count - 1);
+            return result;
+        }
     }
 
     public static class IArrayValueExtensions

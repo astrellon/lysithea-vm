@@ -14,7 +14,7 @@ namespace LysitheaVM
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
             // var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testStandardLibrary.lys"));
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testAdvanced.lys"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/readmeExamples.lys"));
 
             var vm = new VirtualMachine(8);
 

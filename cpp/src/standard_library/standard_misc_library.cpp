@@ -23,6 +23,14 @@ namespace lysithea_vm
             vm.push_stack(top.type_name());
         });
 
+        result->define("isDefined", [](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto top = args.data[0].to_string();
+            value temp;
+            auto is_defined = vm.current_scope->try_get_key(top, temp);
+            vm.push_stack(is_defined);
+        });
+
         result->define("toString", [](virtual_machine &vm, const array_value &args) -> void
         {
             auto top = args.data[0];

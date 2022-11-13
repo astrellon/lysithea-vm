@@ -1,5 +1,5 @@
 (define playerName "Unset")
-(define main (function ()
+(function main ()
     (say "Here is the test dialogue tree")
     (say "What is your name?")
     (getPlayerName)
@@ -18,9 +18,9 @@
     (choice "Questions" questions)
     (choice "Good bye" goodBye)
     (waitForChoice)
-))
+)
 
-(define questions (function ()
+(function questions ()
     (:start)
 
     (say "What do you want to know?")
@@ -45,10 +45,10 @@
         (moveTo main :start)
     ))
     (waitForChoice)
-))
+)
 
-(define goodBye (function ()
+(function goodBye ()
     (randomSay (array.join "Catch you around!" (+ "See you later " playerName "!")))
-))
+)
 
 (main)

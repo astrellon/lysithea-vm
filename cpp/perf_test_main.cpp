@@ -51,7 +51,7 @@ std::shared_ptr<lysithea_vm::scope> create_custom_scope()
 int main()
 {
     std::ifstream input_file;
-    input_file.open("../../examples/perfTest.lisp");
+    input_file.open("../../examples/perfTest.lys");
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";

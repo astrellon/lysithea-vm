@@ -100,15 +100,31 @@ namespace lysithea_vm
                 throw std::runtime_error("Multiply operator expects more than 1 input");
             }
 
-            auto total = 0.0;
+            auto total = 1.0;
             for (auto iter : args.data)
             {
                 if (!iter.is_number())
                 {
                     throw std::runtime_error("Multiple operator needs all numbers");
                 }
-                total += iter.get_number();
+                total *= iter.get_number();
             }
+            vm.push_stack(total);
+        });
+
+        result->define("/", [](virtual_machine &vm, const array_value &args) -> void
+        {
+            if (args.data.size() < 2)
+            {
+                throw std::runtime_error("Divide operator expects more than 1 input");
+            }
+
+            auto total = args.get_number(0);
+            for (auto i = 1; i < args.array_length(); i++)
+            {
+                total /= args.get_number(i);
+            }
+
             vm.push_stack(total);
         });
 

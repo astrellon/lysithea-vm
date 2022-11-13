@@ -35,9 +35,9 @@ The end result does mean there's always some wasted memory either in the double 
 Currently the code is written with a Lisp like syntax. It should not be assumed that it is Lisp or that it supports all the things that Lisp would support. Lisp was chosen for it's ease of parsing and tokenising.
 
 ```lisp
-(define main (function ()
+(function main ()
     (print "Result: " (add 5 12))
-))
+)
 
 (main)
 ```
@@ -78,19 +78,19 @@ Result: 17
 Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `<` operator and `print` function.
 
 ```lisp
-(define main (function ()
+(function main()
     (set x 0)
     (:start)
 
     (inc x)
-    (if (< x 10))
+    (if (< x 10)
         (
             (print "Less than 10: " x)
             (jump :start)
         )
     )
     (done)
-))
+)
 
 (main)
 ```
@@ -101,7 +101,7 @@ Variables can be defined, set and retrieved again. These variables will be scope
 
 ```lisp
 (define name "Global")
-(define main (function ()
+(function main()
     (print "Started main")
     (print name)
 
@@ -111,7 +111,7 @@ Variables can be defined, set and retrieved again. These variables will be scope
     (define name "Created in scope")
     (print name)
     (print "End main")
-))
+)
 
 (print name)
 (main)
@@ -211,7 +211,7 @@ When a function is called (using either call operator) the current list of code 
 
 There's not many keywords that are built in and each are used by the assembler to turn into a set of operators that are used by the virtual machine.
 
-### `(define varName value)`
+### `(define varName1 ...varNameN value)`
 Creates a new variable in the current scope. Currently it is allowed that variables can be redefined, as such define will never throw an error.
 
 Simple example:
@@ -223,19 +223,35 @@ Simple example:
 Scoping example:
 ```lisp
 (define name "Global Name")
-(define main (function ()
+(function main ()
     (print name) ; Outputs Global Name
 
     (define name "Local Name")
     (print name) ; Outputs Local Name
-))
+)
 
 (print name) ; Outputs Global Name
 (main)
 (print name) ; Outputs Global Name
 ```
 
-### `(set varName value)`
+For functions that return multiple values, you'll want to put those into variables.
+```lisp
+(function multiply(x)
+    (return (* x 2) (* x 3))
+)
+(function divide(x)
+    (return (/ x 2) (/ x 3))
+)
+
+(define left right (multiply 5))
+(print "Multiply " left ", " right) ; Multiply 10, 15
+
+(define left right (divide 15))
+(print "Divide " left ", " right) ; Divide 7.5, 5
+```
+
+### `(set varName1 ...varNameN value)`
 Updates a variable, if that variable does not exist in the current scope it will check the parent scope. Will throw an error if the variable has not been defined.
 
 Simple example:
@@ -269,17 +285,19 @@ Error example:
 (set age 30)  ; throws an error because
 ```
 
+Setting multiple variables follows the same logic as defining multiple variables.
+
 ### `(if (conditionalCode) (whenTrueCode) (whenFalseCode?))`
 The conditional code is executed first and if result in a `true` value then the `whenTrueCode` is executed. If another block is provided then that will be executed if the value is not true.
 
 Simple example:
 ```lisp
-(define logCounter (function ()
+(function logCounter ()
     (if (< counter 10)
         (print "Counter less than 10")
         (print "Counter more than 10")
     )
-))
+)
 
 (define counter 0)
 (logCounter) ; Prints Counter less than 10
@@ -334,7 +352,7 @@ Creates a new function value, takes a parameter list, the list itself is require
 The parameter list itself is parsed only as a list of strings.
 
 ```lisp
-(define clamp (function (input lower upper)
+(function clamp(input lower upper)
     (if (< input lower)
         (return lower)
     )
@@ -342,19 +360,20 @@ The parameter list itself is parsed only as a list of strings.
         (return upper)
     )
     (return input)
-))
+)
 
-(print "Clamped 5 " (clamp 5 -1 1))   ; Clamped 5 1
+(print "Clamped 5 "  (clamp 5 -1 1))  ; Clamped 5 1
 (print "Clamped -5 " (clamp -5 -1 1)) ; Clamped -5 -1
-(print "Clamped 0 " (clamp 0 -1 1))   ; Clamped 0 0
+(print "Clamped 0 "  (clamp 0 -1 1))  ; Clamped 0 0
+)
 ```
 Unpack arguments example:
 ```lisp
-(define log (function (type ...inputs)
+(function log (type ...inputs)
     (print "[" type "]: " ...inputs)
-))
+)
 
-(define findMin (function (...values)
+(function findMin(...values)
     (if (== values.length 0)
         (return null)
     )
@@ -370,7 +389,7 @@ Unpack arguments example:
     )
 
     (return min)
-))
+)
 
 (log "Info" "Minimum Number: " (findMin 1 2 3))
 (log "Info" "Minimum Number: " (findMin 20 30 10))

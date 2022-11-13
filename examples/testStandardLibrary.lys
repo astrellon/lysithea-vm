@@ -1,4 +1,4 @@
-(define testArray (function ()
+(function testArray ()
     (print "Running array tests")
 
     (define arr (0 1 2))
@@ -40,9 +40,9 @@
     (assert.equals ("Foo" 30 ("location 1" "location 2")) arr2)
 
     (print "Array tests passed!")
-))
+)
 
-(define testString (function ()
+(function testString ()
     (print "Running string tests")
 
     (define str "012 hello there")
@@ -66,9 +66,9 @@
     (assert.equals "hello,123,there" (string.join "," "hello" 123 "there"))
 
     (print "String tests passed!")
-))
+)
 
-(define testObject (function ()
+(function testObject ()
     (print "Running object tests")
 
     (define obj { name "Foo" age 30 })
@@ -117,13 +117,13 @@
     )
 
     (print "Object tests passed!")
-))
+)
 
-(define testUnpack (function (firstArg ...inputs)
+(function testUnpack (firstArg ...inputs)
     (print "First arg: " firstArg)
     (print "Second arg: " inputs)
     (print "Unpacked args: " (string.join "|" ...inputs))
-))
+)
 
 (testUnpack "Hello" "There" "How" 5 "you?")
 (define values ("abc" 567 "hello there"))

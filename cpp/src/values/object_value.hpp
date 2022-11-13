@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
+#include <map>
 #include <string>
 
 #include "./complex_value.hpp"
@@ -9,7 +9,7 @@
 
 namespace lysithea_vm
 {
-    using object_map = std::unordered_map<std::string, value>;
+    using object_map = std::map<std::string, value>;
 
     class object_value : public complex_value
     {

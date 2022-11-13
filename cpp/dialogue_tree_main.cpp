@@ -136,7 +136,7 @@ std::shared_ptr<scope> create_dialogue_scope()
 int main()
 {
     std::ifstream input_file;
-    input_file.open("../../examples/testDialogue.lisp");
+    input_file.open("../../examples/testDialogue.lys");
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";

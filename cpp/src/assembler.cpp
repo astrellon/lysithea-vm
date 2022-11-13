@@ -92,8 +92,7 @@ namespace lysithea_vm
         }
 
         std::vector<std::string> empty_parameters;
-        auto code = process_temp_function(empty_parameters, temp_code_lines);
-        code->name = "global";
+        auto code = process_temp_function(empty_parameters, temp_code_lines, "global");
 
         return code;
     }
@@ -127,6 +126,8 @@ namespace lysithea_vm
                     return keyword_parse;
                 }
 
+                keyword_parsing_stack.push_back("func-call");
+
                 // Handle general opcode or function call.
                 for (auto iter = array_input->data.cbegin() + 1; iter != array_input->data.cend(); ++iter)
                 {
@@ -134,6 +135,9 @@ namespace lysithea_vm
                 }
 
                 push_range(result, optimise_call_symbol_value(first_symbol_value->data, array_input->data.size() - 1));
+
+                keyword_parsing_stack.pop_back();
+
                 return result;
             }
         }
@@ -150,22 +154,17 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_set(const array_value &input)
+    assembler::code_line_list assembler::parse_define_set(const array_value &input, bool is_define)
     {
-        auto result = parse(input.data[2]);
-        result.emplace_back(vm_operator::set, input.data[1]);
-        return result;
-    }
+        auto op_code = is_define ? vm_operator::define : vm_operator::set;
+        // Parse the last value as the definable/set-able value.
+        auto result = parse(input.data.back());
 
-    assembler::code_line_list assembler::parse_define(const array_value &input)
-    {
-        auto result = parse(input.data[2]);
-        result.emplace_back(vm_operator::define, input.data[1]);
-
-        auto is_function = result[0].argument.get_complex<function_value>();
-        if (is_function)
+        // Loop over all the middle inputs as the values to set.
+        // Multiple variables can be set when a function returns multiple results.
+        for (auto i = input.array_length() - 2; i >= 1; i--)
         {
-            is_function->data->name = input.data[1].to_string();
+            result.emplace_back(op_code, input.data[i]);
         }
         return result;
     }
@@ -333,20 +332,39 @@ namespace lysithea_vm
 
     std::shared_ptr<function> assembler::parse_function(const array_value &input)
     {
+        std::string name;
+        auto offset = 0;
+
+        auto name_var_check = input.data[1].get_complex<const variable_value>();
+        if (name_var_check)
+        {
+            name = name_var_check->data;
+            offset = 1;
+        }
+        else
+        {
+            auto name_string_check = input.data[1].get_complex<const string_value>();
+            if (name_string_check)
+            {
+                name = name_string_check->data;
+                offset = 1;
+            }
+        }
+
         std::vector<std::string> parameters;
-        auto parameters_array = input.data[1].get_complex<const array_value>();
+        auto parameters_array = input.data[1 + offset].get_complex<const array_value>();
         for (auto iter : parameters_array->data)
         {
             parameters.emplace_back(iter.to_string());
         }
 
         code_line_list temp_code_lines;
-        for (auto i = 2; i < input.data.size(); i++)
+        for (auto i = 2 + offset; i < input.data.size(); i++)
         {
             push_range(temp_code_lines, parse(input.data[i]));
         }
 
-        return process_temp_function(parameters, temp_code_lines);
+        return process_temp_function(parameters, temp_code_lines, name);
     }
 
     assembler::code_line_list assembler::parse_change_variable(value input, builtin_function_value change_func)
@@ -391,28 +409,41 @@ namespace lysithea_vm
         return result;
     }
 
+    assembler::code_line_list assembler::parse_function_keyword(const array_value &input)
+    {
+        auto function = parse_function(input);
+        auto function_value = std::make_shared<lysithea_vm::function_value>(function);
+
+        code_line_list result;
+        result.emplace_back(vm_operator::push, function_value);
+
+        auto current_keyword = keyword_parsing_stack.size() > 1 ? keyword_parsing_stack[keyword_parsing_stack.size() - 2] : keyword_function;
+        if (function->has_name && current_keyword == keyword_function)
+        {
+            result.emplace_back(vm_operator::define, value(function->name));
+        }
+        return result;
+    }
+
     std::vector<assembler::temp_code_line> assembler::parse_keyword(const std::string &keyword, const array_value &input)
     {
         code_line_list result;
-        if (keyword == keyword_function)
-        {
-            auto function = parse_function(input);
-            auto function_value = std::make_shared<lysithea_vm::function_value>(function);
+        keyword_parsing_stack.push_back(keyword);
 
-            result.emplace_back(vm_operator::push, function_value);
-            return result;
-        }
-        if (keyword == keyword_continue) { return parse_loop_jump(keyword, true); }
-        if (keyword == keyword_break) { return parse_loop_jump(keyword, false); }
-        if (keyword == keyword_set) { return parse_set(input); }
-        if (keyword == keyword_define) { return parse_define(input); }
-        if (keyword == keyword_loop) { return parse_loop(input); }
-        if (keyword == keyword_if) { return parse_cond(input, true); }
-        if (keyword == keyword_unless) { return parse_cond(input, false); }
-        if (keyword == keyword_inc) { return parse_change_variable(input.data[1], inc_number); }
-        if (keyword == keyword_dec) { return parse_change_variable(input.data[1], dec_number); }
-        if (keyword == keyword_jump) { return parse_jump(input); }
-        if (keyword == keyword_return) { return parse_return(input); }
+        if (keyword == keyword_function) { result = parse_function_keyword(input); }
+        else if (keyword == keyword_continue) { result = parse_loop_jump(keyword, true); }
+        else if (keyword == keyword_break) { result = parse_loop_jump(keyword, false); }
+        else if (keyword == keyword_set) { result = parse_define_set(input, false); }
+        else if (keyword == keyword_define) { result = parse_define_set(input, true); }
+        else if (keyword == keyword_loop) { result = parse_loop(input); }
+        else if (keyword == keyword_if) { result = parse_cond(input, true); }
+        else if (keyword == keyword_unless) { result = parse_cond(input, false); }
+        else if (keyword == keyword_inc) { result = parse_change_variable(input.data[1], inc_number); }
+        else if (keyword == keyword_dec) { result = parse_change_variable(input.data[1], dec_number); }
+        else if (keyword == keyword_jump) { result = parse_jump(input); }
+        else if (keyword == keyword_return) { result = parse_return(input); }
+
+        keyword_parsing_stack.pop_back();
 
         return result;
     }
@@ -562,7 +593,7 @@ namespace lysithea_vm
         return false;
     }
 
-    std::shared_ptr<function> assembler::process_temp_function(const std::vector<std::string> &parameters, const assembler::code_line_list &temp_code_lines)
+    std::shared_ptr<function> assembler::process_temp_function(const std::vector<std::string> &parameters, const assembler::code_line_list &temp_code_lines, const std::string &name)
     {
         std::unordered_map<std::string, int> labels;
         std::vector<code_line> code;
@@ -579,6 +610,6 @@ namespace lysithea_vm
             }
         }
 
-        return std::make_shared<function>(code, parameters, labels);
+        return std::make_shared<function>(code, parameters, labels, name);
     }
 } // lysithea_vm

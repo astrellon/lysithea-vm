@@ -54,6 +54,7 @@ namespace lysithea_vm
             }
             catch (std::exception &exp)
             {
+                // Ignore, as it is a try parse
             }
         }
 

@@ -1,5 +1,5 @@
 ; A simple performance test script.
-(define main (function ()
+(function main ()
     (define total 0)
     (define counter 0)
 
@@ -9,10 +9,10 @@
     )
 
     (print "Done: " total)
-))
+)
 
-(define step (function ()
+(function step ()
     (return (add (rand) (rand)))
-))
+)
 
 (main)

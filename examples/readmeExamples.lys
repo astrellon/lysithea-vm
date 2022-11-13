@@ -1,5 +1,5 @@
-(define labelExample (function ()
-    (define main (function ()
+(function labelExample ()
+    (function main()
         (set x 0)
         (:start)
 
@@ -11,14 +11,14 @@
             )
         )
         (done)
-    ))
+    )
 
     (main)
-))
+)
 
-(define variableExample (function ()
+(function variableExample()
     (define name "Global")
-    (define main (function ()
+    (function main()
         (print "Started main")
         (print name)
 
@@ -28,29 +28,63 @@
         (define name "Created in scope")
         (print name)
         (print "End main")
-    ))
+    )
 
     (print name)
     (main)
     (print name)
-))
+)
 
-(define ifExample1 (function ()
-    (define logCounter (function ()
+(function defineSimpleExample ()
+    (define name "Alan")
+    (print "Hello " name) ; Outputs Hello Alan
+)
+
+(function defineScopeExample ()
+    (define name "Global Name")
+    (function main ()
+        (print name) ; Outputs Global Name
+
+        (define name "Local Name")
+        (print name) ; Outputs Local Name
+    )
+
+    (print name) ; Outputs Global Name
+    (main)
+    (print name) ; Outputs Global Name
+)
+
+(function defineScopeMultiple ()
+    (function multiply(x)
+        (return (* x 2) (* x 3))
+    )
+    (function divide(x)
+        (return (/ x 2) (/ x 3))
+    )
+
+    (define left right (multiply 5))
+    (print "Multiply " left ", " right) ; Multiply 10, 15
+
+    (define left right (divide 15))
+    (print "Divide " left ", " right) ; Divide 7.5, 5
+)
+
+(function ifExample1 ()
+    (function logCounter ()
         (if (< counter 10)
             (print "Counter less than 10")
             (print "Counter more than 10")
         )
-    ))
+    )
 
     (define counter 0)
     (logCounter) ; Prints Counter less than 10
 
     (define counter 20)
     (logCounter) ; Prints Counter more than 10
-))
+)
 
-(define ifExample2 (function ()
+(function ifExample2 ()
     (define progress 0)
     (if (< progress 100)
         (
@@ -62,9 +96,9 @@
             (print "All done")
         )
     )
-))
+)
 
-(define unlessExample (function ()
+(function unlessExample ()
     (define progress 0)
     (unless (< progress 100)
         (
@@ -76,10 +110,10 @@
             (print "Please wait...")
         )
     )
-))
+)
 
-(define functionExample (function ()
-    (define clamp (function (input lower upper)
+(function functionExample ()
+    (function clamp(input lower upper)
         (if (< input lower)
             (return lower)
         )
@@ -87,19 +121,19 @@
             (return upper)
         )
         (return input)
-    ))
+    )
 
     (print "Clamped 5 "  (clamp 5 -1 1))  ; Clamped 5 1
     (print "Clamped -5 " (clamp -5 -1 1)) ; Clamped -5 -1
     (print "Clamped 0 "  (clamp 0 -1 1))  ; Clamped 0 0
-))
+)
 
-(define functionUnpackExample (function ()
-    (define log (function (type ...inputs)
+(function functionUnpackExample ()
+    (function log (type ...inputs)
         (print "[" type "]: " ...inputs)
-    ))
+    )
 
-    (define findMin (function (...values)
+    (function findMin(...values)
         (if (== values.length 0)
             (return null)
         )
@@ -115,26 +149,24 @@
         )
 
         (return min)
-    ))
+    )
 
     (log "Info" "Minimum Number: " (findMin 1 2 3))
     (log "Info" "Minimum Number: " (findMin 20 30 10))
     (log "Info" "Minimum Lexical: " (findMin "ABC" "DEF" "ZXC"))
     (log "Info" "Minimum Empty: " (findMin))
-))
+)
 
-(functionUnpackExample)
-
-(define loopExample1 (function ()
+(function loopExample1 ()
     (define i 0)
     (loop (< i 4)
         (print i)
         (inc i)
     )
     (print "Done")
-))
+)
 
-(define loopExample2 (function ()
+(function loopExample2 ()
     (define i 0)
     (:LoopStart)
     (if (< i 4)
@@ -146,9 +178,9 @@
     )
     (:LoopEnd)
     (print "Done")
-))
+)
 
-(define continueExample (function ()
+(function continueExample ()
     (define i 0)
     (loop (< i 6)
         (inc i)
@@ -159,9 +191,9 @@
         (print i)
     )
     (print "Done")
-))
+)
 
-(define breakExample (function ()
+(function breakExample ()
     (define i 0)
     (loop (< i 6)
         (inc i)
@@ -173,9 +205,9 @@
         )
     )
     (print "Done")
-))
+)
 
-(define incExample (function ()
+(function incExample ()
     (define i 0)
     (print i) ; 0
     (inc i)
@@ -186,9 +218,9 @@
     (print i) ; 0
     (set i (+ i 1))
     (print 1) ; 0
-))
+)
 
-(define decExample (function ()
+(function decExample ()
     (define i 0)
     (print i) ; 0
     (dec i)
@@ -199,6 +231,4 @@
     (print i) ; 0
     (set i (- i 1))
     (print i) ; -1
-))
-
-(decExample)
+)
