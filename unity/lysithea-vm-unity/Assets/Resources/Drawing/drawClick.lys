@@ -1,0 +1,15 @@
+(draw.clear)
+(makeGround)
+(draw.element "Box" vector3.zero (randomColour) 10)
+
+(input.onScreenRaycast (function (didHit hitPosition)
+    (if (== didHit true)
+        (
+            (print "Did hit at " hitPosition)
+            (draw.element "Box" hitPosition (randomColour) 1)
+        )
+        (
+            (print "Did not hit anything")
+        )
+    )
+))

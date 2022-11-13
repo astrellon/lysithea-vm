@@ -1428,7 +1428,7 @@ GameObject:
   - component: {fileID: 456085785}
   - component: {fileID: 456085787}
   m_Layer: 5
-  m_Name: CustomScopeData
+  m_Name: CustomScriptData
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3612,7 +3612,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 500}
+  m_SizeDelta: {x: 0, y: 540}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1506346435
 MonoBehaviour:
@@ -4326,6 +4326,7 @@ MonoBehaviour:
   TextExamples:
   - {fileID: 11400000, guid: 05ba01836d66c49f2a98bcbe046d3dbf, type: 2}
   - {fileID: 11400000, guid: 9b066299885f05007a0f2f2d493285e1, type: 2}
+  - {fileID: 11400000, guid: 99642c3c375cdb32482626f9e879842a, type: 2}
   UICodeEdit: {fileID: 456085787}
   PresetDropdown: {fileID: 1979880028}
 --- !u!1 &1990397222
