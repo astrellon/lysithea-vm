@@ -25,6 +25,13 @@ namespace LysitheaVM
                 vm.PushStack(top.TypeName);
             });
 
+            result.Define("isDefined", (vm, args) =>
+            {
+                var top = args.GetIndex(0).ToString();
+                var isDefined = vm.CurrentScope.TryGetKey(top, out var temp);
+                vm.PushStack(isDefined);
+            });
+
             result.Define("compareTo", (vm, args) =>
             {
                 var left = args.GetIndex(0);

@@ -2100,6 +2100,7 @@ GameObject:
   - component: {fileID: 630172457}
   - component: {fileID: 630172459}
   - component: {fileID: 630172460}
+  - component: {fileID: 630172461}
   m_Layer: 0
   m_Name: DrawingVM
   m_TagString: Untagged
@@ -2119,6 +2120,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 496a3b8ef559785e0b57f97560a24077, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InputLibrary: {fileID: 630172461}
   VMRunner: {fileID: 630172459}
 --- !u!4 &630172458
 Transform:
@@ -2172,6 +2174,19 @@ MonoBehaviour:
   - {fileID: 5701869949051518009, guid: bfb2c672612b435a5a8947e9fac9c0c7, type: 3}
   ElementParent: {fileID: 230738615}
   AppearParticlesPrefab: {fileID: 1199392427256726707, guid: 8c1cac2610f5cd483b39e41193b6a08a, type: 3}
+--- !u!114 &630172461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630172456}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f77f4a4d17b640f0b7b86d11f57ba90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  VM: {fileID: 0}
 --- !u!1 &709112764
 GameObject:
   m_ObjectHideFlags: 0

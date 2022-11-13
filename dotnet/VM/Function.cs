@@ -10,7 +10,7 @@ namespace LysitheaVM
         public static IReadOnlyList<CodeLine> EmptyCode = new CodeLine[0];
         public static IReadOnlyDictionary<string, int> EmptyLabels = new Dictionary<string, int>();
         public static IReadOnlyList<string> EmptyParameters = new string[0];
-        public static readonly Function Empty = new Function(EmptyCode, EmptyParameters, EmptyLabels);
+        public static readonly Function Empty = new Function(EmptyCode, EmptyParameters, EmptyLabels, "");
 
         public readonly IReadOnlyList<CodeLine> Code;
         public readonly IReadOnlyDictionary<string, int> Labels;
@@ -22,7 +22,7 @@ namespace LysitheaVM
         #endregion
 
         #region Constructor
-        public Function(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels = null, string? name = null)
+        public Function(IReadOnlyList<CodeLine> code, IReadOnlyList<string> parameters, IReadOnlyDictionary<string, int>? labels, string name)
         {
             this.Code = code;
             this.Parameters = parameters ?? EmptyParameters;
