@@ -24,7 +24,7 @@ Does not make use of a language server, so it cannot highlight builtin functions
 
 Basic handling of language, highlights value types and keywords.
 
-### 0.0.3
+### 0.0.4
 
 Mostly fixes to the market place entry.
 
