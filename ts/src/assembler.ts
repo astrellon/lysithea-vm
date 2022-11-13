@@ -4,7 +4,7 @@ import Script from "./script";
 import ArrayValue from "./values/arrayValue";
 import BuiltinFunctionValue from "./values/builtinFunctionValue";
 import FunctionValue from "./values/functionValue";
-import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
+import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
 import NumberValue from "./values/numberValue";
 import StringValue from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
@@ -70,6 +70,7 @@ export default class VirtualMachineAssembler
 
     private labelCount: number = 0;
     private loopStack: LoopLabels[] = [];
+    private keywordParsingStack: string[] = [];
 
     public parseFromText(input: string)
     {
@@ -109,9 +110,13 @@ export default class VirtualMachineAssembler
                     return keywordParse;
                 }
 
+                this.keywordParsingStack.push('func-call');
+
                 // Handle general opcode or function call.
                 let result = input.value.slice(1).map(v => this.parse(v)).flat(1);
                 result = result.concat(this.optimiseCallSymbolValue(first.value, input.value.length - 1));
+
+                this.keywordParsingStack.pop();
 
                 return result;
             }
@@ -129,23 +134,18 @@ export default class VirtualMachineAssembler
         return [ codeLine('push', input) ];
     }
 
-    public parseSet(input: ArrayValue)
+    public parseDefineSet(input: ArrayValue, isDefine: boolean)
     {
-        let result = this.parse(input.value[2]);
-        result.push(codeLine('set', input.value[1]));
-        return result;
-    }
+        const opCode: Operator = isDefine ? 'define' : 'set';
+        // Parse the last value as the definable/set-able value.
+        const result = this.parse(input.value[input.value.length - 1]);
 
-    public parseDefine(input: ArrayValue)
-    {
-        let result = this.parse(input.value[2]);
-        result.push(codeLine('define', input.value[1]));
-
-        if (result[0].value !== undefined && result[0].value instanceof FunctionValue)
+        // Loop over all the middle inputs as the values to set.
+        // Multiple variables can be set when a function returns multiple results.
+        for (let i = input.value.length - 2; i >= 1; i--)
         {
-            result[0].value.value.name = input.value[1].toString();
+            result.push(codeLine(opCode, input.value[i]));
         }
-
         return result;
     }
 
@@ -254,26 +254,32 @@ export default class VirtualMachineAssembler
 
     public parseFunction(input: ArrayValue)
     {
-        if (!isIArrayValue(input.value[1]))
+        let name = '';
+        let offset = 0;
+        if (input.value[1] instanceof VariableValue || input.value[1] instanceof StringValue)
+        {
+            name = input.value[1].toString();
+            offset = 1;
+        }
+
+        if (!isIArrayValue(input.value[1 + offset]))
         {
             throw new Error('Function needs parameter array');
         }
 
-        const parameters = input.value[1].arrayValues().map(e => e.toString());
-        const tempCodeLines = input.value.slice(2).map(v => this.parse(v)).flat(1);
+        const parameters = (input.value[1 + offset] as IArrayValue).arrayValues().map(e => e.toString());
+        const tempCodeLines = input.value.slice(2 + offset).map(v => this.parse(v)).flat(1);
 
-        return this.processTempFunction(parameters, tempCodeLines);
+        return this.processTempFunction(parameters, tempCodeLines, name);
     }
 
     public parseGlobalFunction(input: ArrayValue)
     {
         const tempCodeLines = input.value.map(v => this.parse(v)).flat(1);
-        var result = this.processTempFunction([], tempCodeLines);
-        result.name = 'global';
-        return result;
+        return this.processTempFunction([], tempCodeLines, 'global');
     }
 
-    public processTempFunction(parameters: string[], tempCodeLines: TempCodeLine[]) : VMFunction
+    public processTempFunction(parameters: string[], tempCodeLines: TempCodeLine[], name: string) : VMFunction
     {
         const labels: { [label: string]: number } = {}
         const code: CodeLine[] = [];
@@ -290,7 +296,7 @@ export default class VirtualMachineAssembler
             }
         }
 
-        return new VMFunction(code, parameters, labels);
+        return new VMFunction(code, parameters, labels, name);
     }
 
     public parseChangeVariable(input: IValue, changeFunc: IFunctionValue)
@@ -321,30 +327,45 @@ export default class VirtualMachineAssembler
         return result;
     }
 
-    public parseKeyword(input: string, arrayValue: ArrayValue): TempCodeLine[]
+    public parseFunctionKeyword(arrayValue: ArrayValue): TempCodeLine[]
     {
-        switch (input)
+        const func = this.parseFunction(arrayValue);
+        const funcValue = new FunctionValue(func);
+        const result = [codeLine('push', funcValue)];
+
+        const currentKeyword = this.keywordParsingStack.length > 1 ? this.keywordParsingStack[this.keywordParsingStack.length - 1] : FunctionKeyword;
+        if (func.hasName && currentKeyword === FunctionKeyword)
         {
-            case FunctionKeyword:
-                {
-                    const func = this.parseFunction(arrayValue);
-                    const funcValue = new FunctionValue(func);
-                    return [codeLine('push', funcValue)];
-                }
-            case ContinueKeyword: return this.parseLoopJump(ContinueKeyword, true);
-            case BreakKeyword: return this.parseLoopJump(BreakKeyword, false);
-            case SetKeyword: return this.parseSet(arrayValue);
-            case DefineKeyword: return this.parseDefine(arrayValue);
-            case LoopKeyword: return this.parseLoop(arrayValue);
-            case IfKeyword: return this.parseCond(arrayValue, true);
-            case UnlessKeyword: return this.parseCond(arrayValue, false);
-            case IncKeyword: return this.parseChangeVariable(arrayValue.value[1], incNumber);
-            case DecKeyword: return this.parseChangeVariable(arrayValue.value[1], decNumber);
-            case JumpKeyword: return this.parseJump(arrayValue);
-            case ReturnKeyword: return this.parseReturn(arrayValue);
+            result.push(codeLine('define', new StringValue(func.name)));
         }
 
-        return [];
+        return result;
+    }
+
+    public parseKeyword(input: string, arrayValue: ArrayValue): TempCodeLine[]
+    {
+        let result: TempCodeLine[] | null = null;
+
+        this.keywordParsingStack.push(input);
+        switch (input)
+        {
+            case FunctionKeyword: result = this.parseFunctionKeyword(arrayValue); break;
+            case ContinueKeyword: result = this.parseLoopJump(ContinueKeyword, true); break;
+            case BreakKeyword: result = this.parseLoopJump(BreakKeyword, false); break;
+            case SetKeyword: result = this.parseDefineSet(arrayValue, false); break;
+            case DefineKeyword: result = this.parseDefineSet(arrayValue, true); break;
+            case LoopKeyword: result = this.parseLoop(arrayValue); break;
+            case IfKeyword: result = this.parseCond(arrayValue, true); break;
+            case UnlessKeyword: result = this.parseCond(arrayValue, false); break;
+            case IncKeyword: result = this.parseChangeVariable(arrayValue.value[1], incNumber); break;
+            case DecKeyword: result = this.parseChangeVariable(arrayValue.value[1], decNumber); break;
+            case JumpKeyword: result = this.parseJump(arrayValue); break;
+            case ReturnKeyword: result = this.parseReturn(arrayValue); break;
+        }
+
+        this.keywordParsingStack.pop();
+
+        return result != null ? result : [];
     }
 
     private optimiseCallSymbolValue(input: string, numArgs: number): TempCodeLine[]

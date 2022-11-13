@@ -15,10 +15,9 @@ namespace LysitheaVM
         public readonly IReadOnlyList<CodeLine> Code;
         public readonly IReadOnlyDictionary<string, int> Labels;
         public readonly IReadOnlyList<string> Parameters;
-        private readonly string? name;
+        public readonly string Name;
+        public readonly bool HasName;
 
-        public string Name => this.name == null ? "anonymous" : this.name;
-        public bool HasName => this.name != null;
         public bool IsEmpty => this.Code.Count == 0;
         #endregion
 
@@ -28,7 +27,8 @@ namespace LysitheaVM
             this.Code = code;
             this.Parameters = parameters ?? EmptyParameters;
             this.Labels = labels ?? EmptyLabels;
-            this.name = name;
+            this.Name = name.Length > 0 ? name : "anonymous";
+            this.HasName = name.Length > 0;
         }
         #endregion
     }

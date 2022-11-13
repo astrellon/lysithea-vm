@@ -28,7 +28,7 @@ perfScope.define('print', new BuiltinFunctionValue((vm, args) =>
     console.log(args.value.map(c => c.toString()).join(''));
 }));
 
-const file = fs.readFileSync('../examples/perfTest.lisp', {encoding: 'utf-8'});
+const file = fs.readFileSync('../examples/perfTest.lys', {encoding: 'utf-8'});
 
 const assembler = new VirtualMachineAssembler();
 assembler.builtinScope.combineScope(perfScope);

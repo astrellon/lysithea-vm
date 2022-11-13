@@ -270,7 +270,7 @@ namespace LysitheaVM
 
         public Function ParseFunction(ArrayValue input)
         {
-            string? name = null;
+            var name = "";
             var offset = 0;
             if (input[1] is VariableValue || input[1] is StringValue)
             {
@@ -465,7 +465,7 @@ namespace LysitheaVM
             return false;
         }
 
-        private static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines, string? name = null)
+        private static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines, string name)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();

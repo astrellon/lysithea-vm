@@ -118,7 +118,7 @@ function doChoice(index: number, vm: VirtualMachine): boolean
     return true;
 }
 
-const file = fs.readFileSync('../examples/testDialogue.lisp', { encoding: 'utf-8' });
+const file = fs.readFileSync('../examples/testDialogue.lys', { encoding: 'utf-8' });
 
 const assembler = new VirtualMachineAssembler();
 assembler.builtinScope.combineScope(dialogueScope);
