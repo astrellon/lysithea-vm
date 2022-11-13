@@ -157,6 +157,24 @@
     (log "Info" "Minimum Empty: " (findMin))
 )
 
+(function functionDefining ()
+    (define main1 (function ()
+        (print "Inside main1")
+    ))
+
+    (function main2 ()
+        (print "Inside main2")
+    )
+
+    (main1)
+    (main2)
+
+    (print)
+
+    (print "Main1: " (toString main1))
+    (print "Main2: " (toString main2))
+)
+
 (function loopExample1 ()
     (define i 0)
     (loop (< i 4)

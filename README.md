@@ -346,10 +346,13 @@ Still in progress
 Please wait...
 ```
 
-### `(function (parameterList) (codeBody))`
+### `(function name? (parameterList) (codeBody))`
 Creates a new function value, takes a parameter list, the list itself is required but it can be empty.
 
 The parameter list itself is parsed only as a list of strings.
+
+The `name` is optional and if it's left out the function will be anonymous.
+Additionally if the name is present and the function is not being used a value in a function call, the function will also be defined.
 
 ```lisp
 (function clamp(input lower upper)
@@ -367,6 +370,7 @@ The parameter list itself is parsed only as a list of strings.
 (print "Clamped 0 "  (clamp 0 -1 1))  ; Clamped 0 0
 )
 ```
+
 Unpack arguments example:
 ```lisp
 (function log (type ...inputs)
@@ -401,6 +405,32 @@ Unpack arguments example:
 [Info]: Minimum Number: 20
 [Info]: Minimum Lexical: ABC
 [Info]: Minimum Empty: null
+```
+
+Example of function name defining.
+```lisp
+(define main1 (function ()
+    (print "Inside main1")
+))
+
+(function main2 ()
+    (print "Inside main2")
+)
+
+(main1)
+(main2)
+
+(print)
+
+(print "Main1: " (toString main1))
+(print "Main2: " (toString main2))
+
+; Outputs
+Inside main1
+Inside main2
+
+Main1: function:anonymous
+Main2: function:main2
 ```
 
 ### `(loop (conditionalCode) (loopBody))`
