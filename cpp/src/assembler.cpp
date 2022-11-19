@@ -185,7 +185,7 @@ namespace lysithea_vm
         ss_label_end << loop_label_num;
         auto label_end = std::make_shared<string_value>(ss_label_end.str());
 
-        loop_stack.emplace(label_start, label_end);
+        loop_stack.emplace_back(label_start, label_end);
 
         code_line_list result;
         result.emplace_back(ss_label_start.str());
@@ -208,7 +208,7 @@ namespace lysithea_vm
         result.emplace_back(vm_operator::jump, label_start);
         result.emplace_back(ss_label_end.str());
 
-        loop_stack.pop();
+        loop_stack.pop_back();
         return result;
     }
 
@@ -323,7 +323,7 @@ namespace lysithea_vm
             throw std::runtime_error("Unexpected keyword outside of loop");
         }
 
-        auto loop_label = loop_stack.top();
+        auto loop_label = loop_stack.back();
 
         code_line_list result;
         result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start : loop_label.end);

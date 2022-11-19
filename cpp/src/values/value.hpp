@@ -138,6 +138,7 @@ namespace lysithea_vm
                 {
                     case value_type::is_false:
                     case value_type::is_true:
+                    case value_type::undefined:
                     case value_type::null:
                         return 0;
                     case value_type::number:
@@ -167,7 +168,7 @@ namespace lysithea_vm
                     default: break;
                 }
 
-                return "unknown";
+                return "undefined";
             }
 
             std::string type_name() const

@@ -3,7 +3,7 @@
 #include <string>
 #include <istream>
 #include <memory>
-#include <stack>
+#include <vector>
 
 #include "./values/value.hpp"
 #include "./values/complex_value.hpp"
@@ -98,7 +98,7 @@ namespace lysithea_vm
 
             // Fields
             int label_count;
-            std::stack<loop_labels> loop_stack;
+            std::vector<loop_labels> loop_stack;
             std::vector<std::string> keyword_parsing_stack;
 
             // Methods
