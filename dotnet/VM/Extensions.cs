@@ -11,25 +11,46 @@ namespace LysitheaVM
     public static class VirtualMachineExtensions
     {
         #region Methods
-        public static void PushStack(this VirtualMachine vm, bool value)
+        public static void PushStack(this VirtualMachine self, bool value)
         {
-            vm.PushStack(new BoolValue(value));
+            self.PushStack(new BoolValue(value));
         }
-        public static void PushStack(this VirtualMachine vm, int value)
+        public static void PushStack(this VirtualMachine self, int value)
         {
-            vm.PushStack(new NumberValue(value));
+            self.PushStack(new NumberValue(value));
         }
-        public static void PushStack(this VirtualMachine vm, float value)
+        public static void PushStack(this VirtualMachine self, float value)
         {
-            vm.PushStack(new NumberValue(value));
+            self.PushStack(new NumberValue(value));
         }
-        public static void PushStack(this VirtualMachine vm, double value)
+        public static void PushStack(this VirtualMachine self, double value)
         {
-            vm.PushStack(new NumberValue(value));
+            self.PushStack(new NumberValue(value));
         }
-        public static void PushStack(this VirtualMachine vm, string value)
+        public static void PushStack(this VirtualMachine self, string value)
         {
-            vm.PushStack(new StringValue(value));
+            self.PushStack(new StringValue(value));
+        }
+
+        public static T PopStack<T>(this VirtualMachine self) where T : IValue
+        {
+            var obj = self.PopStack();
+            if (obj.GetType() == typeof(T))
+            {
+                return (T)obj;
+            }
+
+            throw new StackException(self.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
+        }
+
+        public static bool PopStackBool(this VirtualMachine self)
+        {
+            return self.PopStack<BoolValue>().Value;
+        }
+
+        public static double PopStackDouble(this VirtualMachine self)
+        {
+            return self.PopStack<NumberValue>().Value;
         }
         #endregion
     }
@@ -61,7 +82,6 @@ namespace LysitheaVM
             return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IValue GetIndex(this IArrayValue self, int index)
         {
             if (self.TryGetIndex(index, out var value))
@@ -72,7 +92,6 @@ namespace LysitheaVM
             throw new System.IndexOutOfRangeException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetIndex<T>(this IArrayValue self, int index) where T : IValue
         {
             if (self.TryGetIndex(index, out var value))
@@ -87,7 +106,6 @@ namespace LysitheaVM
             throw new System.IndexOutOfRangeException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T GetIndex<T>(this IArrayValue self, int index, VirtualMachine.CastValueDelegate<T> cast) where T : IValue
         {
             if (self.TryGetIndex(index, out var value))
@@ -98,19 +116,16 @@ namespace LysitheaVM
             throw new System.IndexOutOfRangeException();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetIndexInt(this IArrayValue self, int index)
         {
             return self.GetIndex<NumberValue>(index).IntValue;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float GetIndexFloat(this IArrayValue self, int index)
         {
             return self.GetIndex<NumberValue>(index).FloatValue;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double GetIndexDouble(this IArrayValue self, int index)
         {
             return self.GetIndex<NumberValue>(index).Value;
