@@ -135,6 +135,16 @@ namespace LysitheaVM
                         }
                     }
                     vm.PushStack(min);
+                })},
+
+                {"sum", new BuiltinFunctionValue((vm, args) =>
+                {
+                    var total = 0.0;
+                    foreach (NumberValue num in args.Value)
+                    {
+                        total += num.Value;
+                    }
+                    vm.PushStack(total);
                 })}
             };
 

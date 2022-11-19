@@ -39,14 +39,6 @@ namespace LysitheaVM
             var vm = new VirtualMachine(8);
             vm.Execute(code);
         }
-
-        [Benchmark]
-        public void TestStdLibStreamFile()
-        {
-            var code = Assembler.ParseFromFile(FilePath);
-            var vm = new VirtualMachine(8);
-            vm.Execute(code);
-        }
         #endregion
     }
 }

@@ -3,16 +3,16 @@
     (define total 0)
     (define counter 0)
 
-    (loop (lessThan counter 1000000)
-        (set total (add total (step)))
-        (inc counter)
+    (loop (< counter 1000000)
+        (+= total (step))
+        (++ counter)
     )
 
     (print "Done: " total)
 )
 
 (function step ()
-    (return (add (rand) (rand)))
+    (return (+ (rand) (rand)))
 )
 
 (main)

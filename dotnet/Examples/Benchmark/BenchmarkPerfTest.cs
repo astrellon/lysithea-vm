@@ -36,6 +36,20 @@ namespace LysitheaVM
         }
 
         [Benchmark]
+        public void TestExecuteIdealVM()
+        {
+            var vm = new VirtualMachine(8);
+            vm.Execute(PerfTestIdealVM.IdealScript);
+        }
+
+        [Benchmark]
+        public void TestExecuteIdealVM2()
+        {
+            var vm = new VirtualMachine(8);
+            vm.Execute(PerfTestIdealVM.IdealScript);
+        }
+
+        [Benchmark]
         public void TestCreateAndExecuteVM()
         {
             var vm = new PerfTestVM();
@@ -75,6 +89,7 @@ namespace LysitheaVM
             var script = PerfMoonSharp.Compile(LuaCodeText, out var mainFunc);
             script.Call(mainFunc);
         }
+
         #endregion
     }
 }

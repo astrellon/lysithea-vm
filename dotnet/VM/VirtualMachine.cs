@@ -86,8 +86,6 @@ namespace LysitheaVM
 
             var codeLine = this.CurrentCode.Code[this.lineCounter++];
 
-            // this.PrintStackDebug();
-
             switch (codeLine.Operator)
             {
                 default:
@@ -102,7 +100,7 @@ namespace LysitheaVM
                         }
                         else
                         {
-                            throw new StackException(this.CreateStackTrace(), "Push needs an input");
+                            this.PushStack(this.PeekStack());
                         }
 
                         break;
@@ -233,6 +231,197 @@ namespace LysitheaVM
                         }
 
                         this.CallFunction(procTop, numArgs.IntValue, true);
+                        break;
+                    }
+
+                // Misc Operator
+                case Operator.StringConcat:
+                    {
+                        if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"StringConcat operator needs the number of args to concat");
+                        }
+
+                        var args = this.GetArgs(numArgs.IntValue);
+                        this.PushStack(string.Join("", args.Value));
+                        break;
+                    }
+
+                    // Math Operators
+                case Operator.Add:
+                    {
+                        this.PushStack(this.PopStack<NumberValue>().Value + this.PopStack<NumberValue>().Value);
+                        break;
+                    }
+                case Operator.AddTo:
+                    {
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"AddTo operator needs code line variable");
+                        }
+
+                        var key = codeLine.Input.ToString();
+                        if (this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
+                        {
+                            this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value + this.PopStack<NumberValue>().Value));
+                        }
+                        break;
+                    }
+                case Operator.Sub:
+                    {
+                        var right = this.PopStack<NumberValue>().Value;
+                        var left = this.PopStack<NumberValue>().Value;
+                        this.PushStack(left - right);
+                        break;
+                    }
+                case Operator.SubFrom:
+                    {
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"SubFrom operator needs code line variable");
+                        }
+
+                        var key = codeLine.Input.ToString();
+                        if (this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
+                        {
+                            this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value - this.PopStack<NumberValue>().Value));
+                        }
+                        break;
+                    }
+                case Operator.Multiply:
+                    {
+                        this.PushStack(this.PopStack<NumberValue>().Value * this.PopStack<NumberValue>().Value);
+                        break;
+                    }
+                case Operator.MultiplyTo:
+                    {
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"MultipleTo operator needs code line variable");
+                        }
+
+                        var key = codeLine.Input.ToString();
+                        if (this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
+                        {
+                            this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value * this.PopStack<NumberValue>().Value));
+                        }
+                        break;
+                    }
+                case Operator.Divide:
+                    {
+                        var right = this.PopStack<NumberValue>().Value;
+                        var left = this.PopStack<NumberValue>().Value;
+                        this.PushStack(left / right);
+                        break;
+                    }
+                case Operator.DivideBy:
+                    {
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"DivideBy operator needs code line variable");
+                        }
+
+                        var key = codeLine.Input.ToString();
+                        if (this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
+                        {
+                            this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value / this.PopStack<NumberValue>().Value));
+                        }
+                        break;
+                    }
+                case Operator.Modulo:
+                    {
+                        var right = this.PopStack<NumberValue>().Value;
+                        var left = this.PopStack<NumberValue>().Value;
+                        this.PushStack(left % right);
+                        break;
+                    }
+                case Operator.Inc:
+                    {
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Inc operator needs code line variable");
+                        }
+
+                        var key = codeLine.Input.ToString();
+                        if (this.CurrentScope.TryGetKey(key, out var foundValue))
+                        {
+                            this.CurrentScope.TrySet(key, new NumberValue(((NumberValue)foundValue).Value + 1));
+                        }
+                        break;
+                    }
+                case Operator.Dec:
+                    {
+                        if (codeLine.Input == null)
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Dec operator needs code line variable");
+                        }
+
+                        var key = codeLine.Input.ToString();
+                        if (this.CurrentScope.TryGetKey(key, out var foundValue))
+                        {
+                            this.CurrentScope.TrySet(key, new NumberValue(((NumberValue)foundValue).Value - 1));
+                        }
+                        break;
+                    }
+
+                    // Comparison
+                case Operator.LessThan:
+                    {
+                        var right = this.PopStack();
+                        var left = this.PopStack();
+                        this.PushStack(left.CompareTo(right) < 0);
+                        break;
+                    }
+                case Operator.LessThanEquals:
+                    {
+                        var right = this.PopStack();
+                        var left = this.PopStack();
+                        this.PushStack(left.CompareTo(right) <= 0);
+                        break;
+                    }
+                case Operator.Equals:
+                    {
+                        var right = this.PopStack();
+                        var left = this.PopStack();
+                        this.PushStack(left.CompareTo(right) == 0);
+                        break;
+                    }
+                case Operator.NotEquals:
+                    {
+                        var right = this.PopStack();
+                        var left = this.PopStack();
+                        this.PushStack(left.CompareTo(right) != 0);
+                        break;
+                    }
+                case Operator.GreaterThan:
+                    {
+                        var right = this.PopStack();
+                        var left = this.PopStack();
+                        this.PushStack(left.CompareTo(right) > 0);
+                        break;
+                    }
+                case Operator.GreaterThanEquals:
+                    {
+                        var right = this.PopStack();
+                        var left = this.PopStack();
+                        this.PushStack(left.CompareTo(right) >= 0);
+                        break;
+                    }
+
+                    // Boolean Operators
+                case Operator.And:
+                    {
+                        this.PushStack(this.PopStack<BoolValue>().Value && this.PopStack<BoolValue>().Value);
+                        break;
+                    }
+                case Operator.Or:
+                    {
+                        this.PushStack(this.PopStack<BoolValue>().Value || this.PopStack<BoolValue>().Value);
+                        break;
+                    }
+                case Operator.Not:
+                    {
+                        this.PushStack(!this.PopStack<BoolValue>().Value);
                         break;
                     }
             }
@@ -381,6 +570,18 @@ namespace LysitheaVM
             }
 
             return obj;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T PopStack<T>() where T : IValue
+        {
+            var obj = this.PopStack();
+            if (obj.GetType() == typeof(T))
+            {
+                return (T)obj;
+            }
+
+            throw new StackException(this.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
