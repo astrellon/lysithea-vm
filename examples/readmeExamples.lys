@@ -3,7 +3,7 @@
         (set x 0)
         (:start)
 
-        (inc x)
+        (++ x)
         (if (< x 10)
             (
                 (print "Less than 10: " x)
@@ -145,7 +145,7 @@
             (if (> min curr)
                 (set min curr)
             )
-            (inc i)
+            (++ i)
         )
 
         (return min)
@@ -179,7 +179,7 @@
     (define i 0)
     (loop (< i 4)
         (print i)
-        (inc i)
+        (++ i)
     )
     (print "Done")
 )
@@ -190,7 +190,7 @@
     (if (< i 4)
         (
         (print i)
-            (inc i)
+            (++ i)
             (jump :LoopStart)
         )
     )
@@ -201,7 +201,7 @@
 (function continueExample ()
     (define i 0)
     (loop (< i 6)
-        (inc i)
+        (++ i)
 
         (if (<= i 3)
             (continue)
@@ -214,7 +214,7 @@
 (function breakExample ()
     (define i 0)
     (loop (< i 6)
-        (inc i)
+        (++ i)
 
         (print i)
 
@@ -227,26 +227,22 @@
 
 (function incExample ()
     (define i 0)
+    (define j 0)
     (print i) ; 0
-    (inc i)
-    (print i) ; 1
+    (++ i)
+    (print i " : " j) ; 1 : 0
 
-    ; Equivalent to:
-    (define i 0)
-    (print i) ; 0
-    (set i (+ i 1))
-    (print 1) ; 0
-)
+    (++ i j)
+    (print i " : " j) ; 2 : 0
+    )
 
 (function decExample ()
     (define i 0)
+    (define j 0)
     (print i) ; 0
-    (dec i)
-    (print i) ; -1
+    (-- i)
+    (print i " : " j) ; -1 : 0
 
-    ; Equivalent to:
-    (define i 0)
-    (print i) ; 0
-    (set i (- i 1))
-    (print i) ; -1
+    (-- i j)
+    (print i " : " j) ; -2 : -1
 )

@@ -304,6 +304,27 @@ namespace LysitheaVM
             return result;
         }
 
+        public List<ITempCodeLine> ParseNegative(ArrayValue input)
+        {
+            if (input.Length >= 3)
+            {
+                return this.ParseMathOperator(Operator.Sub, input);
+            }
+            else if (input.Length == 2)
+            {
+                // If it's a constant already, just push the negative.
+                if (input[1] is NumberValue numValue)
+                {
+                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, new NumberValue(-numValue.Value)) };
+                }
+                return this.ParseOneVariableUpdate(Operator.UnaryNegative, input);
+            }
+            else
+            {
+                throw new Exception($"Negative/Sub operator expects either 1 or 2 inputs");
+            }
+        }
+
         public List<ITempCodeLine> ParseOnePushInput(Operator opCode, ArrayValue input)
         {
             if (input.Value.Count != 2)
@@ -317,43 +338,55 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseTwoPushInputs(Operator opCode, ArrayValue input)
+        public List<ITempCodeLine> ParseMathOperator(Operator opCode, ArrayValue input)
         {
-            if (input.Value.Count != 3)
+            if (input.Value.Count < 3)
             {
-                throw new Exception($"Expecting 2 inputs for: {opCode}");
+                throw new Exception($"Expecting at least 3 inputs for: {opCode}");
             }
 
             var result = this.Parse(input.Value[1]);
-            result.AddRange(this.Parse(input.Value[2]));
-            result.Add(new CodeLine(opCode, null));
+            foreach (var item in input.Value.Skip(2))
+            {
+                result.AddRange(this.Parse(item));
+                result.Add(new CodeLine(opCode, null));
+            }
 
             return result;
         }
 
         public List<ITempCodeLine> ParseOneVariableUpdate(Operator opCode, ArrayValue input)
         {
-            if (input.Value.Count != 2)
+            if (input.Value.Count < 2)
             {
-                throw new Exception($"Expecting 1 input for: {opCode}");
+                throw new Exception($"Expecting at least 1 input for: {opCode}");
             }
 
-            var varName = new StringValue(input.Value[1].ToString());
-            var result = new List<ITempCodeLine> { new CodeLine(opCode, varName) };
+            var result = new List<ITempCodeLine>();
+            foreach (var item in input.Value.Skip(1))
+            {
+                var varName = new StringValue(item.ToString());
+                result.Add(new CodeLine(opCode, varName));
+            }
 
             return result;
         }
 
-        public List<ITempCodeLine> ParseTwoVariableUpdate(Operator opCode, ArrayValue input)
+        public List<ITempCodeLine> ParseMathUpdateVariable(Operator updateOpCode, Operator inbetweenOpCode, ArrayValue input)
         {
-            if (input.Value.Count != 3)
+            if (input.Value.Count < 3)
             {
-                throw new Exception($"Expecting 2 inputs for: {opCode}");
+                throw new Exception($"Expecting at least 2 inputs for: {updateOpCode}");
             }
 
             var varName = new StringValue(input.Value[1].ToString());
             var result = this.Parse(input.Value[2]);
-            result.Add(new CodeLine(opCode, varName));
+            foreach (var item in input.Value.Skip(3))
+            {
+                result.AddRange(this.Parse(item));
+                result.Add(new CodeLine(inbetweenOpCode, null));
+            }
+            result.Add(new CodeLine(updateOpCode, varName));
 
             return result;
         }
@@ -387,25 +420,24 @@ namespace LysitheaVM
                 case ReturnKeyword: result = this.ParseReturn(arrayValue); break;
 
                 // Operators
-                case "+":  result = this.ParseTwoPushInputs(Operator.Add, arrayValue); break;
-                case "-":  result = this.ParseTwoPushInputs(Operator.Sub, arrayValue); break;
-                case "*":  result = this.ParseTwoPushInputs(Operator.Multiply, arrayValue); break;
-                case "/":  result = this.ParseTwoPushInputs(Operator.Divide, arrayValue); break;
-                case "%":  result = this.ParseTwoPushInputs(Operator.Modulo, arrayValue); break;
-                case "<":  result = this.ParseTwoPushInputs(Operator.LessThan, arrayValue); break;
-                case "<=": result = this.ParseTwoPushInputs(Operator.LessThanEquals, arrayValue); break;
-                case "==": result = this.ParseTwoPushInputs(Operator.Equals, arrayValue); break;
-                case "!=": result = this.ParseTwoPushInputs(Operator.NotEquals, arrayValue); break;
-                case ">":  result = this.ParseTwoPushInputs(Operator.GreaterThan, arrayValue); break;
-                case ">=": result = this.ParseTwoPushInputs(Operator.GreaterThanEquals, arrayValue); break;
-                case "&&": result = this.ParseTwoPushInputs(Operator.And, arrayValue); break;
-                case "||": result = this.ParseTwoPushInputs(Operator.Or, arrayValue); break;
+                case "+":  result = this.ParseMathOperator(Operator.Add, arrayValue); break;
+                case "-":  result = this.ParseNegative(arrayValue); break;
+                case "*":  result = this.ParseMathOperator(Operator.Multiply, arrayValue); break;
+                case "/":  result = this.ParseMathOperator(Operator.Divide, arrayValue); break;
+                case "<":  result = this.ParseMathOperator(Operator.LessThan, arrayValue); break;
+                case "<=": result = this.ParseMathOperator(Operator.LessThanEquals, arrayValue); break;
+                case "==": result = this.ParseMathOperator(Operator.Equals, arrayValue); break;
+                case "!=": result = this.ParseMathOperator(Operator.NotEquals, arrayValue); break;
+                case ">":  result = this.ParseMathOperator(Operator.GreaterThan, arrayValue); break;
+                case ">=": result = this.ParseMathOperator(Operator.GreaterThanEquals, arrayValue); break;
+                case "&&": result = this.ParseMathOperator(Operator.And, arrayValue); break;
+                case "||": result = this.ParseMathOperator(Operator.Or, arrayValue); break;
                 case "!":  result = this.ParseOnePushInput(Operator.Not, arrayValue); break;
 
-                case "+=": result = this.ParseTwoVariableUpdate(Operator.AddTo, arrayValue); break;
-                case "-=": result = this.ParseTwoVariableUpdate(Operator.SubFrom, arrayValue); break;
-                case "*=": result = this.ParseTwoVariableUpdate(Operator.MultiplyBy, arrayValue); break;
-                case "/=": result = this.ParseTwoVariableUpdate(Operator.DivideBy, arrayValue); break;
+                case "+=": result = this.ParseMathUpdateVariable(Operator.AddTo, Operator.Add, arrayValue); break;
+                case "-=": result = this.ParseMathUpdateVariable(Operator.SubFrom, Operator.Sub, arrayValue); break;
+                case "*=": result = this.ParseMathUpdateVariable(Operator.MultiplyBy, Operator.Multiply, arrayValue); break;
+                case "/=": result = this.ParseMathUpdateVariable(Operator.DivideBy, Operator.Divide, arrayValue); break;
                 case "++": result = this.ParseOneVariableUpdate(Operator.Inc, arrayValue); break;
                 case "--": result = this.ParseOneVariableUpdate(Operator.Dec, arrayValue); break;
 

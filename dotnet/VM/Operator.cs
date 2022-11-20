@@ -22,8 +22,8 @@ namespace LysitheaVM
         Not, And, Or,
 
         // Math
-        Add, Sub, Multiply, Divide, Modulo,
+        Add, Sub, Multiply, Divide,
         AddTo, SubFrom, MultiplyBy, DivideBy,
-        Inc, Dec
+        Inc, Dec, UnaryNegative
     }
 }

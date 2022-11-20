@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
@@ -95,6 +96,21 @@ namespace LysitheaVM
             }
 
             value = NullValue.Value;
+            return false;
+        }
+
+        public bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
+        {
+            if (this.TryGetKey(key, out var result))
+            {
+                if (result is T casted)
+                {
+                    value = casted;
+                    return true;
+                }
+            }
+
+            value = default(T);
             return false;
         }
         #endregion

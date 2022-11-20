@@ -342,14 +342,6 @@ namespace lysithea_vm
                 break;
             }
 
-            case vm_operator::modulo:
-            {
-                auto right = pop_stack_number();
-                auto left = pop_stack_number();
-                push_stack(fmod(left, right));
-                break;
-            }
-
             case vm_operator::inc:
             {
                 if (!code_line.value.is_complex())
@@ -381,6 +373,23 @@ namespace lysithea_vm
                     throw std::runtime_error("Dec operator could not find variable or was not a number");
                 }
                 current_scope->try_set(key, value(found_value - 1.0));
+                break;
+            }
+
+            case vm_operator::unary_negative:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("UnaryNegative operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("UnaryNegative operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(-found_value));
                 break;
             }
 

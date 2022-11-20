@@ -24,8 +24,8 @@ namespace lysithea_vm
         op_not, op_and, op_or,
 
         // Math
-        add, sub, multiply, divide, modulo,
+        add, sub, multiply, divide,
         add_to, sub_from, multiply_by, divide_by,
-        inc, dec
+        inc, dec, unary_negative
     };
 } // namespace lysithea_vm

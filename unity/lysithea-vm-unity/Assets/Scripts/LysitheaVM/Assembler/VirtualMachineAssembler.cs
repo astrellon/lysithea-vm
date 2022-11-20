@@ -30,8 +30,6 @@ namespace LysitheaVM
         private const string UnlessKeyword = "unless";
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
-        private const string IncKeyword = "inc";
-        private const string DecKeyword = "dec";
         private const string JumpKeyword = "jump";
         private const string ReturnKeyword = "return";
 
@@ -284,17 +282,6 @@ namespace LysitheaVM
             return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines, name);
         }
 
-        public List<ITempCodeLine> ParseChangeVariable(IValue input, BuiltinFunctionValue changeFunc)
-        {
-            var varName = new StringValue(input.ToString());
-            return new List<ITempCodeLine>
-            {
-                new CodeLine(Operator.Get, varName),
-                new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { changeFunc, new NumberValue(1) })),
-                new CodeLine(Operator.Set, varName)
-            };
-        }
-
         public List<ITempCodeLine> ParseJump(ArrayValue input)
         {
             var parse = Parse(input.Value[1]);
@@ -317,6 +304,104 @@ namespace LysitheaVM
             return result;
         }
 
+        public List<ITempCodeLine> ParseNegative(ArrayValue input)
+        {
+            if (input.Length >= 3)
+            {
+                return this.ParseMathOperator(Operator.Sub, input);
+            }
+            else if (input.Length == 2)
+            {
+                // If it's a constant already, just push the negative.
+                if (input[1] is NumberValue numValue)
+                {
+                    return new List<ITempCodeLine> { new CodeLine(Operator.Push, new NumberValue(-numValue.Value)) };
+                }
+                return this.ParseOneVariableUpdate(Operator.UnaryNegative, input);
+            }
+            else
+            {
+                throw new Exception($"Negative/Sub operator expects either 1 or 2 inputs");
+            }
+        }
+
+        public List<ITempCodeLine> ParseOnePushInput(Operator opCode, ArrayValue input)
+        {
+            if (input.Value.Count != 2)
+            {
+                throw new Exception($"Expecting 1 input for: {opCode}");
+            }
+
+            var result = this.Parse(input.Value[1]);
+            result.Add(new CodeLine(opCode, null));
+
+            return result;
+        }
+
+        public List<ITempCodeLine> ParseMathOperator(Operator opCode, ArrayValue input)
+        {
+            if (input.Value.Count < 3)
+            {
+                throw new Exception($"Expecting at least 3 inputs for: {opCode}");
+            }
+
+            var result = this.Parse(input.Value[1]);
+            foreach (var item in input.Value.Skip(2))
+            {
+                result.AddRange(this.Parse(item));
+                result.Add(new CodeLine(opCode, null));
+            }
+
+            return result;
+        }
+
+        public List<ITempCodeLine> ParseOneVariableUpdate(Operator opCode, ArrayValue input)
+        {
+            if (input.Value.Count < 2)
+            {
+                throw new Exception($"Expecting at least 1 input for: {opCode}");
+            }
+
+            var result = new List<ITempCodeLine>();
+            foreach (var item in input.Value.Skip(1))
+            {
+                var varName = new StringValue(item.ToString());
+                result.Add(new CodeLine(opCode, varName));
+            }
+
+            return result;
+        }
+
+        public List<ITempCodeLine> ParseMathUpdateVariable(Operator updateOpCode, Operator inbetweenOpCode, ArrayValue input)
+        {
+            if (input.Value.Count < 3)
+            {
+                throw new Exception($"Expecting at least 2 inputs for: {updateOpCode}");
+            }
+
+            var varName = new StringValue(input.Value[1].ToString());
+            var result = this.Parse(input.Value[2]);
+            foreach (var item in input.Value.Skip(3))
+            {
+                result.AddRange(this.Parse(item));
+                result.Add(new CodeLine(inbetweenOpCode, null));
+            }
+            result.Add(new CodeLine(updateOpCode, varName));
+
+            return result;
+        }
+
+        public List<ITempCodeLine> ParseStringConcat(ArrayValue input)
+        {
+            var result = new List<ITempCodeLine>();
+            foreach (var item in input.Value.Skip(1))
+            {
+                result.AddRange(this.Parse(item));
+            }
+            result.Add(new CodeLine(Operator.StringConcat, new NumberValue(input.Value.Count - 1)));
+            return result;
+        }
+
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             List<ITempCodeLine>? result = null;
@@ -331,10 +416,32 @@ namespace LysitheaVM
                 case LoopKeyword: result = this.ParseLoop(arrayValue); break;
                 case IfKeyword: result = this.ParseCond(arrayValue, true); break;
                 case UnlessKeyword: result = this.ParseCond(arrayValue, false); break;
-                case IncKeyword: result = this.ParseChangeVariable(arrayValue[1], IncNumber); break;
-                case DecKeyword: result = this.ParseChangeVariable(arrayValue[1], DecNumber); break;
                 case JumpKeyword: result = this.ParseJump(arrayValue); break;
                 case ReturnKeyword: result = this.ParseReturn(arrayValue); break;
+
+                // Operators
+                case "+":  result = this.ParseMathOperator(Operator.Add, arrayValue); break;
+                case "-":  result = this.ParseNegative(arrayValue); break;
+                case "*":  result = this.ParseMathOperator(Operator.Multiply, arrayValue); break;
+                case "/":  result = this.ParseMathOperator(Operator.Divide, arrayValue); break;
+                case "<":  result = this.ParseMathOperator(Operator.LessThan, arrayValue); break;
+                case "<=": result = this.ParseMathOperator(Operator.LessThanEquals, arrayValue); break;
+                case "==": result = this.ParseMathOperator(Operator.Equals, arrayValue); break;
+                case "!=": result = this.ParseMathOperator(Operator.NotEquals, arrayValue); break;
+                case ">":  result = this.ParseMathOperator(Operator.GreaterThan, arrayValue); break;
+                case ">=": result = this.ParseMathOperator(Operator.GreaterThanEquals, arrayValue); break;
+                case "&&": result = this.ParseMathOperator(Operator.And, arrayValue); break;
+                case "||": result = this.ParseMathOperator(Operator.Or, arrayValue); break;
+                case "!":  result = this.ParseOnePushInput(Operator.Not, arrayValue); break;
+
+                case "+=": result = this.ParseMathUpdateVariable(Operator.AddTo, Operator.Add, arrayValue); break;
+                case "-=": result = this.ParseMathUpdateVariable(Operator.SubFrom, Operator.Sub, arrayValue); break;
+                case "*=": result = this.ParseMathUpdateVariable(Operator.MultiplyBy, Operator.Multiply, arrayValue); break;
+                case "/=": result = this.ParseMathUpdateVariable(Operator.DivideBy, Operator.Divide, arrayValue); break;
+                case "++": result = this.ParseOneVariableUpdate(Operator.Inc, arrayValue); break;
+                case "--": result = this.ParseOneVariableUpdate(Operator.Dec, arrayValue); break;
+
+                case "$":  result = this.ParseStringConcat(arrayValue); break;
             }
 
             this.keywordParsingStack.PopBack();

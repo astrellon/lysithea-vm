@@ -425,6 +425,22 @@ namespace lysithea_vm
         return result;
     }
 
+    assembler::code_line_list assembler::parse_negative(const array_value &input)
+    {
+        if (input.array_length() == 3)
+        {
+            return parse_two_push_inputs(vm_operator::sub, input);
+        }
+        else if (input.array_length() == 2)
+        {
+            return parse_one_variable_update(vm_operator::unary_negative, input);
+        }
+        else
+        {
+            throw std::runtime_error("Negative/Sub operator expects 1 or 2 inputs");
+        }
+    }
+
     assembler::code_line_list assembler::parse_one_push_input(vm_operator op_code, const array_value &input)
     {
         if (input.array_length() != 2)
@@ -506,10 +522,9 @@ namespace lysithea_vm
         else if (keyword == keyword_return) { result = parse_return(input); }
 
         else if (keyword == "+")  { result = parse_two_push_inputs(vm_operator::add, input); }
-        else if (keyword == "-")  { result = parse_two_push_inputs(vm_operator::sub, input); }
+        else if (keyword == "-")  { result = parse_negative(input); }
         else if (keyword == "*")  { result = parse_two_push_inputs(vm_operator::multiply, input); }
         else if (keyword == "/")  { result = parse_two_push_inputs(vm_operator::divide, input); }
-        else if (keyword == "%")  { result = parse_two_push_inputs(vm_operator::modulo, input); }
         else if (keyword == "<")  { result = parse_two_push_inputs(vm_operator::less_than, input); }
         else if (keyword == "<=") { result = parse_two_push_inputs(vm_operator::less_than_equals, input); }
         else if (keyword == "==") { result = parse_two_push_inputs(vm_operator::equals, input); }

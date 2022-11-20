@@ -3,7 +3,8 @@
 This repository contains code for a simple stack based virtual machine called Lysithea. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. It does come with a standard library which a few of the internal calls make use of, however the standard library does not need to be made available to any given script in order to run.
 
 A list of the builtin types:
-- **Null**: An empty value, not really intended to be pushed around, but if a command does not have a value (because the operator is taking a value from the stack) then the code line value will be null.
+- **Null**: An empty value.
+- **Undefined**: More an internally used value, but usually represents an error.
 - **Strings**: Based off the standard string type from the host programming language.
 - **Boolean**: true/false
 - **Number**: 64 bit double.
@@ -12,7 +13,7 @@ A list of the builtin types:
 - **Function**: A collection of code put into a value, it also contains the labels for jumps and input parameters.
 - **BuiltinFunction**: A reference to a builtin function that can be passed around like a value.
 
-All values should be considered *immutable*! This means that values can be shared between Virtual Machine instances without any issue.
+All values should be considered *immutable*! This means that values can be shared between Virtual Machine instances without issue.
 
 All of these are built on top of several base interfaces:
 
@@ -25,7 +26,7 @@ All of these are built on top of several base interfaces:
 
 The C++ interface contains a basic **value** which contains:
 - **double**: The value for a number.
-- **type**: An enum that indicates the type (null, number, true, false, complex).
+- **type**: An enum that indicates the type (null, undefined, number, true, false, complex).
 - **std::shared_ptr<complex_type>**: A pointer to a more complex type that contains more information, such strings, arrays and objects.
 
 The end result does mean there's always some wasted memory either in the double or the shared pointer, however instead of using a union or std::variant this simplified approach means that it remains safe and fast.
@@ -36,13 +37,13 @@ Currently the code is written with a Lisp like syntax. It should not be assumed 
 
 ```lisp
 (function main ()
-    (print "Result: " (add 5 12))
+    (print "Result: " (+ 5 12))
 )
 
 (main)
 ```
 
-This will push the `5`, `12` and `"add"` to the stack, run the command at the top of the stack (`"add"`), then push `"print"` to the stack and call run again. As for what `"add"` and `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console `Result: 17`.
+This will push the `5` and `12` to the stack and then run the `+` operators, then push `"print"` to the stack and run the `call` opcode. As for `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console `Result: 17`.
 
 Here is an example of a run command handler for the above program in C#:
 ```csharp
@@ -50,16 +51,8 @@ private static Scope CreateScope()
 {
     var result = new Scope();
 
-    result.Define("add", (vm, args) =>
-    {
-        var num1 = args.GetIndex<NumberValue>(0);
-        var num2 = args.GetIndex<NumberValue>(1);
-        vm.PushStack(num1.Value + num2.Value);
-    });
-
     result.Define("print", (vm, args) =>
     {
-        Console.Write("Print: ");
         Console.WriteLine(string.Join("", args.Value));
     });
 
@@ -75,14 +68,14 @@ Result: 17
 
 ## Labels
 
-Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `<` operator and `print` function.
+Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `print` function.
 
 ```lisp
 (function main()
     (set x 0)
     (:start)
 
-    (inc x)
+    (++ x)
     (if (< x 10)
         (
             (print "Less than 10: " x)
@@ -122,11 +115,11 @@ Internally the assembler sees only the last argument as the code line argument e
 
 # Architecture
 
-The internals of the virtual machine is quite simple:
+The internals of the virtual machine is fairly simple and broken into general purpose operators, math operators, comparison operators, boolean operators and one bonus string concatenation operators.
 
 ## Some concepts
 
-### Operator
+### General Purpose Operators
 Internal operators that the virtual machine uses:
 
 #### `(unknown)`
@@ -191,6 +184,93 @@ This is used in situations where we need to distinguish between arrays and argum
 An optimised version of **Call** where the code_line contains an array `(function_value num_args)` which side-steps the need to look up the value from the current scope. These operators come from knowing what values that can be found assemble time.
 
 **Note**: Since `callDirect` operators come from assemble time, it means that if a value is redefined at run time, the operators will still have a reference to the old value from assemble time and will be unaffected.
+
+### Math Operators
+
+#### `(+ num1 num2)`
+Takes the top two values from the stack and pushes the result of adding those numbers together.
+
+```lisp
+(print (+ 10 15)) ; Outputs 25
+```
+
+#### `(- num1 num2)`
+Takes the top two values from the stack and pushes the result of subtracting the top value from the second top value.
+
+```lisp
+(print (- 10 15)) ; Outputs -5
+```
+
+#### `(- num1)`
+Takes the top value from the stack and pushes the negated value.
+
+```lisp
+(print (- 10)) ; Outputs -10
+```
+
+#### `(* num1 num2)`
+Takes the top two values from the stack and pushes the result of multiplying those numbers together.
+
+#### `(/ num1 num2)`
+Takes the top two values from the stack and pushes the result of dividing the second top value from the top value.
+
+```lisp
+(print (/ 10 2)) ; Outputs 5
+```
+
+#### `(+= variable num)`
+Takes the top of the stack and adds it to the variable given.
+
+```lisp
+(define x 10)
+(+= x 20)
+(print x) ; Outputs 30
+```
+
+#### `(-= variable num)`
+Takes the top of the stack and subtracts it from the variable given.
+
+```lisp
+(define x 10)
+(-= x 20)
+(print x) ; Outputs -10
+```
+
+#### `(*= variable num)`
+Takes the top of the stack and multiplies it to the variable given.
+
+```lisp
+(define x 10)
+(*= x 20)
+(print x) ; Outputs 200
+```
+
+#### `(/= variable num)`
+Takes the top of the stack and divides the variable given.
+
+```lisp
+(define x 10)
+(/= x 20)
+(print x) ; Outputs 0.5
+```
+
+#### `(++ variable)`
+Increments the variable by one.
+
+```lisp
+(define x 10)
+(++ x)
+(print x) ; Outputs 11
+```
+
+#### `(-- variable)`
+Decrements the variable by one.
+
+```lisp
+(define x 10)
+(-- x)
+(print x) ; Outputs 9
+```
 
 ### Code Line
 A code line is a simple pair of **operator** and optionally a single **value**.
@@ -389,7 +469,7 @@ Unpack arguments example:
         (if (> min curr)
             (set min curr)
         )
-        (inc i)
+        (++ i)
     )
 
     (return min)
@@ -440,7 +520,7 @@ Creates a looping section of the code. This is effectively a `while` found in ot
 (define i 0)
 (loop (< i 4)
     (print i)
-    (inc i)
+    (++ i)
 )
 (print "Done")
 
@@ -458,7 +538,7 @@ The loop is closer to syntax sugar and is equivalent to:
 (if (< i 4)
     (
         (print i)
-        (inc i)
+        (++ i)
         (jump :LoopStart)
     )
 )
@@ -481,7 +561,7 @@ Used inside loops to jump back to the start of the loop.
 ```lisp
 (define i 0)
 (loop (< i 6)
-    (inc i)
+    (++ i)
 
     (if (<= i 3)
         (continue)
@@ -503,7 +583,7 @@ Used inside loops to break out of the loop and jump to the end.
 ```lisp
 (define i 0)
 (loop (< i 6)
-    (inc i)
+    (++ i)
 
     (print i)
 
@@ -521,42 +601,37 @@ Used inside loops to break out of the loop and jump to the end.
 Done
 ```
 
-### `(inc varName)`
-Increments the value of a variable. In addition to be simpler to write that a `set` and addition operator it's also more performant since it's internally uses fewer instructions.
+### `(++ varName ...varNameN)`
+Increments the value of a variable, or variables if there are multiple. In addition to be simpler to write that a `set` and addition operator it's also more performant since it's internally uses fewer instructions.
 
 ```lisp
 (define i 0)
+(define j 0)
 (print i) ; 0
-(inc i)
-(print i) ; 1
+(++ i)
+(print i " : " j) ; 1 : 0
 
-; Equivalent to:
-(define i 0)
-(print i) ; 0
-(set i (+ i 1))
-(print 1) ; 0
+(++ i j)
+(print i " : " j) ; 2 : 0
 ```
 
-### `(dec varName)`
-Decrements the value of a variable. In addition to be simpler to write that a `set` and subtraction operator it's also more performant since it's internally uses fewer instructions.
+### `(-- varName ...varNameN)`
+Decrements the value of a variable, or variables if there are multiple. In addition to be simpler to write that a `set` and subtraction operator it's also more performant since it's internally uses fewer instructions.
 
 ```lisp
 (define i 0)
+(define j 0)
 (print i) ; 0
-(dec i)
-(print i) ; -1
+(-- i)
+(print i " : " j) ; -1 : 0
 
-; Equivalent to:
-(define i 0)
-(print i) ; 0
-(set i (- i 1))
-(print i) ; -1
+(-- i j)
+(print i " : " j) ; -2 : -1
 ```
 
 # Standard Library
 By default there's basically no builtin functionality to manipulate data. So there is a minimal standard library offered.
 
-- **Operators**: Usual operators for basic math (+, -, *, /), string concatenation (+) and equality operators (==, !=, etc)
 - **Misc**: A handful of general functions: toString, print, compareTo and typeof.
 - **String**: Basic string manipulation: get, set, substring, join, remove, etc.
 - **Array**: Basic array manipulation: get, set, sublist, join, remove, etc.
