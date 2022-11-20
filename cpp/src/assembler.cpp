@@ -425,6 +425,68 @@ namespace lysithea_vm
         return result;
     }
 
+    assembler::code_line_list assembler::parse_one_push_input(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() != 2)
+        {
+            throw std::runtime_error("Operator expects 1 input");
+        }
+
+        auto result = parse(input.data[1]);
+        result.emplace_back(op_code);
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_two_push_inputs(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() != 3)
+        {
+            throw std::runtime_error("Operator expects 2 inputs");
+        }
+
+        auto result = parse(input.data[1]);
+        push_range(result, parse(input.data[2]));
+        result.emplace_back(op_code);
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_one_variable_update(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() != 2)
+        {
+            throw std::runtime_error("Operator expects 1 input");
+        }
+
+        auto var_name = input.data[1].to_string();
+        code_line_list result;
+        result.emplace_back(op_code, value(var_name));
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_two_variable_update(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() != 3)
+        {
+            throw std::runtime_error("Operator expects 2 inputs");
+        }
+
+        auto var_name = input.data[1].to_string();
+        auto result = parse(input.data[2]);
+        result.emplace_back(op_code, value(var_name));
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_string_concat(const array_value &input)
+    {
+        code_line_list result;
+        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        {
+            push_range(result, parse(*iter));
+        }
+        result.emplace_back(vm_operator::string_concat, value(input.array_length() - 1));
+        return result;
+    }
+
     std::vector<assembler::temp_code_line> assembler::parse_keyword(const std::string &keyword, const array_value &input)
     {
         code_line_list result;
@@ -442,6 +504,30 @@ namespace lysithea_vm
         else if (keyword == keyword_dec) { result = parse_change_variable(input.data[1], dec_number); }
         else if (keyword == keyword_jump) { result = parse_jump(input); }
         else if (keyword == keyword_return) { result = parse_return(input); }
+
+        else if (keyword == "+")  { result = parse_two_push_inputs(vm_operator::add, input); }
+        else if (keyword == "-")  { result = parse_two_push_inputs(vm_operator::sub, input); }
+        else if (keyword == "*")  { result = parse_two_push_inputs(vm_operator::multiply, input); }
+        else if (keyword == "/")  { result = parse_two_push_inputs(vm_operator::divide, input); }
+        else if (keyword == "%")  { result = parse_two_push_inputs(vm_operator::modulo, input); }
+        else if (keyword == "<")  { result = parse_two_push_inputs(vm_operator::less_than, input); }
+        else if (keyword == "<=") { result = parse_two_push_inputs(vm_operator::less_than_equals, input); }
+        else if (keyword == "==") { result = parse_two_push_inputs(vm_operator::equals, input); }
+        else if (keyword == "!=") { result = parse_two_push_inputs(vm_operator::not_equals, input); }
+        else if (keyword == ">")  { result = parse_two_push_inputs(vm_operator::greater_than, input); }
+        else if (keyword == ">=") { result = parse_two_push_inputs(vm_operator::greater_than_equals, input); }
+        else if (keyword == "&&") { result = parse_two_push_inputs(vm_operator::op_and, input); }
+        else if (keyword == "||") { result = parse_two_push_inputs(vm_operator::op_or, input); }
+        else if (keyword == "!")  { result = parse_one_push_input(vm_operator::op_not, input); }
+
+        else if (keyword == "+=") { result = parse_two_variable_update(vm_operator::add_to, input); }
+        else if (keyword == "-=") { result = parse_two_variable_update(vm_operator::sub_from, input); }
+        else if (keyword == "*=") { result = parse_two_variable_update(vm_operator::multiply_by, input); }
+        else if (keyword == "/=") { result = parse_two_variable_update(vm_operator::divide_by, input); }
+        else if (keyword == "++") { result = parse_one_variable_update(vm_operator::inc, input); }
+        else if (keyword == "--") { result = parse_one_variable_update(vm_operator::dec, input); }
+
+        else if (keyword == "$")  { result = parse_string_concat(input); }
 
         keyword_parsing_stack.pop_back();
 

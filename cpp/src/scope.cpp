@@ -1,5 +1,7 @@
 #include "scope.hpp"
 
+#include <iostream>
+
 namespace lysithea_vm
 {
     scope::scope() { }
@@ -57,6 +59,36 @@ namespace lysithea_vm
         if (parent)
         {
             return parent->try_get_key(key, result);
+        }
+
+        return false;
+    }
+
+    bool scope::try_get_number(const std::string &key, double &result) const
+    {
+        value found;
+        if (try_get_key(key, found))
+        {
+            if (found.is_number())
+            {
+                result = found.get_number();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool scope::try_get_bool(const std::string &key, bool &result) const
+    {
+        value found;
+        if (try_get_key(key, found))
+        {
+            if (found.is_bool())
+            {
+                result = found.get_bool();
+                return true;
+            }
         }
 
         return false;

@@ -98,6 +98,26 @@ namespace lysithea_vm
                 return result;
             }
 
+            inline double pop_stack_number()
+            {
+                auto result = pop_stack();
+                if (!result.is_number())
+                {
+                    throw std::runtime_error("Unable to pop stack, top was not a number");
+                }
+                return result.get_number();
+            }
+
+            inline double pop_stack_bool()
+            {
+                auto result = pop_stack();
+                if (!result.is_bool())
+                {
+                    throw std::runtime_error("Unable to pop stack, top was not a boolean");
+                }
+                return result.get_bool();
+            }
+
             inline void push_stack(bool input)
             {
                 push_stack(value(input));

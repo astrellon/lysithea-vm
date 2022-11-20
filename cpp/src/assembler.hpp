@@ -76,6 +76,11 @@ namespace lysithea_vm
             code_line_list parse_change_variable(value input, builtin_function_value change_func);
             code_line_list parse_jump(const array_value &input);
             code_line_list parse_return(const array_value &input);
+            code_line_list parse_one_push_input(vm_operator op_code, const array_value &input);
+            code_line_list parse_two_push_inputs(vm_operator op_code, const array_value &input);
+            code_line_list parse_one_variable_update(vm_operator op_code, const array_value &input);
+            code_line_list parse_two_variable_update(vm_operator op_code, const array_value &input);
+            code_line_list parse_string_concat(const array_value &input);
             code_line_list parse_keyword(const std::string &keyword, const array_value &input);
 
             std::shared_ptr<function> parse_global_function(const array_value &input);

@@ -4,27 +4,6 @@
 
 namespace lysithea_vm
 {
-    vm_operator parse_operator(const std::string &input)
-    {
-        auto upper_case = input;
-        std::transform(upper_case.begin(), upper_case.end(), upper_case.begin(), ::toupper);
-
-        if (upper_case == "PUSH") return vm_operator::push;
-        if (upper_case == "TOARGUMENT") return vm_operator::to_argument;
-        if (upper_case == "CALL") return vm_operator::call;
-        if (upper_case == "CALLDIRECT") return vm_operator::call_direct;
-        if (upper_case == "RETURN") return vm_operator::call_return;
-        if (upper_case == "GETPROPERTY") return vm_operator::get_property;
-        if (upper_case == "GET") return vm_operator::get;
-        if (upper_case == "SET") return vm_operator::set;
-        if (upper_case == "DEFINE") return vm_operator::define;
-        if (upper_case == "JUMP") return vm_operator::jump;
-        if (upper_case == "JUMPTRUE") return vm_operator::jump_true;
-        if (upper_case == "JUMPFALSE") return vm_operator::jump_false;
-
-        return vm_operator::unknown;
-    }
-
     std::string to_string(vm_operator input)
     {
         switch (input)
@@ -41,6 +20,29 @@ namespace lysithea_vm
             case vm_operator::push: return "push";
             case vm_operator::set: return "set";
             case vm_operator::to_argument: return "toArgument";
+
+            case vm_operator::string_concat: return "$";
+
+            case vm_operator::add: return "+";
+            case vm_operator::add_to: return "+=";
+            case vm_operator::sub: return "-";
+            case vm_operator::sub_from: return "-=";
+            case vm_operator::multiply: return "*";
+            case vm_operator::multiply_by: return "*=";
+            case vm_operator::divide: return "/";
+            case vm_operator::divide_by: return "/=";
+            case vm_operator::modulo: return "%";
+            case vm_operator::less_than: return "<";
+            case vm_operator::less_than_equals: return "<=";
+            case vm_operator::equals: return "==";
+            case vm_operator::not_equals: return "!=";
+            case vm_operator::greater_than: return ">";
+            case vm_operator::greater_than_equals: return ">=";
+            case vm_operator::inc: return "++";
+            case vm_operator::dec: return "--";
+            case vm_operator::op_and: return "&&";
+            case vm_operator::op_or: return "||";
+            case vm_operator::op_not: return "!";
             default: break;
         }
 

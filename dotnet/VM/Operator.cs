@@ -23,7 +23,7 @@ namespace LysitheaVM
 
         // Math
         Add, Sub, Multiply, Divide, Modulo,
-        AddTo, SubFrom, MultiplyTo, DivideBy,
+        AddTo, SubFrom, MultiplyBy, DivideBy,
         Inc, Dec
     }
 }

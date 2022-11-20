@@ -63,8 +63,6 @@ namespace lysithea_vm
             return;
         }
 
-        // print_stack_debug();
-
         const auto &code_line = current_code->code[program_counter++];
 
         switch (code_line.op)
@@ -226,6 +224,224 @@ namespace lysithea_vm
                 }
 
                 call_function(*array_input->data[0].get_complex(), num_args.get_int(), true);
+                break;
+            }
+
+            // Misc Operator
+            case vm_operator::string_concat:
+            {
+                if (!code_line.value.is_number())
+                {
+                    throw std::runtime_error("StringConcat operator needs the number of args to concat");
+                }
+
+                auto args = get_args(code_line.value.get_int());
+                std::stringstream ss;
+                for (auto iter : args->data)
+                {
+                    ss << iter.to_string();
+                }
+                push_stack(ss.str());
+                break;
+            }
+
+            // Math Operators
+            case vm_operator::add:
+            {
+                push_stack(pop_stack_number() + pop_stack_number());
+                break;
+            }
+
+            case vm_operator::add_to:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("AddTo operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("AddTo operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(found_value + pop_stack_number()));
+                break;
+            }
+
+            case vm_operator::sub:
+            {
+                auto right = pop_stack_number();
+                auto left = pop_stack_number();
+                push_stack(left - right);
+                break;
+            }
+
+            case vm_operator::sub_from:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("SubFrom operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("SubFrom operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(found_value - pop_stack_number()));
+                break;
+            }
+
+            case vm_operator::multiply:
+            {
+                push_stack(pop_stack_number() * pop_stack_number());
+                break;
+            }
+
+            case vm_operator::multiply_by:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("MultiplyBy operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("MultiplyBy operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(found_value * pop_stack_number()));
+                break;
+            }
+
+            case vm_operator::divide:
+            {
+                auto right = pop_stack_number();
+                auto left = pop_stack_number();
+                push_stack(left / right);
+                break;
+            }
+
+            case vm_operator::divide_by:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("DivideBy operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("DivideBy operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(found_value / pop_stack_number()));
+                break;
+            }
+
+            case vm_operator::modulo:
+            {
+                auto right = pop_stack_number();
+                auto left = pop_stack_number();
+                push_stack(fmod(left, right));
+                break;
+            }
+
+            case vm_operator::inc:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("Inc operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("Inc operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(found_value + 1.0));
+                break;
+            }
+
+            case vm_operator::dec:
+            {
+                if (!code_line.value.is_complex())
+                {
+                    throw std::runtime_error("Dec operator needs code line variable");
+                }
+
+                auto key = code_line.value.to_string();
+                double found_value;
+                if (!current_scope->try_get_number(key, found_value))
+                {
+                    throw std::runtime_error("Dec operator could not find variable or was not a number");
+                }
+                current_scope->try_set(key, value(found_value - 1.0));
+                break;
+            }
+
+            // Comparison Operators
+            case vm_operator::less_than:
+            {
+                auto right = pop_stack();
+                auto left = pop_stack();
+                push_stack(left.compare_to(right) < 0);
+                break;
+            }
+            case vm_operator::less_than_equals:
+            {
+                auto right = pop_stack();
+                auto left = pop_stack();
+                push_stack(left.compare_to(right) <= 0);
+                break;
+            }
+            case vm_operator::equals:
+            {
+                auto right = pop_stack();
+                auto left = pop_stack();
+                push_stack(left.compare_to(right) == 0);
+                break;
+            }
+            case vm_operator::not_equals:
+            {
+                auto right = pop_stack();
+                auto left = pop_stack();
+                push_stack(left.compare_to(right) != 0);
+                break;
+            }
+            case vm_operator::greater_than:
+            {
+                auto right = pop_stack();
+                auto left = pop_stack();
+                push_stack(left.compare_to(right) > 0);
+                break;
+            }
+            case vm_operator::greater_than_equals:
+            {
+                auto right = pop_stack();
+                auto left = pop_stack();
+                push_stack(left.compare_to(right) >= 0);
+                break;
+            }
+
+            // Boolean Operators
+            case vm_operator::op_and:
+            {
+                push_stack(pop_stack_bool() && pop_stack_bool());
+                break;
+            }
+            case vm_operator::op_or:
+            {
+                push_stack(pop_stack_bool() || pop_stack_bool());
+                break;
+            }
+            case vm_operator::op_not:
+            {
+                push_stack(!pop_stack_bool());
                 break;
             }
         }
