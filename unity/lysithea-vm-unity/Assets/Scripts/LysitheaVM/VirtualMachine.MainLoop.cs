@@ -180,25 +180,10 @@ namespace LysitheaVM
                         break;
                     }
 
-                    // Math Operators
+                // Math Operators
                 case Operator.Add:
                     {
                         this.PushStack(this.PopStackDouble() + this.PopStackDouble());
-                        break;
-                    }
-                case Operator.AddTo:
-                    {
-                        if (codeLine.Input == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"AddTo operator needs code line variable");
-                        }
-
-                        var key = codeLine.Input.ToString();
-                        if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"AddTo operator could not find variable: {key}");
-                        }
-                        this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value + this.PopStackDouble()));
                         break;
                     }
                 case Operator.Sub:
@@ -208,19 +193,10 @@ namespace LysitheaVM
                         this.PushStack(left - right);
                         break;
                     }
-                case Operator.SubFrom:
+                case Operator.UnaryNegative:
                     {
-                        if (codeLine.Input == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"SubFrom operator needs code line variable");
-                        }
-
-                        var key = codeLine.Input.ToString();
-                        if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"SubFrom operator could not find variable: {key}");
-                        }
-                        this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value - this.PopStackDouble()));
+                        var input = this.PopStackDouble();
+                        this.PushStack(-input);
                         break;
                     }
                 case Operator.Multiply:
@@ -228,42 +204,11 @@ namespace LysitheaVM
                         this.PushStack(this.PopStackDouble() * this.PopStackDouble());
                         break;
                     }
-                case Operator.MultiplyBy:
-                    {
-                        if (codeLine.Input == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"MultipleBy operator needs code line variable");
-                        }
-
-                        var key = codeLine.Input.ToString();
-                        if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"MultiplyBy operator could not find variable: {key}");
-                        }
-                        this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value * this.PopStackDouble()));
-                        break;
-                    }
                 case Operator.Divide:
                     {
                         var right = this.PopStackDouble();
                         var left = this.PopStackDouble();
                         this.PushStack(left / right);
-                        break;
-                    }
-                case Operator.DivideBy:
-                    {
-                        if (codeLine.Input == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"DivideBy operator needs code line variable");
-                        }
-
-                        var key = codeLine.Input.ToString();
-                        if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"DivideBy operator could not find variable: {key}");
-                        }
-
-                        this.CurrentScope.TrySet(key, new NumberValue(foundValue.Value / this.PopStackDouble()));
                         break;
                     }
                 case Operator.Inc:
@@ -296,23 +241,8 @@ namespace LysitheaVM
                         this.CurrentScope.TrySet(key, new NumberValue((foundValue).Value - 1));
                         break;
                     }
-                case Operator.UnaryNegative:
-                    {
-                        if (codeLine.Input == null)
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"UnaryNegative operator needs code line variable");
-                        }
 
-                        var key = codeLine.Input.ToString();
-                        if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
-                        {
-                            throw new OperatorException(this.CreateStackTrace(), $"UnaryNegative operator could not find variable: {key}");
-                        }
-                        this.CurrentScope.TrySet(key, new NumberValue(-(foundValue).Value));
-                        break;
-                    }
-
-                    // Comparison
+                // Comparison
                 case Operator.LessThan:
                     {
                         var right = this.PopStack();

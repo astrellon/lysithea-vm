@@ -246,3 +246,17 @@
     (-- i j)
     (print i " : " j) ; -2 : -1
 )
+
+; (function addUnpackNotWorkingExample ()
+;     (define list (5 10))
+;     (define x (+ ...list)) ; This will throw an error because the add operator expects two number inputs.
+;     (print x)
+; )
+
+(function sumUnpackExample ()
+    (define list (5 10))
+    (define x (math.sum ...list))
+    (print x) ; Outputs 15
+)
+
+(sumUnpackExample)

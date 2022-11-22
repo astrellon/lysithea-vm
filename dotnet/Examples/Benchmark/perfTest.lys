@@ -4,7 +4,7 @@
     (define counter 0)
 
     (loop (< counter 1000000)
-        (+= total (step))
+        (set total (+ total (step)))
         (++ counter)
     )
 

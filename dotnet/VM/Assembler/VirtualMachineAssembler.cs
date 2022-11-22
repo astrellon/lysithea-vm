@@ -317,7 +317,10 @@ namespace LysitheaVM
                 {
                     return new List<ITempCodeLine> { new CodeLine(Operator.Push, new NumberValue(-numValue.Value)) };
                 }
-                return this.ParseOneVariableUpdate(Operator.UnaryNegative, input);
+
+                var result = this.Parse(input[1]);
+                result.Add(new CodeLine(Operator.UnaryNegative, null));
+                return result;
             }
             else
             {
@@ -372,25 +375,6 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseMathUpdateVariable(Operator updateOpCode, Operator inbetweenOpCode, ArrayValue input)
-        {
-            if (input.Value.Count < 3)
-            {
-                throw new Exception($"Expecting at least 2 inputs for: {updateOpCode}");
-            }
-
-            var varName = new StringValue(input.Value[1].ToString());
-            var result = this.Parse(input.Value[2]);
-            foreach (var item in input.Value.Skip(3))
-            {
-                result.AddRange(this.Parse(item));
-                result.Add(new CodeLine(inbetweenOpCode, null));
-            }
-            result.Add(new CodeLine(updateOpCode, varName));
-
-            return result;
-        }
-
         public List<ITempCodeLine> ParseStringConcat(ArrayValue input)
         {
             var result = new List<ITempCodeLine>();
@@ -434,10 +418,6 @@ namespace LysitheaVM
                 case "||": result = this.ParseMathOperator(Operator.Or, arrayValue); break;
                 case "!":  result = this.ParseOnePushInput(Operator.Not, arrayValue); break;
 
-                case "+=": result = this.ParseMathUpdateVariable(Operator.AddTo, Operator.Add, arrayValue); break;
-                case "-=": result = this.ParseMathUpdateVariable(Operator.SubFrom, Operator.Sub, arrayValue); break;
-                case "*=": result = this.ParseMathUpdateVariable(Operator.MultiplyBy, Operator.Multiply, arrayValue); break;
-                case "/=": result = this.ParseMathUpdateVariable(Operator.DivideBy, Operator.Divide, arrayValue); break;
                 case "++": result = this.ParseOneVariableUpdate(Operator.Inc, arrayValue); break;
                 case "--": result = this.ParseOneVariableUpdate(Operator.Dec, arrayValue); break;
 

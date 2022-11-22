@@ -180,6 +180,24 @@ Turns the value from the code line or the value from the top of the stack into a
 
 This is used in situations where we need to distinguish between arrays and argument arrays when unpacking variable length argument calls.
 
+**Note** Unpacking is designed for working with function calls, calls to operators will *not* support unpacking.
+
+ For example:
+ ```lisp
+ (define list (5 10))
+ (define x (+ ...list)) ; This will throw an error because the add operator expects two number inputs.
+ (print x)
+ ```
+
+For reference this is a working example above, making use of a regular `math.sum` function call instead of using a the `+` operator:
+
+```lisp
+(define list (5 10))
+(define x (math.sum ...list))
+(print x) ; Outputs 15
+```
+
+
 #### `(callDirect (function numArgs))`
 An optimised version of **Call** where the code_line contains an array `(function_value num_args)` which side-steps the need to look up the value from the current scope. These operators come from knowing what values that can be found assemble time.
 
@@ -218,42 +236,6 @@ Takes the top two values from the stack and pushes the result of dividing the se
 (print (/ 10 2)) ; Outputs 5
 ```
 
-#### `(+= variable num)`
-Takes the top of the stack and adds it to the variable given.
-
-```lisp
-(define x 10)
-(+= x 20)
-(print x) ; Outputs 30
-```
-
-#### `(-= variable num)`
-Takes the top of the stack and subtracts it from the variable given.
-
-```lisp
-(define x 10)
-(-= x 20)
-(print x) ; Outputs -10
-```
-
-#### `(*= variable num)`
-Takes the top of the stack and multiplies it to the variable given.
-
-```lisp
-(define x 10)
-(*= x 20)
-(print x) ; Outputs 200
-```
-
-#### `(/= variable num)`
-Takes the top of the stack and divides the variable given.
-
-```lisp
-(define x 10)
-(/= x 20)
-(print x) ; Outputs 0.5
-```
-
 #### `(++ variable)`
 Increments the variable by one.
 
@@ -272,6 +254,148 @@ Decrements the variable by one.
 (print x) ; Outputs 9
 ```
 
+### Comparison Operators
+
+The comparison operators calculate a numeric value between two value (-1, 0, 1) with zero meaning they are equal, a one meaning that the `left` value is greater than the `right` and a negative one meaning that the `left` value is less than the `right` value. This makes use of the internal `CompareTo` methods on the value types.
+
+The final result from each of these comparisons is to push a `true` or `false` onto the stack.
+
+As any two variables can be compared this means the type does have to match. However it is up to the `left` operator to determine if the `right` value should match or not. For all builtin types the types have to match, there is **no** type coercion. And as such should be all symmetrical.
+
+But for custom types there's nothing stopping you from having something that lets you compare if a `Vector3` matches an `Array` of numbers for example.
+
+**However** the custom type would always have to be on the left as the array class would not satisfy the same comparison. So be careful to avoid situations where you end up with:
+
+```lisp
+(define myVec (newVector 1 2 3))
+(define myArr (1 2 3))
+(print (== myVec myArr)) ; Uses custom comparison from myVec, outputs 0
+(print (== myArr myVec)) ; Uses the builtin array comparison, outputs 1
+```
+
+#### `(< left right)`
+Checks if the comparison is less than 0.
+
+```lisp
+(define num 5)
+(print (< num 5)) ; Outputs false
+
+(define str "ABC")
+(print (< str "BCD")) ; Outputs true
+```
+
+#### `(<= left right)`
+Checks if the comparison is less than or equal to 0.
+
+```lisp
+(define num 5)
+(print (<= num 5)) ; Outputs true
+
+(define str "ABC")
+(print (<= str "BCD")) ; Outputs true
+```
+
+#### `(> left right)`
+Checks if the comparison is greater than 0.
+
+```lisp
+(define num 5)
+(print (> num 5)) ; Outputs false
+
+(define str "ABC")
+(print (> str "BCD")) ; Outputs false
+```
+
+#### `(>= left right)`
+Checks if the comparison is greater than or equal to 0.
+
+```lisp
+(define num 5)
+(print (>= num 5)) ; Outputs true
+
+(define str "ABC")
+(print (>= str "BCD")) ; Outputs false
+```
+
+#### `(== left right)`
+Checks if the comparison is equal to 0.
+
+```lisp
+(define num 5)
+(print (== num 5)) ; Outputs true
+
+(define str "ABC")
+(print (== str "BCD")) ; Outputs false
+```
+
+#### `(!= left right)`
+Checks if the comparison is not equal to 0.
+
+```lisp
+(define num 5)
+(print (!= num 5)) ; Outputs false
+
+(define str "ABC")
+(print (!= str "BCD")) ; Outputs true
+```
+
+### Boolean Operators
+
+The boolean operators work on boolean values.
+
+#### `(&& left right)`
+Outputs true if both `left` and `right` are true.
+
+```lisp
+(print (&& true true)) ; Outputs true
+(print (&& false true)) ; Outputs false
+(print (&& true false)) ; Outputs false
+(print (&& false false)) ; Outputs false
+
+(print (&& (== 5 5) (!= 5 10))) ; Outputs true
+```
+
+#### `(|| left right)`
+Outputs true if either `left` or `right` are true.
+
+```lisp
+(print (|| true true)) ; Outputs true
+(print (|| false true)) ; Outputs true
+(print (|| true false)) ; Outputs true
+(print (|| false false)) ; Outputs false
+
+(print (|| (== 5 5) (!= 5 10))) ; Outputs true
+```
+
+#### `(! input)`
+Pushes the opposite boolean value onto the stack, `true` -> `false` and `false` -> `true`.
+
+```lisp
+(print (! true)) ; Outputs false
+(print (! false)) ; Outputs true
+```
+
+### Misc Operators
+
+#### `($ ...inputs)`
+Concatenates all inputs input a single string value and pushes that onto the stack.
+
+```lisp
+(print ($ "Hello" "there"))
+; Outputs Hellothere
+
+(define name "Alan")
+(define degrees 25)
+(print ($ "Hello " name ", today it is " degrees " degrees outside"))
+; Outputs Hello Alan, today it is 25 degrees outside
+
+(define list (1 2 3 4))
+(print ($ "Joined list " ...list))
+; Outputs Joined list 1234
+```
+
+If you are wondering about adding a separator between the joined strings, there is a function in the `string` library `string.join` which takes a separator and then a list of inputs to join together.
+
 ### Code Line
 A code line is a simple pair of **operator** and optionally a single **value**.
 
@@ -282,10 +406,10 @@ When a function is called (using either call operator) the current list of code 
 
 ### Scope
 
-- Program Counter: Current code line.
-- Current Scope: Stores the current functions variables.
-- Global Scope: Start scope, stores variables at the global level.
-- Builtin Scope: Scope for variables that come from outside of the virtual machine. Usually at assemble time. This is separate from the global scope as often the builtin scope will be shared between virtual machines, so it is detached from the usual scope parent system and is read only.
+- **Program Counter:** Current code line.
+- **Current Scope:** Stores the current functions variables.
+- **Global Scope:** Start scope, stores variables at the global level.
+- **Builtin Scope:** Scope for variables that come from outside of the virtual machine. Usually at assemble time. This is separate from the global scope as often the builtin scope will be shared between virtual machines, so it is detached from the usual scope parent system and is read only.
 
 # Keywords
 
