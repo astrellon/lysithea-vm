@@ -215,7 +215,7 @@ Takes the top two values from the stack and pushes the result of adding those nu
 (print (+ 10 15)) ; Outputs 25
 ```
 
-More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs. This done at assembler time.
 
 ```lisp
 (print (+ 1 2 3 4)) ; Outputs 10
@@ -223,14 +223,14 @@ More than two inputs can be used, however it will be turned into a chain of oper
 (print (+ 1 (+ 2 (+ 3 4)))) ; Outputs 10
 ```
 
-### Subtract `(- num1 num2)`
+### Subtract `(- num1 num2 ...numN)`
 Takes the top two values from the stack and pushes the result of subtracting the top value from the second top value.
 
 ```lisp
 (print (- 10 15)) ; Outputs -5
 ```
 
-More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs. This is done at assembler time.
 
 ```lisp
 (print (- 1 2 3 4)) ; Outputs -8
@@ -247,14 +247,14 @@ Takes the top value from the stack and pushes the negated value.
 (print (- 10)) ; Outputs -10
 ```
 
-### Multiply `(* num1 num2)`
+### Multiply `(* num1 num2 ...numN)`
 Takes the top two values from the stack and pushes the result of multiplying those numbers together.
 
 ```lisp
 (print (* 5 10)) ; Outputs 50
 ```
 
-More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs. This is done at assembler time.
 
 ```lisp
 (print (* 1 2 3 4)) ; Outputs 24
@@ -262,14 +262,14 @@ More than two inputs can be used, however it will be turned into a chain of oper
 (print (* 1 (* 2 (* 3 4)))) ; Outputs 24
 ```
 
-### Divide `(/ num1 num2)`
+### Divide `(/ num1 num2 ...numN)`
 Takes the top two values from the stack and pushes the result of dividing the second top value from the top value.
 
 ```lisp
 (print (/ 10 2)) ; Outputs 5
 ```
 
-More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs. This is done at assembler time.
 
 ```lisp
 (print (/ 1 2 3 4)) ; Outputs 0.0416666666666667
@@ -280,7 +280,7 @@ It does not actually convert the inputs into the reciprocal and multiplies them 
 
 Each number just adds another pair of `push` and `divide` operators into the code.
 
-### Increment `(++ variable)`
+### Increment `(++ variable ...variableN)`
 Increments the variable by one.
 
 **Note:** The increment operator *only* increments a variable, it does not push the resulting value onto the stack!
@@ -291,7 +291,15 @@ Increments the variable by one.
 (print x) ; Outputs 11
 ```
 
-### Decrement `(-- variable)`
+ With multiple variables each one is incremented.
+ ```lisp
+ (define x 10)
+ (define y 20)
+ (++ x y)
+ (print x ":" y) ; Outputs 11:21
+ ```
+
+### Decrement `(-- variable ...variableN)`
 Decrements the variable by one.
 
 **Note:** The decrement operator *only* decrements a variable, it does not push the resulting value onto the stack!
@@ -301,6 +309,14 @@ Decrements the variable by one.
 (-- x)
 (print x) ; Outputs 9
 ```
+
+ With multiple variables each one is decremented.
+ ```lisp
+ (define x 10)
+ (define y 20)
+ (-- x y)
+ (print x ":" y) ; Outputs 9:19
+ ```
 
 ## Comparison Operators
 
@@ -391,7 +407,7 @@ Checks if the comparison is not equal to 0.
 
 The boolean operators work on boolean values.
 
-### And `(&& left right)`
+### And `(&& left right ...inputN)`
 Outputs true if both `left` and `right` are true.
 
 ```lisp
@@ -410,7 +426,7 @@ Like the math operators the and operator also supports multiple inputs, basicall
 (print (&& true false false true)) ; Outputs false
 ```
 
-### Or `(|| left right)`
+### Or `(|| left right ...inputN)`
 Outputs true if either `left` or `right` are true.
 
 ```lisp

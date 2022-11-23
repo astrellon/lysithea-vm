@@ -248,13 +248,13 @@ namespace lysithea_vm
             // Math Operators
             case vm_operator::add:
             {
-                push_stack(pop_stack_number() + pop_stack_number());
+                push_stack(get_operator_num(code_line) + pop_stack_number());
                 break;
             }
 
             case vm_operator::sub:
             {
-                auto right = pop_stack_number();
+                auto right = get_operator_num(code_line);
                 auto left = pop_stack_number();
                 push_stack(left - right);
                 break;
@@ -268,13 +268,13 @@ namespace lysithea_vm
 
             case vm_operator::multiply:
             {
-                push_stack(pop_stack_number() * pop_stack_number());
+                push_stack(get_operator_num(code_line) * pop_stack_number());
                 break;
             }
 
             case vm_operator::divide:
             {
-                auto right = pop_stack_number();
+                auto right = get_operator_num(code_line);
                 auto left = pop_stack_number();
                 push_stack(left / right);
                 break;
@@ -317,42 +317,42 @@ namespace lysithea_vm
             // Comparison Operators
             case vm_operator::less_than:
             {
-                auto right = pop_stack();
+                auto right = get_operator_arg(code_line);
                 auto left = pop_stack();
                 push_stack(left.compare_to(right) < 0);
                 break;
             }
             case vm_operator::less_than_equals:
             {
-                auto right = pop_stack();
+                auto right = get_operator_arg(code_line);
                 auto left = pop_stack();
                 push_stack(left.compare_to(right) <= 0);
                 break;
             }
             case vm_operator::equals:
             {
-                auto right = pop_stack();
+                auto right = get_operator_arg(code_line);
                 auto left = pop_stack();
                 push_stack(left.compare_to(right) == 0);
                 break;
             }
             case vm_operator::not_equals:
             {
-                auto right = pop_stack();
+                auto right = get_operator_arg(code_line);
                 auto left = pop_stack();
                 push_stack(left.compare_to(right) != 0);
                 break;
             }
             case vm_operator::greater_than:
             {
-                auto right = pop_stack();
+                auto right = get_operator_arg(code_line);
                 auto left = pop_stack();
                 push_stack(left.compare_to(right) > 0);
                 break;
             }
             case vm_operator::greater_than_equals:
             {
-                auto right = pop_stack();
+                auto right = get_operator_arg(code_line);
                 auto left = pop_stack();
                 push_stack(left.compare_to(right) >= 0);
                 break;
@@ -361,12 +361,12 @@ namespace lysithea_vm
             // Boolean Operators
             case vm_operator::op_and:
             {
-                push_stack(pop_stack_bool() && pop_stack_bool());
+                push_stack(get_operator_bool(code_line) && pop_stack_bool());
                 break;
             }
             case vm_operator::op_or:
             {
-                push_stack(pop_stack_bool() || pop_stack_bool());
+                push_stack(get_operator_bool(code_line) || pop_stack_bool());
                 break;
             }
             case vm_operator::op_not:

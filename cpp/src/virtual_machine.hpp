@@ -216,5 +216,37 @@ namespace lysithea_vm
                 }
                 return nullptr;
             }
+
+            inline double get_operator_num(const code_line &input)
+            {
+                auto result = input.value;
+                if (input.value.is_undefined())
+                {
+                    result = pop_stack();
+                }
+
+                if (result.is_number())
+                {
+                    return result.get_number();
+                }
+
+                throw std::runtime_error("Unable to get number argument");
+            }
+
+            inline bool get_operator_bool(const code_line &input)
+            {
+                auto result = input.value;
+                if (input.value.is_undefined())
+                {
+                    result = pop_stack();
+                }
+
+                if (result.is_bool())
+                {
+                    return result.get_bool();
+                }
+
+                throw std::runtime_error("Unable to get boolean argument");
+            }
     };
 } // lysithea_vm

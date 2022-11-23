@@ -532,9 +532,9 @@ namespace lysithea_vm
         array_vector wrapped_code;
         wrapped_code.push_back(value(std::make_shared<variable_value>("set")));
         wrapped_code.push_back(value(std::make_shared<variable_value>(var_name)));
-        wrapped_code.push_back(value(std::make_shared<array_value>(new_code)));
+        wrapped_code.push_back(value(std::make_shared<array_value>(new_code, false)));
 
-        value wrapped_code_value(std::make_shared<array_value>(wrapped_code));
+        value wrapped_code_value(std::make_shared<array_value>(wrapped_code, false));
         return parse(wrapped_code_value);
     }
 

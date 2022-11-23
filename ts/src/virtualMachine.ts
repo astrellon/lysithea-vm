@@ -296,12 +296,12 @@ export default class VirtualMachine
             // Math Operators
             case '+':
                 {
-                    this.pushStackNumber(this.popStackNumber() + this.popStackNumber());
+                    this.pushStackNumber(this.getNumArg(codeLine) + this.popStackNumber());
                     break;
                 }
             case '-':
                 {
-                    const right = this.popStackNumber();
+                    const right = this.getNumArg(codeLine);
                     const left = this.popStackNumber();
                     this.pushStackNumber(left - right);
                     break;
@@ -313,12 +313,12 @@ export default class VirtualMachine
                 }
             case '*':
                 {
-                    this.pushStackNumber(this.popStackNumber() * this.popStackNumber());
+                    this.pushStackNumber(this.getNumArg(codeLine) * this.popStackNumber());
                     break;
                 }
             case '/':
                 {
-                    const right = this.popStackNumber();
+                    const right = this.getNumArg(codeLine);
                     const left = this.popStackNumber();
                     this.pushStackNumber(left / right);
                     break;
@@ -359,42 +359,42 @@ export default class VirtualMachine
             // Comparison Operators
             case '<':
                 {
-                    const right = this.popStack();
+                    const right = codeLine.value ?? this.popStack();
                     const left = this.popStack();
                     this.pushStackBool(left.compareTo(right) < 0);
                     break;
                 }
             case '<=':
                 {
-                    const right = this.popStack();
+                    const right = codeLine.value ?? this.popStack();
                     const left = this.popStack();
                     this.pushStackBool(left.compareTo(right) <= 0);
                     break;
                 }
             case '==':
                 {
-                    const right = this.popStack();
+                    const right = codeLine.value ?? this.popStack();
                     const left = this.popStack();
                     this.pushStackBool(left.compareTo(right) == 0);
                     break;
                 }
             case '!=':
                 {
-                    const right = this.popStack();
+                    const right = codeLine.value ?? this.popStack();
                     const left = this.popStack();
                     this.pushStackBool(left.compareTo(right) != 0);
                     break;
                 }
             case '>':
                 {
-                    const right = this.popStack();
+                    const right = codeLine.value ?? this.popStack();
                     const left = this.popStack();
                     this.pushStackBool(left.compareTo(right) > 0);
                     break;
                 }
             case '>=':
                 {
-                    const right = this.popStack();
+                    const right = codeLine.value ?? this.popStack();
                     const left = this.popStack();
                     this.pushStackBool(left.compareTo(right) >= 0);
                     break;
@@ -403,12 +403,12 @@ export default class VirtualMachine
             // Boolean Operators
             case '&&':
                 {
-                    this.pushStackBool(this.popStackBool() && this.popStackBool());
+                    this.pushStackBool(this.getBoolArg(codeLine) && this.popStackBool());
                     break;
                 }
             case '||':
                 {
-                    this.pushStackBool(this.popStackBool() || this.popStackBool());
+                    this.pushStackBool(this.getBoolArg(codeLine) || this.popStackBool());
                     break;
                 }
             case '!':
@@ -477,6 +477,32 @@ export default class VirtualMachine
             return new ArrayValue(combined, true);
         }
         return new ArrayValue(args, true);
+    }
+
+    public getNumArg(codeLine: CodeLine): number
+    {
+        if (codeLine.value == null)
+        {
+            return this.popStackNumber();
+        }
+        if (isNumberValue(codeLine.value))
+        {
+            return codeLine.value.value;
+        }
+        throw new Error(`${this.getScopeLine()}: Error attempt to get number argument`);
+    }
+
+    public getBoolArg(codeLine: CodeLine): boolean
+    {
+        if (codeLine.value == null)
+        {
+            return this.popStackBool();
+        }
+        if (isBoolValue(codeLine.value))
+        {
+            return codeLine.value.value;
+        }
+        throw new Error(`${this.getScopeLine()}: Error attempt to get boolean argument`);
     }
 
     public jump(label: string)

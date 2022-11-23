@@ -24,16 +24,11 @@ namespace lysithea_vm
             case vm_operator::string_concat: return "$";
 
             case vm_operator::add: return "+";
-            case vm_operator::add_to: return "+=";
-
             case vm_operator::unary_negative:
             case vm_operator::sub: return "-";
-
-            case vm_operator::sub_from: return "-=";
             case vm_operator::multiply: return "*";
-            case vm_operator::multiply_by: return "*=";
             case vm_operator::divide: return "/";
-            case vm_operator::divide_by: return "/=";
+
             case vm_operator::less_than: return "<";
             case vm_operator::less_than_equals: return "<=";
             case vm_operator::equals: return "==";
