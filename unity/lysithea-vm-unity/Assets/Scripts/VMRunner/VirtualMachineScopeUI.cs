@@ -1,11 +1,11 @@
-using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
 namespace LysitheaVM.Unity
 {
-    public class VirtualMachineStackTraceUI : MonoBehaviour
+    public class VirtualMachineScopeUI : MonoBehaviour
     {
         public VMRunnerUI VMRunnerUI;
         public TMP_Text Text;
@@ -13,16 +13,11 @@ namespace LysitheaVM.Unity
         // Update is called once per frame
         void Update()
         {
-            this.UpdateText();
-        }
-
-        private void UpdateText()
-        {
+            var scope = this.VMRunnerUI.VM.GlobalScope;
             var textBuilder = new List<string>();
-            var stack = this.VMRunnerUI.VM.StackTrace;
-            for (var i = 0; i < stack.Index; i++)
+            foreach (var kvp in scope.Values)
             {
-                textBuilder.Add($"{i} - {stack.Data[i]}");
+                textBuilder.Add($"{kvp.Key} = {kvp.Value.ToString()}");
             }
             var text = string.Join("\n", textBuilder);
             this.Text.text = text;
