@@ -268,16 +268,16 @@ namespace LysitheaVM
         {
             if (line >= function.Code.Count)
             {
-                return $"[{function.Name}:{line - 1}: end of code";
+                return $"[{function.Name}:{line}: end of code";
             }
             if (line < 0)
             {
-                return $"[{function.Name}:{line - 1}: before start of code";
+                return $"[{function.Name}:{line}: before start of code";
             }
 
             var codeLine = function.Code[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{function.Name}]:{line - 1}:{codeLine.Operator}: [{codeLineInput}]";
+            return $"[{function.Name}]:{line}:{codeLine.Operator}: [{codeLineInput}]";
         }
         #endregion
 

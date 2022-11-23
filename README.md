@@ -410,12 +410,18 @@ Outputs true if either `left` or `right` are true.
 (print (|| (== 5 5) (!= 5 10))) ; Outputs true
 ```
 
-#### `(! input)`
+#### `(! input ...inputN)`
 Pushes the opposite boolean value onto the stack, `true` -> `false` and `false` -> `true`.
 
 ```lisp
 (print (! true)) ; Outputs false
 (print (! false)) ; Outputs true
+```
+
+This can also take multiple inputs for multiple variables.
+```lisp
+(define x y (! true false))
+(print x ":" y) ; Outputs false:true
 ```
 
 ### Misc Operators

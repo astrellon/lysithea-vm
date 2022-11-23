@@ -330,13 +330,17 @@ namespace LysitheaVM
 
         public List<ITempCodeLine> ParseOnePushInput(Operator opCode, ArrayValue input)
         {
-            if (input.Value.Count != 2)
+            if (input.Value.Count < 2)
             {
-                throw new Exception($"Expecting 1 input for: {opCode}");
+                throw new Exception($"Expecting at least 1 input for: {opCode}");
             }
 
-            var result = this.Parse(input.Value[1]);
-            result.Add(new CodeLine(opCode, null));
+            var result = new List<ITempCodeLine>();
+            foreach (var item in input.Value.Skip(1))
+            {
+                result.AddRange(this.Parse(item));
+                result.Add(new CodeLine(opCode, null));
+            }
 
             return result;
         }
@@ -351,8 +355,15 @@ namespace LysitheaVM
             var result = this.Parse(input.Value[1]);
             foreach (var item in input.Value.Skip(2))
             {
-                result.AddRange(this.Parse(item));
-                result.Add(new CodeLine(opCode, null));
+                if (item is NumberValue)
+                {
+                    result.Add(new CodeLine(opCode, item));
+                }
+                else
+                {
+                    result.AddRange(this.Parse(item));
+                    result.Add(new CodeLine(opCode, null));
+                }
             }
 
             return result;
@@ -571,16 +582,6 @@ namespace LysitheaVM
 
             return new Function(code, parameters, labels, name);
         }
-
-        public static readonly BuiltinFunctionValue IncNumber = new BuiltinFunctionValue((vm, args) =>
-        {
-            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value + 1));
-        });
-
-        public static readonly BuiltinFunctionValue DecNumber = new BuiltinFunctionValue((vm, args) =>
-        {
-            vm.PushStack(new NumberValue(args.GetIndex<NumberValue>(0).Value - 1));
-        });
         #endregion
 
         #endregion

@@ -5,6 +5,7 @@ namespace LysitheaVM
     public class PerfTestVM
     {
         #region Fields
+        private static Random Rand = new Random();
         private static readonly IReadOnlyScope PerfTestScope = CreateScope();
         public readonly VirtualMachine VM;
         public readonly VirtualMachineAssembler Assembler;
@@ -24,10 +25,14 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.Define("rand", PerfTestVMFunctions.FuncRand);
-            result.Define("add", PerfTestVMFunctions.FuncAdd);
-            result.Define("lessThan", PerfTestVMFunctions.FuncLessThan);
-            result.Define("print", PerfTestVMFunctions.FuncPrint);
+            result.Define("rand", (vm, args) =>
+            {
+                vm.PushStack(Rand.NextDouble());
+            });
+            result.Define("print", (vm, args) =>
+            {
+                Console.WriteLine(string.Join("", args.Value));
+            });
 
             return result;
         }

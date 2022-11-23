@@ -25,7 +25,7 @@ namespace LysitheaVM
                         Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
                         Console.WriteLine($"Assert expected true");
                     }
-                })},
+                }, "assert.true")},
 
                 {"false", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -36,7 +36,7 @@ namespace LysitheaVM
                         Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
                         Console.WriteLine($"Assert expected false");
                     }
-                })},
+                }, "assert.false")},
 
                 {"equals", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -48,7 +48,7 @@ namespace LysitheaVM
                         Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
                         Console.WriteLine($"Assert expected equals:\nExpected: {expected.ToString()}\nActual: {actual.ToString()}");
                     }
-                })},
+                }, "assert.equals")},
 
                 {"notEquals", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -60,7 +60,7 @@ namespace LysitheaVM
                         Console.WriteLine(string.Join("\n", vm.CreateStackTrace()));
                         Console.WriteLine($"Assert expected not equals:\nActual: {actual.ToString()}");
                     }
-                })}
+                }, "assert.notEquals")}
             };
 
             result.Define("assert", new ObjectValue(assertFunctions));

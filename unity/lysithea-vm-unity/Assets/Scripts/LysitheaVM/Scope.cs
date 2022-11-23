@@ -57,13 +57,13 @@ namespace LysitheaVM
             this.values[key] = value;
         }
 
-        public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction)
+        public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = null)
         {
             if (this.values == null)
             {
                 this.values = new Dictionary<string, IValue>();
             }
-            this.values[key] = new BuiltinFunctionValue(builtinFunction);
+            this.values[key] = new BuiltinFunctionValue(builtinFunction, name ?? key);
         }
 
         public bool TrySet(string key, IValue value)

@@ -49,7 +49,7 @@ namespace LysitheaVM.Unity
                     }
 
                     vm.PushStack(new ColourValue(new Color(red, green, blue, alpha)));
-                })},
+                }, "colour.new")},
                 {"hsv", new BuiltinFunctionValue((vm, args) =>
                 {
                     var hue = args.GetIndex<NumberValue>(0).FloatValue;
@@ -57,7 +57,7 @@ namespace LysitheaVM.Unity
                     var value = args.GetIndex<NumberValue>(2).FloatValue;
 
                     vm.PushStack(new ColourValue(Color.HSVToRGB(hue, saturation, value)));
-                })}
+                }, "colour.hsv")}
             });
         }
 
@@ -77,23 +77,23 @@ namespace LysitheaVM.Unity
                         var index = Random.Range(0, args.Value.Count);
                         vm.PushStack(args.Value[index]);
                     }
-                })},
+                }, "random.pick")},
                 {"bool", new BuiltinFunctionValue((vm, args) =>
                 {
                     var isTrue = Random.value >= 0.5;
                     vm.PushStack(isTrue);
-                })},
+                }, "random.bool")},
                 {"value", new BuiltinFunctionValue((vm, args) =>
                 {
                     vm.PushStack(Random.value);
-                })},
+                }, "random.value")},
                 {"range", new BuiltinFunctionValue((vm, args) =>
                 {
                     var lower = args.GetIndex<NumberValue>(0);
                     var upper = args.GetIndex<NumberValue>(1);
                     var newValue = Random.Range(lower.FloatValue, upper.FloatValue);
                     vm.PushStack(newValue);
-                })}
+                }, "random.range")}
             });
         }
 
@@ -109,7 +109,7 @@ namespace LysitheaVM.Unity
                     var y = args.GetIndex<NumberValue>(1).FloatValue;
                     var z = args.GetIndex<NumberValue>(2).FloatValue;
                     vm.PushStack(new Vector3Value(new Vector3(x, y, z)));
-                })}
+                }, "vector3.new")}
             });
         }
         #endregion

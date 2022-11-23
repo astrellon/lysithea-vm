@@ -52,6 +52,32 @@ namespace LysitheaVM
         {
             return self.PopStack<NumberValue>().Value;
         }
+
+        public static double GetNumArg(this VirtualMachine self, CodeLine input)
+        {
+            if (input.Input == null)
+            {
+                return self.PopStackDouble();
+            }
+            if (input.Input is NumberValue numValue)
+            {
+                return numValue.Value;
+            }
+            throw new OperatorException(self.CreateStackTrace(), "Error attempting to get number argument");
+        }
+
+        public static bool GetBoolArg(this VirtualMachine self, CodeLine input)
+        {
+            if (input.Input == null)
+            {
+                return self.PopStackBool();
+            }
+            if (input.Input is BoolValue boolValue)
+            {
+                return boolValue.Value;
+            }
+            throw new OperatorException(self.CreateStackTrace(), "Error attempting to get boolean argument");
+        }
         #endregion
     }
 

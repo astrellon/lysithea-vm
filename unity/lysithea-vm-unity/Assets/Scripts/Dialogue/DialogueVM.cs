@@ -112,14 +112,14 @@ namespace LysitheaVM.Unity
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
 
-            assembler.BuiltinScope.Define("actor", new BuiltinFunctionValue(this.ActorFunc));
-            assembler.BuiltinScope.Define("emotion", new BuiltinFunctionValue(this.EmotionFunc));
-            assembler.BuiltinScope.Define("beginLine", new BuiltinFunctionValue(this.BeginLineFunc));
-            assembler.BuiltinScope.Define("text", new BuiltinFunctionValue(this.TextFunc));
-            assembler.BuiltinScope.Define("endLine", new BuiltinFunctionValue(this.EndLineFunc));
-            assembler.BuiltinScope.Define("choice", new BuiltinFunctionValue(this.ChoiceFunc));
-            assembler.BuiltinScope.Define("wait", new BuiltinFunctionValue(this.WaitFunc));
-            assembler.BuiltinScope.Define("moveTo", new BuiltinFunctionValue(this.MoveToFunc));
+            assembler.BuiltinScope.Define("actor", this.ActorFunc);
+            assembler.BuiltinScope.Define("emotion", this.EmotionFunc);
+            assembler.BuiltinScope.Define("beginLine", this.BeginLineFunc);
+            assembler.BuiltinScope.Define("text", this.TextFunc);
+            assembler.BuiltinScope.Define("endLine", this.EndLineFunc);
+            assembler.BuiltinScope.Define("choice", this.ChoiceFunc);
+            assembler.BuiltinScope.Define("wait", this.WaitFunc);
+            assembler.BuiltinScope.Define("moveTo", this.MoveToFunc);
 
             return assembler;
         }

@@ -17,6 +17,8 @@ namespace LysitheaVM
                 return;
             }
 
+            // Console.WriteLine(DebugScopeLine(this.CurrentCode, this.lineCounter));
+            // Console.WriteLine($"- Stack size: {this.stack.StackSize}");
             var codeLine = this.CurrentCode.Code[this.lineCounter++];
 
             switch (codeLine.Operator)
@@ -183,12 +185,12 @@ namespace LysitheaVM
                 // Math Operators
                 case Operator.Add:
                     {
-                        this.PushStack(this.PopStackDouble() + this.PopStackDouble());
+                        this.PushStack(this.GetNumArg(codeLine) + this.PopStackDouble());
                         break;
                     }
                 case Operator.Sub:
                     {
-                        var right = this.PopStackDouble();
+                        var right = this.GetNumArg(codeLine);
                         var left = this.PopStackDouble();
                         this.PushStack(left - right);
                         break;
@@ -200,12 +202,12 @@ namespace LysitheaVM
                     }
                 case Operator.Multiply:
                     {
-                        this.PushStack(this.PopStackDouble() * this.PopStackDouble());
+                        this.PushStack(this.GetNumArg(codeLine) * this.PopStackDouble());
                         break;
                     }
                 case Operator.Divide:
                     {
-                        var right = this.PopStackDouble();
+                        var right = this.GetNumArg(codeLine);
                         var left = this.PopStackDouble();
                         this.PushStack(left / right);
                         break;
@@ -241,45 +243,45 @@ namespace LysitheaVM
                         break;
                     }
 
-                // Comparison
+                // Comparison Operators
                 case Operator.LessThan:
                     {
-                        var right = this.PopStack();
+                        var right = codeLine.Input ?? this.PopStack();
                         var left = this.PopStack();
                         this.PushStack(left.CompareTo(right) < 0);
                         break;
                     }
                 case Operator.LessThanEquals:
                     {
-                        var right = this.PopStack();
+                        var right = codeLine.Input ?? this.PopStack();
                         var left = this.PopStack();
                         this.PushStack(left.CompareTo(right) <= 0);
                         break;
                     }
                 case Operator.Equals:
                     {
-                        var right = this.PopStack();
+                        var right = codeLine.Input ?? this.PopStack();
                         var left = this.PopStack();
                         this.PushStack(left.CompareTo(right) == 0);
                         break;
                     }
                 case Operator.NotEquals:
                     {
-                        var right = this.PopStack();
+                        var right = codeLine.Input ?? this.PopStack();
                         var left = this.PopStack();
                         this.PushStack(left.CompareTo(right) != 0);
                         break;
                     }
                 case Operator.GreaterThan:
                     {
-                        var right = this.PopStack();
+                        var right = codeLine.Input ?? this.PopStack();
                         var left = this.PopStack();
                         this.PushStack(left.CompareTo(right) > 0);
                         break;
                     }
                 case Operator.GreaterThanEquals:
                     {
-                        var right = this.PopStack();
+                        var right = codeLine.Input ?? this.PopStack();
                         var left = this.PopStack();
                         this.PushStack(left.CompareTo(right) >= 0);
                         break;
@@ -288,12 +290,12 @@ namespace LysitheaVM
                     // Boolean Operators
                 case Operator.And:
                     {
-                        this.PushStack(this.PopStackBool() && this.PopStackBool());
+                        this.PushStack(this.GetBoolArg(codeLine) && this.PopStackBool());
                         break;
                     }
                 case Operator.Or:
                     {
-                        this.PushStack(this.PopStackBool() || this.PopStackBool());
+                        this.PushStack(this.GetBoolArg(codeLine) || this.PopStackBool());
                         break;
                     }
                 case Operator.Not:

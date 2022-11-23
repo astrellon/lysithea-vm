@@ -21,7 +21,7 @@ namespace LysitheaVM
                 {
                     var top = args.GetIndex<StringValue>(0);
                     vm.PushStack(new NumberValue(top.Value.Length));
-                })},
+                }, "string.length")},
 
                 {"set", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -29,14 +29,14 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var value = args.GetIndex(2);
                     vm.PushStack(Set(top, index.IntValue, value.ToString()));
-                })},
+                }, "string.set")},
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<StringValue>(0);
                     var index = args.GetIndex<NumberValue>(1);
                     vm.PushStack(Get(top, index.IntValue));
-                })},
+                }, "string.get")},
 
                 {"insert", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -44,7 +44,7 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var value = args.GetIndex(2);
                     vm.PushStack(Insert(top, index.IntValue, value.ToString()));
-                })},
+                }, "string.insert")},
 
                 {"substring", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -52,28 +52,28 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var length = args.GetIndex<NumberValue>(2);
                     vm.PushStack(SubString(top, index.IntValue, length.IntValue));
-                })},
+                }, "string.substring")},
 
                 {"removeAt", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<StringValue>(0);
                     var index = args.GetIndex<NumberValue>(1);
                     vm.PushStack(RemoveAt(top, index.IntValue));
-                })},
+                }, "string.removeAt")},
 
                 {"removeAll", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<StringValue>(0);
                     var values = args.GetIndex<StringValue>(1);
                     vm.PushStack(RemoveAll(top, values.Value));
-                })},
+                }, "string.removeAll")},
 
                 {"join", new BuiltinFunctionValue((vm, args) =>
                 {
                     var separator = args.Value.First().ToString();
                     var result = string.Join(separator, args.Value.Skip(1));
                     vm.PushStack(result);
-                })}
+                }, "string.join")}
             };
 
             result.Define("string", new ObjectValue(stringFunctions));
