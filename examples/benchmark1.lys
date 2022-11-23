@@ -14,5 +14,5 @@
 (define i 0)
 (loop (< i 100000)
     (testString)
-    (inc i)
+    (++ i)
 )

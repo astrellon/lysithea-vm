@@ -1,7 +1,7 @@
 (function main ()
     (actor SELF "shocked")
     (beginLine)
-    (text (random.pick (+ "Hello " PLAYER.name "!") (+ "Welcome " PLAYER.name "!")))
+    (text (random.pick ($ "Hello " PLAYER.name "!") ($ "Welcome " PLAYER.name "!")))
 
     (wait 1000)
     (emotion "happy")

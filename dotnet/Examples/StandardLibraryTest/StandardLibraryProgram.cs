@@ -13,8 +13,7 @@ namespace LysitheaVM
             var assembler = new VirtualMachineAssembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
-            // var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testStandardLibrary.lys"));
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/readmeExamples.lys"));
+            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testStandardLibrary.lys"));
 
             var vm = new VirtualMachine(8);
 

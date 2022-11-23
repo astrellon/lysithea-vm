@@ -25,7 +25,6 @@ namespace lysithea_vm
 
         // Math
         add, sub, multiply, divide,
-        add_to, sub_from, multiply_by, divide_by,
         inc, dec, unary_negative
     };
 } // namespace lysithea_vm

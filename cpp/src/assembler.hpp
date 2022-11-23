@@ -78,9 +78,8 @@ namespace lysithea_vm
             code_line_list parse_return(const array_value &input);
             code_line_list parse_negative(const array_value &input);
             code_line_list parse_one_push_input(vm_operator op_code, const array_value &input);
-            code_line_list parse_two_push_inputs(vm_operator op_code, const array_value &input);
+            code_line_list parse_math_operator(vm_operator op_code, const array_value &input);
             code_line_list parse_one_variable_update(vm_operator op_code, const array_value &input);
-            code_line_list parse_two_variable_update(vm_operator op_code, const array_value &input);
             code_line_list parse_string_concat(const array_value &input);
             code_line_list parse_keyword(const std::string &keyword, const array_value &input);
 

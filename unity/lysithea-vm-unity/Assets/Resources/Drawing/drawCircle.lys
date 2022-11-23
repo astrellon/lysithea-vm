@@ -1,5 +1,5 @@
 (function calcPosition (index)
-    (define angle (* index (* 5 math.DegToRad)))
+    (define angle (* index 5 math.DegToRad))
 
     (define x (* (math.cos angle) 20))
     (define y (* index 0.15))

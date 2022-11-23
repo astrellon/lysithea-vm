@@ -195,8 +195,7 @@ namespace LysitheaVM
                     }
                 case Operator.UnaryNegative:
                     {
-                        var input = this.PopStackDouble();
-                        this.PushStack(-input);
+                        this.PushStack(-this.PopStackDouble());
                         break;
                     }
                 case Operator.Multiply:

@@ -205,11 +205,21 @@ An optimised version of **Call** where the code_line contains an array `(functio
 
 ### Math Operators
 
+General basic math operators, the arithmetic ones (`+`, `-`, `*` and `/`) only take two inputs. However during the assembling stage multiple inputs can be used and they will be changed together. As such don't think that it is any more performant to use one call vs chaining multiple ones.
+
 #### `(+ num1 num2)`
 Takes the top two values from the stack and pushes the result of adding those numbers together.
 
 ```lisp
 (print (+ 10 15)) ; Outputs 25
+```
+
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+
+```lisp
+(print (+ 1 2 3 4)) ; Outputs 10
+; Is effectively
+(print (+ 1 (+ 2 (+ 3 4)))) ; Outputs 10
 ```
 
 #### `(- num1 num2)`
@@ -218,6 +228,16 @@ Takes the top two values from the stack and pushes the result of subtracting the
 ```lisp
 (print (- 10 15)) ; Outputs -5
 ```
+
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+
+```lisp
+(print (- 1 2 3 4)) ; Outputs -8
+; Is effectively
+(print (+ 1 (+ -2 (+ -3 -4))) ; Outputs -8
+```
+
+ It does not actually turn each input into the negative value and then add them, but each new number is another `push` and `sub` pair of operators that are in the code, which has the same effect.
 
 #### `(- num1)`
 Takes the top value from the stack and pushes the negated value.
@@ -229,12 +249,35 @@ Takes the top value from the stack and pushes the negated value.
 #### `(* num1 num2)`
 Takes the top two values from the stack and pushes the result of multiplying those numbers together.
 
+```lisp
+(print (* 5 10)) ; Outputs 50
+```
+
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+
+```lisp
+(print (* 1 2 3 4)) ; Outputs 24
+; Is effectively
+(print (* 1 (* 2 (* 3 4)))) ; Outputs 24
+```
+
 #### `(/ num1 num2)`
 Takes the top two values from the stack and pushes the result of dividing the second top value from the top value.
 
 ```lisp
 (print (/ 10 2)) ; Outputs 5
 ```
+
+More than two inputs can be used, however it will be turned into a chain of operators that only take two inputs.
+
+```lisp
+(print (/ 1 2 3 4)) ; Outputs 0.0416666666666667
+; Is effectively
+(print (* 1 (* 0.5 (* 0.3333333333333333 0.25))) ; Outputs 0.0416666666666667
+```
+It does not actually convert the inputs into the reciprocal and multiplies them together, instead the end result is the same.
+
+Each number just adds another pair of `push` and `divide` operators into the code.
 
 #### `(++ variable)`
 Increments the variable by one.
