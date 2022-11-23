@@ -117,65 +117,64 @@ Internally the assembler sees only the last argument as the code line argument e
 
 The internals of the virtual machine is fairly simple and broken into general purpose operators, math operators, comparison operators, boolean operators and one bonus string concatenation operators.
 
-## Some concepts
+## General Purpose Operators
 
-### General Purpose Operators
-Internal operators that the virtual machine uses:
+**Note:** Internal operators that the virtual machine uses, these are used by the *internals* of the virtual machine and are not the actual code that is written by a user.
 
-#### `(unknown)`
+### `(unknown)`
 Usually only used for error situations when assembling or if a code line (see next) does not have an argument.
 
-#### `(push arg)`
+### `(push arg)`
 Pushes a value onto the data stack. Can be of any value.
 
-#### `(call numArgs)`
+### `(call numArgs)`
 Attempts to invoke a function from the top of the stack, the code line is expected to contain a number which has how many arguments to call the function with.
 
-#### `(return)`
+### `(return)`
 Returns from a function call. This is only needed if you want to return early from a function.
 
 Importantly! It does not function as a way to return values from a function, as the system is stack based whatever is put onto the stack can be accessed from the stack by other functions after a function has finished.
 
-#### `(get varName?)`
+### `(get varName?)`
 Attempts to find a variable based on it's name in the current scope, up to the builtin scope.
 
 The get operator will either lookup the variable based on the code line input or it will grab the value at the top of the stack and use that as the variable name.
 
-#### `(getProperty propertyArray?)`
+### `(getProperty propertyArray?)`
 Attempts to find a value from the value that is on top of the stack. For example looking up `math.sin` will be broken up into `(get "math") (getProperty ("sin"))`. This also works for arrays `arrayValue.0.name` which will get turned into `(get "arrayValue") (getProperty (0 "name"))`.
 
 The value will have to be something that implements the `IArrayValue` or `IObjectValue` interface.
 
-#### `(define varName?)`
+### `(define varName?)`
 This will create/set a variable with the `varName` with the next value from the stack.
 
 If `varName` is not provided it will be taken from the top of the stack before getting the value.
 
 The new variable will be created in the current scope.
 
-#### `(set varName?)`
+### `(set varName?)`
 This like the `define` operator will set the variable `varName` with the next value from the stack.
 
 If `varName` is not provided it will be taken from the top of the stack before getting the value.
 
 Unlike `define` the variable must exist in a scope otherwise an error is thrown. If the variable does not exist in the current scope it will follow the parent scope until it reaches the global scope.
 
-#### `(jump label?)`
+### `(jump label?)`
 Unconditionally jumps to the provided `label`. If the label is not given then it is taken from the top of the stack.
 
-#### `(jumpFalse label?)`
+### `(jumpFalse label?)`
 Conditionally jumps to the provided `label`. If the label is not given then it is taken from the top of the stack.
 
 After the label is grabbed the next value from the top of the stack is compared with `false` and if they are equal then it will jump to the label.
 
-#### `(jumpTrue label?)`
+### `(jumpTrue label?)`
 Conditionally jumps to the provided `label`. If the label is not given then it is taken from the top of the stack.
 
 After the label is grabbed the next value from the top of the stack is compared with `true` and if they are equal then it will jump to the label.
 
 **These are more advanced operator:**
 
-#### `(toArgument value?)`
+### `(toArgument value?)`
 Turns the value from the code line or the value from the top of the stack into an argument array, and expects the top to be array like in the first place.
 
 This is used in situations where we need to distinguish between arrays and argument arrays when unpacking variable length argument calls.
@@ -198,16 +197,18 @@ For reference this is a working example above, making use of a regular `math.sum
 ```
 
 
-#### `(callDirect (function numArgs))`
+### `(callDirect (function numArgs))`
 An optimised version of **Call** where the code_line contains an array `(function_value num_args)` which side-steps the need to look up the value from the current scope. These operators come from knowing what values that can be found assemble time.
 
 **Note**: Since `callDirect` operators come from assemble time, it means that if a value is redefined at run time, the operators will still have a reference to the old value from assemble time and will be unaffected.
 
-### Math Operators
+## Math Operators
 
 General basic math operators, the arithmetic ones (`+`, `-`, `*` and `/`) only take two inputs. However during the assembling stage multiple inputs can be used and they will be changed together. As such don't think that it is any more performant to use one call vs chaining multiple ones.
 
-#### `(+ num1 num2)`
+**Note:** These are used by the virtual machine and are also directly written by the user.
+
+### Addition `(+ num1 num2)`
 Takes the top two values from the stack and pushes the result of adding those numbers together.
 
 ```lisp
@@ -222,7 +223,7 @@ More than two inputs can be used, however it will be turned into a chain of oper
 (print (+ 1 (+ 2 (+ 3 4)))) ; Outputs 10
 ```
 
-#### `(- num1 num2)`
+### Subtract `(- num1 num2)`
 Takes the top two values from the stack and pushes the result of subtracting the top value from the second top value.
 
 ```lisp
@@ -239,14 +240,14 @@ More than two inputs can be used, however it will be turned into a chain of oper
 
  It does not actually turn each input into the negative value and then add them, but each new number is another `push` and `sub` pair of operators that are in the code, which has the same effect.
 
-#### `(- num1)`
+### Unary Negative `(- num1)`
 Takes the top value from the stack and pushes the negated value.
 
 ```lisp
 (print (- 10)) ; Outputs -10
 ```
 
-#### `(* num1 num2)`
+### Multiply `(* num1 num2)`
 Takes the top two values from the stack and pushes the result of multiplying those numbers together.
 
 ```lisp
@@ -261,7 +262,7 @@ More than two inputs can be used, however it will be turned into a chain of oper
 (print (* 1 (* 2 (* 3 4)))) ; Outputs 24
 ```
 
-#### `(/ num1 num2)`
+### Divide `(/ num1 num2)`
 Takes the top two values from the stack and pushes the result of dividing the second top value from the top value.
 
 ```lisp
@@ -279,8 +280,10 @@ It does not actually convert the inputs into the reciprocal and multiplies them 
 
 Each number just adds another pair of `push` and `divide` operators into the code.
 
-#### `(++ variable)`
+### Increment `(++ variable)`
 Increments the variable by one.
+
+**Note:** The increment operator *only* increments a variable, it does not push the resulting value onto the stack!
 
 ```lisp
 (define x 10)
@@ -288,8 +291,10 @@ Increments the variable by one.
 (print x) ; Outputs 11
 ```
 
-#### `(-- variable)`
+### Decrement `(-- variable)`
 Decrements the variable by one.
+
+**Note:** The decrement operator *only* decrements a variable, it does not push the resulting value onto the stack!
 
 ```lisp
 (define x 10)
@@ -297,7 +302,7 @@ Decrements the variable by one.
 (print x) ; Outputs 9
 ```
 
-### Comparison Operators
+## Comparison Operators
 
 The comparison operators calculate a numeric value between two value (-1, 0, 1) with zero meaning they are equal, a one meaning that the `left` value is greater than the `right` and a negative one meaning that the `left` value is less than the `right` value. This makes use of the internal `CompareTo` methods on the value types.
 
@@ -316,7 +321,7 @@ But for custom types there's nothing stopping you from having something that let
 (print (== myArr myVec)) ; Uses the builtin array comparison, outputs 1
 ```
 
-#### `(< left right)`
+### Less Than `(< left right)`
 Checks if the comparison is less than 0.
 
 ```lisp
@@ -327,7 +332,7 @@ Checks if the comparison is less than 0.
 (print (< str "BCD")) ; Outputs true
 ```
 
-#### `(<= left right)`
+### Less Than Or Equals `(<= left right)`
 Checks if the comparison is less than or equal to 0.
 
 ```lisp
@@ -338,7 +343,7 @@ Checks if the comparison is less than or equal to 0.
 (print (<= str "BCD")) ; Outputs true
 ```
 
-#### `(> left right)`
+### Greater Than `(> left right)`
 Checks if the comparison is greater than 0.
 
 ```lisp
@@ -349,7 +354,7 @@ Checks if the comparison is greater than 0.
 (print (> str "BCD")) ; Outputs false
 ```
 
-#### `(>= left right)`
+### Greater Than Or Equals `(>= left right)`
 Checks if the comparison is greater than or equal to 0.
 
 ```lisp
@@ -360,7 +365,7 @@ Checks if the comparison is greater than or equal to 0.
 (print (>= str "BCD")) ; Outputs false
 ```
 
-#### `(== left right)`
+### Equals `(== left right)`
 Checks if the comparison is equal to 0.
 
 ```lisp
@@ -371,7 +376,7 @@ Checks if the comparison is equal to 0.
 (print (== str "BCD")) ; Outputs false
 ```
 
-#### `(!= left right)`
+### Not Equals `(!= left right)`
 Checks if the comparison is not equal to 0.
 
 ```lisp
@@ -382,11 +387,11 @@ Checks if the comparison is not equal to 0.
 (print (!= str "BCD")) ; Outputs true
 ```
 
-### Boolean Operators
+## Boolean Operators
 
 The boolean operators work on boolean values.
 
-#### `(&& left right)`
+### And `(&& left right)`
 Outputs true if both `left` and `right` are true.
 
 ```lisp
@@ -398,7 +403,14 @@ Outputs true if both `left` and `right` are true.
 (print (&& (== 5 5) (!= 5 10))) ; Outputs true
 ```
 
-#### `(|| left right)`
+Like the math operators the and operator also supports multiple inputs, basically all inputs must be `true` for the result to be `true`:
+```lisp
+(print (&& true true true true)) ; Outputs true
+(print (&& true false true true)) ; Outputs false
+(print (&& true false false true)) ; Outputs false
+```
+
+### Or `(|| left right)`
 Outputs true if either `left` or `right` are true.
 
 ```lisp
@@ -410,7 +422,15 @@ Outputs true if either `left` or `right` are true.
 (print (|| (== 5 5) (!= 5 10))) ; Outputs true
 ```
 
-#### `(! input ...inputN)`
+Like the math operators the or operator also supports multiple inputs, basically if any input is `true` then the result is `true`:
+```lisp
+(print (|| true true true true)) ; Outputs true
+(print (|| true false true true)) ; Outputs true
+(print (|| false false false true)) ; Outputs true
+(print (|| false false false false)) ; Outputs false
+```
+
+### Not `(! input ...inputN)`
 Pushes the opposite boolean value onto the stack, `true` -> `false` and `false` -> `true`.
 
 ```lisp
@@ -424,9 +444,9 @@ This can also take multiple inputs for multiple variables.
 (print x ":" y) ; Outputs false:true
 ```
 
-### Misc Operators
+## Misc Operators
 
-#### `($ ...inputs)`
+### String Concatenation `($ ...inputs)`
 Concatenates all inputs input a single string value and pushes that onto the stack.
 
 ```lisp
@@ -437,13 +457,152 @@ Concatenates all inputs input a single string value and pushes that onto the sta
 (define degrees 25)
 (print ($ "Hello " name ", today it is " degrees " degrees outside"))
 ; Outputs Hello Alan, today it is 25 degrees outside
+```
 
+**Note:** Unlike the other operators string concatenation does support unpacking:
+```lisp
 (define list (1 2 3 4))
 (print ($ "Joined list " ...list))
 ; Outputs Joined list 1234
 ```
 
 If you are wondering about adding a separator between the joined strings, there is a function in the `string` library `string.join` which takes a separator and then a list of inputs to join together.
+
+## Conjoined Operators
+
+These aren't operators in their own right, they are more just shorthand for slightly cumbersome code. This means that it's an assembler time code transform, which means it behaves the same way.
+
+### Additional Assignment `(+= varName input)`
+This is shorthand for:
+
+```lisp
+(set varName (+ varName input))
+```
+
+It also supports handling multiple inputs too (and also not supporting array unpacking).
+```lisp
+(define total 5)
+(+= total 1 2 3 4)
+(print total) ; Outputs 15
+
+; The same as
+(define total 5)
+(set total (+ total 1 2 3 4))
+(print total) ; Outputs 15
+```
+
+### Subtract Assignment `(-= varName input)`
+This is shorthand for:
+
+```lisp
+(set varName (- varName input))
+```
+
+It also supports handling multiple inputs too (and also not supporting array unpacking).
+```lisp
+(define total 5)
+(-= total 1 2 3 4)
+(print total) ; Outputs -5
+
+; The same as
+(define total 5)
+(set total (- total 1 2 3 4))
+(print total) ; Outputs -5
+```
+
+### Multiply Assignment `(*= varName input)`
+This is shorthand for:
+
+```lisp
+(set varName (* varName input))
+```
+
+It also supports handling multiple inputs too (and also not supporting array unpacking).
+```lisp
+(define total 5)
+(*= total 1 2 3 4)
+(print total) ; Outputs 120
+
+; The same as
+(define total 5)
+(set total (* total 1 2 3 4))
+(print total) ; Outputs 120
+```
+
+### Divide Assignment `(/= varName input)`
+This is shorthand for:
+
+```lisp
+(set varName (/ varName input))
+```
+
+It also supports handling multiple inputs too (and also not supporting array unpacking).
+```lisp
+(define total 12)
+(/= total 1 2 3 4)
+(print total) ; Outputs 0.5
+
+; The same as
+(define total 12)
+(set total (/ total 1 2 3 4))
+(print total) ; Outputs 0.5
+```
+
+### And Assignment `(&&= varName input)`
+This is shorthand for:
+
+```lisp
+(set varName (&& varName input))
+```
+
+It also supports handling multiple inputs too (and also not supporting array unpacking).
+```lisp
+(define result false)
+(&&= result true)
+(print result) ; Outputs false
+
+; The same as
+(define result false)
+(set result (&& false true))
+(print result) ; Outputs false
+```
+### Or Assignment `(||= varName input)`
+This is shorthand for:
+
+```lisp
+(set varName (|| varName input))
+```
+
+It also supports handling multiple inputs too (and also not supporting array unpacking).
+```lisp
+(define result false)
+(||= result true)
+(print result) ; Outputs true
+
+; The same as
+(define result false)
+(set result (|| false true))
+(print result) ; Outputs true
+```
+
+### String Concatenation Assignment `($= varName ...inputs)`
+This is shorthand for:
+
+```lisp
+(set varName ($ varName ...inputs))
+```
+
+It also supports handling multiple inputs too and array unpacking.
+```lisp
+(define result "Time Taken: ")
+($= result 50 "ms")
+(print result) ; Outputs Time Taken: 50ms
+
+; The same as
+(define result "Time Taken: ")
+(set result ($ result 50 "ms"))
+(print result) ; Outputs Time Taken: 50ms
+```
 
 ### Code Line
 A code line is a simple pair of **operator** and optionally a single **value**.

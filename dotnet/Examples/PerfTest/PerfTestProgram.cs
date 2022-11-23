@@ -12,12 +12,6 @@ namespace LysitheaVM
         #region Methods
         public static void Main(string[] args)
         {
-            var vm = new VirtualMachine(8);
-            vm.Execute(PerfTestIdealVM.IdealScript);
-        }
-
-        public static void MainOld(string[] args)
-        {
             var assembler = new VirtualMachineAssembler();
             assembler.BuiltinScope.CombineScope(PerfTestScope);
             var script = assembler.ParseFromFile("../../../examples/perfTest.lys");

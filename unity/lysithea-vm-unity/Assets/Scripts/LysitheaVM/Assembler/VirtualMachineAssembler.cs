@@ -397,6 +397,23 @@ namespace LysitheaVM
             return result;
         }
 
+        public List<ITempCodeLine> TransformSetOperator(ArrayValue arrayValue)
+        {
+            var opCode = arrayValue.Value[0].ToString();
+            opCode = opCode.Substring(0, opCode.Length - 1);
+
+            var varName = arrayValue.Value[1].ToString();
+            var newCode = arrayValue.Value.ToList();
+            newCode[0] = new VariableValue(opCode);
+
+            var wrappedCode = new List<IValue>();
+            wrappedCode.Add(new VariableValue("set"));
+            wrappedCode.Add(new VariableValue(varName));
+            wrappedCode.Add(new ArrayValue(newCode));
+
+            return this.Parse(new ArrayValue((wrappedCode)));
+        }
+
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
         {
             List<ITempCodeLine>? result = null;
@@ -433,6 +450,16 @@ namespace LysitheaVM
                 case "--": result = this.ParseOneVariableUpdate(Operator.Dec, arrayValue); break;
 
                 case "$":  result = this.ParseStringConcat(arrayValue); break;
+
+                // Conjoined Operators
+                case "+=":
+                case "-=":
+                case "*=":
+                case "/=":
+                case "&&=":
+                case "||=":
+                case "$=":
+                    result = this.TransformSetOperator(arrayValue); break;
             }
 
             this.keywordParsingStack.PopBack();
