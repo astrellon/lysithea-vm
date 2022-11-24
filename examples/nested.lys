@@ -1,0 +1,11 @@
+(define i 0)
+(function createFunc ()
+    (return (function ()
+        (++ i)
+        (return i)
+    ))
+)
+
+(define c1 (createFunc))
+(print (c1))
+(print (c1))
