@@ -1,6 +1,5 @@
 #pragma once
 
-#include "standard_operator_library.hpp"
 #include "standard_math_library.hpp"
 #include "standard_string_library.hpp"
 #include "standard_array_library.hpp"
@@ -17,13 +16,12 @@ namespace lysithea_vm
             enum library_type
             {
                 none = 0,
-                vm_operator = 1 << 0,
-                math = 1 << 1,
-                string = 1 << 2,
-                array = 1 << 3,
-                object = 1 << 4,
-                misc = 1 << 5,
-                all = (1 << 6) - 1
+                math = 1 << 0,
+                string = 1 << 1,
+                array = 1 << 2,
+                object = 1 << 3,
+                misc = 1 << 4,
+                all = (1 << 5) - 1
             };
 
             // Fields

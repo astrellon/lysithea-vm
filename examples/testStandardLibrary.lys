@@ -62,7 +62,7 @@
     (assert.equals "e" (string.substring str -1 1))
     (assert.equals "hello" (string.substring str -11 5))
 
-    (assert.equals "hello 123 there" (+ "hello " 123 " there"))
+    (assert.equals "hello 123 there" ($ "hello " 123 " there"))
     (assert.equals "hello,123,there" (string.join "," "hello" 123 "there"))
 
     (print "String tests passed!")
@@ -113,7 +113,7 @@
     (define objLength (array.length objValues))
     (loop (< i objLength)
         (print i " = " (array.get objValues i))
-        (set i (+ i 1))
+        (++ i)
     )
 
     (print "Object tests passed!")

@@ -2,10 +2,9 @@ import { readAllTokens, tokenize } from "./parser";
 import Scope from "./scope";
 import Script from "./script";
 import ArrayValue from "./values/arrayValue";
-import BuiltinFunctionValue from "./values/builtinFunctionValue";
 import FunctionValue from "./values/functionValue";
 import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
-import NumberValue from "./values/numberValue";
+import NumberValue, { isNumberValue } from "./values/numberValue";
 import StringValue from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
 import VariableValue from "./values/variableValue";
@@ -40,19 +39,8 @@ const IfKeyword = 'if';
 const UnlessKeyword = 'unless';
 const SetKeyword = 'set';
 const DefineKeyword = 'define';
-const IncKeyword = 'inc';
-const DecKeyword = 'dec';
 const JumpKeyword = 'jump';
 const ReturnKeyword = 'return';
-
-const incNumber = new BuiltinFunctionValue((vm, args) =>
-{
-    vm.pushStackNumber(args.getNumber(0) + 1);
-});
-const decNumber = new BuiltinFunctionValue((vm, args) =>
-{
-    vm.pushStackNumber(args.getNumber(0) - 1);
-});
 
 function codeLine(operator: Operator, value?: IValue): TempCodeLine
 {
@@ -322,7 +310,7 @@ export default class VirtualMachineAssembler
 
     public parseReturn(input: ArrayValue)
     {
-        let result = input.value.slice(1).map(v => this.parse(v)).flat(1);
+        const result = input.value.slice(1).map(v => this.parse(v)).flat(1);
         result.push(codeLine('return'));
         return result;
     }
@@ -342,6 +330,111 @@ export default class VirtualMachineAssembler
         return result;
     }
 
+    public parseNegative(input: ArrayValue): TempCodeLine[]
+    {
+        if (input.value.length >= 3)
+        {
+            return this.parseOperator('-', input);
+        }
+        else if (input.value.length === 2)
+        {
+            if (isNumberValue(input.value[1]))
+            {
+                return [codeLine('push', new NumberValue(-input.value[1].value))];
+            }
+
+            const result = this.parse(input.value[1]);
+            result.push(codeLine('unaryNegative'));
+            return result;
+        }
+        else
+        {
+            throw new Error('Negative/Sub operator expects at least 1 input');
+        }
+    }
+
+    public parseOnePushInput(opCode: Operator, input: ArrayValue): TempCodeLine[]
+    {
+        if (input.value.length < 2)
+        {
+            throw new Error(`Expecting at least 1 input for: ${opCode}`);
+        }
+
+        let result: TempCodeLine[] = [];
+        for (let i = 1; i < input.value.length; i++)
+        {
+            result = result.concat(this.parse(input.value[i]));
+            result.push(codeLine(opCode));
+        }
+        return result;
+    }
+
+    public parseOperator(opCode: Operator, input: ArrayValue): TempCodeLine[]
+    {
+        if (input.value.length < 3)
+        {
+            throw new Error(`Expecting at least 3 inputs for: ${opCode}`);
+        }
+
+        let result = this.parse(input.value[1]);
+        for (let i = 2; i < input.value.length; i++)
+        {
+            const item = input.value[i];
+            if (isNumberValue(item))
+            {
+                result.push(codeLine(opCode, item));
+            }
+            else
+            {
+                result = result.concat(this.parse(item));
+                result.push(codeLine(opCode));
+            }
+        }
+
+        return result;
+    }
+
+    public parseOneVariableUpdate(opCode: Operator, input: ArrayValue): TempCodeLine[]
+    {
+        if (input.value.length < 2)
+        {
+            throw new Error(`Expecting at least 1 input for: ${opCode}`);
+        }
+
+        let result: TempCodeLine[] = [];
+        for (let i = 1; i < input.value.length; i++)
+        {
+            const varName = new StringValue(input.value[i].toString());
+            result.push(codeLine(opCode, varName));
+        }
+        return result;
+    }
+
+    public parseStringConcat(input: ArrayValue): TempCodeLine[]
+    {
+        const result = input.value.slice(1).map(v => this.parse(v)).flat(1);
+        result.push(codeLine('stringConcat', new NumberValue(input.value.length - 1)));
+        return result;
+    }
+
+    public transformAssignmentOperator(arrayValue: ArrayValue): TempCodeLine[]
+    {
+        let opCode = arrayValue.value[0].toString();
+        opCode = opCode.substring(0, opCode.length - 1);
+
+        const varName = arrayValue.value[1].toString();
+        const newCode = [...arrayValue.value];
+        newCode[0] = new VariableValue(opCode);
+
+        const wrappedCode = [
+            new VariableValue('set'),
+            new VariableValue(varName),
+            new ArrayValue(newCode)
+        ];
+
+        return this.parse(new ArrayValue(wrappedCode));
+    }
+
     public parseKeyword(input: string, arrayValue: ArrayValue): TempCodeLine[]
     {
         let result: TempCodeLine[] | null = null;
@@ -349,6 +442,7 @@ export default class VirtualMachineAssembler
         this.keywordParsingStack.push(input);
         switch (input)
         {
+            // General Operators
             case FunctionKeyword: result = this.parseFunctionKeyword(arrayValue); break;
             case ContinueKeyword: result = this.parseLoopJump(ContinueKeyword, true); break;
             case BreakKeyword: result = this.parseLoopJump(BreakKeyword, false); break;
@@ -357,10 +451,42 @@ export default class VirtualMachineAssembler
             case LoopKeyword: result = this.parseLoop(arrayValue); break;
             case IfKeyword: result = this.parseCond(arrayValue, true); break;
             case UnlessKeyword: result = this.parseCond(arrayValue, false); break;
-            case IncKeyword: result = this.parseChangeVariable(arrayValue.value[1], incNumber); break;
-            case DecKeyword: result = this.parseChangeVariable(arrayValue.value[1], decNumber); break;
             case JumpKeyword: result = this.parseJump(arrayValue); break;
             case ReturnKeyword: result = this.parseReturn(arrayValue); break;
+
+            // Math Operators
+            case '+':
+            case '*':
+            case '/': result = this.parseOperator(input as Operator, arrayValue); break;
+            case '-': result = this.parseNegative(arrayValue); break;
+
+            case '++':
+            case '--': result = this.parseOneVariableUpdate(input as Operator, arrayValue); break;
+
+            // Comparison Operators
+            case '<':
+            case '<=':
+            case '==':
+            case '!=':
+            case '>':
+            case '>=': result = this.parseOperator(input as Operator, arrayValue); break;
+
+            // Boolean Operators
+            case '&&':
+            case '||': result = this.parseOperator(input as Operator, arrayValue); break;
+            case '!':  result = this.parseOnePushInput('!', arrayValue); break;
+
+            // Misc Operators
+            case '$': result = this.parseStringConcat(arrayValue); break;
+
+            // Conjoined Operators
+            case '+=':
+            case '-=':
+            case '*=':
+            case '/=':
+            case '&&=':
+            case '||=':
+            case '$=': result = this.transformAssignmentOperator(arrayValue); break;
         }
 
         this.keywordParsingStack.pop();

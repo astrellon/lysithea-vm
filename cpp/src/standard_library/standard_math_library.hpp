@@ -18,7 +18,6 @@ namespace lysithea_vm
             // Methods
             static std::shared_ptr<scope> create_scope();
 
-
         private:
             // Constructor
             standard_math_library() { };

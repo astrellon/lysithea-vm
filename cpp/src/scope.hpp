@@ -28,5 +28,7 @@ namespace lysithea_vm
             void define(const std::string &key, builtin_function_callback callback);
             bool try_set(const std::string &key, value input);
             bool try_get_key(const std::string &key, value &result) const;
+            bool try_get_number(const std::string &key, double &result) const;
+            bool try_get_bool(const std::string &key, bool &result) const;
     };
 } // lysithea_vm

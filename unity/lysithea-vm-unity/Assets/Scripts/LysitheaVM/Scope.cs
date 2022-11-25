@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
@@ -56,13 +57,13 @@ namespace LysitheaVM
             this.values[key] = value;
         }
 
-        public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction)
+        public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = null)
         {
             if (this.values == null)
             {
                 this.values = new Dictionary<string, IValue>();
             }
-            this.values[key] = new BuiltinFunctionValue(builtinFunction);
+            this.values[key] = new BuiltinFunctionValue(builtinFunction, name ?? key);
         }
 
         public bool TrySet(string key, IValue value)
@@ -95,6 +96,21 @@ namespace LysitheaVM
             }
 
             value = NullValue.Value;
+            return false;
+        }
+
+        public bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
+        {
+            if (this.TryGetKey(key, out var result))
+            {
+                if (result is T casted)
+                {
+                    value = casted;
+                    return true;
+                }
+            }
+
+            value = default(T);
             return false;
         }
         #endregion

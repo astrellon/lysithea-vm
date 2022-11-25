@@ -9,7 +9,6 @@ namespace LysitheaVM
         private static Random Rand = new Random();
 
         private static readonly Scope PerfTestScope = CreateScope();
-
         #region Methods
         public static void Main(string[] args)
         {
@@ -49,20 +48,6 @@ namespace LysitheaVM
             result.Define("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
-            });
-
-            result.Define("add", (vm, args) =>
-            {
-                var num1 = args.GetIndexDouble(0);
-                var num2 = args.GetIndexDouble(1);
-                vm.PushStack((num1 + num2));
-            });
-
-            result.Define("lessThan", (vm, args) =>
-            {
-                var left = args.GetIndexDouble(0);
-                var right = args.GetIndexDouble(1);
-                vm.PushStack(left < right);
             });
 
             result.Define("print", (vm, args) =>

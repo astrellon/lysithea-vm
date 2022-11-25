@@ -7,7 +7,6 @@
 #include "src/virtual_machine.hpp"
 #include "src/assembler.hpp"
 #include "src/parser.hpp"
-#include "src/standard_library/standard_operator_library.hpp"
 #include "src/standard_library/standard_array_library.hpp"
 
 using namespace lysithea_vm;
@@ -149,7 +148,6 @@ int main()
     lysithea_vm::assembler assembler;
     assembler.builtin_scope.combine_scope(*custom_scope);
     assembler.builtin_scope.combine_scope(*standard_array_library::library_scope);
-    assembler.builtin_scope.combine_scope(*standard_operator_library::library_scope);
 
     auto script = assembler.parse_from_value(parsed);
 

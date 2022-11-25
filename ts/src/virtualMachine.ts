@@ -2,18 +2,36 @@ import Scope, { IReadOnlyScope } from "./scope";
 import Script from "./script";
 import { sublist } from "./standardLibrary/standardArrayLibrary";
 import ArrayValue from "./values/arrayValue";
-import BoolValue from "./values/boolValue";
+import BoolValue, { isBoolValue } from "./values/boolValue";
 import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
-import NumberValue from "./values/numberValue";
+import NumberValue, { isNumberValue } from "./values/numberValue";
 import StringValue from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
 import VMFunction from "./vmFunction";
 
 export type Operator = 'unknown' |
+
+    // General
     'push' | 'toArgument' |
     'call' | 'callDirect' | 'return' |
     'getProperty' | 'get' | 'set' | 'define' |
-    'jump' | 'jumpTrue' | 'jumpFalse';
+    'jump' | 'jumpTrue' | 'jumpFalse' |
+
+    // Misc
+    'stringConcat' |
+
+    // Comparison
+    '>' | '>=' |
+    '==' | '!=' |
+    '<' | '<=' |
+
+    // Boolean
+    '!' | '&&' | '||' |
+
+    // Math
+    '+' | '-' | '*' | '/' |
+    '++' | '--' | 'unaryNegative'
+    ;
 
 export interface CodeLine
 {
@@ -111,6 +129,8 @@ export default class VirtualMachine
                 {
                     throw new Error(`Unknown operator: ${codeLine.operator}`);
                 }
+
+            // General Operators
             case 'push':
                 {
                     if (codeLine.value !== undefined)
@@ -259,6 +279,143 @@ export default class VirtualMachine
                     this.callFunction(funcCall.tryGetIndex(0) as IFunctionValue, (funcCall.tryGetIndex(1) as NumberValue).value, true);
                     break;
                 }
+
+            // Misc Operators
+            case 'stringConcat':
+                {
+                    if (!isNumberValue(codeLine.value))
+                    {
+                        throw new Error(`${this.getScopeLine()}: StringConcat operator needs the number of args to concat`);
+                    }
+
+                    const args = this.getArgs(codeLine.value.value);
+                    this.pushStackString(args.value.join(''));
+                    break;
+                }
+
+            // Math Operators
+            case '+':
+                {
+                    this.pushStackNumber(this.getNumArg(codeLine) + this.popStackNumber());
+                    break;
+                }
+            case '-':
+                {
+                    const right = this.getNumArg(codeLine);
+                    const left = this.popStackNumber();
+                    this.pushStackNumber(left - right);
+                    break;
+                }
+            case 'unaryNegative':
+                {
+                    this.pushStackNumber(-this.popStackNumber());
+                    break;
+                }
+            case '*':
+                {
+                    this.pushStackNumber(this.getNumArg(codeLine) * this.popStackNumber());
+                    break;
+                }
+            case '/':
+                {
+                    const right = this.getNumArg(codeLine);
+                    const left = this.popStackNumber();
+                    this.pushStackNumber(left / right);
+                    break;
+                }
+            case '++':
+                {
+                    if (codeLine.value == undefined)
+                    {
+                        throw new Error(`${this.getScopeLine()}: Inc operator needs code line variable`);
+                    }
+
+                    const key = codeLine.value.toString();
+                    const num = this._currentScope.getNumber(key);
+                    if (num === undefined)
+                    {
+                        throw new Error(`${this.getScopeLine()}: Inc operator could not find variable: ${key}`);
+                    }
+                    this._currentScope.set(key, new NumberValue(num + 1));
+                    break;
+                }
+            case '--':
+                {
+                    if (codeLine.value == undefined)
+                    {
+                        throw new Error(`${this.getScopeLine()}: Dec operator needs code line variable`);
+                    }
+
+                    const key = codeLine.value.toString();
+                    const num = this._currentScope.getNumber(key);
+                    if (num === undefined)
+                    {
+                        throw new Error(`${this.getScopeLine()}: Dec operator could not find variable: ${key}`);
+                    }
+                    this._currentScope.set(key, new NumberValue(num - 1));
+                    break;
+                }
+
+            // Comparison Operators
+            case '<':
+                {
+                    const right = codeLine.value ?? this.popStack();
+                    const left = this.popStack();
+                    this.pushStackBool(left.compareTo(right) < 0);
+                    break;
+                }
+            case '<=':
+                {
+                    const right = codeLine.value ?? this.popStack();
+                    const left = this.popStack();
+                    this.pushStackBool(left.compareTo(right) <= 0);
+                    break;
+                }
+            case '==':
+                {
+                    const right = codeLine.value ?? this.popStack();
+                    const left = this.popStack();
+                    this.pushStackBool(left.compareTo(right) == 0);
+                    break;
+                }
+            case '!=':
+                {
+                    const right = codeLine.value ?? this.popStack();
+                    const left = this.popStack();
+                    this.pushStackBool(left.compareTo(right) != 0);
+                    break;
+                }
+            case '>':
+                {
+                    const right = codeLine.value ?? this.popStack();
+                    const left = this.popStack();
+                    this.pushStackBool(left.compareTo(right) > 0);
+                    break;
+                }
+            case '>=':
+                {
+                    const right = codeLine.value ?? this.popStack();
+                    const left = this.popStack();
+                    this.pushStackBool(left.compareTo(right) >= 0);
+                    break;
+                }
+
+            // Boolean Operators
+            case '&&':
+                {
+                    this.pushStackBool(this.getBoolArg(codeLine) && this.popStackBool());
+                    break;
+                }
+            case '||':
+                {
+                    this.pushStackBool(this.getBoolArg(codeLine) || this.popStackBool());
+                    break;
+                }
+            case '!':
+                {
+                    this.pushStackBool(!this.popStackBool());
+                    break;
+                }
         }
     }
 
@@ -320,6 +477,32 @@ export default class VirtualMachine
             return new ArrayValue(combined, true);
         }
         return new ArrayValue(args, true);
+    }
+
+    public getNumArg(codeLine: CodeLine): number
+    {
+        if (codeLine.value == null)
+        {
+            return this.popStackNumber();
+        }
+        if (isNumberValue(codeLine.value))
+        {
+            return codeLine.value.value;
+        }
+        throw new Error(`${this.getScopeLine()}: Error attempt to get number argument`);
+    }
+
+    public getBoolArg(codeLine: CodeLine): boolean
+    {
+        if (codeLine.value == null)
+        {
+            return this.popStackBool();
+        }
+        if (isBoolValue(codeLine.value))
+        {
+            return codeLine.value.value;
+        }
+        throw new Error(`${this.getScopeLine()}: Error attempt to get boolean argument`);
     }
 
     public jump(label: string)
@@ -441,6 +624,26 @@ export default class VirtualMachine
         }
 
         throw new Error(`${this.getScopeLine()}: Pop stack cast error`);
+    }
+
+    public popStackNumber(): number
+    {
+        const result = this._stack.pop();
+        if (!isNumberValue(result))
+        {
+            throw new Error(`${this.getScopeLine()}: Pop stack error, not a number`);
+        }
+        return result.value;
+    }
+
+    public popStackBool(): boolean
+    {
+        const result = this._stack.pop();
+        if (!isBoolValue(result))
+        {
+            throw new Error(`${this.getScopeLine()}: Pop stack error, not a boolean`);
+        }
+        return result.value;
     }
 
     public peekStack(): IValue

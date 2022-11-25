@@ -28,53 +28,61 @@ namespace LysitheaVM
             return PerfVM.Assembler.ParseFromText(VMCodeText);
         }
 
-        [Benchmark]
-        public void TestControl()
-        {
-            var controlPerf = new PerfControl();
-            controlPerf.Run();
-        }
+        // [Benchmark]
+        // public void TestControl()
+        // {
+        //     var controlPerf = new PerfControl();
+        //     controlPerf.Run();
+        // }
 
         [Benchmark]
-        public void TestCreateAndExecuteVM()
+        public void TestExecuteIdealVM()
         {
-            var vm = new PerfTestVM();
-            var script = vm.Assembler.ParseFromText(VMCodeText);
-            vm.VM.Execute(script);
+            var vm = new VirtualMachine(8);
+            vm.Execute(PerfTestIdealVM.IdealScript);
         }
 
-        [Benchmark]
-        public void TestExecuteVM()
-        {
-            PerfVM.VM.Reset();
-            PerfVM.VM.Execute(PreAssembledScript);
-        }
+        // [Benchmark]
+        // public void TestCreateAndExecuteVM()
+        // {
+        //     var vm = new PerfTestVM();
+        //     var script = vm.Assembler.ParseFromText(VMCodeText);
+        //     vm.VM.Execute(script);
+        // }
 
-        [Benchmark]
-        public void TestExecuteNLua()
-        {
-            PerfLuaVM.Execute(PreCompiledLua);
-        }
+        // [Benchmark]
+        // public void TestExecuteVM()
+        // {
+        //     PerfVM.VM.Reset();
+        //     PerfVM.VM.Execute(PreAssembledScript);
+        // }
 
-        [Benchmark]
-        public void TestCreateAndExecuteNLua()
-        {
-            var lua = new PerfNLua();
-            lua.Execute(LuaCodeText);
-        }
+        // [Benchmark]
+        // public void TestExecuteNLua()
+        // {
+        //     PerfLuaVM.Execute(PreCompiledLua);
+        // }
 
-        [Benchmark]
-        public void TestExecuteMoonSharp()
-        {
-            MoonSharpScript.Call(MoonSharpMainFunc);
-        }
+        // [Benchmark]
+        // public void TestCreateAndExecuteNLua()
+        // {
+        //     var lua = new PerfNLua();
+        //     lua.Execute(LuaCodeText);
+        // }
 
-        [Benchmark]
-        public void TestCreateAndExecuteMoonSharp()
-        {
-            var script = PerfMoonSharp.Compile(LuaCodeText, out var mainFunc);
-            script.Call(mainFunc);
-        }
+        // [Benchmark]
+        // public void TestExecuteMoonSharp()
+        // {
+        //     MoonSharpScript.Call(MoonSharpMainFunc);
+        // }
+
+        // [Benchmark]
+        // public void TestCreateAndExecuteMoonSharp()
+        // {
+        //     var script = PerfMoonSharp.Compile(LuaCodeText, out var mainFunc);
+        //     script.Call(mainFunc);
+        // }
+
         #endregion
     }
 }

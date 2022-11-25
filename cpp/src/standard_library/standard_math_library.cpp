@@ -136,6 +136,20 @@ namespace lysithea_vm
             vm.push_stack(min);
         });
 
+        functions->data["sum"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            auto total = 0.0;
+            for (const auto &iter : args.data)
+            {
+                if (!iter.is_number())
+                {
+                    throw std::runtime_error("Invalid addition operator usage, must be all numbers");
+                }
+                total += iter.get_number();
+            }
+            vm.push_stack(total);
+        });
+
         return result;
     }
 } // lysithea_vm

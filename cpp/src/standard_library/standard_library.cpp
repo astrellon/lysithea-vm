@@ -6,10 +6,6 @@ namespace lysithea_vm
 {
     void standard_library::add_to_scope(scope &input, standard_library::library_type libraries)
     {
-        if (libraries & standard_library::vm_operator)
-        {
-            input.combine_scope(*standard_operator_library::library_scope);
-        }
         if (libraries & standard_library::math)
         {
             input.combine_scope(*standard_math_library::library_scope);

@@ -25,7 +25,7 @@ namespace LysitheaVM
                     var key = args.GetIndex<StringValue>(1);
                     var value = args.GetIndex(2);
                     vm.PushStack(Set(obj, key.Value, value));
-                })},
+                }, "object.set")},
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -39,39 +39,39 @@ namespace LysitheaVM
                     {
                         vm.PushStack(NullValue.Value);
                     }
-                })},
+                }, "object.get")},
 
                 {"removeKey", new BuiltinFunctionValue((vm, args) =>
                 {
                     var obj = args.GetIndex<ObjectValue>(0);
                     var key = args.GetIndex<StringValue>(1);
                     vm.PushStack(RemoveKey(obj, key.Value));
-                })},
+                }, "object.removeKey")},
 
                 {"removeValues", new BuiltinFunctionValue((vm, args) =>
                 {
                     var obj = args.GetIndex<ObjectValue>(0);
                     var values = args.GetIndex(1);
                     vm.PushStack(RemoveValues(obj, values));
-                })},
+                }, "object.removeValues")},
 
                 {"keys", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(Keys(top));
-                })},
+                }, "object.keys")},
 
                 {"values", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(Values(top));
-                })},
+                }, "object.values")},
 
                 {"length", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<ObjectValue>(0);
                     vm.PushStack(top.Value.Count);
-                })}
+                }, "object.length")}
             };
 
             result.Define("object", new ObjectValue(objectFunctions));

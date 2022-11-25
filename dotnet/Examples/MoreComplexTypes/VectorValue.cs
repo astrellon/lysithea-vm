@@ -61,7 +61,7 @@ namespace LysitheaVM.Example
                 }
                 case "add":
                 {
-                    value = new BuiltinFunctionValue(this.Add);
+                    value = new BuiltinFunctionValue(this.Add, "vector.add");
                     return true;
                 }
             }

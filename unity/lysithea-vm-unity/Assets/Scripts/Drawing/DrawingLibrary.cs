@@ -25,12 +25,12 @@ namespace LysitheaVM.Unity
                     var scale = args.GetIndex(3, Vector3Value.Cast);
 
                     DrawingContext.Instance.DrawElement(elementName.Value, position.Value, colour.Value, scale.Value);
-                })},
+                }, "draw.element")},
 
                 {"clear", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     DrawingContext.Instance.ClearScene();
-                })}
+                }, "draw.clear")}
             };
 
             result.Define("draw", new ObjectValue(drawingFunctions));

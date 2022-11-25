@@ -185,7 +185,7 @@ namespace lysithea_vm
         ss_label_end << loop_label_num;
         auto label_end = std::make_shared<string_value>(ss_label_end.str());
 
-        loop_stack.emplace(label_start, label_end);
+        loop_stack.emplace_back(label_start, label_end);
 
         code_line_list result;
         result.emplace_back(ss_label_start.str());
@@ -208,7 +208,7 @@ namespace lysithea_vm
         result.emplace_back(vm_operator::jump, label_start);
         result.emplace_back(ss_label_end.str());
 
-        loop_stack.pop();
+        loop_stack.pop_back();
         return result;
     }
 
@@ -323,7 +323,7 @@ namespace lysithea_vm
             throw std::runtime_error("Unexpected keyword outside of loop");
         }
 
-        auto loop_label = loop_stack.top();
+        auto loop_label = loop_stack.back();
 
         code_line_list result;
         result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start : loop_label.end);
@@ -425,11 +425,125 @@ namespace lysithea_vm
         return result;
     }
 
+    assembler::code_line_list assembler::parse_negative(const array_value &input)
+    {
+        if (input.array_length() == 3)
+        {
+            return parse_operator(vm_operator::sub, input);
+        }
+        else if (input.array_length() == 2)
+        {
+            // If it's a constant already, just push the negative.
+            if (input.data[1].is_number())
+            {
+                code_line_list result;
+                result.emplace_back(vm_operator::push, value(-input.data[1].get_number()));
+                return result;
+            }
+            else
+            {
+                auto result = parse(input.data[1]);
+                result.emplace_back(vm_operator::unary_negative);
+                return result;
+            }
+        }
+        else
+        {
+            throw std::runtime_error("Negative/Sub operator expects 1 or 2 inputs");
+        }
+    }
+
+    assembler::code_line_list assembler::parse_one_push_input(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() < 2)
+        {
+            throw std::runtime_error("Operator expects ast least 1 input");
+        }
+
+        code_line_list result;
+        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        {
+            push_range(result, parse(*iter));
+            result.emplace_back(op_code);
+        }
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_operator(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() < 3)
+        {
+            throw std::runtime_error("Operator expects at least 2 inputs");
+        }
+
+        auto result = parse(input.data[1]);
+        for (auto iter = input.data.cbegin() + 2; iter != input.data.cend(); ++iter)
+        {
+            if (iter->is_number())
+            {
+                result.emplace_back(op_code, *iter);
+            }
+            else
+            {
+                push_range(result, parse(*iter));
+                result.emplace_back(op_code);
+            }
+        }
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_one_variable_update(vm_operator op_code, const array_value &input)
+    {
+        if (input.array_length() < 2)
+        {
+            throw std::runtime_error("Operator expects at least 1 input");
+        }
+
+        code_line_list result;
+        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        {
+            auto var_name = iter->to_string();
+            result.emplace_back(op_code, value(var_name));
+        }
+
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_string_concat(const array_value &input)
+    {
+        code_line_list result;
+        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        {
+            push_range(result, parse(*iter));
+        }
+        result.emplace_back(vm_operator::string_concat, value(input.array_length() - 1));
+        return result;
+    }
+
+    assembler::code_line_list assembler::transform_assignment_operator(const array_value &input)
+    {
+        auto op_code = input.data[0].to_string();
+        op_code = op_code.substr(0, op_code.size() - 1);
+
+        auto var_name = input.data[1].to_string();
+        array_vector new_code(input.data);
+        new_code[0] = value(std::make_shared<variable_value>(op_code));
+
+        array_vector wrapped_code;
+        wrapped_code.push_back(value(std::make_shared<variable_value>("set")));
+        wrapped_code.push_back(value(std::make_shared<variable_value>(var_name)));
+        wrapped_code.push_back(value(std::make_shared<array_value>(new_code, false)));
+
+        value wrapped_code_value(std::make_shared<array_value>(wrapped_code, false));
+        return parse(wrapped_code_value);
+    }
+
     std::vector<assembler::temp_code_line> assembler::parse_keyword(const std::string &keyword, const array_value &input)
     {
         code_line_list result;
         keyword_parsing_stack.push_back(keyword);
 
+        // General Operators
         if (keyword == keyword_function) { result = parse_function_keyword(input); }
         else if (keyword == keyword_continue) { result = parse_loop_jump(keyword, true); }
         else if (keyword == keyword_break) { result = parse_loop_jump(keyword, false); }
@@ -442,6 +556,37 @@ namespace lysithea_vm
         else if (keyword == keyword_dec) { result = parse_change_variable(input.data[1], dec_number); }
         else if (keyword == keyword_jump) { result = parse_jump(input); }
         else if (keyword == keyword_return) { result = parse_return(input); }
+
+        // Math Operators
+        else if (keyword == "+")  { result = parse_operator(vm_operator::add, input); }
+        else if (keyword == "-")  { result = parse_negative(input); }
+        else if (keyword == "*")  { result = parse_operator(vm_operator::multiply, input); }
+        else if (keyword == "/")  { result = parse_operator(vm_operator::divide, input); }
+        else if (keyword == "++") { result = parse_one_variable_update(vm_operator::inc, input); }
+        else if (keyword == "--") { result = parse_one_variable_update(vm_operator::dec, input); }
+
+        // Comparison Operators
+        else if (keyword == "<")  { result = parse_operator(vm_operator::less_than, input); }
+        else if (keyword == "<=") { result = parse_operator(vm_operator::less_than_equals, input); }
+        else if (keyword == "==") { result = parse_operator(vm_operator::equals, input); }
+        else if (keyword == "!=") { result = parse_operator(vm_operator::not_equals, input); }
+        else if (keyword == ">")  { result = parse_operator(vm_operator::greater_than, input); }
+        else if (keyword == ">=") { result = parse_operator(vm_operator::greater_than_equals, input); }
+
+        // Boolean Operators
+        else if (keyword == "&&") { result = parse_operator(vm_operator::op_and, input); }
+        else if (keyword == "||") { result = parse_operator(vm_operator::op_or, input); }
+        else if (keyword == "!")  { result = parse_one_push_input(vm_operator::op_not, input); }
+
+        // Misc Operators
+        else if (keyword == "$")  { result = parse_string_concat(input); }
+
+        // Conjoined Operators
+        else if (keyword == "+=" || keyword == "-=" || keyword == "*=" || keyword == "/=" ||
+            keyword == "&&=" || keyword == "||=" || keyword == "$=")
+        {
+            result = transform_assignment_operator(input);
+        }
 
         keyword_parsing_stack.pop_back();
 

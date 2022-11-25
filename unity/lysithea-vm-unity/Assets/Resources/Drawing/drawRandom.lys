@@ -16,5 +16,5 @@
 (define i 0)
 (loop (< i 100)
     (drawRandomElement)
-    (inc i)
+    (++ i)
 )

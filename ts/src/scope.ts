@@ -1,4 +1,5 @@
 import { IValue } from "./values/ivalues";
+import { isNumberValue } from "./values/numberValue";
 
 export interface ScopeData
 {
@@ -68,6 +69,17 @@ export default class Scope implements IReadOnlyScope
         if (this._parent !== undefined)
         {
             return this._parent.get(key);
+        }
+
+        return undefined;
+    }
+
+    public getNumber(key: string): number | undefined
+    {
+        const result = this.get(key);
+        if (isNumberValue(result))
+        {
+            return result.value;
         }
 
         return undefined;

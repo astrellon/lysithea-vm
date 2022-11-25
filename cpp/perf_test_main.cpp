@@ -22,20 +22,6 @@ std::shared_ptr<lysithea_vm::scope> create_custom_scope()
         vm.push_stack(dist(_rand));
     });
 
-    result->define("add", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
-    {
-        auto num1 = args.get_number(0);
-        auto num2 = args.get_number(1);
-        vm.push_stack(num1 + num2);
-    });
-
-    result->define("lessThan", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
-    {
-        auto left = args.get_number(0);
-        auto right = args.get_number(1);
-        vm.push_stack(left < right);
-    });
-
     result->define("print", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
     {
         for (auto iter : args.data)

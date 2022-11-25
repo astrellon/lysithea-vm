@@ -52,7 +52,7 @@
     (set sub (string.substring str -11 5))
 
     ; "hello 123 there"
-    (define join (+ "hello " 123 " there"))
+    (define join ($ "hello " 123 " there"))
 
     ; "hello,123,there"
     (set join (string.join "," "hello" 123 "there"))
@@ -98,8 +98,8 @@
     (define i 0)
     (define objLength (array.length objValues))
     (loop (< i objLength)
-        (define temp (+ (toString i) " = " (array.get objValues i)))
-        (set i (+ i 1))
+        (define temp ($ i " = " (array.get objValues i)))
+        (++ i)
     )
 ))
 

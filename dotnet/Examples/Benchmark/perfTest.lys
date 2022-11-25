@@ -1,17 +1,18 @@
-(define main (function ()
+; A simple performance test script.
+(function main ()
     (define total 0)
     (define counter 0)
 
-    (loop (lessThan counter 1000000)
-        (set total (add total (step)))
-        (inc counter)
+    (loop (< counter 1000000)
+        (set total (+ total (step)))
+        (++ counter)
     )
 
     (print "Done: " total)
-))
+)
 
-(define step (function ()
-    (return (add (rand) (rand)))
-))
+(function step ()
+    (return (+ (rand) (rand)))
+)
 
 (main)

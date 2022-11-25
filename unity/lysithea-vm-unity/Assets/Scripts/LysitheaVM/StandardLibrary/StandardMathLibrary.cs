@@ -27,62 +27,62 @@ namespace LysitheaVM
                 {
                     var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Sin(top.Value));
-                })},
+                }, "math.sin")},
 
                 {"cos", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Cos(top.Value));
-                })},
+                }, "math.cos")},
 
                 {"tan", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Tan(top.Value));
-                })},
+                }, "math.tan")},
 
                 {"pow", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     var y = args.GetIndex<NumberValue>(1);
                     vm.PushStack(Math.Pow(x.Value, y.Value));
-                })},
+                }, "math.pow")},
 
                 {"exp", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Exp(x.Value));
-                })},
+                }, "math.exp")},
 
                 {"floor", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Floor(x.Value));
-                })},
+                }, "math.floor")},
 
                 {"ceil", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Ceiling(x.Value));
-                })},
+                }, "math.ceil")},
 
                 {"round", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Round(x.Value));
-                })},
+                }, "math.round")},
 
                 {"isFinite", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(double.IsFinite(x.Value));
-                })},
+                }, "math.isFinite")},
 
                 {"isNaN", new BuiltinFunctionValue((vm, args) =>
                 {
                     var x = args.GetIndex<NumberValue>(0);
                     vm.PushStack(double.IsNaN(x.Value));
-                })},
+                }, "math.isNaN")},
 
                 {"parse", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -95,19 +95,19 @@ namespace LysitheaVM
                     {
                         vm.PushStack(double.Parse(top.ToString()));
                     }
-                })},
+                }, "math.parse")},
 
                 {"log", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Log(top.Value));
-                })},
+                }, "math.log")},
 
                 {"abs", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<NumberValue>(0);
                     vm.PushStack(Math.Abs(top.Value));
-                })},
+                }, "math.abs")},
 
                 {"max", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -121,7 +121,7 @@ namespace LysitheaVM
                         }
                     }
                     vm.PushStack(max);
-                })},
+                }, "math.max")},
 
                 {"min", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -135,7 +135,17 @@ namespace LysitheaVM
                         }
                     }
                     vm.PushStack(min);
-                })}
+                }, "math.min")},
+
+                {"sum", new BuiltinFunctionValue((vm, args) =>
+                {
+                    var total = 0.0;
+                    foreach (NumberValue num in args.Value)
+                    {
+                        total += num.Value;
+                    }
+                    vm.PushStack(total);
+                }, "math.sum")}
             };
 
             result.Define("math", new ObjectValue(mathFunctions));

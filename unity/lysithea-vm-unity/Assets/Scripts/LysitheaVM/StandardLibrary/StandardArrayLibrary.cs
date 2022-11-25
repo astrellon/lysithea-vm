@@ -23,13 +23,13 @@ namespace LysitheaVM
                 {"join", new BuiltinFunctionValue((vm, args) =>
                 {
                     vm.PushStack(new ArrayValue(args.Value));
-                })},
+                }, "array.join")},
 
                 {"length", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<IArrayValue>(0);
                     vm.PushStack(top.ArrayValues.Count);
-                })},
+                }, "array.length")},
 
                 {"set", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -37,7 +37,7 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var value = args.GetIndex(2);
                     vm.PushStack(Set(top, index.IntValue, value));
-                })},
+                }, "array.set")},
 
                 {"get", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -51,7 +51,7 @@ namespace LysitheaVM
                     {
                         vm.PushStack(NullValue.Value);
                     }
-                })},
+                }, "array.get")},
 
                 {"insert", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -59,7 +59,7 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var value = args.GetIndex(2);
                     vm.PushStack(Insert(top, index.IntValue, value));
-                })},
+                }, "array.insert")},
 
                 {"insertFlatten", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -67,42 +67,42 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var value = args.GetIndex<IArrayValue>(2);
                     vm.PushStack(InsertFlatten(top, index.IntValue, value));
-                })},
+                }, "array.insertFlatten")},
 
                 {"remove", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<ArrayValue>(0);
                     var value = args.GetIndex(1);
                     vm.PushStack(Remove(top, value));
-                })},
+                }, "array.remove")},
 
                 {"removeAt", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<ArrayValue>(0);
                     var index = args.GetIndex<NumberValue>(1);
                     vm.PushStack(RemoveAt(top, index.IntValue));
-                })},
+                }, "array.removeAt")},
 
                 {"removeAll", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<ArrayValue>(0);
                     var value = args.GetIndex(1);
                     vm.PushStack(RemoveAll(top, value));
-                })},
+                }, "array.removeAll")},
 
                 {"contains", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<IArrayValue>(0);
                     var value = args.GetIndex(1);
                     vm.PushStack(Contains(top, value));
-                })},
+                }, "array.contains")},
 
                 {"indexOf", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<IArrayValue>(0);
                     var value = args.GetIndex(1);
                     vm.PushStack(IndexOf(top, value));
-                })},
+                }, "array.indexOf")},
 
                 {"sublist", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -110,7 +110,7 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var length = args.GetIndex<NumberValue>(2);
                     vm.PushStack(SubList(top, index.IntValue, length.IntValue));
-                })}
+                }, "array.sublist")}
             };
 
             result.Define("array", new ObjectValue(arrayFunctions));

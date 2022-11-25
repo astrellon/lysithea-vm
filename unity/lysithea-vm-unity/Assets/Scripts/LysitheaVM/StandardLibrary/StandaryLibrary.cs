@@ -8,13 +8,12 @@ namespace LysitheaVM
         public enum LibraryType
         {
             None = 0,
-            Operators = 1 << 0,
-            Math = 1 << 1,
-            String = 1 << 2,
-            Array = 1 << 3,
-            Object = 1 << 4,
-            Misc = 1 << 5,
-            All = (1 << 6) - 1
+            Math = 1 << 0,
+            String = 1 << 1,
+            Array = 1 << 2,
+            Object = 1 << 3,
+            Misc = 1 << 4,
+            All = (1 << 5) - 1
         }
 
         public static IReadOnlyScope AllLibraries = CreateAllLibrariesScope();
@@ -35,10 +34,6 @@ namespace LysitheaVM
                 return;
             }
 
-            if (libraries.HasFlag(LibraryType.Operators))
-            {
-                scope.CombineScope(StandardOperators.Scope);
-            }
             if (libraries.HasFlag(LibraryType.Math))
             {
                 scope.CombineScope(StandardMathLibrary.Scope);

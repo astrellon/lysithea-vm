@@ -9,12 +9,6 @@ namespace LysitheaVM.Unity
     {
         public VMRunnerUI VMRunnerUI;
         public TMP_Text Text;
-        private string prefix;
-
-        void Start()
-        {
-            this.prefix = this.Text.text;
-        }
 
         // Update is called once per frame
         void Update()
@@ -24,7 +18,7 @@ namespace LysitheaVM.Unity
 
         private void UpdateText()
         {
-            var textBuilder = new List<string>{ this.prefix };
+            var textBuilder = new List<string>();
             var stack = this.VMRunnerUI.VM.StackTrace;
             for (var i = 0; i < stack.Index; i++)
             {
