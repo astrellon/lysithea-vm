@@ -1,3 +1,4 @@
+import BuiltinFunctionValue, { BuiltinFunctionCallback } from "./values/builtinFunctionValue";
 import { IValue } from "./values/ivalues";
 import { isNumberValue } from "./values/numberValue";
 
@@ -40,6 +41,11 @@ export default class Scope implements IReadOnlyScope
     public define(key: string, value: IValue)
     {
         this._values[key] = value;
+    }
+
+    public defineFunc(key: string, value: BuiltinFunctionCallback, name: string | null = null)
+    {
+        this._values[key] = new BuiltinFunctionValue(value, name ?? key);
     }
 
     public set(key: string, value: IValue): boolean

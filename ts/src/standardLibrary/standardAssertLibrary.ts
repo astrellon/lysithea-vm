@@ -19,7 +19,7 @@ export function createAssertScope()
                 console.error(vm.createStackTrace().join('\n'));
                 console.error('Assert expected true');
             }
-        }),
+        }, "assert.true"),
 
         false: new BuiltinFunctionValue((vm, args) =>
         {
@@ -30,7 +30,7 @@ export function createAssertScope()
                 console.error(vm.createStackTrace().join('\n'));
                 console.error('Assert expected false');
             }
-        }),
+        }, "assert.false"),
 
         equals: new BuiltinFunctionValue((vm, args) =>
         {
@@ -42,7 +42,7 @@ export function createAssertScope()
                 console.error(vm.createStackTrace().join('\n'));
                 console.error(`Assert expected equals:\nExpected: ${expected.toString()}\nActual: ${actual.toString()}`);
             }
-        }),
+        }, "assert.equals"),
 
         notEquals: new BuiltinFunctionValue((vm, args) =>
         {
@@ -54,7 +54,7 @@ export function createAssertScope()
                 console.error(vm.createStackTrace().join('\n'));
                 console.error(`Assert expected not equals:\nActual: ${actual.toString()}`);
             }
-        })
+        }, "assert.notEquals")
     };
 
     result.define('assert', new ObjectValue(assertFunctions));

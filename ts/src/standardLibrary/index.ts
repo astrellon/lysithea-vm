@@ -1,5 +1,4 @@
 import Scope from "../scope";
-import { operatorScope } from "./standardOperators";
 import { mathScope } from "./standardMathLibrary";
 import { stringScope } from "./standardStringLibrary";
 import { arrayScope } from "./standardArrayLibrary";
@@ -7,21 +6,16 @@ import { objectScope } from "./standardObjectLibrary";
 import { miscScope } from "./standardMiscLibrary";
 
 export enum LibraryType {
-    operator = 1 << 0,
-    math = 1 << 1,
-    string = 1 << 2,
-    array = 1 << 3,
-    object = 1 << 4,
-    misc = 1 << 5,
-    all = (1 << 6) - 1
+    math = 1 << 0,
+    string = 1 << 1,
+    array = 1 << 2,
+    object = 1 << 3,
+    misc = 1 << 4,
+    all = (1 << 5) - 1
 }
 
 export function addToScope(scope: Scope, libraries: LibraryType)
 {
-    if (libraries & LibraryType.operator)
-    {
-        scope.combineScope(operatorScope);
-    }
     if (libraries & LibraryType.math)
     {
         scope.combineScope(mathScope);

@@ -1,10 +1,10 @@
-import VirtualMachine from "../src/virtualMachine";
 import fs from "fs";
 import { addToScope, LibraryType } from "../src/standardLibrary/index";
-import VirtualMachineAssembler from "../src/assembler";
 import { assertScope } from "../src/standardLibrary/standardAssertLibrary";
+import VirtualMachine from "../src/virtualMachine";
+import VirtualMachineAssembler from "../src/assembler";
 
-const file = fs.readFileSync('../examples/readmeExamples.lys', {encoding: 'utf-8'});
+const file = fs.readFileSync('../examples/testStandardLibrary.lys', {encoding: 'utf-8'});
 
 const assembler = new VirtualMachineAssembler();
 addToScope(assembler.builtinScope, LibraryType.all);

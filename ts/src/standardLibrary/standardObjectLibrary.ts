@@ -25,7 +25,7 @@ export function createObjectScope()
             const key = args.getString(1);
             const value = args.getIndex(2);
             vm.pushStack(set(top, key, value));
-        }),
+        }, "object.set"),
 
         get: new BuiltinFunctionValue((vm, args) =>
         {
@@ -40,39 +40,39 @@ export function createObjectScope()
             {
                 vm.pushStack(NullValue.Value);
             }
-        }),
+        }, "object.get"),
 
         removeKey: new BuiltinFunctionValue((vm, args) =>
         {
             const obj = args.getIndexCast(0, isObjectValue);
             const key = args.getString(1);
             vm.pushStack(removeKey(obj, key));
-        }),
+        }, "object.removeKey"),
 
         removeValues: new BuiltinFunctionValue((vm, args) =>
         {
             const obj = args.getIndexCast(0, isObjectValue);
             const values = args.getIndex(1);
             vm.pushStack(removeValues(obj, values));
-        }),
+        }, "object.removeValues"),
 
         keys: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isObjectValue);
             vm.pushStack(keys(top));
-        }),
+        }, "object.keys"),
 
         values: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isObjectValue);
             vm.pushStack(values(top));
-        }),
+        }, "object.values"),
 
         length: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isObjectValue);
             vm.pushStackNumber(length(top));
-        })
+        }, "object.length")
     }
 
     result.define('object', new ObjectValue(objectFunctions));

@@ -1,6 +1,6 @@
 {
   "name": "lysithea-vm",
-  "version": "1.0.0",
+  "version": "0.0.5",
   "description": "A simple stack based virtual machine call Lysithea.",
   "scripts": {
     "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",

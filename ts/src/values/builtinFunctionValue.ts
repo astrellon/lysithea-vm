@@ -7,14 +7,16 @@ export type BuiltinFunctionCallback = (vm: VirtualMachine, args: ArrayValue) => 
 export default class BuiltinFunctionValue implements IFunctionValue
 {
     public readonly value: BuiltinFunctionCallback;
+    public readonly name: string;
 
-    constructor (value: BuiltinFunctionCallback)
+    constructor (value: BuiltinFunctionCallback, name: string)
     {
         this.value = value;
+        this.name = name;
     }
 
     public typename() { return 'builtin-function'; }
-    public toString() { return this.typename(); }
+    public toString() { return `builtin-function:${this.name}`; }
 
     public compareTo(other: IValue): CompareResult
     {
