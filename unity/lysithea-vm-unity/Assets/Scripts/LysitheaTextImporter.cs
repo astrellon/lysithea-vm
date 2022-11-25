@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 
@@ -16,3 +17,4 @@ namespace LysitheaVM.Unity
         }
     }
 }
+#endif

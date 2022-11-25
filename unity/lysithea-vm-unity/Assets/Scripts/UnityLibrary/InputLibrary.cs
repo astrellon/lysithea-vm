@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LysitheaVM.Unity
 {
@@ -57,18 +58,9 @@ namespace LysitheaVM.Unity
         {
             if (Input.GetMouseButtonDown(0))
             {
-                var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                var didHit = Physics.Raycast(ray, out var hit);
-                var hitPosition = Vector3.zero;
-                if (didHit)
-                {
-                    hitPosition = hit.point;
-                }
-
-                var args = new ArgumentsValue(new IValue[] { new BoolValue(didHit), new Vector3Value(hitPosition) });
                 foreach (var func in this.onClickHandlers)
                 {
-                    this.VM.QueueFunction(func, args);
+                    this.VM.QueueFunction(func);
                 }
             }
         }
