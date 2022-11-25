@@ -6,18 +6,6 @@ namespace LysitheaVM.Unity
 {
     public class VMRunner : MonoBehaviour
     {
-        public struct QueuedFunction
-        {
-            public readonly IFunctionValue Function;
-            public readonly ArgumentsValue Arguments;
-
-            public QueuedFunction(IFunctionValue func, ArgumentsValue args)
-            {
-                this.Function = func;
-                this.Arguments = args;
-            }
-        }
-
         #region Fields
         public delegate void CompleteHandler(VMRunner runner);
 
@@ -33,7 +21,7 @@ namespace LysitheaVM.Unity
 
         public bool IsWaiting => this.Running && this.WaitUntil > 0.0f;
 
-        private Queue<QueuedFunction> queuedFunctions = new Queue<QueuedFunction>();
+        private Queue<IFunctionValue> queuedFunctions = new Queue<IFunctionValue>();
         #endregion
 
         #region Unity Methods
@@ -85,12 +73,7 @@ namespace LysitheaVM.Unity
                 {
                     if (this.queuedFunctions.Count > 0)
                     {
-                        var call = this.queuedFunctions.Dequeue();
-                        foreach (var item in call.Arguments.Value)
-                        {
-                            this.VM.PushStack(item);
-                        }
-                        this.VM.CallFunction(call.Function, call.Arguments.Length, false);
+                        this.VM.CallFunction(this.queuedFunctions.Dequeue(), 0, false);
                         this.VM.Running = true;
                     }
                     else
@@ -104,9 +87,9 @@ namespace LysitheaVM.Unity
         #endregion
 
         #region Methods
-        public void QueueFunction(IFunctionValue func, ArgumentsValue? args = null)
+        public void QueueFunction(IFunctionValue func)
         {
-            this.queuedFunctions.Enqueue(new QueuedFunction(func, args ?? ArgumentsValue.Empty));
+            this.queuedFunctions.Enqueue(func);
             this.VM.Running = true;
             this.Running = true;
         }
