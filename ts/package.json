@@ -1,7 +1,8 @@
 {
   "name": "lysithea-vm",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "A simple stack based virtual machine call Lysithea.",
+  "main": "./dist/index.js",
   "scripts": {
     "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",
     "diagTree": "ts-node --project ./examples/tsconfig.json ./examples/dialogueTreeIndex.ts",
