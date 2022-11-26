@@ -1,10 +1,10 @@
-import Scope, { IReadOnlyScope } from "../scope";
-import ArrayValue from "../values/arrayValue";
-import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import { Scope, IReadOnlyScope } from "../scope";
+import { ArrayValue } from "../values/arrayValue";
+import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
 import { IValue } from "../values/ivalues";
-import NullValue from "../values/nullValue";
-import ObjectValue, { isObjectValue, ObjectValueMap } from "../values/objectValue";
-import StringValue from "../values/stringValue";
+import { NullValue } from "../values/nullValue";
+import { ObjectValue, isObjectValue, ObjectValueMap } from "../values/objectValue";
+import { StringValue } from "../values/stringValue";
 
 export const objectScope: IReadOnlyScope = createObjectScope();
 

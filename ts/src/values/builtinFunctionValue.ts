@@ -1,10 +1,10 @@
-import VirtualMachine from "../virtualMachine";
-import ArrayValue from "./arrayValue";
+import { VirtualMachine } from "../virtualMachine";
+import { ArrayValue } from "./arrayValue";
 import { CompareResult, IFunctionValue, IValue } from "./ivalues";
 
 export type BuiltinFunctionCallback = (vm: VirtualMachine, args: ArrayValue) => void;
 
-export default class BuiltinFunctionValue implements IFunctionValue
+export class BuiltinFunctionValue implements IFunctionValue
 {
     public readonly value: BuiltinFunctionCallback;
     public readonly name: string;

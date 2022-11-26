@@ -6,7 +6,7 @@ export interface ObjectValueMap
     readonly [key: string]: IValue
 }
 
-export default class ObjectValue implements IObjectValue
+export class ObjectValue implements IObjectValue
 {
     public readonly value: ObjectValueMap;
     public readonly keys: ReadonlyArray<string>;

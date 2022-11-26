@@ -1,7 +1,7 @@
-import Scope, { IReadOnlyScope } from "../scope";
-import BuiltinFunctionValue from "../values/builtinFunctionValue";
-import NumberValue, { isNumberValue } from "../values/numberValue";
-import ObjectValue, { ObjectValueMap } from "../values/objectValue";
+import { Scope, IReadOnlyScope } from "../scope";
+import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
+import { NumberValue, isNumberValue } from "../values/numberValue";
+import { ObjectValue, ObjectValueMap } from "../values/objectValue";
 
 const degToRad = Math.PI / 180.0;
 

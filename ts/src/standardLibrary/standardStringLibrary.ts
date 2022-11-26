@@ -1,7 +1,7 @@
-import Scope, { IReadOnlyScope } from "../scope";
-import BuiltinFunctionValue from "../values/builtinFunctionValue";
-import ObjectValue, { ObjectValueMap } from "../values/objectValue";
-import StringValue, { isStringValue } from "../values/stringValue";
+import { Scope, IReadOnlyScope } from "../scope";
+import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
+import { ObjectValue, ObjectValueMap } from "../values/objectValue";
+import { StringValue, isStringValue } from "../values/stringValue";
 
 export const stringScope: IReadOnlyScope = createStringScope();
 

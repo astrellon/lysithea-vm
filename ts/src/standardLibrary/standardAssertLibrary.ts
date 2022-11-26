@@ -1,6 +1,6 @@
-import Scope, { IReadOnlyScope } from "../scope";
-import BuiltinFunctionValue from "../values/builtinFunctionValue";
-import ObjectValue, { ObjectValueMap } from "../values/objectValue";
+import { Scope, IReadOnlyScope } from "../scope";
+import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
+import { ObjectValue, ObjectValueMap } from "../values/objectValue";
 
 export const assertScope: IReadOnlyScope = createAssertScope();
 

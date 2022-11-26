@@ -1,8 +1,8 @@
 import fs from "fs";
 import { addToScope, LibraryType } from "../src/standardLibrary/index";
 import { assertScope } from "../src/standardLibrary/standardAssertLibrary";
-import VirtualMachine from "../src/virtualMachine";
-import VirtualMachineAssembler from "../src/assembler";
+import { VirtualMachine } from "../src/virtualMachine";
+import { VirtualMachineAssembler } from "../src/assembler";
 
 const file = fs.readFileSync('../examples/testStandardLibrary.lys', {encoding: 'utf-8'});
 

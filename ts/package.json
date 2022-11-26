@@ -1,13 +1,18 @@
 {
   "name": "lysithea-vm",
-  "version": "0.0.5",
+  "version": "0.0.9",
   "description": "A simple stack based virtual machine call Lysithea.",
   "scripts": {
     "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",
     "diagTree": "ts-node --project ./examples/tsconfig.json ./examples/dialogueTreeIndex.ts",
     "stdLib": "ts-node --project ./examples/tsconfig.json ./examples/standardLibraryIndex.ts",
-    "build": "tsc --project ./tsconfig.build.json && terser --compress --mangle --output lysithea-vm.mini.js -- lysithea-vm.js"
+    "build": "rm -r ./dist && mkdir -p ./dist && tsc --project ./tsconfig.build.json"
   },
+  "repository": "github:astrellon/lysithea-vm",
+  "keywords": [
+    "scripting"
+  ],
+  "npmName": "lysithea-vm",
   "author": "Alan Lawrey",
   "license": "MIT",
   "devDependencies": {

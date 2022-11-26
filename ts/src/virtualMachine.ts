@@ -1,13 +1,13 @@
-import Scope, { IReadOnlyScope } from "./scope";
-import Script from "./script";
+import { Scope, IReadOnlyScope } from "./scope";
+import { Script } from "./script";
 import { sublist } from "./standardLibrary/standardArrayLibrary";
-import ArrayValue from "./values/arrayValue";
-import BoolValue, { isBoolValue } from "./values/boolValue";
+import { ArrayValue } from "./values/arrayValue";
+import { BoolValue, isBoolValue } from "./values/boolValue";
 import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
-import NumberValue, { isNumberValue } from "./values/numberValue";
-import StringValue from "./values/stringValue";
+import { NumberValue, isNumberValue } from "./values/numberValue";
+import { StringValue } from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
-import VMFunction from "./vmFunction";
+import { VMFunction } from "./vmFunction";
 
 export type Operator = 'unknown' |
 
@@ -46,7 +46,7 @@ export interface ScopeFrame
     readonly scope: Scope;
 }
 
-export default class VirtualMachine
+export class VirtualMachine
 {
     public builtinScope: IReadOnlyScope | undefined = undefined;
 

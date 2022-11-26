@@ -1,7 +1,7 @@
 import fs from "fs";
-import VirtualMachine from "../src/virtualMachine";
-import VirtualMachineAssembler from "../src/assembler";
-import Scope from "../src/scope";
+import { VirtualMachine } from "../src/virtualMachine";
+import { VirtualMachineAssembler } from "../src/assembler";
+import { Scope } from "../src/scope";
 
 function createScope()
 {

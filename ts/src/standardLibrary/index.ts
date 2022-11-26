@@ -1,4 +1,4 @@
-import Scope from "../scope";
+import { Scope } from "../scope";
 import { mathScope } from "./standardMathLibrary";
 import { stringScope } from "./standardStringLibrary";
 import { arrayScope } from "./standardArrayLibrary";

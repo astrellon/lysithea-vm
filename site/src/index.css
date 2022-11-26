@@ -1,0 +1,70 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Quicksand';
+    font-weight: 500;
+    font-size: x-large;
+    color: white;
+    margin: 0;
+}
+
+.main-background {
+    background-size: cover;
+}
+
+.background-1 {
+    background-image: url('./images/Blooming-heather-at-Westruper-Heide-resized.jpg');
+}
+.background-2 {
+    background-image: url('./images/Glowing-sky-resized.jpg');
+}
+.background-3 {
+    background-image: url('./images/Small-railway-in-Gruga-Park-in-Essen-resized.jpg');
+}
+.background-4 {
+    background-image: url('./images/Two-birch-trees-in-the-sunset-resized.jpg');
+}
+
+.main-navbar {
+    min-height: 4rem;
+    text-shadow: 0 2px 2px rgba(0, 0, 0, 1);
+}
+
+.main-navbar h1 {
+    margin: 0;
+    padding: 1rem;
+}
+
+.main-section {
+    padding: 1rem;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.code-section {
+    font-family: monospace;
+    font-size: 1rem;
+    color: black;
+    padding: 0.5rem;
+    width: 100%;
+    height: 200px;
+    margin: 0;
+    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.75);
+}
+
+.code-output {
+    background-color: rgba(200, 200, 200, 0.75);
+}
+
+.code-example-section {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: row;
+
+}
+.code-example-section>div {
+    flex: 1;
+}

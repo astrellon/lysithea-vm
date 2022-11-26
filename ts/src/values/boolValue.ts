@@ -1,6 +1,6 @@
 import { CompareResult, IValue } from "./ivalues";
 
-export default class BoolValue implements IValue
+export class BoolValue implements IValue
 {
     public static readonly True: BoolValue = new BoolValue(true);
     public static readonly False: BoolValue = new BoolValue(false);

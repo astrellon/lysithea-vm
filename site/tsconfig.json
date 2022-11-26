@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "outDir": "./dist/",
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "module": "AMD",
+        "moduleResolution": "Node",
+        "target": "es6",
+        "noEmitOnError": true,
+        "declaration": true,
+        "esModuleInterop": true,
+        "sourceMap": true,
+        "inlineSources": true
+    },
+    "files": ["src/index.ts"]
+}

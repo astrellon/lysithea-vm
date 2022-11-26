@@ -1,6 +1,6 @@
 import { CompareResult, IValue } from "./ivalues";
 
-export default class VariableValue implements IValue
+export class VariableValue implements IValue
 {
     public readonly value: string;
 

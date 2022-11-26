@@ -1,8 +1,8 @@
 import { CompareResult, IObjectValue, IValue } from "./ivalues";
-import NumberValue from "./numberValue";
+import { NumberValue } from "./numberValue";
 
 const keys: ReadonlyArray<string> = [ 'length' ];
-export default class StringValue implements IObjectValue
+export class StringValue implements IObjectValue
 {
     public readonly value: string;
 

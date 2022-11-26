@@ -1,6 +1,6 @@
-import VirtualMachine from "./virtualMachine";
+import { VirtualMachine } from "./virtualMachine";
 
-export default class VirtualMachineRunner
+export class VirtualMachineRunner
 {
     private _vm: VirtualMachine;
     public get vm() { return this._vm; }

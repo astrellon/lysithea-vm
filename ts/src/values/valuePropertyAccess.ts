@@ -1,7 +1,7 @@
 import { IArrayValue, isIArrayValue, isIObjectValue, IValue } from "./ivalues";
-import NumberValue from "./numberValue";
-import StringValue from "./stringValue";
-import VariableValue from "./variableValue";
+import { NumberValue } from "./numberValue";
+import { StringValue } from "./stringValue";
+import { VariableValue } from "./variableValue";
 
 export function getProperty(current: IValue, properties: IArrayValue): IValue | undefined
 {

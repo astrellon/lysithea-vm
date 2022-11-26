@@ -1,4 +1,4 @@
-import BuiltinFunctionValue, { BuiltinFunctionCallback } from "./values/builtinFunctionValue";
+import { BuiltinFunctionValue, BuiltinFunctionCallback } from "./values/builtinFunctionValue";
 import { IValue } from "./values/ivalues";
 import { isNumberValue } from "./values/numberValue";
 
@@ -13,7 +13,7 @@ export interface IReadOnlyScope
     get values(): Readonly<ScopeData>;
 }
 
-export default class Scope implements IReadOnlyScope
+export class Scope implements IReadOnlyScope
 {
     public static readonly Empty: IReadOnlyScope = new Scope(undefined);
 

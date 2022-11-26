@@ -1,6 +1,6 @@
 import { CompareResult, IValue } from "./ivalues";
 
-export default class NumberValue implements IValue
+export class NumberValue implements IValue
 {
     public readonly value: number;
 

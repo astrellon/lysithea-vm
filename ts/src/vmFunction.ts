@@ -7,7 +7,7 @@ interface Labels
     readonly [label: string]: number;
 }
 
-export default class VMFunction
+export class VMFunction
 {
     public static readonly Empty = new VMFunction([], [], {}, '');
 

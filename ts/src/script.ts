@@ -1,7 +1,7 @@
-import Scope, { IReadOnlyScope } from "./scope";
-import VMFunction from "./vmFunction";
+import { Scope, IReadOnlyScope } from "./scope";
+import { VMFunction } from "./vmFunction";
 
-export default class Script
+export class Script
 {
     public static readonly Empty = new Script(Scope.Empty, VMFunction.Empty);
 

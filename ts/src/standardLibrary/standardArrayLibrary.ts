@@ -1,9 +1,9 @@
-import Scope, { IReadOnlyScope } from "../scope";
-import ArrayValue, { isArrayValue } from "../values/arrayValue";
-import BuiltinFunctionValue from "../values/builtinFunctionValue";
+import { Scope, IReadOnlyScope } from "../scope";
+import { ArrayValue, isArrayValue } from "../values/arrayValue";
+import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
 import { IArrayValue, isIArrayValue, IValue } from "../values/ivalues";
-import NullValue from "../values/nullValue";
-import ObjectValue, { ObjectValueMap } from "../values/objectValue";
+import { NullValue } from "../values/nullValue";
+import { ObjectValue, ObjectValueMap } from "../values/objectValue";
 
 export const arrayScope: IReadOnlyScope = createArrayScope();
 

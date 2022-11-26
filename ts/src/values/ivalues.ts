@@ -1,5 +1,5 @@
-import VirtualMachine from "../virtualMachine";
-import ArrayValue from "./arrayValue";
+import { VirtualMachine } from "../virtualMachine";
+import { ArrayValue } from "./arrayValue";
 
 export type CompareResult = -1 | 0 | 1;
 export interface IValue

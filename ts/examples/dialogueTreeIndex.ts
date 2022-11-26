@@ -1,12 +1,12 @@
-import VirtualMachine from "../src/virtualMachine";
-import VirtualMachineRunner from "../src/virtualMachineRunner";
+import { VirtualMachine } from "../src/virtualMachine";
+import { VirtualMachineRunner } from "../src/virtualMachineRunner";
 import fs from "fs";
 import readline from "readline";
-import Scope from "../src/scope";
-import VirtualMachineAssembler from "../src/assembler";
+import { Scope } from "../src/scope";
+import { VirtualMachineAssembler } from "../src/assembler";
 import { arrayScope } from "../src/standardLibrary/standardArrayLibrary";
 import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "../src/values/ivalues";
-import StringValue from "../src/values/stringValue";
+import { StringValue } from "../src/values/stringValue";
 
 const rl = readline.createInterface({
     input: process.stdin,

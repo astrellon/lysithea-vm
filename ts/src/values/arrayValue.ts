@@ -1,11 +1,11 @@
 import { isBoolValue } from "./boolValue";
 import { CompareResult, IArrayValue, IObjectValue, IValue } from "./ivalues";
-import NumberValue, { isNumberValue, numberCompareTo } from "./numberValue";
+import { NumberValue, isNumberValue, numberCompareTo } from "./numberValue";
 import { isStringValue } from "./stringValue";
 
 const keys: ReadonlyArray<string> = [ "length" ];
 
-export default class ArrayValue implements IArrayValue, IObjectValue
+export class ArrayValue implements IArrayValue, IObjectValue
 {
     public static readonly Empty = new ArrayValue([], false);
     public static readonly EmptyArgs = new ArrayValue([], true);

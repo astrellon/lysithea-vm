@@ -1,4 +1,4 @@
-import Scope, { IReadOnlyScope } from "../scope";
+import { Scope, IReadOnlyScope } from "../scope";
 
 export const miscScope: IReadOnlyScope = createMiscScope();
 

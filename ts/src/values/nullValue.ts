@@ -1,6 +1,6 @@
 import { CompareResult, IValue } from "./ivalues";
 
-export default class NullValue implements IValue
+export class NullValue implements IValue
 {
     public static readonly Value = new NullValue();
 
