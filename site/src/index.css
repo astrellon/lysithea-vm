@@ -8,7 +8,7 @@ html {
 }
 
 body {
-    font-family: 'Quicksand';
+    font-family: 'Quicksand', 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     font-weight: 500;
     font-size: x-large;
     margin: 0;
@@ -20,13 +20,25 @@ body[theme="light"] {
 
 body[theme="dark"] {
     color: black;
-    text-shadow: 0 0 2px white;
+}
+
+code {
+    font-weight: 700;
+    text-shadow: 0px 0px 2px #000;
+}
+
+body[theme="dark"] code {
+    color: white;
 }
 
 @media (max-width: 600px) {
     body {
         font-size: large;
     }
+}
+
+details {
+    font-size: 90%;
 }
 
 button {

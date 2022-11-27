@@ -15,7 +15,15 @@
 
     <section class="main-section">
         <article>
+            <h2>Overview</h2>
+            A handle of basic examples of the Lysithea scripting language running in the browser. Check out <a href="https://github.com/astrellon/lysithea-vm">the repository</a> for more details.
+        </article>
+        <article>
             <h2>Simple Example</h2>
+            <details>
+                <summary>Includes the standard library.</summary>
+            </details>
+
             A simple example of creating a function and running it.
 
             <div class="code-example-section">
@@ -24,9 +32,10 @@
                         <strong>
                             Code Input
                         </strong>
-                        <button onclick="run('code1')">Run</button>
+                        <button onclick="runStdLib('code1')">Run</button>
                     </div>
-                    <textarea id="code1" class="code-section" placeholder="Placeholder code">(function main()
+                    <textarea id="code1" class="code-section" placeholder="Placeholder code">
+(function main()
     (print (+ 5 12))
 )
 (main)</textarea>
@@ -41,6 +50,9 @@
 
         <article>
             <h2>Loop Example</h2>
+            <details>
+                <summary>Includes the standard library.</summary>
+            </details>
             A simple example looping example.
 
             <div class="code-example-section">
@@ -49,9 +61,10 @@
                         <strong>
                             Code Input
                         </strong>
-                        <button onclick="run('code2')">Run</button>
+                        <button onclick="runStdLib('code2')">Run</button>
                     </div>
-                    <textarea id="code2" class="code-section" placeholder="Placeholder code">(define i 0)
+                    <textarea id="code2" class="code-section" placeholder="Placeholder code">
+(define i 0)
 (loop (< i 4)
     (print i)
     (++ i)
@@ -67,17 +80,71 @@
         </article>
 
         <article>
-            <h2>Page Set</h2>
+            <h2>Performance Test</h2>
+            <details>
+                <summary>Includes the standard library with a <code>rand</code> functions.</summary>
+            </details>
             A somewhat contrived example of adding some extra functions for interacting with the page.
 
-            In this example there are two extra functions <code>setBackground</code> and <code>setTheme</code>.
+            <div class="code-example-section">
+                <div>
+                    <div class="code-example-section__title">
+                        <strong>
+                            Code Input
+                        </strong>
+                        <button onclick="runPerfTest()">Run</button>
+                    </div>
+                    <textarea id="codePerfTest" class="code-section" placeholder="Placeholder code">
+; A simple performance test script.
+(function main ()
+    (define total 0)
+    (define counter 0)
 
-            <div>
+    (loop (< counter 1000000)
+        (+= total (step))
+        (++ counter)
+    )
+
+    (print "Done: " total)
+)
+
+(function step ()
+    (return (+ (rand) (rand)))
+)
+
+(main)</textarea>
+                </div>
+
+                <div>
+                    <div class="code-example-section__title"><strong>Console Output</strong></div>
+                    <pre id="codePerfTest_output" class="code-section code-output"></pre>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <h2>Page Set</h2>
+            <details>
+                <summary>Includes the standard library with <code>setBackground</code>, <code>setTheme</code> and <code>random</code> functions.</summary>
+            </details>
+
+            <p>
+                A somewhat contrived example of adding some extra functions for interacting with the page.
+            </p>
+
+            <p>
+                In this example there are two extra functions <code>setBackground</code> and <code>setTheme</code>.
+            </p>
+
+            <p>
                 <code>setBackground</code> has three inputs <code>purple</code>, <code>grey</code> and <code>green</code>.
-            </div>
-            <div>
+            </p>
+            <p>
                 <code>setTheme</code> has two inputs <code>light</code> and <code>dark</code>.
-            </div>
+            </p>
+            <p>
+                <code>random.pick</code> takes a list of arguments and will randomly return one of the values.
+            </p>
 
             <div class="code-example-section">
                 <div>
@@ -87,8 +154,15 @@
                         </strong>
                         <button onclick="runPageSetup()">Run</button>
                     </div>
-                    <textarea id="codePageSetup" class="code-section" placeholder="Placeholder code">(print (setBackground "grey"))
-(print (setTheme "dark"))</textarea>
+                    <textarea id="codePageSetup" class="code-section" placeholder="Placeholder code">
+(define background (random.pick "purple" "green" "grey"))
+(define theme (random.pick "light" "dark"))
+
+(print "Setting background to: " background)
+(print "Setting theme to: " theme)
+
+(setBackground background)
+(setTheme theme)</textarea>
                 </div>
 
                 <div>
