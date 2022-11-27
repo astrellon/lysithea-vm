@@ -6,7 +6,7 @@
     <link href="./index.css" rel="stylesheet">
     <title>Lysithea Scripting Language</title>
 </head>
-<body class="main-background background-3">
+<body class="main-background" background="purple" theme="light">
     <header class="main-navbar">
         <div>
             <h1> Lysithea Scripting Language </h1>
@@ -15,26 +15,87 @@
 
     <section class="main-section">
         <article>
-            <div><strong> Simple Example </strong></div>
+            <h2>Simple Example</h2>
             A simple example of creating a function and running it.
 
             <div class="code-example-section">
                 <div>
-                    <div>Code Input</div>
-                    <textarea id="code1" class="code-section" placeholder="Placeholder code">
-(function main()
+                    <div class="code-example-section__title">
+                        <strong>
+                            Code Input
+                        </strong>
+                        <button onclick="run('code1')">Run</button>
+                    </div>
+                    <textarea id="code1" class="code-section" placeholder="Placeholder code">(function main()
     (print (+ 5 12))
 )
-(main)
-                    </textarea>
+(main)</textarea>
                 </div>
 
                 <div>
-                    <div>Console Output</div>
+                    <div class="code-example-section__title"><strong>Console Output</strong></div>
                     <pre id="code1_output" class="code-section code-output"></pre>
                 </div>
             </div>
-            <button onclick="run('code1')">Run</button>
+        </article>
+
+        <article>
+            <h2>Loop Example</h2>
+            A simple example looping example.
+
+            <div class="code-example-section">
+                <div>
+                    <div class="code-example-section__title">
+                        <strong>
+                            Code Input
+                        </strong>
+                        <button onclick="run('code2')">Run</button>
+                    </div>
+                    <textarea id="code2" class="code-section" placeholder="Placeholder code">(define i 0)
+(loop (< i 4)
+    (print i)
+    (++ i)
+)
+(print "Done")</textarea>
+                </div>
+
+                <div>
+                    <div class="code-example-section__title"><strong>Console Output</strong></div>
+                    <pre id="code2_output" class="code-section code-output"></pre>
+                </div>
+            </div>
+        </article>
+
+        <article>
+            <h2>Page Set</h2>
+            A somewhat contrived example of adding some extra functions for interacting with the page.
+
+            In this example there are two extra functions <code>setBackground</code> and <code>setTheme</code>.
+
+            <div>
+                <code>setBackground</code> has three inputs <code>purple</code>, <code>grey</code> and <code>green</code>.
+            </div>
+            <div>
+                <code>setTheme</code> has two inputs <code>light</code> and <code>dark</code>.
+            </div>
+
+            <div class="code-example-section">
+                <div>
+                    <div class="code-example-section__title">
+                        <strong>
+                            Code Input
+                        </strong>
+                        <button onclick="runPageSetup()">Run</button>
+                    </div>
+                    <textarea id="codePageSetup" class="code-section" placeholder="Placeholder code">(print (setBackground "grey"))
+(print (setTheme "dark"))</textarea>
+                </div>
+
+                <div>
+                    <div class="code-example-section__title"><strong>Console Output</strong></div>
+                    <pre id="codePageSetup_output" class="code-section code-output"></pre>
+                </div>
+            </div>
         </article>
     </section>
     <script type="module" src="./index.ts"></script>
