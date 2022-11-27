@@ -1,10 +1,7 @@
 import { getTextFor } from './common';
 import { randomScope } from './randomLibrary';
 
-import { VirtualMachine } from 'lysithea-vm/src/virtualMachine';
-import { VirtualMachineAssembler } from 'lysithea-vm/src/assembler';
-import { addToScope, LibraryType } from 'lysithea-vm/src/standardLibrary';
-import { Scope } from 'lysithea-vm/src/scope';
+import { VirtualMachine, VirtualMachineAssembler, Scope, addToScope, LibraryType } from 'lysithea-vm';
 
 const pageSetupScope = new Scope();
 pageSetupScope.defineFunc("setBackground", (vm, args) =>

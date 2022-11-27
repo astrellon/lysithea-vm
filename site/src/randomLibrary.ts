@@ -1,8 +1,4 @@
-import { Scope } from "lysithea-vm/src/scope";
-import { isArrayValue } from "lysithea-vm/src/values/arrayValue";
-import { BuiltinFunctionValue } from "lysithea-vm/src/values/builtinFunctionValue";
-import { IArrayValue } from "lysithea-vm/src/values/ivalues";
-import { ObjectValue, ObjectValueMap } from "lysithea-vm/src/values/objectValue";
+import { ObjectValueMap, Scope, IArrayValue, isArrayValue, ObjectValue, BuiltinFunctionValue } from 'lysithea-vm';
 
 function createScope()
 {

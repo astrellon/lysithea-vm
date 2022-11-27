@@ -1,8 +1,6 @@
 import { getTextFor } from "./common";
 
-import { VirtualMachine } from 'lysithea-vm/src/virtualMachine';
-import { VirtualMachineAssembler } from 'lysithea-vm/src/assembler';
-import { addToScope, LibraryType } from 'lysithea-vm/src/standardLibrary';
+import { VirtualMachine, VirtualMachineAssembler, LibraryType, addToScope } from 'lysithea-vm';
 
 function runStdLib(codeId: string)
 {

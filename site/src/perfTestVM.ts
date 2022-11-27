@@ -1,8 +1,6 @@
 import { getTextFor } from './common';
 
-import { VirtualMachine } from 'lysithea-vm/src/virtualMachine';
-import { VirtualMachineAssembler } from 'lysithea-vm/src/assembler';
-import { Scope } from 'lysithea-vm/src/scope';
+import { VirtualMachine, VirtualMachineAssembler, Scope } from 'lysithea-vm';
 
 const perfTestScope = new Scope();
 perfTestScope.defineFunc("rand", (vm, args) =>
