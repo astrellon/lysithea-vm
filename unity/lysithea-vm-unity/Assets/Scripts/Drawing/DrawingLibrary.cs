@@ -30,7 +30,16 @@ namespace LysitheaVM.Unity
                 {"clear", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     DrawingContext.Instance.ClearScene();
-                }, "draw.clear")}
+                }, "draw.clear")},
+
+                {"nativeExample", new BuiltinFunctionValue((vm, args) =>
+                {
+                    var num = args.GetIndexInt(0);
+                    for (var i = 0; i < num; i++)
+                    {
+                        DrawingContext.Instance.DrawElement("Box", NativeDrawCircle.CalcPosition(i), NativeDrawCircle.CalcColour(i), Vector3.one);
+                    }
+                }, "draw.nativeExample")},
             };
 
             result.Define("draw", new ObjectValue(drawingFunctions));

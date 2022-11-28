@@ -4,21 +4,9 @@ using UnityEngine;
 
 namespace LysitheaVM.Unity
 {
-    public class NativeDrawCircle : MonoBehaviour
+    public static class NativeDrawCircle
     {
-        public DrawingContext DrawingContext;
-
-        public void Execute()
-        {
-            this.DrawingContext.ClearScene();
-            NativeDrawCommon.MakeGround(this.DrawingContext);
-
-            for (var i = 0; i < 100; i++)
-            {
-                this.DrawingContext.DrawElement("Box", CalcPosition(i), CalcColour(i), Vector3.one);
-            }
-        }
-
+        #region Methods
         public static Vector3 CalcPosition(int index)
         {
             var angle = (float)index * 5.0f * (float)StandardMathLibrary.DegToRad;
@@ -35,5 +23,6 @@ namespace LysitheaVM.Unity
             var hue = (float)index / 100.0f;
             return Color.HSVToRGB(hue, 0.8f, 0.75f);
         }
+        #endregion
     }
 }
