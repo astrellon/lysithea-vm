@@ -9,5 +9,10 @@ namespace LysitheaVM.Unity
         public VMRunner VMRunner;
 
         public VirtualMachine VM => this.VMRunner.VM;
+
+        public void TogglePaused()
+        {
+            this.VM.Paused = !this.VM.Paused;
+        }
     }
 }
