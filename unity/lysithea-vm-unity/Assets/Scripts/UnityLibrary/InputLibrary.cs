@@ -44,6 +44,7 @@ namespace LysitheaVM.Unity
                     var pos = Input.mousePosition;
                     vm.PushStack(new Vector3Value(pos));
                 }, "input.mousePosition")},
+
                 {"onScreenRaycast", new BuiltinFunctionValue((vm, args) =>
                 {
                     var func = args.GetIndex<IFunctionValue>(0);

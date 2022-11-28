@@ -20,6 +20,6 @@
     (++ i)
 )
 
-(input.onClick (function ()
+(input.onScreenRaycast (function ()
     (print "Mouse Pos: " (input.mousePosition))
 ))

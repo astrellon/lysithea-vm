@@ -54,7 +54,7 @@ public class CameraTargetOrientationScript : MonoBehaviour
 
     void LateUpdate()
     {
-        #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBPLAYER
+        #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBPLAYER || UNITY_WEBGL
 
         // Rotating camera with RMB dragging on PC.
         if (enableRotation && (Input.GetMouseButton(1)))
