@@ -1,3 +1,8 @@
+$colour-light-link: #e17be1;
+$colour-light-visited: #c25ec2;
+$colour-dark-link: #f9bbf6;
+$colour-dark-visited: #f1c9e3;
+
 * {
     box-sizing: border-box;
 }
@@ -14,12 +19,40 @@ body {
     margin: 0;
 }
 
+footer {
+    padding: 1.5rem;
+    font-size: 90%;
+}
+
 body[theme="light"] {
     color: white;
 }
 
 body[theme="dark"] {
     color: black;
+
+    a {
+        color: $colour-dark-link;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+
+        &:visited {
+            color: $colour-dark-visited;
+        }
+    }
+}
+
+a {
+    color: $colour-light-link;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    opacity: 0.85;
+
+    &:visited {
+        color: $colour-light-visited;
+    }
+
+    &:focus, &:hover {
+        opacity: 1;
+    }
 }
 
 code {
