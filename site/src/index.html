@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="./index.css" rel="stylesheet">
+    <link href="./index.scss" rel="stylesheet">
     <title>Lysithea Scripting Language</title>
 </head>
 <body class="main-background" background="purple" theme="light">
@@ -16,7 +16,21 @@
     <section class="main-section">
         <article>
             <h2>Overview</h2>
-            A handle of basic examples of the Lysithea scripting language running in the browser. Check out <a href="https://github.com/astrellon/lysithea-vm">the repository</a> for more details.
+            <p>
+                A handle of basic examples of the Lysithea scripting language running in the browser. Check out <a href="https://github.com/astrellon/lysithea-vm">the repository</a> for more details.
+            </p>
+            <p>
+                There are two Unity examples as well, both of these can be found in the repository as well:
+                <ul>
+                    <li>
+                        <a href="/lysithea-vm/webgl/drawing">Drawing</a>: Example of creating elements.
+                    </li>
+                    <li>
+                        <a href="/lysithea-vm/webgl/dialogue">Dialogue</a>: Example of a game dialogue system.
+                    </li>
+                </ul>
+                <strong>Note: </strong> While these work on mobile, they are definitely not mobile optimised and currently there is an issue with input fields and mobile keyboards.
+            </p>
         </article>
         <article>
             <h2>Simple Example</h2>
@@ -180,6 +194,9 @@
             </div>
         </article>
     </section>
+    <footer>
+        Alan Lawrey 2022
+    </footer>
     <script type="module" src="./index.ts"></script>
 </body>
 </html>
