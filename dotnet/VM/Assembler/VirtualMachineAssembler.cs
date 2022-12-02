@@ -32,6 +32,7 @@ namespace LysitheaVM
         private const string DefineKeyword = "define";
         private const string JumpKeyword = "jump";
         private const string ReturnKeyword = "return";
+        private static readonly string[] NewlineSeparators = new[] { "\n", "\r", "\r\n" };
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
@@ -42,9 +43,19 @@ namespace LysitheaVM
         #region Methods
 
         #region Parse From Input
-        public Script ParseFromReader(TextReader reader)
+        public Script ParseFromFile(string filePath)
         {
-            var parsed = VirtualMachineParser.ReadAllTokens(reader);
+            return this.ParseFromText(File.ReadAllLines(filePath));
+        }
+
+        public Script ParseFromText(string input)
+        {
+            return this.ParseFromText(input.Split(NewlineSeparators, StringSplitOptions.None));
+        }
+
+        public Script ParseFromText(IReadOnlyList<string> input)
+        {
+            var parsed = VirtualMachineParser.ReadAllTokens(input);
 
             var code = this.ParseGlobalFunction(parsed);
             var scriptScope = new Scope();
@@ -53,43 +64,25 @@ namespace LysitheaVM
             return new Script(scriptScope, code);
         }
 
-        public Script ParseFromStream(Stream input)
+        public Function ParseGlobalFunction(TokenList input)
         {
-            using var reader = new StreamReader(input);
-            return ParseFromReader(reader);
-        }
-
-        public Script ParseFromFile(string filePath)
-        {
-            using var file = File.OpenRead(filePath);
-            return ParseFromStream(file);
-        }
-
-        public Script ParseFromText(string input)
-        {
-            using var reader = new StringReader(input);
-            return ParseFromReader(reader);
-        }
-
-        public Function ParseGlobalFunction(ArrayValue input)
-        {
-            var tempCodeLines = input.Value.SelectMany(Parse).ToList();
+            var tempCodeLines = input.Data.SelectMany(Parse).ToList();
             var result = VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
             return result;
         }
 
-        public List<ITempCodeLine> Parse(IValue input)
+        public List<ITempCodeLine> Parse(IToken input)
         {
-            if (input is ArrayValue arrayValue)
+            if (input is TokenList arrayValue)
             {
-                if (!arrayValue.Value.Any())
+                if (!arrayValue.Data.Any())
                 {
                     return new List<ITempCodeLine>();
                 }
 
-                var first = arrayValue.Value.First();
+                var first = arrayValue.Data.First();
                 // If the first item in an array is a symbol we assume that it is a function call or a label
-                if (first is VariableValue firstSymbolValue)
+                if (first.TryGetValue<VariableValue>(out var firstSymbolValue))
                 {
                     if (firstSymbolValue.IsLabel)
                     {
@@ -107,11 +100,11 @@ namespace LysitheaVM
 
                     var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
-                    foreach (var item in arrayValue.Value.Skip(1))
+                    foreach (var item in arrayValue.Data.Skip(1))
                     {
                         result.AddRange(Parse(item));
                     }
-                    result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Length - 1));
+                    result.AddRange(this.OptimiseCallSymbolValue(firstSymbolValue.Value, arrayValue.Data.Count - 1));
 
                     this.keywordParsingStack.PopBack();
 
@@ -120,7 +113,7 @@ namespace LysitheaVM
 
                 // Any array that doesn't start with a symbol we assume it's a data array.
             }
-            else if (input is VariableValue varValue)
+            else if (input.TryGetValue<VariableValue>(out var varValue))
             {
                 if (!varValue.IsLabel)
                 {
@@ -128,12 +121,12 @@ namespace LysitheaVM
                 }
             }
 
-            return new List<ITempCodeLine> { new CodeLine(Operator.Push, input) };
+            return new List<ITempCodeLine> { new CodeLine(Operator.Push, input.GetValue()) };
         }
         #endregion
 
         #region Keyword Parsing
-        public List<ITempCodeLine> ParseFunctionKeyword(ArrayValue arrayValue)
+        public List<ITempCodeLine> ParseFunctionKeyword(TokenList arrayValue)
         {
             var function = ParseFunction(arrayValue);
             var functionValue = new FunctionValue(function);
@@ -266,7 +259,7 @@ namespace LysitheaVM
             return new List<ITempCodeLine> { new CodeLine(Operator.Jump, jumpToStart ? loopLabel.Start : loopLabel.End) };
         }
 
-        public Function ParseFunction(ArrayValue input)
+        public Function ParseFunction(TokenList input)
         {
             var name = "";
             var offset = 0;
@@ -414,7 +407,7 @@ namespace LysitheaVM
             return this.Parse(new ArrayValue((wrappedCode)));
         }
 
-        public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, ArrayValue arrayValue)
+        public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, TokenList arrayValue)
         {
             List<ITempCodeLine>? result = null;
             this.keywordParsingStack.Add(firstSymbol.Value);

@@ -2,24 +2,26 @@ using System;
 using System.Text;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
 
 namespace LysitheaVM
 {
     public class VirtualMachineParser
     {
         #region Fields
-        public string Current { get; private set; }
+        public string Current { get; private set; } = "";
+        public int LineNumber { get; private set; } = 0;
+        public int ColumnNumber { get; private set; } = 0;
+
         private char inQuote = '\0';
         private char returnSymbol = '\0';
         private bool escaped = false;
         private bool inComment = false;
-        private StringBuilder accumulator = new StringBuilder();
-        private TextReader input;
+        private readonly StringBuilder accumulator = new StringBuilder();
+        private readonly IReadOnlyList<string> input;
         #endregion
 
         #region Constructor
-        public VirtualMachineParser(TextReader input)
+        public VirtualMachineParser(IReadOnlyList<string> input)
         {
             this.input = input;
         }
@@ -35,9 +37,15 @@ namespace LysitheaVM
                 return true;
             }
 
-            while (this.input.Peek() >= 0)
+            while (this.LineNumber < this.input.Count && this.ColumnNumber < this.input[this.LineNumber].Length)
             {
-                var ch = (char)this.input.Read();
+                var ch = this.input[this.LineNumber][this.ColumnNumber++];
+                if (ch == '\n' || ch == '\r')
+                {
+                    this.ColumnNumber = 0;
+                    this.LineNumber++;
+                }
+
                 if (this.inComment)
                 {
                     if (ch == '\n' || ch == '\r')
@@ -143,6 +151,7 @@ namespace LysitheaVM
                             }
                             break;
                         }
+
                         default:
                         {
                             accumulator.Append(ch);
@@ -155,20 +164,20 @@ namespace LysitheaVM
             return false;
         }
 
-        public static ArrayValue ReadAllTokens(TextReader input)
+        public static TokenList ReadAllTokens(IReadOnlyList<string> input)
         {
             var parser = new VirtualMachineParser(input);
-            var result = new List<IValue>();
+            var result = new List<IToken>();
 
             while (parser.MoveNext())
             {
                 result.Add(ReadFromParser(parser));
             }
 
-            return new ArrayValue(result);
+            return new TokenList(result);
         }
 
-        public static IValue ReadFromParser(VirtualMachineParser parser)
+        public static IToken ReadFromParser(VirtualMachineParser parser)
         {
             var token = parser.Current;
             switch (token)
@@ -179,7 +188,7 @@ namespace LysitheaVM
                 }
                 case "(":
                 {
-                    var list = new List<IValue>();
+                    var list = new List<IToken>();
                     while (parser.MoveNext())
                     {
                         if (parser.Current == ")")
@@ -189,7 +198,7 @@ namespace LysitheaVM
                         list.Add(ReadFromParser(parser));
                     }
 
-                    return new ArrayValue(list);
+                    return new TokenList(list);
                 }
                 case ")":
                 {
@@ -197,7 +206,7 @@ namespace LysitheaVM
                 }
                 case "{":
                 {
-                    var map = new Dictionary<string, IValue>();
+                    var map = new Dictionary<string, IToken>();
                     while (parser.MoveNext())
                     {
                         if (parser.Current == "}")
@@ -210,7 +219,7 @@ namespace LysitheaVM
                         map[key] = value;
                     }
 
-                    return new ObjectValue(map);
+                    return new TokenMap(map);
                 }
                 case "}":
                 {
@@ -218,7 +227,7 @@ namespace LysitheaVM
                 }
                 default:
                 {
-                    return Atom(token);
+                    return new Token(parser.LineNumber, parser.ColumnNumber, Atom(token));
                 }
             }
         }
