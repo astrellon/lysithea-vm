@@ -174,7 +174,7 @@ namespace LysitheaVM
                 result.Add(ReadFromParser(parser));
             }
 
-            return new TokenList(result);
+            return new TokenList(0, 0, result);
         }
 
         public static IToken ReadFromParser(VirtualMachineParser parser)
@@ -188,6 +188,8 @@ namespace LysitheaVM
                 }
                 case "(":
                 {
+                    var lineNumber = parser.LineNumber;
+                    var columnNumber = parser.ColumnNumber;
                     var list = new List<IToken>();
                     while (parser.MoveNext())
                     {
@@ -198,7 +200,7 @@ namespace LysitheaVM
                         list.Add(ReadFromParser(parser));
                     }
 
-                    return new TokenList(list);
+                    return new TokenList(lineNumber, columnNumber, list);
                 }
                 case ")":
                 {
@@ -206,6 +208,8 @@ namespace LysitheaVM
                 }
                 case "{":
                 {
+                    var lineNumber = parser.LineNumber;
+                    var columnNumber = parser.ColumnNumber;
                     var map = new Dictionary<string, IToken>();
                     while (parser.MoveNext())
                     {
@@ -219,7 +223,7 @@ namespace LysitheaVM
                         map[key] = value;
                     }
 
-                    return new TokenMap(map);
+                    return new TokenMap(lineNumber, columnNumber, map);
                 }
                 case "}":
                 {
