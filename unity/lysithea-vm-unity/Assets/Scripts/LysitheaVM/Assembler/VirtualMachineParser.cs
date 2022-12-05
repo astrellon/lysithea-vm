@@ -2,24 +2,30 @@ using System;
 using System.Text;
 using System.Linq;
 using System.Collections.Generic;
-using System.IO;
 
 namespace LysitheaVM
 {
     public class VirtualMachineParser
     {
         #region Fields
-        public string Current { get; private set; }
+        public string Current { get; private set; } = "";
+        public int LineNumber { get; private set; } = 0;
+        public int ColumnNumber { get; private set; } = 0;
+        public int StartLineNumber { get; private set; } = 0;
+        public int StartColumnNumber { get; private set; } = 0;
+
         private char inQuote = '\0';
         private char returnSymbol = '\0';
         private bool escaped = false;
         private bool inComment = false;
-        private StringBuilder accumulator = new StringBuilder();
-        private TextReader input;
+        private readonly StringBuilder accumulator = new StringBuilder();
+        private readonly IReadOnlyList<string> input;
+
+        public CodeLocation CurrentLocation => new CodeLocation(this.StartLineNumber, this.StartColumnNumber, this.LineNumber, this.ColumnNumber);
         #endregion
 
         #region Constructor
-        public VirtualMachineParser(TextReader input)
+        public VirtualMachineParser(IReadOnlyList<string> input)
         {
             this.input = input;
         }
@@ -35,12 +41,26 @@ namespace LysitheaVM
                 return true;
             }
 
-            while (this.input.Peek() >= 0)
+            while (this.LineNumber < this.input.Count)
             {
-                var ch = (char)this.input.Read();
+                var line = this.input[this.LineNumber];
+                if (line.Length == 0)
+                {
+                    this.LineNumber++;
+                    continue;
+                }
+
+                var ch = line[this.ColumnNumber++];
+                var atEndOfLine = this.ColumnNumber >= line.Length;
+                if (atEndOfLine)
+                {
+                    this.ColumnNumber = 0;
+                    this.LineNumber++;
+                }
+
                 if (this.inComment)
                 {
-                    if (ch == '\n' || ch == '\r')
+                    if (atEndOfLine)
                     {
                         this.inComment = false;
                     }
@@ -57,22 +77,22 @@ namespace LysitheaVM
                             case '\'':
                             case '\\':
                             {
-                                this.accumulator.Append(ch);
+                                this.AppendChar(ch);
                                 break;
                             }
                             case 't':
                             {
-                                this.accumulator.Append('\t');
+                                this.AppendChar('\t');
                                 break;
                             }
                             case 'r':
                             {
-                                this.accumulator.Append('\r');
+                                this.AppendChar('\r');
                                 break;
                             }
                             case 'n':
                             {
-                                this.accumulator.Append('\n');
+                                this.AppendChar('\n');
                                 break;
                             }
                         }
@@ -85,7 +105,12 @@ namespace LysitheaVM
                         continue;
                     }
 
-                    this.accumulator.Append(ch);
+                    this.AppendChar(ch);
+                    if (atEndOfLine)
+                    {
+                        this.AppendChar('\n');
+                    }
+
                     if (ch == this.inQuote)
                     {
                         this.Current = this.accumulator.ToString();
@@ -108,7 +133,7 @@ namespace LysitheaVM
                         case '\'':
                         {
                             this.inQuote = ch;
-                            this.accumulator.Append(ch);
+                            this.AppendChar(ch);
                             break;
                         }
 
@@ -143,9 +168,10 @@ namespace LysitheaVM
                             }
                             break;
                         }
+
                         default:
                         {
-                            accumulator.Append(ch);
+                            this.AppendChar(ch);
                             break;
                         }
                     }
@@ -155,20 +181,30 @@ namespace LysitheaVM
             return false;
         }
 
-        public static ArrayValue ReadAllTokens(TextReader input)
+        private void AppendChar(char ch)
+        {
+            if (this.accumulator.Length == 0)
+            {
+                this.StartLineNumber = this.LineNumber;
+                this.StartColumnNumber = this.ColumnNumber - 1;
+            }
+            this.accumulator.Append(ch);
+        }
+
+        public static TokenList ReadAllTokens(IReadOnlyList<string> input)
         {
             var parser = new VirtualMachineParser(input);
-            var result = new List<IValue>();
+            var result = new List<IToken>();
 
             while (parser.MoveNext())
             {
                 result.Add(ReadFromParser(parser));
             }
 
-            return new ArrayValue(result);
+            return new TokenList(CodeLocation.Empty, result);
         }
 
-        public static IValue ReadFromParser(VirtualMachineParser parser)
+        public static IToken ReadFromParser(VirtualMachineParser parser)
         {
             var token = parser.Current;
             switch (token)
@@ -179,7 +215,9 @@ namespace LysitheaVM
                 }
                 case "(":
                 {
-                    var list = new List<IValue>();
+                    var lineNumber = parser.LineNumber;
+                    var columnNumber = parser.ColumnNumber;
+                    var list = new List<IToken>();
                     while (parser.MoveNext())
                     {
                         if (parser.Current == ")")
@@ -189,7 +227,7 @@ namespace LysitheaVM
                         list.Add(ReadFromParser(parser));
                     }
 
-                    return new ArrayValue(list);
+                    return new TokenList(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), list);
                 }
                 case ")":
                 {
@@ -197,7 +235,9 @@ namespace LysitheaVM
                 }
                 case "{":
                 {
-                    var map = new Dictionary<string, IValue>();
+                    var lineNumber = parser.LineNumber;
+                    var columnNumber = parser.ColumnNumber;
+                    var map = new Dictionary<string, IToken>();
                     while (parser.MoveNext())
                     {
                         if (parser.Current == "}")
@@ -210,7 +250,7 @@ namespace LysitheaVM
                         map[key] = value;
                     }
 
-                    return new ObjectValue(map);
+                    return new TokenMap(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), map);
                 }
                 case "}":
                 {
@@ -218,7 +258,7 @@ namespace LysitheaVM
                 }
                 default:
                 {
-                    return Atom(token);
+                    return new Token(parser.CurrentLocation, Atom(token));
                 }
             }
         }

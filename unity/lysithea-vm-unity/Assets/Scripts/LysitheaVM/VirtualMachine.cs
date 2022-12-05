@@ -248,7 +248,7 @@ namespace LysitheaVM
             for (var i = this.stackTrace.Index - 1; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];
-                result.Add(DebugScopeLine(stackFrame.Function, stackFrame.LineCounter));
+                result.Add(DebugScopeLine(stackFrame.Function, stackFrame.LineCounter - 1));
             }
 
             return result;
@@ -276,8 +276,29 @@ namespace LysitheaVM
             }
 
             var codeLine = function.Code[line];
+            var codeLocation = function.DebugSymbols.CodeLineToText[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{function.Name}]:{line}:{codeLine.Operator}: [{codeLineInput}]";
+            var text = $"[{function.Name}]: line:{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
+
+            var fromLineIndex = Math.Max(0, codeLocation.StartLineNumber - 1);
+            var toLineIndex = Math.Min(function.DebugSymbols.FullText.Count, codeLocation.StartLineNumber + 2);
+            for (var i = fromLineIndex; i < toLineIndex; i++)
+            {
+                var lineNum = (i + 1).ToString();
+                if (i == codeLocation.StartLineNumber + 1)
+                {
+                    text += new String(' ', codeLocation.StartColumnNumber + lineNum.Length + 1) + '^';
+                    var diff = codeLocation.EndColumnNumber - codeLocation.StartColumnNumber;
+                    if (diff > 0)
+                    {
+                        text += new String('-', diff - 1) + '^';
+                    }
+                    text += '\n';
+                }
+                text += $"{lineNum}: {function.DebugSymbols.FullText[i]}\n";
+            }
+
+            return text;
         }
         #endregion
 

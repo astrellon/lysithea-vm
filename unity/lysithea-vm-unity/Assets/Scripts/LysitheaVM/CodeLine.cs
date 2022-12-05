@@ -4,24 +4,10 @@ using System.Diagnostics;
 
 namespace LysitheaVM
 {
-    public interface ITempCodeLine { }
-
     [DebuggerDisplay("{Description}")]
-    public class LabelCodeLine : ITempCodeLine
-    {
-        public readonly string Label;
-
-        public string Description => $"Label: {this.Label}";
-
-        public LabelCodeLine(string label) { this.Label = label; }
-    }
-
-    [DebuggerDisplay("{Description}")]
-    public class CodeLine : ITempCodeLine
+    public class CodeLine
     {
         #region Fields
-        public static readonly CodeLine Empty = new CodeLine(Operator.Unknown, NullValue.Value);
-
         public readonly Operator Operator;
         public readonly IValue? Input;
 
@@ -31,14 +17,14 @@ namespace LysitheaVM
             {
                 if (this.Input == null)
                 {
-                    return this.Operator.ToString();
+                    return $"{this.Operator}";
                 }
 
                 if (this.Input is StringValue stringInput)
                 {
-                    return $"{this.Operator} \"{stringInput.Value}\"";
+                    return $"{this.Operator}: \"{stringInput.Value}\"";
                 }
-                return $"{this.Operator} {this.Input.ToString()}";
+                return $"{this.Operator}: {this.Input.ToString()}";
             }
         }
         #endregion
