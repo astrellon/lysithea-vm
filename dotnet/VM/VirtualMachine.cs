@@ -245,7 +245,7 @@ namespace LysitheaVM
             var result = new List<string>();
 
             result.Add(DebugScopeLine(this.CurrentCode, this.lineCounter - 1));
-            for (var i = this.stackTrace.Index - 1; i >= 0; i--)
+            for (var i = this.stackTrace.Index; i >= 0; i--)
             {
                 var stackFrame = this.stackTrace.Data[i];
                 result.Add(DebugScopeLine(stackFrame.Function, stackFrame.LineCounter - 1));

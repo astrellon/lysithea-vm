@@ -17,8 +17,6 @@ namespace LysitheaVM
                 return;
             }
 
-            // Console.WriteLine(DebugScopeLine(this.CurrentCode, this.lineCounter));
-            // Console.WriteLine($"- Stack size: {this.stack.StackSize}");
             var codeLine = this.CurrentCode.Code[this.lineCounter++];
 
             switch (codeLine.Operator)
