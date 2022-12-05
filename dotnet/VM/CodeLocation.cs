@@ -8,22 +8,30 @@ namespace LysitheaVM
         #region Fields
         public static readonly CodeLocation Empty = new CodeLocation(0, 0);
 
-        public readonly int LineNumber;
-        public readonly int ColumnNumber;
+        public readonly int StartLineNumber;
+        public readonly int EndLineNumber;
+        public readonly int StartColumnNumber;
+        public readonly int EndColumnNumber;
         #endregion
 
         #region Constructor
-        public CodeLocation(int lineNumber, int columnNumber)
+        public CodeLocation(int lineNumber, int columnNumber) : this(lineNumber, columnNumber, lineNumber, columnNumber)
         {
-            this.LineNumber = lineNumber;
-            this.ColumnNumber = columnNumber;
+
+        }
+        public CodeLocation(int startLineNumber, int startColumnNumber, int endLineNumber, int endColumnNumber)
+        {
+            this.StartLineNumber = startLineNumber;
+            this.StartColumnNumber = startColumnNumber;
+            this.EndLineNumber = endLineNumber;
+            this.EndColumnNumber = endColumnNumber;
         }
         #endregion
 
         #region Methods
         public new string ToString()
         {
-            return $"{this.LineNumber}:{this.ColumnNumber}";
+            return $"{this.StartLineNumber}:{this.StartColumnNumber} -> {this.EndLineNumber}:{this.EndColumnNumber}";
         }
         #endregion
     }

@@ -11,6 +11,8 @@ namespace LysitheaVM
         public string Current { get; private set; } = "";
         public int LineNumber { get; private set; } = 0;
         public int ColumnNumber { get; private set; } = 0;
+        public int StartLineNumber { get; private set; } = 0;
+        public int StartColumnNumber { get; private set; } = 0;
 
         private char inQuote = '\0';
         private char returnSymbol = '\0';
@@ -18,6 +20,8 @@ namespace LysitheaVM
         private bool inComment = false;
         private readonly StringBuilder accumulator = new StringBuilder();
         private readonly IReadOnlyList<string> input;
+
+        public CodeLocation CurrentLocation => new CodeLocation(this.StartLineNumber, this.StartColumnNumber, this.LineNumber, this.ColumnNumber);
         #endregion
 
         #region Constructor
@@ -73,22 +77,22 @@ namespace LysitheaVM
                             case '\'':
                             case '\\':
                             {
-                                this.accumulator.Append(ch);
+                                this.AppendChar(ch);
                                 break;
                             }
                             case 't':
                             {
-                                this.accumulator.Append('\t');
+                                this.AppendChar('\t');
                                 break;
                             }
                             case 'r':
                             {
-                                this.accumulator.Append('\r');
+                                this.AppendChar('\r');
                                 break;
                             }
                             case 'n':
                             {
-                                this.accumulator.Append('\n');
+                                this.AppendChar('\n');
                                 break;
                             }
                         }
@@ -101,7 +105,12 @@ namespace LysitheaVM
                         continue;
                     }
 
-                    this.accumulator.Append(ch);
+                    this.AppendChar(ch);
+                    if (atEndOfLine)
+                    {
+                        this.AppendChar('\n');
+                    }
+
                     if (ch == this.inQuote)
                     {
                         this.Current = this.accumulator.ToString();
@@ -124,7 +133,7 @@ namespace LysitheaVM
                         case '\'':
                         {
                             this.inQuote = ch;
-                            this.accumulator.Append(ch);
+                            this.AppendChar(ch);
                             break;
                         }
 
@@ -162,7 +171,7 @@ namespace LysitheaVM
 
                         default:
                         {
-                            accumulator.Append(ch);
+                            this.AppendChar(ch);
                             break;
                         }
                     }
@@ -170,6 +179,16 @@ namespace LysitheaVM
             }
 
             return false;
+        }
+
+        private void AppendChar(char ch)
+        {
+            if (this.accumulator.Length == 0)
+            {
+                this.StartLineNumber = this.LineNumber;
+                this.StartColumnNumber = this.ColumnNumber - 1;
+            }
+            this.accumulator.Append(ch);
         }
 
         public static TokenList ReadAllTokens(IReadOnlyList<string> input)
@@ -208,7 +227,7 @@ namespace LysitheaVM
                         list.Add(ReadFromParser(parser));
                     }
 
-                    return new TokenList(new CodeLocation(lineNumber, columnNumber), list);
+                    return new TokenList(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), list);
                 }
                 case ")":
                 {
@@ -231,7 +250,7 @@ namespace LysitheaVM
                         map[key] = value;
                     }
 
-                    return new TokenMap(new CodeLocation(lineNumber, columnNumber), map);
+                    return new TokenMap(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), map);
                 }
                 case "}":
                 {
@@ -239,7 +258,7 @@ namespace LysitheaVM
                 }
                 default:
                 {
-                    return new Token(new CodeLocation(parser.LineNumber, parser.ColumnNumber), Atom(token));
+                    return new Token(parser.CurrentLocation, Atom(token));
                 }
             }
         }
