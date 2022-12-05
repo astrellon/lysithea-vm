@@ -8,11 +8,11 @@ namespace LysitheaVM
 {
     public interface IToken
     {
-        int LineNumber { get; }
-        int ColumnNumber { get; }
+        CodeLocation Location { get; }
 
         bool TryGetValue<T>([NotNullWhen(true)] out T? result);
-        IValue? GetValue();
+        IValue GetValue();
+        IValue? GetValueCanBeEmpty();
         Token Copy(IValue? input);
         Token ToEmpty();
         string ToString();
@@ -21,16 +21,14 @@ namespace LysitheaVM
     public class Token : IToken
     {
         #region Fields
-        public int LineNumber { get; init; }
-        public int ColumnNumber { get; init; }
+        public CodeLocation Location { get; private set; }
         public readonly IValue? Value;
         #endregion
 
         #region Constructor
-        public Token(int lineNumber, int columnNumber, IValue? value)
+        public Token(CodeLocation location, IValue? value)
         {
-            this.LineNumber = lineNumber;
-            this.ColumnNumber = columnNumber;
+            this.Location = location;
             this.Value = value;
         }
         #endregion
@@ -48,14 +46,23 @@ namespace LysitheaVM
             return false;
         }
 
-        public IValue? GetValue()
+        public IValue GetValue()
+        {
+            if (this.Value == null)
+            {
+                throw new System.Exception("Cannot get value of empty token");
+            }
+            return this.Value;
+        }
+
+        public IValue? GetValueCanBeEmpty()
         {
             return this.Value;
         }
 
         public Token Copy(IValue? input)
         {
-            return new Token(this.LineNumber, this.ColumnNumber, input);
+            return new Token(this.Location, input);
         }
 
         public override string ToString()
@@ -69,7 +76,7 @@ namespace LysitheaVM
 
         public Token ToEmpty()
         {
-            return new Token(this.LineNumber, this.ColumnNumber, null);
+            return new Token(this.Location, null);
         }
         #endregion
     }
@@ -77,16 +84,14 @@ namespace LysitheaVM
     public class TokenList : IToken
     {
         #region Fields
-        public int LineNumber { get; init; }
-        public int ColumnNumber { get; init; }
+        public CodeLocation Location { get; private set; }
         public readonly IReadOnlyList<IToken> Data;
         #endregion
 
         #region Constructor
-        public TokenList(int lineNumber, int columnNumber, IReadOnlyList<IToken> data)
+        public TokenList(CodeLocation location, IReadOnlyList<IToken> data)
         {
-            this.LineNumber = lineNumber;
-            this.ColumnNumber = columnNumber;
+            this.Location = location;
             this.Data = data;
         }
         #endregion
@@ -98,14 +103,19 @@ namespace LysitheaVM
             return false;
         }
 
-        public IValue? GetValue()
+        public IValue GetValue()
         {
             return new ArrayValue(this.Data.Select(t => t.GetValue()).ToList());
         }
 
+        public IValue? GetValueCanBeEmpty()
+        {
+            return this.GetValue();
+        }
+
         public Token Copy(IValue? input)
         {
-            return new Token(this.LineNumber, this.ColumnNumber, input);
+            return new Token(this.Location, input);
         }
 
         public override string ToString()
@@ -115,7 +125,7 @@ namespace LysitheaVM
 
         public Token ToEmpty()
         {
-            return new Token(this.LineNumber, this.ColumnNumber, null);
+            return new Token(this.Location, null);
         }
         #endregion
     }
@@ -123,16 +133,14 @@ namespace LysitheaVM
     public class TokenMap : IToken
     {
         #region Fields
-        public int LineNumber { get; init; }
-        public int ColumnNumber { get; init; }
+        public CodeLocation Location { get; private set; }
         public readonly IReadOnlyDictionary<string, IToken> Data;
         #endregion
 
         #region Constructor
-        public TokenMap(int lineNumber, int columnNumber, IReadOnlyDictionary<string, IToken> data)
+        public TokenMap(CodeLocation location, IReadOnlyDictionary<string, IToken> data)
         {
-            this.LineNumber = lineNumber;
-            this.ColumnNumber = columnNumber;
+            this.Location = location;
             this.Data = data;
         }
         #endregion
@@ -144,14 +152,19 @@ namespace LysitheaVM
             return false;
         }
 
-        public IValue? GetValue()
+        public IValue GetValue()
         {
             return new ObjectValue(this.Data.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetValue()));
         }
 
+        public IValue? GetValueCanBeEmpty()
+        {
+            return this.GetValue();
+        }
+
         public Token Copy(IValue? input)
         {
-            return new Token(this.LineNumber, this.ColumnNumber, input);
+            return new Token(this.Location, input);
         }
 
         public override string ToString()
@@ -161,7 +174,7 @@ namespace LysitheaVM
 
         public Token ToEmpty()
         {
-            return new Token(this.LineNumber, this.ColumnNumber, null);
+            return new Token(this.Location, null);
         }
         #endregion
     }

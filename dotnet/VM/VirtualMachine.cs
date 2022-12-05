@@ -276,8 +276,20 @@ namespace LysitheaVM
             }
 
             var codeLine = function.Code[line];
+            var codeLocation = function.DebugSymbols.CodeLineToText[line];
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            return $"[{function.Name}]:{line}:{codeLine.Operator}: [{codeLineInput}]";
+            var text = $"[{function.Name}]: line:{codeLocation.LineNumber + 1}, column:{codeLocation.ColumnNumber}\n";
+            for (var i = Math.Max(0, codeLocation.LineNumber - 1); i < Math.Min(function.DebugSymbols.FullText.Count, codeLocation.LineNumber + 2); i++)
+            {
+                var lineNum = (i + 1).ToString();
+                if (i == codeLocation.LineNumber + 1)
+                {
+                    text += new String('-', codeLocation.ColumnNumber + lineNum.Length) + "^\n";
+                }
+                text += $"{lineNum}: {function.DebugSymbols.FullText[i]}\n";
+            }
+
+            return text;
         }
         #endregion
 

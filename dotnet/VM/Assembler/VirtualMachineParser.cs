@@ -37,10 +37,18 @@ namespace LysitheaVM
                 return true;
             }
 
-            while (this.LineNumber < this.input.Count && this.ColumnNumber < this.input[this.LineNumber].Length)
+            while (this.LineNumber < this.input.Count)
             {
-                var ch = this.input[this.LineNumber][this.ColumnNumber++];
-                if (ch == '\n' || ch == '\r')
+                var line = this.input[this.LineNumber];
+                if (line.Length == 0)
+                {
+                    this.LineNumber++;
+                    continue;
+                }
+
+                var ch = line[this.ColumnNumber++];
+                var atEndOfLine = this.ColumnNumber >= line.Length;
+                if (atEndOfLine)
                 {
                     this.ColumnNumber = 0;
                     this.LineNumber++;
@@ -48,7 +56,7 @@ namespace LysitheaVM
 
                 if (this.inComment)
                 {
-                    if (ch == '\n' || ch == '\r')
+                    if (atEndOfLine)
                     {
                         this.inComment = false;
                     }
@@ -174,7 +182,7 @@ namespace LysitheaVM
                 result.Add(ReadFromParser(parser));
             }
 
-            return new TokenList(0, 0, result);
+            return new TokenList(CodeLocation.Empty, result);
         }
 
         public static IToken ReadFromParser(VirtualMachineParser parser)
@@ -200,7 +208,7 @@ namespace LysitheaVM
                         list.Add(ReadFromParser(parser));
                     }
 
-                    return new TokenList(lineNumber, columnNumber, list);
+                    return new TokenList(new CodeLocation(lineNumber, columnNumber), list);
                 }
                 case ")":
                 {
@@ -223,7 +231,7 @@ namespace LysitheaVM
                         map[key] = value;
                     }
 
-                    return new TokenMap(lineNumber, columnNumber, map);
+                    return new TokenMap(new CodeLocation(lineNumber, columnNumber), map);
                 }
                 case "}":
                 {
@@ -231,7 +239,7 @@ namespace LysitheaVM
                 }
                 default:
                 {
-                    return new Token(parser.LineNumber, parser.ColumnNumber, Atom(token));
+                    return new Token(new CodeLocation(parser.LineNumber, parser.ColumnNumber), Atom(token));
                 }
             }
         }

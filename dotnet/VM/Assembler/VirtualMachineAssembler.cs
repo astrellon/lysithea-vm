@@ -37,6 +37,7 @@ namespace LysitheaVM
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
         private List<string> keywordParsingStack = new List<string>();
+        private IReadOnlyList<string> fullText = new string[1]{""};
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
 
@@ -55,6 +56,7 @@ namespace LysitheaVM
 
         public Script ParseFromText(IReadOnlyList<string> input)
         {
+            this.fullText = input;
             var parsed = VirtualMachineParser.ReadAllTokens(input);
 
             var code = this.ParseGlobalFunction(parsed);
@@ -67,7 +69,7 @@ namespace LysitheaVM
         public Function ParseGlobalFunction(TokenList input)
         {
             var tempCodeLines = input.Data.SelectMany(Parse).ToList();
-            var result = VirtualMachineAssembler.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
+            var result = this.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
             return result;
         }
 
@@ -273,7 +275,7 @@ namespace LysitheaVM
             var parameters = ((TokenList)input.Data[1 + offset]).Data.Select(arg => arg.ToString()).ToList();
             var tempCodeLines = input.Data.Skip(2 + offset).SelectMany(Parse).ToList();
 
-            return VirtualMachineAssembler.ProcessTempFunction(parameters, tempCodeLines, name);
+            return this.ProcessTempFunction(parameters, tempCodeLines, name);
         }
 
         public List<ITempCodeLine> ParseJump(TokenList input)
@@ -283,7 +285,7 @@ namespace LysitheaVM
             {
                 return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, input.Copy(codeLine.Input)) };
             }
-            parse.Add(new TempCodeLine(Operator.Jump, null));
+            parse.Add(new TempCodeLine(Operator.Jump, input.Copy(null)));
             return parse;
         }
 
@@ -294,7 +296,7 @@ namespace LysitheaVM
             {
                 result.AddRange(Parse(item));
             }
-            result.Add(new TempCodeLine(Operator.Return, null));
+            result.Add(new TempCodeLine(Operator.Return, input.Copy(null)));
             return result;
         }
 
@@ -313,7 +315,7 @@ namespace LysitheaVM
                 }
 
                 var result = this.Parse(input.Data[1]);
-                result.Add(new TempCodeLine(Operator.UnaryNegative, null));
+                result.Add(new TempCodeLine(Operator.UnaryNegative, input.Data[1].Copy(null)));
                 return result;
             }
             else
@@ -333,7 +335,7 @@ namespace LysitheaVM
             foreach (var item in input.Data.Skip(1))
             {
                 result.AddRange(this.Parse(item));
-                result.Add(new TempCodeLine(opCode, null));
+                result.Add(new TempCodeLine(opCode, item.Copy(null)));
             }
 
             return result;
@@ -403,9 +405,9 @@ namespace LysitheaVM
             var wrappedCode = new List<IToken>();
             wrappedCode.Add(arrayValue.Copy(new VariableValue("set")));
             wrappedCode.Add(arrayValue.Data[1].Copy(new VariableValue(varName)));
-            wrappedCode.Add(new TokenList(arrayValue.LineNumber, arrayValue.ColumnNumber, newCode));
+            wrappedCode.Add(new TokenList(arrayValue.Location, newCode));
 
-            return this.Parse(new TokenList(arrayValue.LineNumber, arrayValue.ColumnNumber, wrappedCode));
+            return this.Parse(new TokenList(arrayValue.Location, wrappedCode));
         }
 
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, TokenList arrayValue)
@@ -470,6 +472,11 @@ namespace LysitheaVM
         #region Helper Methods
         private List<ITempCodeLine> OptimiseCallSymbolValue(Token input, int numArgs)
         {
+            if (input.Value == null)
+            {
+                throw new Exception("Call token cannot be null");
+            }
+
             var numArgsValue = new NumberValue(numArgs);
             var isProperty = IsGetPropertyRequest(input.Value.ToString(), out var parentKey, out var property);
 
@@ -520,6 +527,11 @@ namespace LysitheaVM
 
         private List<ITempCodeLine> OptimiseGetSymbolValue(Token input)
         {
+            if (input.Value == null)
+            {
+                throw new Exception("Get symbol token value cannot be null");
+            }
+
             var isArgumentUnpack = false;
             var inputStr = input.Value.ToString();
             if (inputStr.StartsWith("..."))
@@ -569,7 +581,7 @@ namespace LysitheaVM
 
             if (isArgumentUnpack)
             {
-                result.Add(new TempCodeLine(Operator.ToArgument, null));
+                result.Add(new TempCodeLine(Operator.ToArgument, input.Copy(null)));
             }
 
             return result;
@@ -590,10 +602,11 @@ namespace LysitheaVM
             return false;
         }
 
-        private static Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines, string name)
+        private Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<ITempCodeLine> tempCodeLines, string name)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
+            var locations = new List<CodeLocation>();
 
             foreach (var tempLine in tempCodeLines)
             {
@@ -601,13 +614,16 @@ namespace LysitheaVM
                 {
                     labels.Add(labelCodeLine.Label, code.Count);
                 }
-                else if (tempLine is CodeLine codeLine)
+                else if (tempLine is TempCodeLine codeLine)
                 {
-                    code.Add(codeLine);
+                    locations.Add(codeLine.Token.Location);
+                    code.Add(new CodeLine(codeLine.Operator, codeLine.Token.GetValueCanBeEmpty()));
                 }
             }
 
-            return new Function(code, parameters, labels, name);
+            var debugSymbols = new DebugSymbols(this.fullText, locations);
+
+            return new Function(code, parameters, labels, name, debugSymbols);
         }
         #endregion
 

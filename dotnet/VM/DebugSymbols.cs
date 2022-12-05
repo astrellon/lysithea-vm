@@ -6,14 +6,14 @@ namespace LysitheaVM
     public class DebugSymbols
     {
         #region Fields
-        public static readonly DebugSymbols Empty = new DebugSymbols("", new int[0]);
+        public static readonly DebugSymbols Empty = new DebugSymbols(new string[1] {""}, new CodeLocation[0]);
 
-        public readonly string FullText;
-        public readonly IReadOnlyList<int> CodeLineToText;
+        public readonly IReadOnlyList<string> FullText;
+        public readonly IReadOnlyList<CodeLocation> CodeLineToText;
         #endregion
 
         #region Constructor
-        public DebugSymbols(string fullText, IReadOnlyList<int> codeLineToText)
+        public DebugSymbols(IReadOnlyList<string> fullText, IReadOnlyList<CodeLocation> codeLineToText)
         {
             this.FullText = fullText;
             this.CodeLineToText = codeLineToText;
