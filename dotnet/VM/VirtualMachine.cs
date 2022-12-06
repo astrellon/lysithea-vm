@@ -276,9 +276,9 @@ namespace LysitheaVM
             }
 
             var codeLine = function.Code[line];
-            var codeLocation = function.DebugSymbols.CodeLineToText[line];
+            function.DebugSymbols.TryGetLocation(line, out var codeLocation);
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            var text = $"[{function.Name}]: line:{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
+            var text = $"{function.DebugSymbols.SourceName}: [{function.Name}]: line:{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
 
             var fromLineIndex = Math.Max(0, codeLocation.StartLineNumber - 1);
             var toLineIndex = Math.Min(function.DebugSymbols.FullText.Count, codeLocation.StartLineNumber + 2);

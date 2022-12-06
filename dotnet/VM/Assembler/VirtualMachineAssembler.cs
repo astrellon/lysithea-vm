@@ -38,6 +38,7 @@ namespace LysitheaVM
         private int labelCount = 0;
         private List<string> keywordParsingStack = new List<string>();
         private IReadOnlyList<string> fullText = new string[1]{""};
+        private string sourceName = "";
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
 
@@ -46,17 +47,18 @@ namespace LysitheaVM
         #region Parse From Input
         public Script ParseFromFile(string filePath)
         {
-            return this.ParseFromText(File.ReadAllLines(filePath));
+            return this.ParseFromText(filePath, File.ReadAllLines(filePath));
         }
 
-        public Script ParseFromText(string input)
+        public Script ParseFromText(string sourceName, string input)
         {
-            return this.ParseFromText(input.Split(NewlineSeparators, StringSplitOptions.None));
+            return this.ParseFromText(sourceName, input.Split(NewlineSeparators, StringSplitOptions.None));
         }
 
-        public Script ParseFromText(IReadOnlyList<string> input)
+        public Script ParseFromText(string sourceName, IReadOnlyList<string> input)
         {
             this.fullText = input;
+            this.sourceName = sourceName;
             var parsed = VirtualMachineParser.ReadAllTokens(input);
 
             var code = this.ParseGlobalFunction(parsed);
@@ -621,7 +623,7 @@ namespace LysitheaVM
                 }
             }
 
-            var debugSymbols = new DebugSymbols(this.fullText, locations);
+            var debugSymbols = new DebugSymbols(this.sourceName, this.fullText, locations);
 
             return new Function(code, parameters, labels, name, debugSymbols);
         }

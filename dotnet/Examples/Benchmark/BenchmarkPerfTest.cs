@@ -25,7 +25,7 @@ namespace LysitheaVM
         #region Methods
         private static Script AssembleScript()
         {
-            return PerfVM.Assembler.ParseFromText(VMCodeText);
+            return PerfVM.Assembler.ParseFromText("perfTest.lys", VMCodeText);
         }
 
         // [Benchmark]

@@ -21,7 +21,7 @@ namespace LysitheaVM
             assembler.BuiltinScope.CombineScope(CustomScope);
             assembler.BuiltinScope.CombineScope(StandardArrayLibrary.Scope);
 
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testDialogue.lys"));
+            var script = assembler.ParseFromFile("../../../examples/testDialogue.lys");
 
             var vm = new VirtualMachine(8);
 
