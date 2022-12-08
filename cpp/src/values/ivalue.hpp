@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-#include <unordered_map>
 
 namespace lysithea_vm
 {

@@ -425,13 +425,13 @@ namespace lysithea_vm
 
     void virtual_machine::jump(const std::string &label)
     {
-        auto find = current_code->labels.find(label);
-        if (find == current_code->labels.end())
+        int line;
+        if (!current_code->labels.try_get(label, line))
         {
             throw std::runtime_error("Unable to jump to label");
         }
 
-        program_counter = find->second;
+        program_counter = line;
     }
 
     void virtual_machine::call_function(const complex_value &value, int num_args, bool push_to_stack_trace)
