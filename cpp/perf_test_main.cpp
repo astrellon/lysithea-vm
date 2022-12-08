@@ -11,6 +11,7 @@
 
 std::random_device _rd;
 std::mt19937 _rand(_rd());
+std::uniform_real_distribution<double> dist(0.0, 1.0);
 
 std::shared_ptr<lysithea_vm::scope> create_custom_scope()
 {
@@ -18,7 +19,6 @@ std::shared_ptr<lysithea_vm::scope> create_custom_scope()
 
     result->define("rand", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
     {
-        std::uniform_real_distribution<double> dist(0.0, 1.0);
         vm.push_stack(dist(_rand));
     });
 

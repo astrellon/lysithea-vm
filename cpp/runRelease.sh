@@ -2,7 +2,8 @@
 ./buildRelease.sh
 if [ $? -eq 0 ]; then
     cd ./Release
-    ./perfTest
+    ./mapBenchmark
+    # ./perfTest
     # ./standardLibraryTest
     # ./dialogueTree
     cd ../
