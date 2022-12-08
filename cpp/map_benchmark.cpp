@@ -68,14 +68,14 @@ void testSmallMap(int num)
 
 void testMap(int num)
 {
-    std::map<std::uint32_t, int> map;
+    std::map<std::string, int> map;
 
     for (auto i = 0; i < num; i++)
     {
         std::stringstream ss;
         ss << "index_" << i;
-        auto hash = hash_string(ss.str().c_str());
-        map.insert(std::pair<std::uint32_t, int>(hash, i));
+        // auto hash = hash_string(ss.str().c_str());
+        map.insert(std::pair<std::string, int>(ss.str(), i));
     }
 
     auto start = std::chrono::steady_clock::now();
@@ -85,10 +85,10 @@ void testMap(int num)
         auto randNum = randInt(num);
         std::stringstream ss;
         ss << "index_" << randNum;
-        auto hash = hash_string(ss.str().c_str());
+        // auto hash = hash_string(ss.str().c_str());
 
         int found;
-        auto find = map.find(hash);
+        auto find = map.find(ss.str());
         if (find != map.end())
         {
             total += find->second;
@@ -102,14 +102,14 @@ void testMap(int num)
 }
 void testUnorderedMap(int num)
 {
-    std::unordered_map<std::uint32_t, int> map;
+    std::unordered_map<std::string, int> map;
 
     for (auto i = 0; i < num; i++)
     {
         std::stringstream ss;
         ss << "index_" << i;
-        auto hash = hash_string(ss.str().c_str());
-        map.insert(std::pair<std::uint32_t, int>(hash, i));
+        // auto hash = hash_string(ss.str().c_str());
+        map.insert(std::pair<std::string, int>(ss.str(), i));
     }
 
     auto start = std::chrono::steady_clock::now();
@@ -119,11 +119,11 @@ void testUnorderedMap(int num)
         auto randNum = randInt(num);
         std::stringstream ss;
         ss << "index_" << randNum;
-        auto hash = hash_string(ss.str().c_str());
+        // auto hash = hash_string(ss.str().c_str());
 
 
         int found;
-        auto find = map.find(hash);
+        auto find = map.find(ss.str());
         if (find != map.end())
         {
             total += find->second;

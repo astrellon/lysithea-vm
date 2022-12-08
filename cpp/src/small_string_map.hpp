@@ -18,10 +18,10 @@ namespace lysithea_vm
 
             bool contains(const std::string &key)
             {
-                auto hash = hash_string(key.c_str());
+                // auto hash = hash_string(key.c_str());
                 for (auto iter : _data)
                 {
-                    if (iter.first == hash)
+                    if (iter.first == key)
                     {
                         return true;
                     }
@@ -31,10 +31,10 @@ namespace lysithea_vm
             }
             bool try_get(const std::string &key, T& value) const
             {
-                auto hash = hash_string(key.c_str());
+                // auto hash = hash_string(key.c_str());
                 for (auto iter : _data)
                 {
-                    if (iter.first == hash)
+                    if (iter.first == key)
                     {
                         value = iter.second;
                         return true;
@@ -46,27 +46,27 @@ namespace lysithea_vm
 
             void set(const std::string &key, T value)
             {
-                auto hash = hash_string(key.c_str());
+                // auto hash = hash_string(key.c_str());
                 for (auto iter = _data.begin(); iter != _data.end(); ++iter)
                 {
-                    if (iter->first == hash)
+                    if (iter->first == key)
                     {
                         iter->second = value;
                         return;
                     }
                 }
 
-                _data.emplace_back(hash, value);
+                _data.emplace_back(key, value);
             }
 
-            inline const std::vector<std::pair<std::uint32_t, T>> data() const
+            inline const std::vector<std::pair<std::string, T>> data() const
             {
                 return _data;
             }
 
         private:
             // Fields
-            std::vector<std::pair<std::uint32_t, T>> _data;
+            std::vector<std::pair<std::string, T>> _data;
 
             // Methods
             static uint32_t hash_string(const char * s)
