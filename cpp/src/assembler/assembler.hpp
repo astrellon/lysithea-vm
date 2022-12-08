@@ -5,37 +5,22 @@
 #include <memory>
 #include <vector>
 
-#include "./values/value.hpp"
-#include "./values/complex_value.hpp"
-#include "./values/string_value.hpp"
-#include "./values/builtin_function_value.hpp"
-#include "./script.hpp"
-#include "./scope.hpp"
-#include "./operator.hpp"
-#include "./function.hpp"
+#include "./temp_code_line.hpp"
+
+#include "../values/value.hpp"
+#include "../values/complex_value.hpp"
+#include "../values/string_value.hpp"
+#include "../values/builtin_function_value.hpp"
+#include "../script.hpp"
+#include "../scope.hpp"
+#include "../operator.hpp"
+#include "../function.hpp"
 
 namespace lysithea_vm
 {
     class assembler
     {
         public:
-            struct temp_code_line
-            {
-                // Fields
-                vm_operator op;
-                std::string jump_label;
-                value argument;
-
-                // Constructor
-                temp_code_line(const std::string &jump_label) : op(vm_operator::unknown), jump_label(jump_label), argument() { }
-                temp_code_line(vm_operator op, std::shared_ptr<complex_value> arg) : op(op), argument(arg) { }
-                temp_code_line(vm_operator op, value arg) : op(op), argument(arg) { }
-                temp_code_line(vm_operator op) : op(op), argument() { }
-
-                // Methods
-                bool is_label() const { return jump_label.size() > 0; }
-                std::string to_string() const;
-            };
 
             using code_line_list = std::vector<temp_code_line>;
 

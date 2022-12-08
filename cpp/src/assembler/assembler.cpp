@@ -4,12 +4,12 @@
 #include <unordered_map>
 
 #include "./parser.hpp"
-#include "./utils.hpp"
-#include "./values/function_value.hpp"
-#include "./values/variable_value.hpp"
-#include "./values/value_property_access.hpp"
-#include "./standard_library/standard_math_library.hpp"
-#include "./virtual_machine.hpp"
+#include "../utils.hpp"
+#include "../values/function_value.hpp"
+#include "../values/variable_value.hpp"
+#include "../values/value_property_access.hpp"
+#include "../standard_library/standard_math_library.hpp"
+#include "../virtual_machine.hpp"
 
 namespace lysithea_vm
 {
@@ -34,27 +34,6 @@ namespace lysithea_vm
     {
         vm.push_stack(args.get_number(0) - 1);
     });
-
-    std::string assembler::temp_code_line::to_string() const
-    {
-        if (is_label())
-        {
-            return jump_label;
-        }
-
-        std::stringstream result;
-        result << lysithea_vm::to_string(op);
-        if (!argument.is_undefined())
-        {
-            result << ": " << argument.to_string();
-        }
-        else
-        {
-            result << ": <no arg>";
-        }
-
-        return result.str();
-    }
 
     assembler::assembler() : label_count(0)
     {
@@ -539,7 +518,7 @@ namespace lysithea_vm
         return parse(wrapped_code_value);
     }
 
-    std::vector<assembler::temp_code_line> assembler::parse_keyword(const std::string &keyword, const array_value &input)
+    std::vector<temp_code_line> assembler::parse_keyword(const std::string &keyword, const array_value &input)
     {
         code_line_list result;
         keyword_parsing_stack.push_back(keyword);
@@ -594,7 +573,7 @@ namespace lysithea_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::optimise_call_symbol_value(const std::string &variable, int num_args)
+    std::vector<temp_code_line> assembler::optimise_call_symbol_value(const std::string &variable, int num_args)
     {
         code_line_list result;
         value num_arg_value(num_args);
@@ -656,7 +635,7 @@ namespace lysithea_vm
         return result;
     }
 
-    std::vector<assembler::temp_code_line> assembler::optimise_get_symbol_value(const std::string &variable)
+    std::vector<temp_code_line> assembler::optimise_get_symbol_value(const std::string &variable)
     {
         std::string get_name = variable;
         auto is_argument_unpack = starts_with_unpack(variable);

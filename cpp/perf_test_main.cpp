@@ -4,8 +4,8 @@
 #include <fstream>
 #include <chrono>
 
-#include "src/assembler.hpp"
-#include "src/parser.hpp"
+#include "src/assembler/assembler.hpp"
+#include "src/assembler/parser.hpp"
 #include "src/values/values.hpp"
 #include "src/virtual_machine.hpp"
 

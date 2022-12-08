@@ -1,0 +1,23 @@
+#pragma once
+
+namespace lysithea_vm
+{
+    class code_location
+    {
+        public:
+            // Fields
+            const int start_line_number;
+            const int end_line_number;
+            const int start_column_number;
+            const int end_column_number;
+
+            // Constructor
+            code_location(): code_location(0, 0, 0, 0) { }
+            code_location(int line_number, int column_number): code_location(line_number, column_number, line_number, column_number) { }
+            code_location(int start_line_number, int start_column_number, int end_line_number, int end_column_number):
+                start_line_number(start_line_number), start_column_number(start_column_number),
+                end_line_number(end_line_number), end_column_number(end_column_number) { }
+
+            // Methods
+    };
+} // lysithea_vm

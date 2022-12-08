@@ -1,9 +1,9 @@
 #include "parser.hpp"
 
-#include "./values/array_value.hpp"
-#include "./values/object_value.hpp"
-#include "./values/string_value.hpp"
-#include "./values/variable_value.hpp"
+#include "../values/array_value.hpp"
+#include "../values/object_value.hpp"
+#include "../values/string_value.hpp"
+#include "../values/variable_value.hpp"
 
 namespace lysithea_vm
 {
@@ -186,7 +186,7 @@ namespace lysithea_vm
                 list.push_back(read_from_parser(input));
             }
 
-            return value(std::make_shared<array_value>(list, false));
+            return array_value::make_value(list, false);
         }
         if (token == ")")
         {

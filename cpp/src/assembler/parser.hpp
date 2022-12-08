@@ -4,8 +4,8 @@
 #include <sstream>
 #include <string>
 
-#include "./values/value.hpp"
-#include "./values/array_value.hpp"
+#include "../values/value.hpp"
+#include "../values/array_value.hpp"
 
 namespace lysithea_vm
 {
