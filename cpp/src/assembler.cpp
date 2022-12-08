@@ -1,6 +1,7 @@
 #include "assembler.hpp"
 
 #include <sstream>
+#include <unordered_map>
 
 #include "./parser.hpp"
 #include "./utils.hpp"
@@ -740,14 +741,14 @@ namespace lysithea_vm
 
     std::shared_ptr<function> assembler::process_temp_function(const std::vector<std::string> &parameters, const assembler::code_line_list &temp_code_lines, const std::string &name)
     {
-        small_string_map<int> labels;
+        std::unordered_map<std::string, int> labels;
         std::vector<code_line> code;
 
         for (const auto &temp_line : temp_code_lines)
         {
             if (temp_line.is_label())
             {
-                labels.set(temp_line.jump_label, code.size());
+                labels[temp_line.jump_label] = code.size();
             }
             else
             {

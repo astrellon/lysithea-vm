@@ -2,10 +2,10 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "./values/value.hpp"
 #include "./values/builtin_function_value.hpp"
-#include "./small_string_map.hpp"
 
 namespace lysithea_vm
 {
@@ -13,7 +13,7 @@ namespace lysithea_vm
     {
         public:
             // Fields
-            small_string_map<value> values;
+            std::unordered_map<std::string, value> values;
             std::shared_ptr<scope> parent;
 
             // Constructor

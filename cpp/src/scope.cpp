@@ -14,27 +14,28 @@ namespace lysithea_vm
 
     void scope::combine_scope(const scope &input)
     {
-        for (auto iter : input.values.data())
+        for (auto iter : input.values)
         {
-            values.set(iter.first, iter.second);
+            values[iter.first] = iter.second;
         }
     }
 
     void scope::define(const std::string &key, value input)
     {
-        values.set(key, input);
+        values[key] = input;
     }
 
     void scope::define(const std::string &key, builtin_function_callback callback)
     {
-        values.set(key, value::make_builtin(callback));
+        values[key] = value::make_builtin(callback);
     }
 
     bool scope::try_set(const std::string &key, value input)
     {
-        if (values.contains(key))
+        auto find = values.find(key);
+        if (find != values.end())
         {
-            values.set(key, input);
+            find->second = input;
             return true;
         }
 
@@ -48,8 +49,10 @@ namespace lysithea_vm
 
     bool scope::try_get_key(const std::string &key, value &result) const
     {
-        if (values.try_get(key, result))
+        auto find = values.find(key);
+        if (find != values.cend())
         {
+            result = find->second;
             return true;
         }
 
