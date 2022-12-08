@@ -17,7 +17,6 @@ namespace lysithea_vm
         for (auto iter : input.values.data())
         {
             values.set(iter.first, iter.second);
-            // values[iter.first] = iter.second;
         }
     }
 
@@ -33,8 +32,7 @@ namespace lysithea_vm
 
     bool scope::try_set(const std::string &key, value input)
     {
-        auto find = values.find(key);
-        if (find != values.data().end())
+        if (values.contains(key))
         {
             values.set(key, input);
             return true;
@@ -50,10 +48,8 @@ namespace lysithea_vm
 
     bool scope::try_get_key(const std::string &key, value &result) const
     {
-        auto find = values.find(key);
-        if (find != values.data().end())
+        if (values.try_get(key, result))
         {
-            result = find->second;
             return true;
         }
 
