@@ -3,9 +3,13 @@
 #include <istream>
 #include <sstream>
 #include <string>
+#include <vector>
+#include <memory>
 
 #include "../values/value.hpp"
 #include "../values/array_value.hpp"
+#include "../code_location.hpp"
+#include "./token.hpp"
 
 namespace lysithea_vm
 {
@@ -16,14 +20,20 @@ namespace lysithea_vm
             std::string current;
 
             // Constructor
-            parser(std::istream &input);
+            parser(std::shared_ptr<std::vector<std::string>> input);
 
             // Methods
             bool move_next();
+            code_location current_location() const;
 
-            static array_value read_from_stream(std::istream &input);
-            static array_value read_from_text(const std::string &input);
-            static value read_from_parser(parser &input);
+            std::shared_ptr<std::vector<std::string>> input_data() const
+            {
+                return input;
+            }
+
+            static std::shared_ptr<token_list> read_from_stream(std::istream &input);
+            static std::shared_ptr<token_list> read_from_text(const std::string &input);
+            static std::shared_ptr<itoken> read_from_parser(parser &input);
             static value atom(const std::string &input);
 
         private:
@@ -32,9 +42,16 @@ namespace lysithea_vm
             char return_symbol;
             bool escaped;
             bool in_comment;
+            int line_number;
+            int column_number;
+            int start_line_number;
+            int start_column_number;
             std::stringstream accumulator;
-            std::istream &input;
+            int accumulator_size;
+            std::shared_ptr<std::vector<std::string>> input;
 
             // Methods
+            void append_char(char ch);
+            void reset_accumulator();
     };
 } // lysithea_vm

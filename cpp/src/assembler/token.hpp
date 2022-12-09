@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <algorithm>
 
 #include "../code_location.hpp"
 #include "../values/array_value.hpp"
