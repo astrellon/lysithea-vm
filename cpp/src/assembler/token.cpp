@@ -2,13 +2,13 @@
 
 namespace lysithea_vm
 {
-    token itoken::copy(value new_token_value) const
+    std::shared_ptr<itoken> itoken::copy(value new_token_value) const
     {
-        return token(location, new_token_value);
+        return std::make_shared<token>(location, new_token_value);
     }
 
-    token itoken::to_empty() const
+    std::shared_ptr<itoken> itoken::to_empty() const
     {
-        return token(location);
+        return std::make_shared<token>(location);
     }
 } // lysithea_vm

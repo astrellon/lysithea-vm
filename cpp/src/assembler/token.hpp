@@ -24,8 +24,8 @@ namespace lysithea_vm
             virtual ~itoken() { }
 
             // Methods
-            token copy(value new_token_value) const;
-            token to_empty() const;
+            std::shared_ptr<itoken> copy(value new_token_value) const;
+            std::shared_ptr<itoken> to_empty() const;
 
             virtual value get_value() const = 0;
     };

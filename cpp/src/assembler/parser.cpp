@@ -7,7 +7,7 @@
 
 namespace lysithea_vm
 {
-    parser::parser(std::shared_ptr<std::vector<std::string>> input) : in_quote('\0'), return_symbol('\0'),
+    parser::parser(const std::vector<std::string> &input) : in_quote('\0'), return_symbol('\0'),
         escaped(false), in_comment(false), line_number(0), column_number(0),
         start_line_number(0), start_column_number(0),
         accumulator(), input(input)
@@ -24,9 +24,9 @@ namespace lysithea_vm
             return true;
         }
 
-        while (line_number < input->size())
+        while (line_number < input.size())
         {
-            const auto &line = input->at(line_number);
+            const auto &line = input[line_number];
             if (line.size() == 0)
             {
                 line_number++;
@@ -167,37 +167,8 @@ namespace lysithea_vm
         return code_location(start_line_number, start_column_number, line_number, column_number);
     }
 
-    std::shared_ptr<token_list> parser::read_from_stream(std::istream &input)
+    std::shared_ptr<token_list> parser::read_from_text(const std::vector<std::string> &input_lines)
     {
-        auto input_lines = std::make_shared<std::vector<std::string>>();
-
-        char ch;
-        std::stringstream accumulator;
-        while (input.get(ch))
-        {
-            if (ch == '\r')
-            {
-                auto next = input.peek();
-                if (next == '\n')
-                {
-                    input.get(ch);
-                }
-
-                input_lines->emplace_back(accumulator.str());
-                accumulator.str(std::string());
-            }
-            else if (ch == '\n')
-            {
-                input_lines->emplace_back(accumulator.str());
-                accumulator.str(std::string());
-            }
-            else
-            {
-                accumulator << ch;
-            }
-        }
-        input_lines->emplace_back(accumulator.str());
-
         parser input_parser(input_lines);
 
         std::vector<std::shared_ptr<itoken>> result;
@@ -207,12 +178,6 @@ namespace lysithea_vm
         }
 
         return std::make_shared<token_list>(code_location(), result);
-    }
-
-    std::shared_ptr<token_list> parser::read_from_text(const std::string &input)
-    {
-        std::stringstream stream(input);
-        return read_from_stream(stream);
     }
 
     std::shared_ptr<itoken> parser::read_from_parser(parser &input)
@@ -325,4 +290,45 @@ namespace lysithea_vm
         accumulator.str("");
         accumulator.clear();
     }
+
+    std::shared_ptr<std::vector<std::string>> parser::split_stream(std::istream &input)
+    {
+        auto result = std::make_shared<std::vector<std::string>>();
+
+        char ch;
+        std::stringstream accumulator;
+        while (input.get(ch))
+        {
+            if (ch == '\r')
+            {
+                auto next = input.peek();
+                if (next == '\n')
+                {
+                    input.get(ch);
+                }
+
+                result->emplace_back(accumulator.str());
+                accumulator.str(std::string());
+            }
+            else if (ch == '\n')
+            {
+                result->emplace_back(accumulator.str());
+                accumulator.str(std::string());
+            }
+            else
+            {
+                accumulator << ch;
+            }
+        }
+        result->emplace_back(accumulator.str());
+
+        return result;
+    }
+
+    std::shared_ptr<std::vector<std::string>> parser::split_text(const std::string &input)
+    {
+        std::stringstream stream(input);
+        return split_stream(stream);
+    }
+
 } // lysithea_vm

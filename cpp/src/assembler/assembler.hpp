@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "./temp_code_line.hpp"
+#include "./token.hpp"
 
 #include "../values/value.hpp"
 #include "../values/complex_value.hpp"
@@ -33,12 +34,8 @@ namespace lysithea_vm
             static const std::string keyword_unless;
             static const std::string keyword_set;
             static const std::string keyword_define;
-            static const std::string keyword_inc;
-            static const std::string keyword_dec;
             static const std::string keyword_jump;
             static const std::string keyword_return;
-            static const builtin_function_value inc_number;
-            static const builtin_function_value dec_number;
 
             scope builtin_scope;
 
@@ -48,28 +45,28 @@ namespace lysithea_vm
             // Methods
             std::shared_ptr<script> parse_from_text(const std::string &input);
             std::shared_ptr<script> parse_from_stream(std::istream &input);
-            std::shared_ptr<script> parse_from_value(const array_value &input);
-            code_line_list parse(value input);
+            std::shared_ptr<script> parse_from_value(const token_list &input);
+            code_line_list parse(const itoken &input);
 
-            code_line_list parse_function_keyword(const array_value &input);
-            code_line_list parse_define_set(const array_value &input, bool is_define);
-            code_line_list parse_loop(const array_value &input);
-            code_line_list parse_cond(const array_value &input, bool is_if_statement);
-            code_line_list parse_flatten(value input);
+            code_line_list parse_function_keyword(const token_list &input);
+            code_line_list parse_define_set(const token_list &input, bool is_define);
+            code_line_list parse_loop(const token_list &input);
+            code_line_list parse_cond(const token_list &input, bool is_if_statement);
+            code_line_list parse_flatten(const itoken &input);
             code_line_list parse_loop_jump(const std::string &keyword, bool jump_to_start);
-            std::shared_ptr<function> parse_function(const array_value &input);
+            std::shared_ptr<function> parse_function(const token_list &input);
             code_line_list parse_change_variable(value input, builtin_function_value change_func);
-            code_line_list parse_jump(const array_value &input);
-            code_line_list parse_return(const array_value &input);
-            code_line_list parse_negative(const array_value &input);
-            code_line_list parse_one_push_input(vm_operator op_code, const array_value &input);
-            code_line_list parse_operator(vm_operator op_code, const array_value &input);
-            code_line_list parse_one_variable_update(vm_operator op_code, const array_value &input);
-            code_line_list parse_string_concat(const array_value &input);
-            code_line_list transform_assignment_operator(const array_value &input);
-            code_line_list parse_keyword(const std::string &keyword, const array_value &input);
+            code_line_list parse_jump(const token_list &input);
+            code_line_list parse_return(const token_list &input);
+            code_line_list parse_negative(const token_list &input);
+            code_line_list parse_one_push_input(vm_operator op_code, const token_list &input);
+            code_line_list parse_operator(vm_operator op_code, const token_list &input);
+            code_line_list parse_one_variable_update(vm_operator op_code, const token_list &input);
+            code_line_list parse_string_concat(const token_list &input);
+            code_line_list transform_assignment_operator(const token_list &input);
+            code_line_list parse_keyword(const std::string &keyword, const token_list &input);
 
-            std::shared_ptr<function> parse_global_function(const array_value &input);
+            std::shared_ptr<function> parse_global_function(const token_list &input);
 
             code_line_list optimise_call_symbol_value(const std::string &variable, int num_args);
             code_line_list optimise_get_symbol_value(const std::string &variable);

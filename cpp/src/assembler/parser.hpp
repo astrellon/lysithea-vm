@@ -20,21 +20,23 @@ namespace lysithea_vm
             std::string current;
 
             // Constructor
-            parser(std::shared_ptr<std::vector<std::string>> input);
+            parser(const std::vector<std::string> &input);
 
             // Methods
             bool move_next();
             code_location current_location() const;
 
-            std::shared_ptr<std::vector<std::string>> input_data() const
+            const std::vector<std::string> &input_data() const
             {
                 return input;
             }
 
-            static std::shared_ptr<token_list> read_from_stream(std::istream &input);
-            static std::shared_ptr<token_list> read_from_text(const std::string &input);
+            static std::shared_ptr<token_list> read_from_text(const std::vector<std::string> &input_lines);
             static std::shared_ptr<itoken> read_from_parser(parser &input);
             static value atom(const std::string &input);
+
+            static std::shared_ptr<std::vector<std::string>> split_stream(std::istream &input);
+            static std::shared_ptr<std::vector<std::string>> split_text(const std::string &input);
 
         private:
             // Fields
@@ -48,7 +50,7 @@ namespace lysithea_vm
             int start_column_number;
             std::stringstream accumulator;
             int accumulator_size;
-            std::shared_ptr<std::vector<std::string>> input;
+            const std::vector<std::string> &input;
 
             // Methods
             void append_char(char ch);
