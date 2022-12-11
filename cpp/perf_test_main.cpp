@@ -46,11 +46,11 @@ int main()
 
     auto custom_scope = create_custom_scope();
 
-    auto parsed = lysithea_vm::parser::read_from_stream(input_file);
+    // auto parsed = lysithea_vm::parser::read_from_(input_file);
     lysithea_vm::assembler assembler;
     assembler.builtin_scope.combine_scope(*custom_scope);
 
-    auto script = assembler.parse_from_value(parsed);
+    auto script = assembler.parse_from_stream(input_file);
 
     lysithea_vm::virtual_machine vm(16);
 

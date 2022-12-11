@@ -39,10 +39,10 @@ namespace lysithea_vm
     {
         auto line_split = parser::split_stream(input);
         auto parsed = parser::read_from_text(*line_split);
-        return parse_from_value(*parsed);
+        return parse_from_value(parsed);
     }
 
-    std::shared_ptr<script> assembler::parse_from_value(const token_list &input)
+    std::shared_ptr<script> assembler::parse_from_value(const token &input)
     {
         auto code = parse_global_function(input);
 
@@ -52,10 +52,10 @@ namespace lysithea_vm
         return std::make_shared<script>(script_scope, code);
     }
 
-    std::shared_ptr<function> assembler::parse_global_function(const token_list &input)
+    std::shared_ptr<function> assembler::parse_global_function(const token &input)
     {
         code_line_list temp_code_lines;
-        for (const auto &iter : input.data)
+        for (const auto &iter : input.list_data)
         {
             auto lines = parse(*iter);
             push_range(temp_code_lines, lines);
@@ -67,23 +67,23 @@ namespace lysithea_vm
         return code;
     }
 
-    assembler::code_line_list assembler::parse(const itoken &input)
+    assembler::code_line_list assembler::parse(const token &input)
     {
         code_line_list result;
-        auto array_input = dynamic_cast<const token_list *>(&input);
-        if (array_input != nullptr)
+        // auto array_input = dynamic_cast<const token_list *>(&input);
+        if (input.type == token_type::list)
         {
-            if (array_input->data.size() == 0)
+            if (input.list_data.size() == 0)
             {
                 return result;
             }
 
-            auto first_token = array_input->data[0];
+            const auto &first_token = input.list_data[0];
             // If the first item in an array is a symbol we assume that it is a function call or a label
-            auto first = dynamic_cast<token *>(first_token.get());
-            if (first != nullptr)
+            // auto first = dynamic_cast<token *>(first_token.get());
+            if (first_token->type == token_type::value)
             {
-                auto first_symbol_value = first->token_value.get_complex<variable_value>();
+                auto first_symbol_value = first_token->token_value.get_complex<variable_value>();
                 if (first_symbol_value)
                 {
                     if (first_symbol_value->is_label())
@@ -93,7 +93,7 @@ namespace lysithea_vm
                     }
 
                     // Check for keywords
-                    auto keyword_parse = parse_keyword(first_symbol_value->data, *array_input);
+                    auto keyword_parse = parse_keyword(first_symbol_value->data, input);
                     if (keyword_parse.size() > 0)
                     {
                         return keyword_parse;
@@ -102,12 +102,12 @@ namespace lysithea_vm
                     keyword_parsing_stack.push_back("func-call");
 
                     // Handle general opcode or function call.
-                    for (auto iter = array_input->data.cbegin() + 1; iter != array_input->data.cend(); ++iter)
+                    for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
                     {
                         push_range(result, parse(*iter->get()));
                     }
 
-                    push_range(result, optimise_call_symbol_value(first_symbol_value->data, array_input->data.size() - 1));
+                    push_range(result, optimise_call_symbol_value(first_symbol_value->data, input.list_data.size() - 1));
 
                     keyword_parsing_stack.pop_back();
 
@@ -117,10 +117,10 @@ namespace lysithea_vm
         }
         else
         {
-            auto input_token = dynamic_cast<const token *>(&input);
-            if (input_token)
+            // auto input_token = dynamic_cast<const token *>(&input);
+            if (input.type == token_type::value)
             {
-                auto symbol_value = input_token->token_value.get_complex<variable_value>();
+                auto symbol_value = input.token_value.get_complex<variable_value>();
                 if (symbol_value && !symbol_value->is_label())
                 {
                     return optimise_get_symbol_value(symbol_value->data);
@@ -132,24 +132,24 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_define_set(const token_list &input, bool is_define)
+    assembler::code_line_list assembler::parse_define_set(const token &input, bool is_define)
     {
         auto op_code = is_define ? vm_operator::define : vm_operator::set;
         // Parse the last value as the definable/set-able value.
-        auto result = parse(*input.data.back());
+        auto result = parse(*input.list_data.back());
 
         // Loop over all the middle inputs as the values to set.
         // Multiple variables can be set when a function returns multiple results.
-        for (auto i = input.data.size() - 2; i >= 1; i--)
+        for (auto i = input.list_data.size() - 2; i >= 1; i--)
         {
-            result.emplace_back(op_code, input.data[i]);
+            result.emplace_back(op_code, input.list_data[i]);
         }
         return result;
     }
 
-    assembler::code_line_list assembler::parse_loop(const token_list &input)
+    assembler::code_line_list assembler::parse_loop(const token &input)
     {
-        if (input.data.size() < 3)
+        if (input.list_data.size() < 3)
         {
             throw std::runtime_error("Loop input has too few inputs");
         }
@@ -168,35 +168,35 @@ namespace lysithea_vm
         code_line_list result;
         result.emplace_back(ss_label_start.str());
 
-        auto comparison_value = input.data[1];
-        auto comparison_call = comparison_value->get_value().get_complex<const array_value>();
+        const auto &comparison_token = *input.list_data[1];
+        auto comparison_call = comparison_token.token_value.get_complex<const array_value>();
         if (!comparison_call)
         {
             throw std::runtime_error("Loop comparison input needs to be an array");
         }
 
-        push_range(result, parse(*comparison_value));
-        result.emplace_back(vm_operator::jump_false, label_end);
+        push_range(result, parse(comparison_token));
+        result.emplace_back(vm_operator::jump_false, comparison_token.copy(label_end));
 
-        for (auto i = 2; i < input.data.size(); i++)
+        for (auto i = 2; i < input.list_data.size(); i++)
         {
-            push_range(result, parse(*input.data[i]));
+            push_range(result, parse(*input.list_data[i]));
         }
 
-        result.emplace_back(vm_operator::jump, label_start);
+        result.emplace_back(vm_operator::jump, comparison_token.copy(label_start));
         result.emplace_back(ss_label_end.str());
 
         loop_stack.pop_back();
         return result;
     }
 
-    assembler::code_line_list assembler::parse_cond(const token_list &input, bool is_if_statement)
+    assembler::code_line_list assembler::parse_cond(const token &input, bool is_if_statement)
     {
-        if (input.data.size() < 3)
+        if (input.list_data.size() < 3)
         {
             throw std::runtime_error("Condition input has too few inputs");
         }
-        if (input.data.size() < 3)
+        if (input.list_data.size() < 3)
         {
             throw std::runtime_error("Condition input has too many inputs!");
         }
@@ -211,53 +211,53 @@ namespace lysithea_vm
         ss_label_end << if_label_num;
         auto label_end = std::make_shared<string_value>(ss_label_end.str());
 
-        auto has_else_call = input.data.size() == 4;
+        auto has_else_call = input.list_data.size() == 4;
         auto jump_operator = is_if_statement ? vm_operator::jump_false : vm_operator::jump_true;
 
-        auto comparison_value = input.data[1];
-        auto comparison_call = comparison_value->get_value().get_complex<const array_value>();
+        const auto &comparison_token = *input.list_data[1];
+        auto comparison_call = comparison_token.token_value.get_complex<const array_value>();
         if (!comparison_call)
         {
             throw std::runtime_error("Condition needs comparison to be an array");
         }
 
-        auto first_block_value = input.data[2];
-        auto first_block_call = first_block_value->get_value().get_complex<const array_value>();
+        const auto &first_block_token = *input.list_data[2];
+        auto first_block_call = first_block_token.token_value.get_complex<const array_value>();
         if (!first_block_call)
         {
             throw std::runtime_error("Condition needs first block to be an array");
         }
 
-        auto result = parse(*comparison_value);
+        auto result = parse(comparison_token);
 
         if (has_else_call)
         {
             // Jump to else if the condition doesn't match
-            result.emplace_back(jump_operator, label_else);
+            result.emplace_back(jump_operator, comparison_token.copy(label_else));
 
             // First block of code
-            push_range(result, parse_flatten(*first_block_value));
+            push_range(result, parse_flatten(first_block_token));
             // Jump after the condition, skipping second block of code.
-            result.emplace_back(vm_operator::jump, label_end);
+            result.emplace_back(vm_operator::jump, first_block_token.copy(label_end));
 
             // Jump target for else
             result.emplace_back(ss_label_else.str());
 
             // Second 'else' block of code
-            auto second_block_value = input.data[3];
-            auto second_block_call = second_block_value->get_value().get_complex<const array_value>();
+            const auto &second_block_value = *input.list_data[3];
+            auto second_block_call = second_block_value.token_value.get_complex<const array_value>();
             if (!second_block_call)
             {
                 throw std::runtime_error("Condition else needs second block to be an array");
             }
 
-            push_range(result, parse_flatten(*second_block_value));
+            push_range(result, parse_flatten(second_block_value));
         }
         else
         {
-            result.emplace_back(jump_operator, label_end);
+            result.emplace_back(jump_operator, comparison_token.copy(label_end));
 
-            push_range(result, parse_flatten(*first_block_value));
+            push_range(result, parse_flatten(first_block_token));
         }
 
         result.emplace_back(ss_label_end.str());
@@ -265,17 +265,14 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_flatten(const itoken &input)
+    assembler::code_line_list assembler::parse_flatten(const token &input)
     {
-        // auto is_array = input.get_complex<const array_value>();
-        auto is_array = dynamic_cast<const token_list *>(&input);
-        if (is_array)
+        if (input.type == token_type::list)
         {
             auto all_array = true;
-            for (auto iter : is_array->data)
+            for (const auto &iter : input.list_data)
             {
-                // if (!iter.get_complex<const array_value>())
-                if (!dynamic_cast<const token_list *>(iter.get()))
+                if (iter->type != token_type::list)
                 {
                     all_array = false;
                     break;
@@ -285,7 +282,7 @@ namespace lysithea_vm
             if (all_array)
             {
                 code_line_list result;
-                for (auto iter : is_array->data)
+                for (const auto &iter : input.list_data)
                 {
                     push_range(result, parse(*iter));
                 }
@@ -296,7 +293,7 @@ namespace lysithea_vm
         return parse(input);
     }
 
-    assembler::code_line_list assembler::parse_loop_jump(const std::string &keyword, bool jump_to_start)
+    assembler::code_line_list assembler::parse_loop_jump(const token &token, const std::string &keyword, bool jump_to_start)
     {
         if (loop_stack.size() == 0)
         {
@@ -306,16 +303,16 @@ namespace lysithea_vm
         auto loop_label = loop_stack.back();
 
         code_line_list result;
-        result.emplace_back(vm_operator::jump, jump_to_start ? loop_label.start : loop_label.end);
+        result.emplace_back(vm_operator::jump, token.copy(jump_to_start ? loop_label.start : loop_label.end));
         return result;
     }
 
-    std::shared_ptr<function> assembler::parse_function(const token_list &input)
+    std::shared_ptr<function> assembler::parse_function(const token &input)
     {
         std::string name;
         auto offset = 0;
 
-        auto name_var_check = input.data[1]->get_value().get_complex<const variable_value>();
+        auto name_var_check = input.list_data[1]->token_value.get_complex<const variable_value>();
         if (name_var_check)
         {
             name = name_var_check->data;
@@ -323,7 +320,7 @@ namespace lysithea_vm
         }
         else
         {
-            auto name_string_check = input.data[1]->get_value().get_complex<const string_value>();
+            auto name_string_check = input.list_data[1]->token_value.get_complex<const string_value>();
             if (name_string_check)
             {
                 name = name_string_check->data;
@@ -332,56 +329,60 @@ namespace lysithea_vm
         }
 
         std::vector<std::string> parameters;
-        auto parameters_array = input.data[1 + offset]->get_value().get_complex<const array_value>();
+        auto parameters_array = input.list_data[1 + offset]->token_value.get_complex<const array_value>();
         for (auto iter : parameters_array->data)
         {
             parameters.emplace_back(iter.to_string());
         }
 
         code_line_list temp_code_lines;
-        for (auto i = 2 + offset; i < input.data.size(); i++)
+        for (auto i = 2 + offset; i < input.list_data.size(); i++)
         {
-            push_range(temp_code_lines, parse(*input.data[i]));
+            push_range(temp_code_lines, parse(*input.list_data[i]));
         }
 
         return process_temp_function(parameters, temp_code_lines, name);
     }
 
-    assembler::code_line_list assembler::parse_change_variable(value input, builtin_function_value change_func)
+    // assembler::code_line_list assembler::parse_change_variable(value input, builtin_function_value change_func)
+    // {
+    //     auto var_name = std::make_shared<string_value>(input.to_string());
+    //     value num_args(1);
+
+    //     array_vector call_array_args;
+    //     call_array_args.emplace_back(std::make_shared<builtin_function_value>(change_func));
+    //     call_array_args.emplace_back(num_args);
+    //     auto call_array_values = std::make_shared<array_value>(call_array_args, false);
+
+    //     code_line_list result;
+    //     result.emplace_back(vm_operator::get, token(value(var_name)));
+    //     result.emplace_back(vm_operator::call_direct, call_array_values);
+    //     result.emplace_back(vm_operator::set, value(var_name));
+
+    //     return result;
+    // }
+
+    assembler::code_line_list assembler::parse_jump(const token &input)
     {
-        auto var_name = std::make_shared<string_value>(input.to_string());
-        value num_args(1);
-
-        array_vector call_array_args;
-        call_array_args.emplace_back(std::make_shared<builtin_function_value>(change_func));
-        call_array_args.emplace_back(num_args);
-        auto call_array_values = std::make_shared<array_value>(call_array_args, false);
-
-        code_line_list result;
-        result.emplace_back(vm_operator::get, var_name);
-        result.emplace_back(vm_operator::call_direct, call_array_values);
-        result.emplace_back(vm_operator::set, var_name);
-
-        return result;
-    }
-
-    assembler::code_line_list assembler::parse_jump(const token_list &input)
-    {
-        auto result = parse(*input.data[1]);
-        if (result.size() == 1 && result[0].op == vm_operator::push && !result[0].argument.is_undefined())
+        auto result = parse(*input.list_data[1]);
+        if (result.size() == 1 && result[0].op == vm_operator::push)
         {
-             code_line_list new_result;
-             new_result.emplace_back(vm_operator::jump, result[0].argument);
-             return new_result;
+            const auto &first_token = result[0].argument;
+            if (!first_token.token_value.is_undefined())
+            {
+                code_line_list new_result;
+                new_result.emplace_back(vm_operator::jump, result[0].argument);
+                return new_result;
+            }
         }
-        result.emplace_back(vm_operator::jump);
+        result.emplace_back(vm_operator::jump, input.to_empty());
         return result;
     }
 
-    assembler::code_line_list assembler::parse_return(const token_list &input)
+    assembler::code_line_list assembler::parse_return(const token &input)
     {
         code_line_list result;
-        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
             push_range(result, parse(*iter->get()));
         }
@@ -389,7 +390,7 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_function_keyword(const token_list &input)
+    assembler::code_line_list assembler::parse_function_keyword(const token &input)
     {
         auto function = parse_function(input);
         auto function_value = std::make_shared<lysithea_vm::function_value>(function);
@@ -400,21 +401,21 @@ namespace lysithea_vm
         auto current_keyword = keyword_parsing_stack.size() > 1 ? keyword_parsing_stack[keyword_parsing_stack.size() - 2] : keyword_function;
         if (function->has_name && current_keyword == keyword_function)
         {
-            result.emplace_back(vm_operator::define, value(function->name));
+            result.emplace_back(vm_operator::define, input.copy(value(function->name)));
         }
         return result;
     }
 
-    assembler::code_line_list assembler::parse_negative(const token_list &input)
+    assembler::code_line_list assembler::parse_negative(const token &input)
     {
-        if (input.data.size() == 3)
+        if (input.list_data.size() == 3)
         {
             return parse_operator(vm_operator::sub, input);
         }
-        else if (input.data.size() == 2)
+        else if (input.list_data.size() == 2)
         {
             // If it's a constant already, just push the negative.
-            auto first = input.data[1]->get_value();
+            auto first = input.list_data[1]->get_value();
             if (first.is_number())
             {
                 code_line_list result;
@@ -423,7 +424,7 @@ namespace lysithea_vm
             }
             else
             {
-                auto result = parse(*input.data[1]);
+                auto result = parse(*input.list_data[1]);
                 result.emplace_back(vm_operator::unary_negative);
                 return result;
             }
@@ -434,33 +435,33 @@ namespace lysithea_vm
         }
     }
 
-    assembler::code_line_list assembler::parse_one_push_input(vm_operator op_code, const token_list &input)
+    assembler::code_line_list assembler::parse_one_push_input(vm_operator op_code, const token &input)
     {
-        if (input.data.size() < 2)
+        if (input.list_data.size() < 2)
         {
             throw std::runtime_error("Operator expects ast least 1 input");
         }
 
         code_line_list result;
-        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
-            push_range(result, parse(*iter->get()));
+            push_range(result, parse(**iter));
             result.emplace_back(op_code);
         }
         return result;
     }
 
-    assembler::code_line_list assembler::parse_operator(vm_operator op_code, const token_list &input)
+    assembler::code_line_list assembler::parse_operator(vm_operator op_code, const token &input)
     {
-        if (input.data.size() < 3)
+        if (input.list_data.size() < 3)
         {
             throw std::runtime_error("Operator expects at least 2 inputs");
         }
 
-        auto result = parse(*input.data[1]);
-        for (auto iter = input.data.cbegin() + 2; iter != input.data.cend(); ++iter)
+        auto result = parse(*input.list_data[1]);
+        for (auto iter = input.list_data.cbegin() + 2; iter != input.list_data.cend(); ++iter)
         {
-            const auto &token = *iter->get();
+            const auto &token = **iter;
             auto token_value = token.get_value();
             if (token_value.is_number())
             {
@@ -475,15 +476,15 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_one_variable_update(vm_operator op_code, const token_list &input)
+    assembler::code_line_list assembler::parse_one_variable_update(vm_operator op_code, const token &input)
     {
-        if (input.data.size() < 2)
+        if (input.list_data.size() < 2)
         {
             throw std::runtime_error("Operator expects at least 1 input");
         }
 
         code_line_list result;
-        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
             auto var_name = (*iter)->get_value().to_string();
             result.emplace_back(op_code, value(var_name));
@@ -492,45 +493,44 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_string_concat(const token_list &input)
+    assembler::code_line_list assembler::parse_string_concat(const token &input)
     {
         code_line_list result;
-        for (auto iter = input.data.cbegin() + 1; iter != input.data.cend(); ++iter)
+        for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
-            push_range(result, parse(*iter->get()));
+            push_range(result, parse(**iter));
         }
-        result.emplace_back(vm_operator::string_concat, value(input.data.size() - 1));
+        result.emplace_back(vm_operator::string_concat, value(input.list_data.size() - 1));
         return result;
     }
 
-    assembler::code_line_list assembler::transform_assignment_operator(const token_list &input)
+    assembler::code_line_list assembler::transform_assignment_operator(const token &input)
     {
-        auto op_code = input.data[0]->get_value().to_string();
+        auto op_code = input.list_data[0]->get_value().to_string();
         op_code = op_code.substr(0, op_code.size() - 1);
 
-        auto var_name = input.data[1]->get_value().to_string();
-        std::vector<std::shared_ptr<itoken>> new_code(input.data);
-        new_code[0] = input.data[0]->copy(value(std::make_shared<variable_value>(op_code)));
+        auto var_name = input.list_data[1]->get_value().to_string();
+        std::vector<std::shared_ptr<token>> new_code(input.list_data);
+        new_code[0] = std::make_shared<token>(input.list_data[0]->copy(value(std::make_shared<variable_value>(op_code))));
 
-        std::vector<std::shared_ptr<itoken>> wrapped_code;
-        wrapped_code.push_back(input.copy(value(std::make_shared<variable_value>("set"))));
-        wrapped_code.push_back(input.data[1]->copy(value(std::make_shared<variable_value>(var_name))));
-        wrapped_code.push_back(std::make_shared<token_list>(input.location, new_code));
+        std::vector<std::shared_ptr<token>> wrapped_code;
+        wrapped_code.push_back(std::make_shared<token>(input.copy(value(std::make_shared<variable_value>("set")))));
+        wrapped_code.push_back(std::make_shared<token>(input.list_data[1]->copy(value(std::make_shared<variable_value>(var_name)))));
+        wrapped_code.emplace_back(input.location, new_code);
 
-        // value wrapped_code_value(std::make_shared<array_value>(wrapped_code, false));
-        auto wrapped_code_value = std::make_shared<token_list>(input.location, wrapped_code);
-        return parse(*wrapped_code_value);
+        token wrapped_code_value(input.location, wrapped_code);
+        return parse(wrapped_code_value);
     }
 
-    std::vector<temp_code_line> assembler::parse_keyword(const std::string &keyword, const token_list &input)
+    std::vector<temp_code_line> assembler::parse_keyword(const std::string &keyword, const token &input)
     {
         code_line_list result;
         keyword_parsing_stack.push_back(keyword);
 
         // General Operators
         if (keyword == keyword_function) { result = parse_function_keyword(input); }
-        else if (keyword == keyword_continue) { result = parse_loop_jump(keyword, true); }
-        else if (keyword == keyword_break) { result = parse_loop_jump(keyword, false); }
+        else if (keyword == keyword_continue) { result = parse_loop_jump(input, keyword, true); }
+        else if (keyword == keyword_break) { result = parse_loop_jump(input, keyword, false); }
         else if (keyword == keyword_set) { result = parse_define_set(input, false); }
         else if (keyword == keyword_define) { result = parse_define_set(input, true); }
         else if (keyword == keyword_loop) { result = parse_loop(input); }

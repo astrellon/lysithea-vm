@@ -287,7 +287,7 @@ namespace LysitheaVM
             {
                 return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, input.Copy(codeLine.Input)) };
             }
-            parse.Add(new TempCodeLine(Operator.Jump, input.Copy(null)));
+            parse.Add(new TempCodeLine(Operator.Jump, input.ToEmpty()));
             return parse;
         }
 
@@ -298,7 +298,7 @@ namespace LysitheaVM
             {
                 result.AddRange(Parse(item));
             }
-            result.Add(new TempCodeLine(Operator.Return, input.Copy(null)));
+            result.Add(new TempCodeLine(Operator.Return, input.ToEmpty()));
             return result;
         }
 

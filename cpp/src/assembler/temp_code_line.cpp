@@ -11,14 +11,14 @@ namespace lysithea_vm
 
         std::stringstream result;
         result << lysithea_vm::to_string(op);
-        if (!argument.is_undefined())
-        {
-            result << ": " << argument.to_string();
-        }
-        else
-        {
-            result << ": <no arg>";
-        }
+        // if (!argument.is_undefined())
+        // {
+        //     result << ": " << argument.to_string();
+        // }
+        // else
+        // {
+        //     result << ": <no arg>";
+        // }
 
         return result.str();
     }

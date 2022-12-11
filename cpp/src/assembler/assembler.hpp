@@ -45,28 +45,28 @@ namespace lysithea_vm
             // Methods
             std::shared_ptr<script> parse_from_text(const std::string &input);
             std::shared_ptr<script> parse_from_stream(std::istream &input);
-            std::shared_ptr<script> parse_from_value(const token_list &input);
-            code_line_list parse(const itoken &input);
+            std::shared_ptr<script> parse_from_value(const token &input);
+            code_line_list parse(const token &input);
 
-            code_line_list parse_function_keyword(const token_list &input);
-            code_line_list parse_define_set(const token_list &input, bool is_define);
-            code_line_list parse_loop(const token_list &input);
-            code_line_list parse_cond(const token_list &input, bool is_if_statement);
-            code_line_list parse_flatten(const itoken &input);
-            code_line_list parse_loop_jump(const std::string &keyword, bool jump_to_start);
-            std::shared_ptr<function> parse_function(const token_list &input);
-            code_line_list parse_change_variable(value input, builtin_function_value change_func);
-            code_line_list parse_jump(const token_list &input);
-            code_line_list parse_return(const token_list &input);
-            code_line_list parse_negative(const token_list &input);
-            code_line_list parse_one_push_input(vm_operator op_code, const token_list &input);
-            code_line_list parse_operator(vm_operator op_code, const token_list &input);
-            code_line_list parse_one_variable_update(vm_operator op_code, const token_list &input);
-            code_line_list parse_string_concat(const token_list &input);
-            code_line_list transform_assignment_operator(const token_list &input);
-            code_line_list parse_keyword(const std::string &keyword, const token_list &input);
+            code_line_list parse_function_keyword(const token &input);
+            code_line_list parse_define_set(const token &input, bool is_define);
+            code_line_list parse_loop(const token &input);
+            code_line_list parse_cond(const token &input, bool is_if_statement);
+            code_line_list parse_flatten(const token &input);
+            code_line_list parse_loop_jump(const token &token, const std::string &keyword, bool jump_to_start);
+            std::shared_ptr<function> parse_function(const token &input);
+            // code_line_list parse_change_variable(value input, builtin_function_value change_func);
+            code_line_list parse_jump(const token &input);
+            code_line_list parse_return(const token &input);
+            code_line_list parse_negative(const token &input);
+            code_line_list parse_one_push_input(vm_operator op_code, const token &input);
+            code_line_list parse_operator(vm_operator op_code, const token &input);
+            code_line_list parse_one_variable_update(vm_operator op_code, const token &input);
+            code_line_list parse_string_concat(const token &input);
+            code_line_list transform_assignment_operator(const token &input);
+            code_line_list parse_keyword(const std::string &keyword, const token &input);
 
-            std::shared_ptr<function> parse_global_function(const token_list &input);
+            std::shared_ptr<function> parse_global_function(const token &input);
 
             code_line_list optimise_call_symbol_value(const std::string &variable, int num_args);
             code_line_list optimise_get_symbol_value(const std::string &variable);

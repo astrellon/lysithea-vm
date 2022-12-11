@@ -31,8 +31,8 @@ namespace lysithea_vm
                 return input;
             }
 
-            static std::shared_ptr<token_list> read_from_text(const std::vector<std::string> &input_lines);
-            static std::shared_ptr<itoken> read_from_parser(parser &input);
+            static token read_from_text(const std::vector<std::string> &input_lines);
+            static token read_from_parser(parser &input);
             static value atom(const std::string &input);
 
             static std::shared_ptr<std::vector<std::string>> split_stream(std::istream &input);

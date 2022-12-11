@@ -6,10 +6,10 @@ namespace lysithea_vm
     {
         public:
             // Fields
-            const int start_line_number;
-            const int end_line_number;
-            const int start_column_number;
-            const int end_column_number;
+            int start_line_number;
+            int end_line_number;
+            int start_column_number;
+            int end_column_number;
 
             // Constructor
             code_location(): code_location(0, 0, 0, 0) { }

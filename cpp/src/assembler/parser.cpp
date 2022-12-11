@@ -167,32 +167,32 @@ namespace lysithea_vm
         return code_location(start_line_number, start_column_number, line_number, column_number);
     }
 
-    std::shared_ptr<token_list> parser::read_from_text(const std::vector<std::string> &input_lines)
+    token parser::read_from_text(const std::vector<std::string> &input_lines)
     {
         parser input_parser(input_lines);
 
-        std::vector<std::shared_ptr<itoken>> result;
+        std::vector<token> result;
         while (input_parser.move_next())
         {
             result.emplace_back(read_from_parser(input_parser));
         }
 
-        return std::make_shared<token_list>(code_location(), result);
+        return token(code_location(), result);
     }
 
-    std::shared_ptr<itoken> parser::read_from_parser(parser &input)
+    token parser::read_from_parser(parser &input)
     {
-        const auto &token = input.current;
-        if (token.size() == 0)
+        const auto &input_token = input.current;
+        if (input_token.size() == 0)
         {
             throw std::runtime_error("Unexpected end of tokens");
         }
-        if (token == "(")
+        if (input_token == "(")
         {
             auto line_number = input.line_number;
             auto column_number = input.column_number;
 
-            std::vector<std::shared_ptr<itoken>> list;
+            std::vector<token> list;
             while (input.move_next())
             {
                 if (input.current == ")")
@@ -204,18 +204,18 @@ namespace lysithea_vm
             }
 
             code_location location(line_number, column_number, input.line_number, input.column_number);
-            return std::make_shared<token_list>(location, list);
+            return token(location, list);
         }
-        if (token == ")")
+        if (input_token == ")")
         {
             throw std::runtime_error("Unexpected )");
         }
-        if (token == "{")
+        if (input_token == "{")
         {
             auto line_number = input.line_number;
             auto column_number = input.column_number;
 
-            std::unordered_map<std::string, std::shared_ptr<itoken>> map;
+            std::unordered_map<std::string, token> map;
             while (input.move_next())
             {
                 if (input.current == "}")
@@ -226,18 +226,18 @@ namespace lysithea_vm
                 auto key = read_from_parser(input);
                 input.move_next();
 
-                map.emplace(key->get_value().to_string(), read_from_parser(input));
+                map.emplace(key.get_value().to_string(), read_from_parser(input));
             }
 
             code_location location(line_number, column_number, input.line_number, input.column_number);
-            return std::make_shared<token_map>(location, map);
+            return token(location, map);
         }
-        if (token == "}")
+        if (input_token == "}")
         {
             throw std::runtime_error("Unexpected }");
         }
 
-        return std::make_shared<lysithea_vm::token>(input.current_location(), atom(token));
+        return token(input.current_location(), atom(input_token));
     }
 
     value parser::atom(const std::string &input)
