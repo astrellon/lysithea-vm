@@ -1,5 +1,6 @@
 #include "assembler.hpp"
 
+#include <iostream>
 #include <sstream>
 #include <unordered_map>
 
@@ -169,8 +170,7 @@ namespace lysithea_vm
         result.emplace_back(ss_label_start.str());
 
         const auto &comparison_token = *input.list_data[1];
-        auto comparison_call = comparison_token.token_value.get_complex<const array_value>();
-        if (!comparison_call)
+        if (comparison_token.type != token_type::list)
         {
             throw std::runtime_error("Loop comparison input needs to be an array");
         }
@@ -215,15 +215,13 @@ namespace lysithea_vm
         auto jump_operator = is_if_statement ? vm_operator::jump_false : vm_operator::jump_true;
 
         const auto &comparison_token = *input.list_data[1];
-        auto comparison_call = comparison_token.token_value.get_complex<const array_value>();
-        if (!comparison_call)
+        if (comparison_token.type != token_type::list)
         {
             throw std::runtime_error("Condition needs comparison to be an array");
         }
 
         const auto &first_block_token = *input.list_data[2];
-        auto first_block_call = first_block_token.token_value.get_complex<const array_value>();
-        if (!first_block_call)
+        if (first_block_token.type != token_type::list)
         {
             throw std::runtime_error("Condition needs first block to be an array");
         }
@@ -244,14 +242,13 @@ namespace lysithea_vm
             result.emplace_back(ss_label_else.str());
 
             // Second 'else' block of code
-            const auto &second_block_value = *input.list_data[3];
-            auto second_block_call = second_block_value.token_value.get_complex<const array_value>();
-            if (!second_block_call)
+            const auto &second_block_token = *input.list_data[3];
+            if (second_block_token.type != token_type::list)
             {
                 throw std::runtime_error("Condition else needs second block to be an array");
             }
 
-            push_range(result, parse_flatten(second_block_value));
+            push_range(result, parse_flatten(second_block_token));
         }
         else
         {
@@ -329,10 +326,10 @@ namespace lysithea_vm
         }
 
         std::vector<std::string> parameters;
-        auto parameters_array = input.list_data[1 + offset]->token_value.get_complex<const array_value>();
-        for (auto iter : parameters_array->data)
+        auto parameters_array = input.list_data[1 + offset]->list_data;
+        for (auto iter : parameters_array)
         {
-            parameters.emplace_back(iter.to_string());
+            parameters.emplace_back(iter->to_string(0));
         }
 
         code_line_list temp_code_lines;

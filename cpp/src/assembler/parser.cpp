@@ -1,5 +1,7 @@
 #include "parser.hpp"
 
+#include <iostream>
+
 #include "../values/array_value.hpp"
 #include "../values/object_value.hpp"
 #include "../values/string_value.hpp"
@@ -10,7 +12,7 @@ namespace lysithea_vm
     parser::parser(const std::vector<std::string> &input) : in_quote('\0'), return_symbol('\0'),
         escaped(false), in_comment(false), line_number(0), column_number(0),
         start_line_number(0), start_column_number(0),
-        accumulator(), input(input)
+        accumulator(), accumulator_size(0), input(input)
     {
 
     }
@@ -89,7 +91,6 @@ namespace lysithea_vm
                     continue;
                 }
 
-                accumulator << ch;
                 append_char(ch);
                 if (ch == in_quote)
                 {

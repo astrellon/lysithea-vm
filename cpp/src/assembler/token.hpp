@@ -40,6 +40,8 @@ namespace lysithea_vm
             token (const code_location &location, const std::unordered_map<std::string, token_ptr> &data) : location(location), type(token_type::map), map_data(data) { }
 
             // Methods
+            std::string to_string(int indent) const;
+
             value get_value() const;
             token copy(value new_token_value) const;
             token copy(complex_ptr new_token_value) const;
