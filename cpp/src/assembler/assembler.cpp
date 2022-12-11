@@ -78,12 +78,12 @@ namespace lysithea_vm
                 return result;
             }
 
-            const auto &first_token = input.list_data[0];
+            const auto &first_token = *input.list_data[0];
             // If the first item in an array is a symbol we assume that it is a function call or a label
             // auto first = dynamic_cast<token *>(first_token.get());
-            if (first_token->type == token_type::value)
+            if (first_token.type == token_type::value)
             {
-                auto first_symbol_value = first_token->token_value.get_complex<variable_value>();
+                auto first_symbol_value = first_token.token_value.get_complex<variable_value>();
                 if (first_symbol_value)
                 {
                     if (first_symbol_value->is_label())
@@ -107,7 +107,7 @@ namespace lysithea_vm
                         push_range(result, parse(*iter->get()));
                     }
 
-                    push_range(result, optimise_call_symbol_value(first_symbol_value->data, input.list_data.size() - 1));
+                    push_range(result, optimise_call_symbol_value(first_token, first_symbol_value->data, input.list_data.size() - 1));
 
                     keyword_parsing_stack.pop_back();
 
@@ -123,7 +123,7 @@ namespace lysithea_vm
                 auto symbol_value = input.token_value.get_complex<variable_value>();
                 if (symbol_value && !symbol_value->is_label())
                 {
-                    return optimise_get_symbol_value(symbol_value->data);
+                    return optimise_get_symbol_value(input, symbol_value->data);
                 }
             }
         }
@@ -142,7 +142,7 @@ namespace lysithea_vm
         // Multiple variables can be set when a function returns multiple results.
         for (auto i = input.list_data.size() - 2; i >= 1; i--)
         {
-            result.emplace_back(op_code, input.list_data[i]);
+            result.emplace_back(op_code, *input.list_data[i]);
         }
         return result;
     }
@@ -386,7 +386,7 @@ namespace lysithea_vm
         {
             push_range(result, parse(*iter->get()));
         }
-        result.emplace_back(vm_operator::call_return);
+        result.emplace_back(vm_operator::call_return, input.to_empty());
         return result;
     }
 
@@ -396,7 +396,7 @@ namespace lysithea_vm
         auto function_value = std::make_shared<lysithea_vm::function_value>(function);
 
         code_line_list result;
-        result.emplace_back(vm_operator::push, function_value);
+        result.emplace_back(vm_operator::push, input.copy(value(function_value)));
 
         auto current_keyword = keyword_parsing_stack.size() > 1 ? keyword_parsing_stack[keyword_parsing_stack.size() - 2] : keyword_function;
         if (function->has_name && current_keyword == keyword_function)
@@ -419,13 +419,13 @@ namespace lysithea_vm
             if (first.is_number())
             {
                 code_line_list result;
-                result.emplace_back(vm_operator::push, value(-first.get_number()));
+                result.emplace_back(vm_operator::push, input.list_data[1]->copy(value(-first.get_number())));
                 return result;
             }
             else
             {
                 auto result = parse(*input.list_data[1]);
-                result.emplace_back(vm_operator::unary_negative);
+                result.emplace_back(vm_operator::unary_negative, input.list_data[1]->to_empty());
                 return result;
             }
         }
@@ -446,7 +446,7 @@ namespace lysithea_vm
         for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
             push_range(result, parse(**iter));
-            result.emplace_back(op_code);
+            result.emplace_back(op_code, (*iter)->to_empty());
         }
         return result;
     }
@@ -465,12 +465,12 @@ namespace lysithea_vm
             auto token_value = token.get_value();
             if (token_value.is_number())
             {
-                result.emplace_back(op_code, token_value);
+                result.emplace_back(op_code, token);
             }
             else
             {
                 push_range(result, parse(token));
-                result.emplace_back(op_code);
+                result.emplace_back(op_code, input.to_empty());
             }
         }
         return result;
@@ -487,7 +487,7 @@ namespace lysithea_vm
         for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
             auto var_name = (*iter)->get_value().to_string();
-            result.emplace_back(op_code, value(var_name));
+            result.emplace_back(op_code, (*iter)->copy(value(var_name)));
         }
 
         return result;
@@ -500,7 +500,7 @@ namespace lysithea_vm
         {
             push_range(result, parse(**iter));
         }
-        result.emplace_back(vm_operator::string_concat, value(input.list_data.size() - 1));
+        result.emplace_back(vm_operator::string_concat, input.copy(value(input.list_data.size() - 1)));
         return result;
     }
 
@@ -510,13 +510,13 @@ namespace lysithea_vm
         op_code = op_code.substr(0, op_code.size() - 1);
 
         auto var_name = input.list_data[1]->get_value().to_string();
-        std::vector<std::shared_ptr<token>> new_code(input.list_data);
+        std::vector<token_ptr> new_code(input.list_data);
         new_code[0] = std::make_shared<token>(input.list_data[0]->copy(value(std::make_shared<variable_value>(op_code))));
 
-        std::vector<std::shared_ptr<token>> wrapped_code;
-        wrapped_code.push_back(std::make_shared<token>(input.copy(value(std::make_shared<variable_value>("set")))));
-        wrapped_code.push_back(std::make_shared<token>(input.list_data[1]->copy(value(std::make_shared<variable_value>(var_name)))));
-        wrapped_code.emplace_back(input.location, new_code);
+        std::vector<token_ptr> wrapped_code;
+        wrapped_code.emplace_back(std::make_shared<token>(input.copy(value(std::make_shared<variable_value>("set")))));
+        wrapped_code.emplace_back(std::make_shared<token>(input.list_data[1]->copy(value(std::make_shared<variable_value>(var_name)))));
+        wrapped_code.emplace_back(std::make_shared<token>(input.location, new_code));
 
         token wrapped_code_value(input.location, wrapped_code);
         return parse(wrapped_code_value);
@@ -575,7 +575,7 @@ namespace lysithea_vm
         return result;
     }
 
-    std::vector<temp_code_line> assembler::optimise_call_symbol_value(const std::string &variable, int num_args)
+    std::vector<temp_code_line> assembler::optimise_call_symbol_value(const token &input, const std::string &variable, int num_args)
     {
         code_line_list result;
         value num_arg_value(num_args);
@@ -600,7 +600,7 @@ namespace lysithea_vm
                     call_vector.emplace_back(num_arg_value);
 
                     auto call_value = std::make_shared<array_value>(call_vector, false);
-                    result.emplace_back(vm_operator::call_direct, call_value);
+                    result.emplace_back(vm_operator::call_direct, input.copy(call_value));
                     return result;
                 }
 
@@ -616,7 +616,7 @@ namespace lysithea_vm
                     call_vector.emplace_back(num_arg_value);
 
                     auto call_value = std::make_shared<array_value>(call_vector, false);
-                    result.emplace_back(vm_operator::call_direct, call_value);
+                    result.emplace_back(vm_operator::call_direct, input.copy(call_value));
                     return result;
                 }
 
@@ -625,19 +625,19 @@ namespace lysithea_vm
         }
 
         // Could not find the parent right now, so look for the parent at runtime.
-        result.emplace_back(vm_operator::get, parent_key);
+        result.emplace_back(vm_operator::get, input.copy(parent_key));
 
         // If this was also a property check also look up the property at runtime.
         if (is_property)
         {
-            result.emplace_back(vm_operator::get_property, property);
+            result.emplace_back(vm_operator::get_property, input.copy(property));
         }
-        result.emplace_back(vm_operator::call, num_arg_value);
+        result.emplace_back(vm_operator::call, input.copy(num_arg_value));
 
         return result;
     }
 
-    std::vector<temp_code_line> assembler::optimise_get_symbol_value(const std::string &variable)
+    std::vector<temp_code_line> assembler::optimise_get_symbol_value(const token &input, const std::string &variable)
     {
         std::string get_name = variable;
         auto is_argument_unpack = starts_with_unpack(variable);
@@ -663,36 +663,36 @@ namespace lysithea_vm
                 if (try_get_property(found_parent, *property, found_property))
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.
-                    result.emplace_back(vm_operator::push, found_property);
+                    result.emplace_back(vm_operator::push, input.copy(found_property));
                 }
                 else
                 {
                     // We didn't find the property at compile time, so look it up at run time.
-                    result.emplace_back(vm_operator::push, found_parent);
-                    result.emplace_back(vm_operator::get_property, property);
+                    result.emplace_back(vm_operator::push, input.copy(found_parent));
+                    result.emplace_back(vm_operator::get_property, input.copy(property));
                 }
             }
             else
             {
                 // This was not a property request but we found the parent so just push onto the stack.
-                result.emplace_back(vm_operator::push, found_parent);
+                result.emplace_back(vm_operator::push, input.copy(found_parent));
             }
         }
         else
         {
             // Could not find the parent right now, so look for the parent at runtime.
-            result.emplace_back(vm_operator::get, parent_key);
+            result.emplace_back(vm_operator::get, input.copy(parent_key));
 
             // If this was also a property check also look up the property at runtime.
             if (is_property)
             {
-                result.emplace_back(vm_operator::get_property, property);
+                result.emplace_back(vm_operator::get_property, input.copy(property));
             }
         }
 
         if (is_argument_unpack)
         {
-            result.emplace_back(vm_operator::to_argument);
+            result.emplace_back(vm_operator::to_argument, input.to_empty());
         }
 
         return result;
@@ -724,6 +724,7 @@ namespace lysithea_vm
     {
         std::unordered_map<std::string, int> labels;
         std::vector<code_line> code;
+        std::vector<code_location> locations;
 
         for (const auto &temp_line : temp_code_lines)
         {
@@ -733,7 +734,8 @@ namespace lysithea_vm
             }
             else
             {
-                code.emplace_back(temp_line.op, temp_line.argument);
+                locations.emplace_back(temp_line.argument.location);
+                code.emplace_back(temp_line.op, temp_line.argument.get_value());
             }
         }
 

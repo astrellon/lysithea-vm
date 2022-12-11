@@ -171,10 +171,10 @@ namespace lysithea_vm
     {
         parser input_parser(input_lines);
 
-        std::vector<token> result;
+        std::vector<token_ptr> result;
         while (input_parser.move_next())
         {
-            result.emplace_back(read_from_parser(input_parser));
+            result.emplace_back(std::make_shared<token>(read_from_parser(input_parser)));
         }
 
         return token(code_location(), result);
@@ -192,7 +192,7 @@ namespace lysithea_vm
             auto line_number = input.line_number;
             auto column_number = input.column_number;
 
-            std::vector<token> list;
+            std::vector<token_ptr> list;
             while (input.move_next())
             {
                 if (input.current == ")")
@@ -200,7 +200,7 @@ namespace lysithea_vm
                     break;
                 }
 
-                list.emplace_back(read_from_parser(input));
+                list.emplace_back(std::make_shared<token>(read_from_parser(input)));
             }
 
             code_location location(line_number, column_number, input.line_number, input.column_number);
@@ -215,7 +215,7 @@ namespace lysithea_vm
             auto line_number = input.line_number;
             auto column_number = input.column_number;
 
-            std::unordered_map<std::string, token> map;
+            std::unordered_map<std::string, token_ptr> map;
             while (input.move_next())
             {
                 if (input.current == "}")
@@ -226,7 +226,7 @@ namespace lysithea_vm
                 auto key = read_from_parser(input);
                 input.move_next();
 
-                map.emplace(key.get_value().to_string(), read_from_parser(input));
+                map.emplace(key.get_value().to_string(), std::make_shared<token>(read_from_parser(input)));
             }
 
             code_location location(line_number, column_number, input.line_number, input.column_number);

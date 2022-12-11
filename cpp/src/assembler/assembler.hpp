@@ -68,8 +68,8 @@ namespace lysithea_vm
 
             std::shared_ptr<function> parse_global_function(const token &input);
 
-            code_line_list optimise_call_symbol_value(const std::string &variable, int num_args);
-            code_line_list optimise_get_symbol_value(const std::string &variable);
+            code_line_list optimise_call_symbol_value(const token &input, const std::string &variable, int num_args);
+            code_line_list optimise_get_symbol_value(const token &input, const std::string &variable);
 
             static bool is_get_property_request(const std::string &variable, std::shared_ptr<string_value> &parent_key, std::shared_ptr<array_value> &property);
 

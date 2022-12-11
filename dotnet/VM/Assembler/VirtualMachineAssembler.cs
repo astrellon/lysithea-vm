@@ -317,7 +317,7 @@ namespace LysitheaVM
                 }
 
                 var result = this.Parse(input.Data[1]);
-                result.Add(new TempCodeLine(Operator.UnaryNegative, input.Data[1].Copy(null)));
+                result.Add(new TempCodeLine(Operator.UnaryNegative, input.Data[1].ToEmpty()));
                 return result;
             }
             else
@@ -337,7 +337,7 @@ namespace LysitheaVM
             foreach (var item in input.Data.Skip(1))
             {
                 result.AddRange(this.Parse(item));
-                result.Add(new TempCodeLine(opCode, item.Copy(null)));
+                result.Add(new TempCodeLine(opCode, item.ToEmpty()));
             }
 
             return result;
@@ -355,7 +355,7 @@ namespace LysitheaVM
             {
                 if (item.TryGetValue<NumberValue>(out var numValue))
                 {
-                    result.Add(new TempCodeLine(opCode, item.Copy(numValue)));
+                    result.Add(new TempCodeLine(opCode, item));
                 }
                 else
                 {
@@ -583,7 +583,7 @@ namespace LysitheaVM
 
             if (isArgumentUnpack)
             {
-                result.Add(new TempCodeLine(Operator.ToArgument, input.Copy(null)));
+                result.Add(new TempCodeLine(Operator.ToArgument, input.ToEmpty()));
             }
 
             return result;
