@@ -5,8 +5,8 @@
 
 #include "src/values/values.hpp"
 #include "src/virtual_machine.hpp"
-#include "src/assembler.hpp"
-#include "src/parser.hpp"
+#include "src/assembler/assembler.hpp"
+#include "src/assembler/parser.hpp"
 #include "src/standard_library/standard_array_library.hpp"
 
 using namespace lysithea_vm;
@@ -134,8 +134,10 @@ std::shared_ptr<scope> create_dialogue_scope()
 
 int main()
 {
+    const char *filename = "../../examples/testDialogue.lys";
+
     std::ifstream input_file;
-    input_file.open("../../examples/testDialogue.lys");
+    input_file.open(filename);
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";
@@ -144,12 +146,11 @@ int main()
 
     auto custom_scope = create_dialogue_scope();
 
-    auto parsed = lysithea_vm::parser::read_from_stream(input_file);
     lysithea_vm::assembler assembler;
     assembler.builtin_scope.combine_scope(*custom_scope);
     assembler.builtin_scope.combine_scope(*standard_array_library::library_scope);
 
-    auto script = assembler.parse_from_value(parsed);
+    auto script = assembler.parse_from_stream(filename, input_file);
 
     lysithea_vm::virtual_machine vm(16);
     vm.execute(script);

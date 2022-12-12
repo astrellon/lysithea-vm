@@ -248,7 +248,7 @@ namespace lysithea_vm
                 throw std::runtime_error("Unable to get boolean argument");
             }
 
-            void print_stack_trace();
+            std::vector<std::string> create_stack_trace();
             static std::string debug_scope_line(const function &func, int line);
     };
 } // lysithea_vm

@@ -6,6 +6,7 @@
 #include "./values/value_property_access.hpp"
 #include "./standard_library/standard_array_library.hpp"
 #include "./utils.hpp"
+#include "./errors/virtual_machine_error.hpp"
 
 namespace lysithea_vm
 {
@@ -69,7 +70,7 @@ namespace lysithea_vm
         {
             default:
             {
-                throw std::runtime_error("Unknown operator");
+                throw virtual_machine_error(create_stack_trace(), "Unknown operator");
             }
             case vm_operator::push:
             {
@@ -79,7 +80,7 @@ namespace lysithea_vm
                 }
                 else
                 {
-                    throw std::runtime_error("Push needs an input");
+                    throw virtual_machine_error(create_stack_trace(), "Push needs an input");
                 }
                 break;
             }
@@ -88,7 +89,7 @@ namespace lysithea_vm
                 auto top = get_operator_arg<array_value>(code_line);
                 if (!top)
                 {
-                    throw std::runtime_error("Unable to convert input to argument");
+                    throw virtual_machine_error(create_stack_trace(), std::string("Unable to convert input to argument: ") + top->to_string());
                 }
 
                 push_stack(std::make_shared<array_value>(top->data, true));
@@ -100,7 +101,7 @@ namespace lysithea_vm
                 auto is_string = key.get_complex<string_value>();
                 if (!is_string)
                 {
-                    throw std::runtime_error("Unable to get value, input needs to be a string");
+                    throw virtual_machine_error(create_stack_trace(), std::string("Unable to get value, input needs to be a string: ") + key.to_string());
                 }
 
                 value found_value;
@@ -111,7 +112,7 @@ namespace lysithea_vm
                 }
                 else
                 {
-                    throw std::runtime_error("Unable to find value to get");
+                    throw virtual_machine_error(create_stack_trace(), std::string("Unable to find value to get: ") + key.to_string());
                 }
                 break;
             }
@@ -120,7 +121,7 @@ namespace lysithea_vm
                 auto key = get_operator_arg<array_value>(code_line);
                 if (!key)
                 {
-                    throw std::runtime_error("Unable to get property, input needs to be an array");
+                    throw virtual_machine_error(create_stack_trace(), std::string("Unable to get property, input needs to be an array: ") + key->to_string());
                 }
 
                 auto top = pop_stack();
@@ -131,7 +132,7 @@ namespace lysithea_vm
                 }
                 else
                 {
-                    throw std::runtime_error("Unable to get property");
+                    throw virtual_machine_error(create_stack_trace(), std::string("Unable to get property: ") + key->to_string());
                 }
 
                 break;
@@ -149,8 +150,7 @@ namespace lysithea_vm
                 auto value = pop_stack();
                 if (!current_scope->try_set(key.to_string(), value))
                 {
-                    print_stack_trace();
-                    throw std::runtime_error("Unable to set variable that has not been defined");
+                    throw virtual_machine_error(create_stack_trace(), "Unable to set variable that has not been defined: " + key.to_string());
                 }
                 break;
             }
@@ -189,7 +189,7 @@ namespace lysithea_vm
             {
                 if (!code_line.value.is_number())
                 {
-                    throw std::runtime_error("Call needs a num args code line input");
+                    throw virtual_machine_error(create_stack_trace(), "Call needs a num args code line input");
                 }
 
                 auto top = pop_stack();
@@ -199,7 +199,7 @@ namespace lysithea_vm
                 }
                 else
                 {
-                    throw std::runtime_error("Call needs a function to run");
+                    throw virtual_machine_error(create_stack_trace(), "Call needs a function to run");
                 }
                 break;
             }
@@ -208,20 +208,20 @@ namespace lysithea_vm
                 auto error = false;
                 if (!code_line.value.is_array())
                 {
-                    throw std::runtime_error("Call direct needs an array input");
+                    throw virtual_machine_error(create_stack_trace(), "Call direct needs an array input");
                 }
 
                 auto array_input = code_line.value.get_complex<const array_value>();
                 if (array_input->data.size() != 2 ||
                     !array_input->data[0].is_function())
                 {
-                    throw std::runtime_error("Call direct needs two inputs of func and number");
+                    throw virtual_machine_error(create_stack_trace(), "Call direct needs two inputs of func and number");
                 }
 
                 auto num_args = array_input->data[1];
                 if (!num_args.is_number())
                 {
-                    throw std::runtime_error("Call direct needs two inputs of func and number");
+                    throw virtual_machine_error(create_stack_trace(), "Call direct needs two inputs of func and number");
                 }
 
                 call_function(*array_input->data[0].get_complex(), num_args.get_int(), true);
@@ -233,7 +233,7 @@ namespace lysithea_vm
             {
                 if (!code_line.value.is_number())
                 {
-                    throw std::runtime_error("StringConcat operator needs the number of args to concat");
+                    throw virtual_machine_error(create_stack_trace(), "StringConcat operator needs the number of args to concat");
                 }
 
                 auto args = get_args(code_line.value.get_int());
@@ -285,14 +285,14 @@ namespace lysithea_vm
             {
                 if (!code_line.value.is_complex())
                 {
-                    throw std::runtime_error("Inc operator needs code line variable");
+                    throw virtual_machine_error(create_stack_trace(), "Inc operator needs code line variable");
                 }
 
                 auto key = code_line.value.to_string();
                 double found_value;
                 if (!current_scope->try_get_number(key, found_value))
                 {
-                    throw std::runtime_error("Inc operator could not find variable or was not a number");
+                    throw virtual_machine_error(create_stack_trace(), "Inc operator could not find variable or was not a number");
                 }
                 current_scope->try_set(key, value(found_value + 1.0));
                 break;
@@ -302,14 +302,14 @@ namespace lysithea_vm
             {
                 if (!code_line.value.is_complex())
                 {
-                    throw std::runtime_error("Dec operator needs code line variable");
+                    throw virtual_machine_error(create_stack_trace(), "Dec operator needs code line variable");
                 }
 
                 auto key = code_line.value.to_string();
                 double found_value;
                 if (!current_scope->try_get_number(key, found_value))
                 {
-                    throw std::runtime_error("Dec operator could not find variable or was not a number");
+                    throw virtual_machine_error(create_stack_trace(), "Dec operator could not find variable or was not a number");
                 }
                 current_scope->try_set(key, value(found_value - 1.0));
                 break;
@@ -429,7 +429,7 @@ namespace lysithea_vm
         auto find = current_code->labels.find(label);
         if (find == current_code->labels.cend())
         {
-            throw std::runtime_error("Unable to jump to label");
+            throw virtual_machine_error(create_stack_trace(), std::string("Unable to jump to label: ") + label);
         }
 
         program_counter = find->second;
@@ -439,7 +439,7 @@ namespace lysithea_vm
     {
         if (!value.is_function())
         {
-            throw std::runtime_error("Unable to invoke non function value");
+            throw virtual_machine_error(create_stack_trace(), std::string("Unable to invoke non function value") + value.to_string());
         }
         auto args = get_args(num_args);
         value.invoke(*this, args, push_to_stack_trace);
@@ -481,7 +481,7 @@ namespace lysithea_vm
             }
             else
             {
-                throw std::runtime_error("Function called without enough arguments");
+                throw virtual_machine_error(create_stack_trace(), "Function called without enough arguments");
             }
         }
     }
@@ -504,7 +504,7 @@ namespace lysithea_vm
     {
         if (!try_return())
         {
-            throw std::runtime_error("Unable to return, call stack empty");
+            throw virtual_machine_error(create_stack_trace(), "Unable to return, call stack empty");
         }
     }
 
@@ -518,15 +518,19 @@ namespace lysithea_vm
         }
     }
 
-    void virtual_machine::print_stack_trace()
+    std::vector<std::string> virtual_machine::create_stack_trace()
     {
-        std::cout << debug_scope_line(*current_code, program_counter - 1) << '\n';
+        std::vector<std::string> result;
+
+        result.emplace_back(debug_scope_line(*current_code, program_counter - 1));
         const auto &stack_data = stack_trace.stack_data();
-        for (auto i = stack_trace.stack_size(); i >= 0; i--)
+        for (auto i = stack_trace.stack_size() - 1; i >= 0; i--)
         {
             const auto &stack_frame = stack_data[i];
-            std::cout << debug_scope_line(*stack_frame.code, stack_frame.line_counter - 1);
+            result.emplace_back(debug_scope_line(*stack_frame.code, stack_frame.line_counter - 1));
         }
+
+        return result;
     }
 
     std::string virtual_machine::debug_scope_line(const function &func, int line)
