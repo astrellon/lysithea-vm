@@ -149,6 +149,7 @@ namespace lysithea_vm
                 auto value = pop_stack();
                 if (!current_scope->try_set(key.to_string(), value))
                 {
+                    print_stack_trace();
                     throw std::runtime_error("Unable to set variable that has not been defined");
                 }
                 break;
@@ -515,5 +516,64 @@ namespace lysithea_vm
         {
             std::cout << "- " << iter.to_string() << "\n";
         }
+    }
+
+    void virtual_machine::print_stack_trace()
+    {
+        std::cout << debug_scope_line(*current_code, program_counter - 1) << '\n';
+        const auto &stack_data = stack_trace.stack_data();
+        for (auto i = stack_trace.stack_size(); i >= 0; i--)
+        {
+            const auto &stack_frame = stack_data[i];
+            std::cout << debug_scope_line(*stack_frame.code, stack_frame.line_counter - 1);
+        }
+    }
+
+    std::string virtual_machine::debug_scope_line(const function &func, int line)
+    {
+        std::stringstream ss;
+        ss << func.symbols->source_name << ": [" << func.name << "]: line:";
+        if (line >= func.code.size())
+        {
+            ss << line << ": end of code";
+            return ss.str();
+        }
+        else if (line < 0)
+        {
+            ss << line << ": before start of code";
+            return ss.str();
+        }
+
+        const auto &code_line = func.code[line];
+        code_location location;
+        func.symbols->try_get_location(line, location);
+
+        ss << (location.start_line_number + 1) << ", column:" << location.start_column_number << "\n";
+
+        auto from_line_index = std::max(0, location.start_line_number - 1);
+        auto to_line_index = std::min(static_cast<int>(func.symbols->full_text->size()), location.start_line_number + 2);
+
+        for (auto i = from_line_index; i < to_line_index; i++)
+        {
+            std::stringstream line_number_ss;
+            line_number_ss << (i + 1);
+
+            auto line_number = line_number_ss.str();
+
+            if (i == location.start_line_number + 1)
+            {
+                ss << std::string(location.start_column_number + line_number.size() + 1, ' ') << '^';
+                auto diff = location.end_column_number - location.start_column_number;
+                if (diff > 0)
+                {
+                    ss << std::string(diff - 1, '-') << '^';
+                }
+                ss << '\n';
+            }
+
+            ss << line_number << ": " << func.symbols->full_text->at(i) << '\n';
+        }
+
+        return ss.str();
     }
 } // namespace lysithea_vm

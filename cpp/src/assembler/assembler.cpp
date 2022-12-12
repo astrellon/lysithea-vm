@@ -30,16 +30,18 @@ namespace lysithea_vm
 
     }
 
-    std::shared_ptr<script> assembler::parse_from_text(const std::string &input)
+    std::shared_ptr<script> assembler::parse_from_text(const std::string &source_name, const std::string &input)
     {
         std::stringstream stream(input);
-        return parse_from_stream(stream);
+        return parse_from_stream(source_name, stream);
     }
 
-    std::shared_ptr<script> assembler::parse_from_stream(std::istream &input)
+    std::shared_ptr<script> assembler::parse_from_stream(const std::string &source_name, std::istream &input)
     {
-        auto line_split = parser::split_stream(input);
-        auto parsed = parser::read_from_text(*line_split);
+        this->source_text = parser::split_stream(input);
+        this->source_name = source_name;
+
+        auto parsed = parser::read_from_text(*source_text);
         return parse_from_value(parsed);
     }
 
@@ -736,6 +738,8 @@ namespace lysithea_vm
             }
         }
 
-        return std::make_shared<function>(code, parameters, labels, name);
+        auto symbols = std::make_shared<debug_symbols>(source_name, source_text, locations);
+
+        return std::make_shared<function>(code, parameters, labels, name, symbols);
     }
 } // lysithea_vm

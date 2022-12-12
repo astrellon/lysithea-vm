@@ -43,9 +43,8 @@ namespace lysithea_vm
             assembler();
 
             // Methods
-            std::shared_ptr<script> parse_from_text(const std::string &input);
-            std::shared_ptr<script> parse_from_stream(std::istream &input);
-            std::shared_ptr<script> parse_from_value(const token &input);
+            std::shared_ptr<script> parse_from_text(const std::string &source_name, const std::string &input);
+            std::shared_ptr<script> parse_from_stream(const std::string &source_name, std::istream &input);
             code_line_list parse(const token &input);
 
             code_line_list parse_function_keyword(const token &input);
@@ -89,8 +88,13 @@ namespace lysithea_vm
             std::vector<loop_labels> loop_stack;
             std::vector<std::string> keyword_parsing_stack;
 
+            std::string source_name;
+            std::shared_ptr<std::vector<std::string>> source_text;
+
             // Methods
-            static std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines, const std::string &name);
+            std::shared_ptr<script> parse_from_value(const token &input);
+
+            std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines, const std::string &name);
 
     };
 } // lysithea_vm

@@ -50,7 +50,7 @@ int main()
     lysithea_vm::assembler assembler;
     assembler.builtin_scope.combine_scope(*custom_scope);
 
-    auto script = assembler.parse_from_stream(input_file);
+    auto script = assembler.parse_from_stream("perfTest.lys", input_file);
 
     lysithea_vm::virtual_machine vm(16);
 

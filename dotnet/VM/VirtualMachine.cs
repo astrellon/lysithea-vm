@@ -266,19 +266,20 @@ namespace LysitheaVM
 
         private static string DebugScopeLine(Function function, int line)
         {
+            var text = $"{function.DebugSymbols.SourceName}: [{function.Name}]: line:";
             if (line >= function.Code.Count)
             {
-                return $"[{function.Name}:{line}: end of code";
+                return $"{text}{line} end of code";
             }
             if (line < 0)
             {
-                return $"[{function.Name}:{line}: before start of code";
+                return $"{text}{line} before start of code";
             }
 
             var codeLine = function.Code[line];
             function.DebugSymbols.TryGetLocation(line, out var codeLocation);
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            var text = $"{function.DebugSymbols.SourceName}: [{function.Name}]: line:{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
+            text += $"{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
 
             var fromLineIndex = Math.Max(0, codeLocation.StartLineNumber - 1);
             var toLineIndex = Math.Min(function.DebugSymbols.FullText.Count, codeLocation.StartLineNumber + 2);
