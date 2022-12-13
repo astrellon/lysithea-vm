@@ -734,6 +734,7 @@ namespace lysithea_vm
             else
             {
                 locations.emplace_back(temp_line.argument.location);
+                // TODO: Check if the get_value needs to handle empty
                 code.emplace_back(temp_line.op, temp_line.argument.get_value());
             }
         }

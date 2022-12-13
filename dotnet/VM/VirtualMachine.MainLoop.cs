@@ -58,6 +58,10 @@ namespace LysitheaVM
                         }
 
                         var keyString = key.ToString();
+                        if (keyString == "inputs")
+                        {
+                            "asd".ToArray();
+                        }
                         if (this.CurrentScope.TryGetKey(keyString, out var foundValue) ||
                             (this.BuiltinScope != null && this.BuiltinScope.TryGetKey(keyString, out foundValue)))
                         {

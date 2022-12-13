@@ -68,25 +68,25 @@ namespace LysitheaVM
             return new Script(scriptScope, code);
         }
 
-        public Function ParseGlobalFunction(TokenList input)
+        public Function ParseGlobalFunction(Token input)
         {
-            var tempCodeLines = input.Data.SelectMany(Parse).ToList();
+            var tempCodeLines = input.TokenList.SelectMany(Parse).ToList();
             var result = this.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
             return result;
         }
 
-        public List<ITempCodeLine> Parse(IToken input)
+        public List<ITempCodeLine> Parse(Token input)
         {
-            if (input is TokenList arrayValue)
+            if (input.Type == TokenType.List)
             {
-                if (!arrayValue.Data.Any())
+                if (!input.TokenList.Any())
                 {
                     return new List<ITempCodeLine>();
                 }
 
-                var first = arrayValue.Data.First();
+                var first = input.TokenList.First();
                 // If the first item in an array is a symbol we assume that it is a function call or a label
-                if (first is Token firstToken && first.TryGetValue<VariableValue>(out var firstSymbolValue))
+                if (first.Value is VariableValue firstSymbolValue)
                 {
                     if (firstSymbolValue.IsLabel)
                     {
@@ -94,7 +94,7 @@ namespace LysitheaVM
                     }
 
                     // Check for keywords
-                    var keywordParse = ParseKeyword(firstSymbolValue, arrayValue);
+                    var keywordParse = ParseKeyword(firstSymbolValue, input);
                     if (keywordParse.Any())
                     {
                         return keywordParse;
@@ -104,11 +104,11 @@ namespace LysitheaVM
 
                     var result = new List<ITempCodeLine>();
                     // Handle general opcode or function call.
-                    foreach (var item in arrayValue.Data.Skip(1))
+                    foreach (var item in input.TokenList.Skip(1))
                     {
                         result.AddRange(Parse(item));
                     }
-                    result.AddRange(this.OptimiseCallSymbolValue(firstToken, arrayValue.Data.Count - 1));
+                    result.AddRange(this.OptimiseCallSymbolValue(first, input.TokenList.Count - 1));
 
                     this.keywordParsingStack.PopBack();
 
@@ -117,11 +117,11 @@ namespace LysitheaVM
 
                 // Any array that doesn't start with a symbol we assume it's a data array.
             }
-            else if (input is Token inputToken && input.TryGetValue<VariableValue>(out var varValue))
+            else if (input.Value is VariableValue varValue)
             {
                 if (!varValue.IsLabel)
                 {
-                    return this.OptimiseGetSymbolValue(inputToken);
+                    return this.OptimiseGetSymbolValue(input);
                 }
             }
 
@@ -130,40 +130,40 @@ namespace LysitheaVM
         #endregion
 
         #region Keyword Parsing
-        public List<ITempCodeLine> ParseFunctionKeyword(TokenList arrayValue)
+        public List<ITempCodeLine> ParseFunctionKeyword(Token arrayValue)
         {
             var function = ParseFunction(arrayValue);
             var functionValue = new FunctionValue(function);
-            var functionToken = arrayValue.Copy(functionValue);
+            var functionToken = arrayValue.KeepLocation(functionValue);
             var result = new List<ITempCodeLine> { new TempCodeLine(Operator.Push, functionToken) };
             var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : FunctionKeyword;
             if (function.HasName && currentKeyword == FunctionKeyword)
             {
-                result.Add(new TempCodeLine(Operator.Define, arrayValue.Copy(new StringValue(function.Name))));
+                result.Add(new TempCodeLine(Operator.Define, arrayValue.KeepLocation(new StringValue(function.Name))));
             }
             return result;
         }
 
-        public List<ITempCodeLine> ParseDefineSet(TokenList input, bool isDefine)
+        public List<ITempCodeLine> ParseDefineSet(Token input, bool isDefine)
         {
             var opCode = isDefine ? Operator.Define : Operator.Set;
             // Parse the last value as the definable/set-able value.
-            var result = this.Parse(input.Data.Last());
+            var result = this.Parse(input.TokenList.Last());
 
             // Loop over all the middle inputs as the values to set.
             // Multiple variables can be set when a function returns multiple results.
-            for (var i = input.Data.Count - 2; i >= 1; i--)
+            for (var i = input.TokenList.Count - 2; i >= 1; i--)
             {
-                result.Add(new TempCodeLine(opCode, input.Data[i]));
+                result.Add(new TempCodeLine(opCode, input.TokenList[i]));
             }
             return result;
         }
 
-        public List<ITempCodeLine> ParseLoop(TokenList input)
+        public List<ITempCodeLine> ParseLoop(Token input)
         {
-            if (input.Data.Count < 3)
+            if (input.TokenList.Count < 3)
             {
-                throw new Exception("Loop input has too few inputs");
+                throw new AssemblerException(input, "Loop input has too few inputs");
             }
 
             var loopLabelNum = this.labelCount++;
@@ -173,15 +173,15 @@ namespace LysitheaVM
             this.loopStack.Push(new LoopLabels(labelStart, labelEnd));
 
             var result = new List<ITempCodeLine> { new LabelCodeLine(labelStart.Value) };
-            var comparisonCall = (TokenList)input.Data[1];
+            var comparisonCall = input.TokenList[1];
             result.AddRange(Parse(comparisonCall));
 
-            result.Add(new TempCodeLine(Operator.JumpFalse, comparisonCall.Copy(labelEnd)));
-            for (var i = 2; i < input.Data.Count; i++)
+            result.Add(new TempCodeLine(Operator.JumpFalse, comparisonCall.KeepLocation(labelEnd)));
+            for (var i = 2; i < input.TokenList.Count; i++)
             {
-                result.AddRange(Parse(input.Data[i]));
+                result.AddRange(Parse(input.TokenList[i]));
             }
-            result.Add(new TempCodeLine(Operator.Jump, comparisonCall.Copy(labelStart)));
+            result.Add(new TempCodeLine(Operator.Jump, comparisonCall.KeepLocation(labelStart)));
             result.Add(new LabelCodeLine(labelEnd.Value));
 
             this.loopStack.Pop();
@@ -189,50 +189,50 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseCond(TokenList input, bool isIfStatement)
+        public List<ITempCodeLine> ParseCond(Token input, bool isIfStatement)
         {
-            if (input.Data.Count < 3)
+            if (input.TokenList.Count < 3)
             {
-                throw new Exception("Condition input has too few inputs");
+                throw new AssemblerException(input, "Condition input has too few inputs");
             }
-            if (input.Data.Count > 4)
+            if (input.TokenList.Count > 4)
             {
-                throw new Exception("Condition input has too many inputs!");
+                throw new AssemblerException(input, "Condition input has too many inputs!");
             }
 
             var ifLabelNum = this.labelCount++;
             var labelElse = $":CondElse{ifLabelNum}";
             var labelEnd = $":CondEnd{ifLabelNum}";
 
-            var hasElseCall = input.Data.Count == 4;
+            var hasElseCall = input.TokenList.Count == 4;
             var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
 
-            var comparisonCall = (TokenList)input.Data[1];
-            var firstBlock = (TokenList)input.Data[2];
+            var comparisonCall = input.TokenList[1];
+            var firstBlock = input.TokenList[2];
 
             var result = Parse(comparisonCall);
 
             if (hasElseCall)
             {
                 // Jump to else if the condition doesn't match
-                result.Add(new TempCodeLine(jumpOperator, comparisonCall.Copy(new StringValue(labelElse))));
+                result.Add(new TempCodeLine(jumpOperator, comparisonCall.KeepLocation(new StringValue(labelElse))));
 
                 // First block of code
                 result.AddRange(this.ParseFlatten(firstBlock));
                 // Jump after the condition, skipping second block of code.
-                result.Add(new TempCodeLine(Operator.Jump, firstBlock.Copy(new StringValue(labelEnd))));
+                result.Add(new TempCodeLine(Operator.Jump, firstBlock.KeepLocation(new StringValue(labelEnd))));
 
                 // Jump target for else
                 result.Add(new LabelCodeLine(labelElse));
 
                 // Second 'else' block of code
-                var secondBlock = (TokenList)input.Data[3];
+                var secondBlock = input.TokenList[3];
                 result.AddRange(this.ParseFlatten(secondBlock));
             }
             else
             {
                 // We only have one block, so jump to the end of the block if the condition doesn't match
-                result.Add(new TempCodeLine(jumpOperator, comparisonCall.Copy(new StringValue(labelEnd))));
+                result.Add(new TempCodeLine(jumpOperator, comparisonCall.KeepLocation(new StringValue(labelEnd))));
 
                 result.AddRange(ParseFlatten(firstBlock));
             }
@@ -243,58 +243,58 @@ namespace LysitheaVM
             return result;
         }
 
-        public IEnumerable<ITempCodeLine> ParseFlatten(TokenList input)
+        public IEnumerable<ITempCodeLine> ParseFlatten(Token input)
         {
-            if (input.Data.All(i => i is TokenList))
+            if (input.TokenList.All(i => i.Type == TokenType.List))
             {
-                return input.Data.SelectMany(Parse);
+                return input.TokenList.SelectMany(Parse);
             }
 
             return Parse(input);
         }
 
-        public List<ITempCodeLine> ParseLoopJump(IToken token, string keyword, bool jumpToStart)
+        public List<ITempCodeLine> ParseLoopJump(Token token, string keyword, bool jumpToStart)
         {
             if (!this.loopStack.Any())
             {
-                throw new Exception($"Unexpected {keyword} outside of loop");
+                throw new AssemblerException(token, $"Unexpected {keyword} outside of loop");
             }
 
             var loopLabel = this.loopStack.Last();
-            return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, token.Copy(jumpToStart ? loopLabel.Start : loopLabel.End)) };
+            return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, token.KeepLocation(jumpToStart ? loopLabel.Start : loopLabel.End)) };
         }
 
-        public Function ParseFunction(TokenList input)
+        public Function ParseFunction(Token input)
         {
             var name = "";
             var offset = 0;
-            if (input.Data[1].TryGetValue<VariableValue>(out var varValue) || input.Data[1].TryGetValue<StringValue>(out var strValue))
+            if (input.TokenList[1].Value is VariableValue || input.TokenList[1].Value is StringValue)
             {
-                name = input.Data[1].ToString();
+                name = input.TokenList[1].ToString();
                 offset = 1;
             }
 
-            var parameters = ((TokenList)input.Data[1 + offset]).Data.Select(arg => arg.ToString()).ToList();
-            var tempCodeLines = input.Data.Skip(2 + offset).SelectMany(Parse).ToList();
+            var parameters = (input.TokenList[1 + offset]).TokenList.Select(arg => arg.ToString()).ToList();
+            var tempCodeLines = input.TokenList.Skip(2 + offset).SelectMany(Parse).ToList();
 
             return this.ProcessTempFunction(parameters, tempCodeLines, name);
         }
 
-        public List<ITempCodeLine> ParseJump(TokenList input)
+        public List<ITempCodeLine> ParseJump(Token input)
         {
-            var parse = Parse(input.Data[1]);
+            var parse = Parse(input.TokenList[1]);
             if (parse.Count == 1 && parse[0] is CodeLine codeLine && codeLine.Operator == Operator.Push)
             {
-                return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, input.Copy(codeLine.Input)) };
+                return new List<ITempCodeLine> { new TempCodeLine(Operator.Jump, input.KeepLocation(codeLine.Input)) };
             }
             parse.Add(new TempCodeLine(Operator.Jump, input.ToEmpty()));
             return parse;
         }
 
-        public List<ITempCodeLine> ParseReturn(TokenList input)
+        public List<ITempCodeLine> ParseReturn(Token input)
         {
             var result = new List<ITempCodeLine>();
-            foreach (var item in input.Data.Skip(1))
+            foreach (var item in input.TokenList.Skip(1))
             {
                 result.AddRange(Parse(item));
             }
@@ -302,39 +302,39 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseNegative(TokenList input)
+        public List<ITempCodeLine> ParseNegative(Token input)
         {
-            if (input.Data.Count >= 3)
+            if (input.TokenList.Count >= 3)
             {
                 return this.ParseOperator(Operator.Sub, input);
             }
-            else if (input.Data.Count == 2)
+            else if (input.TokenList.Count == 2)
             {
                 // If it's a constant already, just push the negative.
-                if (input.Data[1].TryGetValue<NumberValue>(out var numValue))
+                if (input.TokenList[1].Value is NumberValue numValue)
                 {
-                    return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input.Data[1].Copy(new NumberValue(-numValue.Value))) };
+                    return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input.TokenList[1].KeepLocation(new NumberValue(-numValue.Value))) };
                 }
 
-                var result = this.Parse(input.Data[1]);
-                result.Add(new TempCodeLine(Operator.UnaryNegative, input.Data[1].ToEmpty()));
+                var result = this.Parse(input.TokenList[1]);
+                result.Add(new TempCodeLine(Operator.UnaryNegative, input.TokenList[1].ToEmpty()));
                 return result;
             }
             else
             {
-                throw new Exception($"Negative/Sub operator expects at least 1 input");
+                throw new AssemblerException(input, $"Negative/Sub operator expects at least 1 input");
             }
         }
 
-        public List<ITempCodeLine> ParseOnePushInput(Operator opCode, TokenList input)
+        public List<ITempCodeLine> ParseOnePushInput(Operator opCode, Token input)
         {
-            if (input.Data.Count < 2)
+            if (input.TokenList.Count < 2)
             {
-                throw new Exception($"Expecting at least 1 input for: {opCode}");
+                throw new AssemblerException(input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<ITempCodeLine>();
-            foreach (var item in input.Data.Skip(1))
+            foreach (var item in input.TokenList.Skip(1))
             {
                 result.AddRange(this.Parse(item));
                 result.Add(new TempCodeLine(opCode, item.ToEmpty()));
@@ -343,17 +343,17 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseOperator(Operator opCode, TokenList input)
+        public List<ITempCodeLine> ParseOperator(Operator opCode, Token input)
         {
-            if (input.Data.Count < 3)
+            if (input.TokenList.Count < 3)
             {
-                throw new Exception($"Expecting at least 3 inputs for: {opCode}");
+                throw new AssemblerException(input, $"Expecting at least 3 inputs for: {opCode}");
             }
 
-            var result = this.Parse(input.Data[1]);
-            foreach (var item in input.Data.Skip(2))
+            var result = this.Parse(input.TokenList[1]);
+            foreach (var item in input.TokenList.Skip(2))
             {
-                if (item.TryGetValue<NumberValue>(out var numValue))
+                if (item.Value is NumberValue numValue)
                 {
                     result.Add(new TempCodeLine(opCode, item));
                 }
@@ -367,52 +367,52 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<ITempCodeLine> ParseOneVariableUpdate(Operator opCode, TokenList input)
+        public List<ITempCodeLine> ParseOneVariableUpdate(Operator opCode, Token input)
         {
-            if (input.Data.Count < 2)
+            if (input.TokenList.Count < 2)
             {
                 throw new Exception($"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<ITempCodeLine>();
-            foreach (var item in input.Data.Skip(1))
+            foreach (var item in input.TokenList.Skip(1))
             {
                 var varName = new StringValue(item.ToString());
-                result.Add(new TempCodeLine(opCode, item.Copy(varName)));
+                result.Add(new TempCodeLine(opCode, item.KeepLocation(varName)));
             }
 
             return result;
         }
 
-        public List<ITempCodeLine> ParseStringConcat(TokenList input)
+        public List<ITempCodeLine> ParseStringConcat(Token input)
         {
             var result = new List<ITempCodeLine>();
-            foreach (var item in input.Data.Skip(1))
+            foreach (var item in input.TokenList.Skip(1))
             {
                 result.AddRange(this.Parse(item));
             }
-            result.Add(new TempCodeLine(Operator.StringConcat, input.Copy(new NumberValue(input.Data.Count - 1))));
+            result.Add(new TempCodeLine(Operator.StringConcat, input.KeepLocation(new NumberValue(input.TokenList.Count - 1))));
             return result;
         }
 
-        public List<ITempCodeLine> TransformAssignmentOperator(TokenList arrayValue)
+        public List<ITempCodeLine> TransformAssignmentOperator(Token arrayValue)
         {
-            var opCode = arrayValue.Data[0].ToString();
+            var opCode = arrayValue.TokenList[0].ToString();
             opCode = opCode.Substring(0, opCode.Length - 1);
 
-            var varName = arrayValue.Data[1].ToString();
-            var newCode = arrayValue.Data.ToList();
-            newCode[0] = arrayValue.Data[0].Copy(new VariableValue(opCode));
+            var varName = arrayValue.TokenList[1].ToString();
+            var newCode = arrayValue.TokenList.ToList();
+            newCode[0] = arrayValue.TokenList[0].KeepLocation(new VariableValue(opCode));
 
-            var wrappedCode = new List<IToken>();
-            wrappedCode.Add(arrayValue.Copy(new VariableValue("set")));
-            wrappedCode.Add(arrayValue.Data[1].Copy(new VariableValue(varName)));
-            wrappedCode.Add(new TokenList(arrayValue.Location, newCode));
+            var wrappedCode = new List<Token>();
+            wrappedCode.Add(arrayValue.KeepLocation(new VariableValue("set")));
+            wrappedCode.Add(arrayValue.TokenList[1].KeepLocation(new VariableValue(varName)));
+            wrappedCode.Add(new Token(arrayValue.Location, newCode));
 
-            return this.Parse(new TokenList(arrayValue.Location, wrappedCode));
+            return this.Parse(new Token(arrayValue.Location, wrappedCode));
         }
 
-        public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, TokenList arrayValue)
+        public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, Token arrayValue)
         {
             List<ITempCodeLine>? result = null;
             this.keywordParsingStack.Add(firstSymbol.Value);
@@ -474,9 +474,9 @@ namespace LysitheaVM
         #region Helper Methods
         private List<ITempCodeLine> OptimiseCallSymbolValue(Token input, int numArgs)
         {
-            if (input.Value == null)
+            if (input.Type != TokenType.Value)
             {
-                throw new Exception("Call token cannot be null");
+                throw new AssemblerException(input, "Call token cannot be null");
             }
 
             var numArgsValue = new NumberValue(numArgs);
@@ -493,7 +493,7 @@ namespace LysitheaVM
                         // If we found the property then we're done and we can just push that known value onto the stack.
                         var callValue = new IValue[]{ foundProperty, numArgsValue };
                         return new List<ITempCodeLine> {
-                            new TempCodeLine(Operator.CallDirect, input.Copy(new ArrayValue(callValue)))
+                            new TempCodeLine(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
                         };
                     }
 
@@ -506,32 +506,32 @@ namespace LysitheaVM
                     {
                         var callValue = new IValue[]{ foundParent, numArgsValue };
                         return new List<ITempCodeLine> {
-                            new TempCodeLine(Operator.CallDirect, input.Copy(new ArrayValue(callValue)))
+                            new TempCodeLine(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
                         };
                     }
 
-                    throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundParent.ToString()}");
+                    throw new AssemblerException(input, $"Attempting to call a value that is not a function: {input.ToString()} = {foundParent.ToString()}");
                 }
             }
 
             // Could not find the parent right now, so look for the parent at runtime.
-            var result = new List<ITempCodeLine> { new TempCodeLine(Operator.Get, input.Copy(new StringValue(parentKey))) };
+            var result = new List<ITempCodeLine> { new TempCodeLine(Operator.Get, input.KeepLocation(new StringValue(parentKey))) };
 
             // If this was also a property check also look up the property at runtime.
             if (isProperty)
             {
-                result.Add(new TempCodeLine(Operator.GetProperty, input.Copy(property)));
+                result.Add(new TempCodeLine(Operator.GetProperty, input.KeepLocation(property)));
             }
 
-            result.Add(new TempCodeLine(Operator.Call, input.Copy(numArgsValue)));
+            result.Add(new TempCodeLine(Operator.Call, input.KeepLocation(numArgsValue)));
             return result;
         }
 
         private List<ITempCodeLine> OptimiseGetSymbolValue(Token input)
         {
-            if (input.Value == null)
+            if (input.Type != TokenType.Value)
             {
-                throw new Exception("Get symbol token value cannot be null");
+                throw new AssemblerException(input, "Get symbol token value cannot be null");
             }
 
             var isArgumentUnpack = false;
@@ -554,30 +554,30 @@ namespace LysitheaVM
                     if (ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
                     {
                         // If we found the property then we're done and we can just push that known value onto the stack.
-                        result.Add(new TempCodeLine(Operator.Push, input.Copy(foundProperty)));
+                        result.Add(new TempCodeLine(Operator.Push, input.KeepLocation(foundProperty)));
                     }
                     else
                     {
                         // We didn't find the property at compile time, so look it up at run time.
-                        result.Add(new TempCodeLine(Operator.Push, input.Copy(foundParent)));
-                        result.Add(new TempCodeLine(Operator.GetProperty, input.Copy(property)));
+                        result.Add(new TempCodeLine(Operator.Push, input.KeepLocation(foundParent)));
+                        result.Add(new TempCodeLine(Operator.GetProperty, input.KeepLocation(property)));
                     }
                 }
                 else
                 {
                     // This was not a property request but we found the parent so just push onto the stack.
-                    result.Add(new TempCodeLine(Operator.Push, input.Copy(foundParent)));
+                    result.Add(new TempCodeLine(Operator.Push, input.KeepLocation(foundParent)));
                 }
             }
             else
             {
                 // Could not find the parent right now, so look for the parent at runtime.
-                result.Add(new TempCodeLine(Operator.Get, input.Copy(new StringValue(parentKey))));
+                result.Add(new TempCodeLine(Operator.Get, input.KeepLocation(new StringValue(parentKey))));
 
                 // If this was also a property check also look up the property at runtime.
                 if (isProperty)
                 {
-                    result.Add(new TempCodeLine(Operator.GetProperty, input.Copy(property)));
+                    result.Add(new TempCodeLine(Operator.GetProperty, input.KeepLocation(property)));
                 }
             }
 

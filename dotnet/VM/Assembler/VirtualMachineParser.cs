@@ -191,33 +191,33 @@ namespace LysitheaVM
             this.accumulator.Append(ch);
         }
 
-        public static TokenList ReadAllTokens(IReadOnlyList<string> input)
+        public static Token ReadAllTokens(IReadOnlyList<string> input)
         {
             var parser = new VirtualMachineParser(input);
-            var result = new List<IToken>();
+            var result = new List<Token>();
 
             while (parser.MoveNext())
             {
                 result.Add(ReadFromParser(parser));
             }
 
-            return new TokenList(CodeLocation.Empty, result);
+            return new Token(CodeLocation.Empty, result);
         }
 
-        public static IToken ReadFromParser(VirtualMachineParser parser)
+        public static Token ReadFromParser(VirtualMachineParser parser)
         {
             var token = parser.Current;
             switch (token)
             {
                 case null:
                 {
-                    throw new ArgumentException("Unexpected end of tokens");
+                    throw new ParserException(parser.CurrentLocation, token, "Unexpected end of tokens");
                 }
                 case "(":
                 {
                     var lineNumber = parser.LineNumber;
                     var columnNumber = parser.ColumnNumber;
-                    var list = new List<IToken>();
+                    var list = new List<Token>();
                     while (parser.MoveNext())
                     {
                         if (parser.Current == ")")
@@ -227,17 +227,17 @@ namespace LysitheaVM
                         list.Add(ReadFromParser(parser));
                     }
 
-                    return new TokenList(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), list);
+                    return new Token(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), list);
                 }
                 case ")":
                 {
-                    throw new ArgumentException("Unexpected )");
+                    throw new ParserException(parser.CurrentLocation, token, "Unexpected )");
                 }
                 case "{":
                 {
                     var lineNumber = parser.LineNumber;
                     var columnNumber = parser.ColumnNumber;
-                    var map = new Dictionary<string, IToken>();
+                    var map = new Dictionary<string, Token>();
                     while (parser.MoveNext())
                     {
                         if (parser.Current == "}")
@@ -250,11 +250,11 @@ namespace LysitheaVM
                         map[key] = value;
                     }
 
-                    return new TokenMap(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), map);
+                    return new Token(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), map);
                 }
                 case "}":
                 {
-                    throw new ArgumentException("Unexpected }");
+                    throw new ParserException(parser.CurrentLocation, token, "Unexpected }");
                 }
                 default:
                 {

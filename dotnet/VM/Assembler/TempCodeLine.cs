@@ -28,7 +28,7 @@ namespace LysitheaVM
     {
         #region Fields
         public readonly Operator Operator;
-        public readonly IToken Token;
+        public readonly Token Token;
 
         public string Description
         {
@@ -40,7 +40,7 @@ namespace LysitheaVM
         #endregion
 
         #region Constructor
-        public TempCodeLine(Operator op, IToken token)
+        public TempCodeLine(Operator op, Token token)
         {
             this.Operator = op;
             this.Token = token;

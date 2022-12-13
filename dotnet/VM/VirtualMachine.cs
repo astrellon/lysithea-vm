@@ -120,7 +120,6 @@ namespace LysitheaVM
             value.Invoke(this, args, pushToStackTrace);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
         {
             if (pushToStackTrace)
