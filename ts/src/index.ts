@@ -1,5 +1,5 @@
 export * from "./virtualMachine";
-export * from "./assembler";
+export * from "./assembler/assembler";
 export * from "./scope";
 export * from "./script";
 export * from "./vmFunction";

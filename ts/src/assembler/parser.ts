@@ -1,11 +1,11 @@
-import { ArrayValue } from "./values/arrayValue";
-import { BoolValue } from "./values/boolValue";
-import { IValue } from "./values/ivalues";
-import { NullValue } from "./values/nullValue";
-import { NumberValue } from "./values/numberValue";
-import { ObjectValue } from "./values/objectValue";
-import { StringValue } from "./values/stringValue";
-import { VariableValue } from "./values/variableValue";
+import { ArrayValue } from "../values/arrayValue";
+import { BoolValue } from "../values/boolValue";
+import { IValue } from "../values/ivalues";
+import { NullValue } from "../values/nullValue";
+import { NumberValue } from "../values/numberValue";
+import { ObjectValue } from "../values/objectValue";
+import { StringValue } from "../values/stringValue";
+import { VariableValue } from "../values/variableValue";
 
 export function tokenize(input: string)
 {

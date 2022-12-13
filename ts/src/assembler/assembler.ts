@@ -1,15 +1,15 @@
 import { readAllTokens, tokenize } from "./parser";
-import { Scope } from "./scope";
-import { Script } from "./script";
-import { ArrayValue } from "./values/arrayValue";
-import { FunctionValue } from "./values/functionValue";
-import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
-import { NumberValue, isNumberValue } from "./values/numberValue";
-import { StringValue } from "./values/stringValue";
-import { getProperty } from "./values/valuePropertyAccess";
-import { VariableValue } from "./values/variableValue";
-import { CodeLine, Operator } from "./virtualMachine";
-import { VMFunction } from "./vmFunction";
+import { Scope } from "../scope";
+import { Script } from "../script";
+import { ArrayValue } from "../values/arrayValue";
+import { FunctionValue } from "../values/functionValue";
+import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "../values/ivalues";
+import { NumberValue, isNumberValue } from "../values/numberValue";
+import { StringValue } from "../values/stringValue";
+import { getProperty } from "../values/valuePropertyAccess";
+import { VariableValue } from "../values/variableValue";
+import { CodeLine, Operator } from "../virtualMachine";
+import { VMFunction } from "../vmFunction";
 
 interface TempCodeLine
 {

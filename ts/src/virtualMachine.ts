@@ -46,6 +46,14 @@ export interface ScopeFrame
     readonly scope: Scope;
 }
 
+export interface CodeLocation
+{
+    readonly startLineNumber: number;
+    readonly startColumnNumber: number;
+    readonly endLineNumber: number;
+    readonly endColumnNumber: number;
+}
+
 export class VirtualMachine
 {
     public builtinScope: IReadOnlyScope | undefined = undefined;
