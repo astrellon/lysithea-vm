@@ -116,6 +116,33 @@
         (++ i)
     )
 
+    (define defaultSettings { "ReadFromApi" false "UseLogin" true })
+    (define newSettings (object.join defaultSettings { "UseLogin" false }))
+
+    (assert.false newSettings.UseLogin)
+    (assert.true defaultSettings.UseLogin)
+
+    (set newSettings (object.join newSettings { "NewSetting" 5 }))
+    (assert.equals 5 newSettings.NewSetting)
+
+    (print "Combined Settings: " newSettings)
+
+    (define prop1 "x")
+    (define value1 5)
+
+    (define prop2 "y")
+    (define value2 10)
+
+    (define prop3 "z")
+    (define value3 12)
+
+    (define location (object.join prop1 value1 prop2 value2 prop3 value3 { "type" "Vector" }))
+    (assert.equals 5 location.x)
+    (assert.equals 10 location.y)
+    (assert.equals 12 location.z)
+    (assert.equals "Vector" location.type)
+    (assert.equals 4 (object.length location))
+
     (print "Object tests passed!")
 )
 

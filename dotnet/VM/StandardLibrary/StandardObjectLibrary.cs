@@ -19,6 +19,11 @@ namespace LysitheaVM
 
             var objectFunctions = new Dictionary<string, IValue>
             {
+                {"join", new BuiltinFunctionValue((vm, args) =>
+                {
+                    vm.PushStack(Join(args));
+                }, "object.join")},
+
                 {"set", new BuiltinFunctionValue((vm, args) =>
                 {
                     var obj = args.GetIndex<ObjectValue>(0);
@@ -77,6 +82,41 @@ namespace LysitheaVM
             result.Define("object", new ObjectValue(objectFunctions));
 
             return result;
+        }
+
+        public static ObjectValue Join(ArgumentsValue args)
+        {
+            var map = new Dictionary<string, IValue>();
+            var argValues = args.ArrayValues;
+
+            for (var i = 0; i < argValues.Count; i++)
+            {
+                var arg = argValues[i];
+                if (arg is StringValue argStr)
+                {
+                    var key = argStr.Value;
+                    var value = argValues[++i];
+                    map[key] = value;
+                }
+                else if (arg is IObjectValue argObj)
+                {
+                    foreach (var key in argObj.ObjectKeys)
+                    {
+                        if (argObj.TryGetKey(key, out var value))
+                        {
+                            map[key] = value;
+                        }
+                    }
+                }
+                else
+                {
+                    var key = arg.ToString();
+                    var value = argValues[++i];
+                    map[key] = value;
+                }
+            }
+
+            return new ObjectValue(map);
         }
 
         public static ArrayValue Keys(ObjectValue self)
