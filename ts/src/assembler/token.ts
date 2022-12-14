@@ -1,36 +1,83 @@
 import { CodeLocation } from "../virtualMachine";
 import { IValue } from "../values/ivalues";
+import { ArrayValue, ObjectValue, ObjectValueMap } from "../index";
+import { Editable } from "../standardLibrary/standardObjectLibrary";
 
-export interface IToken
-{
-    readonly location: CodeLocation;
+export type TokenType = 'empty' | 'value' | 'list' | 'map';
 
-    readonly getValue: () => IValue;
-    readonly getValueCanBeEmpty: () => IValue | undefined;
+export type TokenList = ReadonlyArray<Token>;
+export interface TokenMap { readonly [key: string]: Token }
 
-    readonly keepLocation: (value: IValue | undefined) => Token;
-    readonly toEmpty: () => Token;
-}
+const EmptyTokenList: TokenList = [];
+const EmptyTokenMap: TokenMap = {};
 
-export class Token implements IToken
+export class Token
 {
     public readonly location: CodeLocation;
     public readonly value: IValue | undefined;
+    public readonly type: TokenType;
+    public readonly tokenList: TokenList;
+    public readonly tokenMap: TokenMap;
 
-    constructor (location: CodeLocation, value: IValue | undefined)
+    constructor (location: CodeLocation, type: TokenType, value: IValue | undefined = undefined, tokenList: TokenList = EmptyTokenList, tokenMap: TokenMap = EmptyTokenMap)
     {
         this.location = location;
         this.value = value;
+        this.type = type;
+        this.tokenList = tokenList;
+        this.tokenMap = tokenMap;
     }
 
-    public getValue()
+    public static empty(location: CodeLocation)
     {
-        if (this.value === undefined)
-        {
-            throw new Error('Cannot get value of empty token');
-        }
+        return new Token(location, 'empty');
+    }
 
-        return this.value;
+    public static value(location: CodeLocation, value: IValue | undefined)
+    {
+        return new Token(location, 'value', value);
+    }
+
+    public static list(location: CodeLocation, list: TokenList)
+    {
+        return new Token(location, 'list', undefined, list);
+    }
+
+    public static map(location: CodeLocation, map: TokenMap)
+    {
+        return new Token(location, 'map', undefined, EmptyTokenList, map);
+    }
+
+    public getValue(): IValue
+    {
+        switch (this.type)
+        {
+            case 'empty':
+            {
+                throw new Error('Cannot get value of empty token');
+            }
+            case 'value':
+            {
+                if (this.value === undefined)
+                {
+                    throw new Error('Cannot get value of empty token');
+                }
+                return this.value;
+            }
+            case 'list':
+            {
+                return new ArrayValue(this.tokenList.map(t => t.getValue()));
+            }
+            case 'map':
+            {
+                const map: Editable<ObjectValueMap> = {};
+                for (const prop in this.tokenMap)
+                {
+                    map[prop] = this.tokenMap[prop].getValue();
+                }
+                return new ObjectValue(map);
+            }
+        }
     }
 
     public getValueCanBeEmpty()
@@ -40,23 +87,11 @@ export class Token implements IToken
 
     public keepLocation(value: IValue | undefined)
     {
-        return new Token(this.location, value);
+        return Token.value(this.location, value);
     }
 
     public toEmpty()
     {
-        return new Token(this.location, undefined);
-    }
-}
-
-export class TokenList implements IToken
-{
-    public readonly location: CodeLocation;
-    public readonly data: ReadonlyArray<IToken>;
-
-    constructor (location: CodeLocation, data: ReadonlyArray<IToken>)
-    {
-        this.location = location;
-        this.data = data;
+        return Token.empty(this.location);
     }
 }

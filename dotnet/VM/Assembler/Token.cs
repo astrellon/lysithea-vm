@@ -65,6 +65,9 @@ namespace LysitheaVM
             switch (this.Type)
             {
                 case TokenType.Empty:
+                {
+                    throw new AssemblerException(this, "Cannot get value of empty token");
+                }
                 case TokenType.Value:
                 {
                     return this.Value;
