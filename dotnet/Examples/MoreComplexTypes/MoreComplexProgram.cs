@@ -13,7 +13,7 @@ namespace LysitheaVM.Example
 
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(CustomScope);
             var script = assembler.ParseFromFile("../../../examples/testObject.lys");

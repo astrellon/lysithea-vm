@@ -53,6 +53,12 @@ export interface CodeLocation
     readonly endLineNumber: number;
     readonly endColumnNumber: number;
 }
+export const EmptyCodeLocation: CodeLocation = {
+    startLineNumber: 0,
+    startColumnNumber: 0,
+    endLineNumber: 0,
+    endColumnNumber: 0
+}
 
 export class VirtualMachine
 {

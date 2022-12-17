@@ -94,4 +94,16 @@ export class Token
     {
         return Token.empty(this.location);
     }
+
+    public toString()
+    {
+        switch (this.type)
+        {
+            default:
+            case 'empty': return '<empty>';
+            case 'value': return this.getValue().toString();
+            case 'list': return '<TokenList>';
+            case 'map': return '<TokenMap>';
+        }
+    }
 }

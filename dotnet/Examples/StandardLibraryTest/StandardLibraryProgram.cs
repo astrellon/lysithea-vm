@@ -10,7 +10,7 @@ namespace LysitheaVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(StandardAssertLibrary.Scope);
             var script = assembler.ParseFromFile("../../../examples/testStandardLibrary.lys");

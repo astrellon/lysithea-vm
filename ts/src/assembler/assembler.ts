@@ -1,4 +1,3 @@
-import { readAllTokens, tokenize } from "./parser";
 import { Scope } from "../scope";
 import { Script } from "../script";
 import { ArrayValue } from "../values/arrayValue";
@@ -10,6 +9,7 @@ import { getProperty } from "../values/valuePropertyAccess";
 import { VariableValue } from "../values/variableValue";
 import { CodeLine, Operator } from "../virtualMachine";
 import { VMFunction } from "../vmFunction";
+import { Lexer } from "./lexer";
 
 interface TempCodeLine
 {
@@ -62,8 +62,9 @@ export class VirtualMachineAssembler
 
     public parseFromText(input: string)
     {
-        const tokens = tokenize(input);
-        const parsed = readAllTokens(tokens);
+        // const tokens = (input);
+        // const parsed = readAllTokens(tokens);
+        const parsed = Lexer.readFromLines(input);
 
         const code = this.parseGlobalFunction(parsed);
         const scriptScope = new Scope();

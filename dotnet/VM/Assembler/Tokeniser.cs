@@ -1,19 +1,18 @@
 using System;
 using System.Text;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace LysitheaVM
 {
-    public class VirtualMachineParser
+    public class Tokeniser
     {
         #region Fields
         public string Current { get; private set; } = "";
         public int LineNumber { get; private set; } = 0;
         public int ColumnNumber { get; private set; } = 0;
-        public int StartLineNumber { get; private set; } = 0;
-        public int StartColumnNumber { get; private set; } = 0;
 
+        private int startLineNumber = 0;
+        private int startColumnNumber = 0;
         private char inQuote = '\0';
         private char returnSymbol = '\0';
         private bool escaped = false;
@@ -21,17 +20,22 @@ namespace LysitheaVM
         private readonly StringBuilder accumulator = new StringBuilder();
         private readonly IReadOnlyList<string> input;
 
-        public CodeLocation CurrentLocation => new CodeLocation(this.StartLineNumber, this.StartColumnNumber, this.LineNumber, this.ColumnNumber);
+        public CodeLocation CurrentLocation => new CodeLocation(this.startLineNumber, this.startColumnNumber, this.LineNumber, this.ColumnNumber);
         #endregion
 
         #region Constructor
-        public VirtualMachineParser(IReadOnlyList<string> input)
+        public Tokeniser(IReadOnlyList<string> input)
         {
             this.input = input;
         }
         #endregion
 
         #region Methods
+        public CodeLocation CreateLocation(int startLineNumber, int startColumnNumber)
+        {
+            return new CodeLocation(startLineNumber, startColumnNumber, this.LineNumber, this.ColumnNumber);
+        }
+
         public bool MoveNext()
         {
             if (this.returnSymbol != '\0')
@@ -185,109 +189,10 @@ namespace LysitheaVM
         {
             if (this.accumulator.Length == 0)
             {
-                this.StartLineNumber = this.LineNumber;
-                this.StartColumnNumber = this.ColumnNumber - 1;
+                this.startLineNumber = this.LineNumber;
+                this.startColumnNumber = this.ColumnNumber - 1;
             }
             this.accumulator.Append(ch);
-        }
-
-        public static Token ReadAllTokens(IReadOnlyList<string> input)
-        {
-            var parser = new VirtualMachineParser(input);
-            var result = new List<Token>();
-
-            while (parser.MoveNext())
-            {
-                result.Add(ReadFromParser(parser));
-            }
-
-            return new Token(CodeLocation.Empty, result);
-        }
-
-        public static Token ReadFromParser(VirtualMachineParser parser)
-        {
-            var token = parser.Current;
-            switch (token)
-            {
-                case null:
-                {
-                    throw new ParserException(parser.CurrentLocation, token, "Unexpected end of tokens");
-                }
-                case "(":
-                {
-                    var lineNumber = parser.LineNumber;
-                    var columnNumber = parser.ColumnNumber;
-                    var list = new List<Token>();
-                    while (parser.MoveNext())
-                    {
-                        if (parser.Current == ")")
-                        {
-                            break;
-                        }
-                        list.Add(ReadFromParser(parser));
-                    }
-
-                    return new Token(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), list);
-                }
-                case ")":
-                {
-                    throw new ParserException(parser.CurrentLocation, token, "Unexpected )");
-                }
-                case "{":
-                {
-                    var lineNumber = parser.LineNumber;
-                    var columnNumber = parser.ColumnNumber;
-                    var map = new Dictionary<string, Token>();
-                    while (parser.MoveNext())
-                    {
-                        if (parser.Current == "}")
-                        {
-                            break;
-                        }
-                        var key = ReadFromParser(parser).ToString();
-                        parser.MoveNext();
-                        var value = ReadFromParser(parser);
-                        map[key] = value;
-                    }
-
-                    return new Token(new CodeLocation(lineNumber, columnNumber, parser.LineNumber, parser.ColumnNumber), map);
-                }
-                case "}":
-                {
-                    throw new ParserException(parser.CurrentLocation, token, "Unexpected }");
-                }
-                default:
-                {
-                    return new Token(parser.CurrentLocation, Atom(token));
-                }
-            }
-        }
-
-        public static IValue Atom(string input)
-        {
-            if (input.Length == 0 || input == "null")
-            {
-                return NullValue.Value;
-            }
-
-            if (double.TryParse(input, out var number))
-            {
-                return new NumberValue(number);
-            }
-            if (bool.TryParse(input, out var boolean))
-            {
-                return new BoolValue(boolean);
-            }
-
-            var first = input.First();
-            var last = input.Last();
-            if ((first == '"'  && last == '"') ||
-                (first == '\'' && last == '\''))
-            {
-                return new StringValue(input.Substring(1, input.Length - 2));
-            }
-
-            return new VariableValue(input);
         }
         #endregion
     }

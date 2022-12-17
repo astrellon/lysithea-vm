@@ -12,7 +12,7 @@ namespace LysitheaVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             assembler.BuiltinScope.CombineScope(PerfTestScope);
             var script = assembler.ParseFromFile("../../../examples/perfTest.lys");
 

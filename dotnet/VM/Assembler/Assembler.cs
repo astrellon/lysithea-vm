@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace LysitheaVM
 {
-    public class VirtualMachineAssembler
+    public class Assembler
     {
         private class LoopLabels
         {
@@ -59,7 +59,7 @@ namespace LysitheaVM
         {
             this.fullText = input;
             this.sourceName = sourceName;
-            var parsed = VirtualMachineParser.ReadAllTokens(input);
+            var parsed = Lexer.ReadFromLines(input);
 
             var code = this.ParseGlobalFunction(parsed);
             var scriptScope = new Scope();
