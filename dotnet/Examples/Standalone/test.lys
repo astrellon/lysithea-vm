@@ -1,0 +1,4 @@
+(define name "Alan")
+(define age 33)
+(define list ["Person" name age])
+(print "List: " list)

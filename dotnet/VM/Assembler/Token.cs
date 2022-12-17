@@ -7,7 +7,7 @@ namespace LysitheaVM
 {
     public enum TokenType
     {
-        Empty, Value, List, Map
+        Empty, Value, Expression, List, Map
     }
 
     public class Token
@@ -19,34 +19,19 @@ namespace LysitheaVM
         public readonly CodeLocation Location;
         public readonly TokenType Type;
 
-        public readonly IValue Value = NullValue.Value;
-        public readonly IReadOnlyList<Token> TokenList = EmptyList;
-        public readonly IReadOnlyDictionary<string, Token> TokenMap = EmptyMap;
+        public readonly IValue TokenValue;
+        public readonly IReadOnlyList<Token> TokenList;
+        public readonly IReadOnlyDictionary<string, Token> TokenMap;
         #endregion
 
         #region Constructor
-        public Token(CodeLocation location)
+        public Token(CodeLocation location, TokenType type, IValue? value = null, IReadOnlyList<Token>? list = null, IReadOnlyDictionary<string, Token>? map = null)
         {
             this.Location = location;
-            this.Type = TokenType.Empty;
-        }
-        public Token(CodeLocation location, IValue value)
-        {
-            this.Location = location;
-            this.Type = TokenType.Value;
-            this.Value = value;
-        }
-        public Token(CodeLocation location, IReadOnlyList<Token> data)
-        {
-            this.Location = location;
-            this.Type = TokenType.List;
-            this.TokenList = data;
-        }
-        public Token(CodeLocation location, IReadOnlyDictionary<string, Token> data)
-        {
-            this.Location = location;
-            this.Type = TokenType.Map;
-            this.TokenMap = data;
+            this.Type = type;
+            this.TokenValue = value ?? NullValue.Value;
+            this.TokenList = list ?? EmptyList;
+            this.TokenMap = map ?? EmptyMap;
         }
         #endregion
 
@@ -70,7 +55,7 @@ namespace LysitheaVM
                 }
                 case TokenType.Value:
                 {
-                    return this.Value;
+                    return this.TokenValue;
                 }
                 case TokenType.List:
                 {
@@ -81,7 +66,7 @@ namespace LysitheaVM
                     return new ObjectValue(this.TokenMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetValue()));
                 }
             }
-            return this.Value;
+            return this.TokenValue;
         }
 
         public Token KeepLocation(IValue? input)
@@ -90,7 +75,7 @@ namespace LysitheaVM
             {
                 return this.ToEmpty();
             }
-            return new Token(this.Location, input);
+            return Token.Value(this.Location, input);
         }
 
         public override string ToString()
@@ -99,16 +84,43 @@ namespace LysitheaVM
             {
                 default:
                 case TokenType.Empty: return "<empty>";
-                case TokenType.Value: return this.Value.ToString();
+                case TokenType.Value: return this.TokenValue.ToString();
                 case TokenType.List: return "<TokenList>";
                 case TokenType.Map: return "<TokenMap>";
+                case TokenType.Expression: return "<TokenExpression>";
             }
         }
 
         public Token ToEmpty()
         {
-            return new Token(this.Location);
+            return new Token(this.Location, TokenType.Empty);
         }
+
+        public static Token Empty(CodeLocation location)
+        {
+            return new Token(location, TokenType.Empty);
+        }
+
+        public static Token Value(CodeLocation location, IValue value)
+        {
+            return new Token(location, TokenType.Value, value: value);
+        }
+
+        public static Token List(CodeLocation location, IReadOnlyList<Token> list)
+        {
+            return new Token(location, TokenType.List, list: list);
+        }
+
+        public static Token Map(CodeLocation location, IReadOnlyDictionary<string, Token> map)
+        {
+            return new Token(location, TokenType.Map, map: map);
+        }
+
+        public static Token Expression(CodeLocation location, IReadOnlyList<Token> expression)
+        {
+            return new Token(location, TokenType.Expression, list: expression);
+        }
+
         #endregion
     }
 }

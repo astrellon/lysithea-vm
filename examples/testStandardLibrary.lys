@@ -1,43 +1,43 @@
 (function testArray ()
     (print "Running array tests")
 
-    (define arr (0 1 2))
-    (assert.equals (0 1 2) arr)
+    (define arr [0 1 2])
+    (assert.equals [0 1 2] arr)
 
     (assert.equals 3 arr.length)
     (assert.equals 3 (array.length arr))
 
     (set arr (array.set arr 1 "b"))
-    (assert.equals (0 "b" 2) arr)
+    (assert.equals [0 "b" 2] arr)
 
-    (set arr (array.insertFlatten arr -1 ("c" "d")))
-    (assert.equals (0 "b" "c" "d" 2) arr)
+    (set arr (array.insertFlatten arr -1 ["c" "d"]))
+    (assert.equals [0 "b" "c" "d" 2] arr)
 
     (set arr (array.insert arr 0 "a"))
-    (assert.equals ("a" 0 "b" "c" "d" 2) arr)
+    (assert.equals ["a" 0 "b" "c" "d" 2] arr)
 
     (set arr (array.removeAt arr 1))
-    (assert.equals ("a" "b" "c" "d" 2) arr)
+    (assert.equals ["a" "b" "c" "d" 2] arr)
 
     (set arr (array.remove arr 2))
-    (assert.notEquals ("a" "b" "c" "e") arr)
-    (assert.equals ("a" "b" "c" "d") arr)
+    (assert.notEquals ["a" "b" "c" "e"] arr)
+    (assert.equals ["a" "b" "c" "d"] arr)
 
     (assert.equals 4 arr.length)
     (assert.equals 4 (array.length arr))
 
-    (assert.equals ("a" "b") (array.sublist arr 0 2))
-    (assert.equals ("a" "b" "c" "d") (array.sublist arr 0 -1))
-    (assert.equals ("d") (array.sublist arr -1 -1))
-    (assert.equals ("c" "d") (array.sublist arr -2 -1))
-    (assert.equals ("b" "c") (array.sublist arr -3 2))
+    (assert.equals ["a" "b"] (array.sublist arr 0 2))
+    (assert.equals ["a" "b" "c" "d"] (array.sublist arr 0 -1))
+    (assert.equals ["d"] (array.sublist arr -1 -1))
+    (assert.equals ["c" "d"] (array.sublist arr -2 -1))
+    (assert.equals ["b" "c"] (array.sublist arr -3 2))
 
     (define name "Foo")
     (define age 30)
-    (define address ("location 1" "location 2"))
+    (define address ["location 1" "location 2"])
 
     (define arr2 (array.join name age address))
-    (assert.equals ("Foo" 30 ("location 1" "location 2")) arr2)
+    (assert.equals ["Foo" 30 ["location 1" "location 2"]] arr2)
 
     (print "Array tests passed!")
 )
@@ -71,7 +71,7 @@
 (function testObject ()
     (print "Running object tests")
 
-    (define obj { name "Foo" age 30 })
+    (define obj { "name" "Foo" "age" 30 })
 
     (set obj (object.set obj "name" "Bar"))
     (assert.equals {name "Bar" age 30} obj)
@@ -153,7 +153,7 @@
 )
 
 (testUnpack "Hello" "There" "How" 5 "you?")
-(define values ("abc" 567 "hello there"))
+(define values ["abc" 567 "hello there"])
 (print "Values1: " values)
 (print "Values2: " ...values)
 

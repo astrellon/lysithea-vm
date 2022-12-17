@@ -265,7 +265,7 @@ namespace LysitheaVM
 
         private static string DebugScopeLine(Function function, int line)
         {
-            var text = $"{function.DebugSymbols.SourceName}: [{function.Name}]: line:";
+            var text = $"  at [{function.Name}] in {function.DebugSymbols.SourceName}:line ";
             if (line >= function.Code.Count)
             {
                 return $"{text}{line} end of code";

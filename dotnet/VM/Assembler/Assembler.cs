@@ -77,7 +77,7 @@ namespace LysitheaVM
 
         public List<ITempCodeLine> Parse(Token input)
         {
-            if (input.Type == TokenType.List)
+            if (input.Type == TokenType.Expression)
             {
                 if (!input.TokenList.Any())
                 {
@@ -86,7 +86,7 @@ namespace LysitheaVM
 
                 var first = input.TokenList.First();
                 // If the first item in an array is a symbol we assume that it is a function call or a label
-                if (first.Value is VariableValue firstSymbolValue)
+                if (first.TokenValue is VariableValue firstSymbolValue)
                 {
                     if (firstSymbolValue.IsLabel)
                     {
@@ -114,10 +114,12 @@ namespace LysitheaVM
 
                     return result;
                 }
-
-                // Any array that doesn't start with a symbol we assume it's a data array.
+                else
+                {
+                    throw new AssemblerException(input, $"Expression needs to start with a function variable");
+                }
             }
-            else if (input.Value is VariableValue varValue)
+            else if (input.TokenValue is VariableValue varValue)
             {
                 if (!varValue.IsLabel)
                 {
@@ -268,7 +270,7 @@ namespace LysitheaVM
         {
             var name = "";
             var offset = 0;
-            if (input.TokenList[1].Value is VariableValue || input.TokenList[1].Value is StringValue)
+            if (input.TokenList[1].TokenValue is VariableValue || input.TokenList[1].TokenValue is StringValue)
             {
                 name = input.TokenList[1].ToString();
                 offset = 1;
@@ -311,7 +313,7 @@ namespace LysitheaVM
             else if (input.TokenList.Count == 2)
             {
                 // If it's a constant already, just push the negative.
-                if (input.TokenList[1].Value is NumberValue numValue)
+                if (input.TokenList[1].TokenValue is NumberValue numValue)
                 {
                     return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input.TokenList[1].KeepLocation(new NumberValue(-numValue.Value))) };
                 }
@@ -353,7 +355,7 @@ namespace LysitheaVM
             var result = this.Parse(input.TokenList[1]);
             foreach (var item in input.TokenList.Skip(2))
             {
-                if (item.Value is NumberValue numValue)
+                if (item.TokenValue is NumberValue numValue)
                 {
                     result.Add(new TempCodeLine(opCode, item));
                 }
@@ -407,9 +409,9 @@ namespace LysitheaVM
             var wrappedCode = new List<Token>();
             wrappedCode.Add(arrayValue.KeepLocation(new VariableValue("set")));
             wrappedCode.Add(arrayValue.TokenList[1].KeepLocation(new VariableValue(varName)));
-            wrappedCode.Add(new Token(arrayValue.Location, newCode));
+            wrappedCode.Add(Token.Expression(arrayValue.Location, newCode));
 
-            return this.Parse(new Token(arrayValue.Location, wrappedCode));
+            return this.Parse(Token.Expression(arrayValue.Location, wrappedCode));
         }
 
         public virtual List<ITempCodeLine> ParseKeyword(VariableValue firstSymbol, Token arrayValue)
@@ -480,7 +482,7 @@ namespace LysitheaVM
             }
 
             var numArgsValue = new NumberValue(numArgs);
-            var isProperty = IsGetPropertyRequest(input.Value.ToString(), out var parentKey, out var property);
+            var isProperty = IsGetPropertyRequest(input.TokenValue.ToString(), out var parentKey, out var property);
 
             // Check if we know about the parent object? (eg: string.length, the parent is the string object)
             if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
@@ -535,7 +537,7 @@ namespace LysitheaVM
             }
 
             var isArgumentUnpack = false;
-            var inputStr = input.Value.ToString();
+            var inputStr = input.TokenValue.ToString();
             if (inputStr.StartsWith("..."))
             {
                 isArgumentUnpack = true;

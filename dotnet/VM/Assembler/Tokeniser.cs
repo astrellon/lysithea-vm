@@ -143,6 +143,8 @@ namespace LysitheaVM
 
                         case '(':
                         case ')':
+                        case '[':
+                        case ']':
                         case '{':
                         case '}':
                         {

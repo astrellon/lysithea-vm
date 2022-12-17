@@ -17,7 +17,7 @@ namespace LysitheaVM
                 result.Add(ReadFromTokeniser(parser));
             }
 
-            return new Token(CodeLocation.Empty, result);
+            return Token.Expression(CodeLocation.Empty, result);
         }
 
         public static Token ReadFromTokeniser(Tokeniser tokeniser)
@@ -43,11 +43,37 @@ namespace LysitheaVM
                         list.Add(ReadFromTokeniser(tokeniser));
                     }
 
-                    return new Token(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
+                    return Token.Expression(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
                 }
                 case ")":
                 {
                     throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected )");
+                }
+                case "[":
+                {
+                    var startLineNumber = tokeniser.LineNumber;
+                    var startColumnNumber = tokeniser.ColumnNumber;
+                    var list = new List<Token>();
+                    while (tokeniser.MoveNext())
+                    {
+                        if (tokeniser.Current == "]")
+                        {
+                            break;
+                        }
+
+                        var value = ReadFromTokeniser(tokeniser);
+                        if (value.Type == TokenType.Expression)
+                        {
+                            throw new ParserException(value.Location, "", "Expression found in array literal");
+                        }
+                        list.Add(value);
+                    }
+
+                    return Token.List(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
+                }
+                case "]":
+                {
+                    throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected ]");
                 }
                 case "{":
                 {
@@ -60,13 +86,20 @@ namespace LysitheaVM
                         {
                             break;
                         }
+
                         var key = ReadFromTokeniser(tokeniser).ToString();
                         tokeniser.MoveNext();
+
                         var value = ReadFromTokeniser(tokeniser);
+                        if (value.Type == TokenType.Expression)
+                        {
+                            throw new ParserException(value.Location, "", "Expression found in map literal");
+                        }
+
                         map[key] = value;
                     }
 
-                    return new Token(tokeniser.CreateLocation(startLineNumber, startColumnNumber), map);
+                    return Token.Map(tokeniser.CreateLocation(startLineNumber, startColumnNumber), map);
                 }
                 case "}":
                 {
@@ -74,7 +107,7 @@ namespace LysitheaVM
                 }
                 default:
                 {
-                    return new Token(tokeniser.CurrentLocation, ParseConstant(token));
+                    return Token.Value(tokeniser.CurrentLocation, ParseConstant(token));
                 }
             }
         }

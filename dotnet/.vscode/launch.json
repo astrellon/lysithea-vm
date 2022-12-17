@@ -49,6 +49,17 @@
             "stopAtEntry": false
         },
         {
+            "name": "Run Standalone",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-standalone-program",
+            "program": "${workspaceFolder}/Examples/Standalone/bin/Debug/net6.0/standalone.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Examples/Standalone",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
