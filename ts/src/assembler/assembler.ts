@@ -1,3 +1,4 @@
+import { AssemblerError } from "../errors/errors";
 import { Scope } from "../scope";
 import { Script } from "../script";
 import { ArrayValue } from "../values/arrayValue";
@@ -10,12 +11,13 @@ import { VariableValue } from "../values/variableValue";
 import { CodeLine, Operator } from "../virtualMachine";
 import { VMFunction } from "../vmFunction";
 import { Lexer } from "./lexer";
+import { Token } from "./token";
 
 interface TempCodeLine
 {
     readonly label?: string;
     readonly operator?: Operator;
-    readonly value?: IValue;
+    readonly value?: Token;
 }
 
 interface LoopLabels
@@ -42,7 +44,7 @@ const DefineKeyword = 'define';
 const JumpKeyword = 'jump';
 const ReturnKeyword = 'return';
 
-function codeLine(operator: Operator, value?: IValue): TempCodeLine
+function codeLine(operator: Operator, value: Token): TempCodeLine
 {
     return { operator, value };
 }
@@ -52,7 +54,18 @@ function labelLine(label: string): TempCodeLine
     return { label };
 }
 
-export class VirtualMachineAssembler
+const regexSplit = /(\r\n|\n|\r)/g;
+function splitInput(input: string)
+{
+    return input.split(regexSplit);
+}
+
+function isTokenExpression(input: Token)
+{
+    return input.type === 'expression';
+}
+
+export class Assembler
 {
     public builtinScope: Scope = new Scope();
 
@@ -62,9 +75,8 @@ export class VirtualMachineAssembler
 
     public parseFromText(input: string)
     {
-        // const tokens = (input);
-        // const parsed = readAllTokens(tokens);
-        const parsed = Lexer.readFromLines(input);
+        const split = splitInput(input);
+        const parsed = Lexer.readFromLines(split);
 
         const code = this.parseGlobalFunction(parsed);
         const scriptScope = new Scope();
@@ -73,21 +85,21 @@ export class VirtualMachineAssembler
         return new Script(scriptScope, code);
     }
 
-    public parse(input: IValue): TempCodeLine[]
+    public parse(input: Token): TempCodeLine[]
     {
-        if (input instanceof ArrayValue)
+        if (input.type === 'expression')
         {
-            if (input.value.length === 0)
+            if (input.tokenList.length === 0)
             {
                 return [];
             }
 
-            const first = input.value[0];
+            const first = input.tokenList[0];
             // If the first item in an array is a variable we assume that it is a function call or a label
-            if (first instanceof VariableValue)
+            if (first.value instanceof VariableValue)
             {
                 const firstString = first.toString();
-                if (first.isLabel)
+                if (first.value.isLabel)
                 {
                     return [ labelLine(firstString) ];
                 }
@@ -102,47 +114,49 @@ export class VirtualMachineAssembler
                 this.keywordParsingStack.push('func-call');
 
                 // Handle general opcode or function call.
-                let result = input.value.slice(1).map(v => this.parse(v)).flat(1);
-                result = result.concat(this.optimiseCallSymbolValue(first.value, input.value.length - 1));
+                let result = input.tokenList.slice(1).map(v => this.parse(v)).flat(1);
+                result = result.concat(this.optimiseCallSymbolValue(first, input.tokenList.length - 1));
 
                 this.keywordParsingStack.pop();
 
                 return result;
             }
-
-            // Any array that doesn't start with a variable we assume it's a data array.
-        }
-        else if (input instanceof VariableValue)
-        {
-            if (!input.isLabel)
+            else
             {
-                return this.optimiseGetSymbolValue(input.value);
+                throw new AssemblerError(input, 'Expression needs to start with a function variable');
+            }
+        }
+        else if (input.value instanceof VariableValue)
+        {
+            if (!input.value.isLabel)
+            {
+                return this.optimiseGetSymbolValue(input);
             }
         }
 
         return [ codeLine('push', input) ];
     }
 
-    public parseDefineSet(input: ArrayValue, isDefine: boolean)
+    public parseDefineSet(input: Token, isDefine: boolean)
     {
         const opCode: Operator = isDefine ? 'define' : 'set';
         // Parse the last value as the definable/set-able value.
-        const result = this.parse(input.value[input.value.length - 1]);
+        const result = this.parse(input.tokenList[input.tokenList.length - 1]);
 
         // Loop over all the middle inputs as the values to set.
         // Multiple variables can be set when a function returns multiple results.
-        for (let i = input.value.length - 2; i >= 1; i--)
+        for (let i = input.tokenList.length - 2; i >= 1; i--)
         {
-            result.push(codeLine(opCode, input.value[i]));
+            result.push(codeLine(opCode, input.tokenList[i]));
         }
         return result;
     }
 
-    public parseLoop(input: ArrayValue)
+    public parseLoop(input: Token)
     {
-        if (input.value.length < 3)
+        if (input.tokenList.length < 3)
         {
-            throw new Error('Loop input has too few arguments');
+            throw new AssemblerError(input, 'Loop input has too few arguments');
         }
 
         const loopLabelNum = this.labelCount++;
@@ -151,15 +165,15 @@ export class VirtualMachineAssembler
 
         this.loopStack.push({ start: labelStart, end: labelEnd });
 
-        const comparisonCall = input.value[1];
+        const comparisonCall = input.tokenList[1];
         let result = [ labelLine(labelStart), ...this.parse(comparisonCall) ];
-        result.push(codeLine('jumpFalse', new StringValue(labelEnd)));
-        for (let i = 2; i < input.value.length; i++)
+        result.push(codeLine('jumpFalse', comparisonCall.keepLocation(new StringValue(labelEnd))));
+        for (let i = 2; i < input.tokenList.length; i++)
         {
-            result = result.concat(this.parse(input.value[i]));
+            result = result.concat(this.parse(input.tokenList[i]));
         }
 
-        result.push(codeLine('jump', new StringValue(labelStart)));
+        result.push(codeLine('jump', comparisonCall.keepLocation(new StringValue(labelStart))));
         result.push(labelLine(labelEnd));
 
         this.loopStack.pop();
@@ -167,50 +181,50 @@ export class VirtualMachineAssembler
         return result;
     }
 
-    public parseCond(input: ArrayValue, isIfStatement: boolean)
+    public parseCond(input: Token, isIfStatement: boolean)
     {
-        if (input.value.length < 3)
+        if (input.tokenList.length < 3)
         {
-            throw new Error('Condition input has too few inputs');
+            throw new AssemblerError(input, 'Condition input has too few inputs');
         }
-        if (input.value.length > 4)
+        if (input.tokenList.length > 4)
         {
-            throw new Error('Condition input has too many inputs!');
+            throw new AssemblerError(input, 'Condition input has too many inputs!');
         }
 
         const ifLabelNum = this.labelCount++;
         const labelElse = `:CondElse${ifLabelNum}`;
         const labelEnd = `:CondEnd${ifLabelNum}`;
 
-        const hasElseCall = input.value.length === 4;
+        const hasElseCall = input.tokenList.length === 4;
         const jumpOperator = isIfStatement ? 'jumpFalse' : 'jumpTrue';
 
-        const comparisonCall = input.value[1];
-        const firstBlock = input.value[2] as ArrayValue;
+        const comparisonCall = input.tokenList[1];
+        const firstBlock = input.tokenList[2];
 
         let result = this.parse(comparisonCall);
 
         if (hasElseCall)
         {
             // Jump to else if the condition doesn't match
-            result.push(codeLine(jumpOperator, new StringValue(labelElse)));
+            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(new StringValue(labelElse))));
 
             // First block of code
             result = result.concat(this.parseFlatten(firstBlock));
             // Jump after the condition, skipping second block of code.
-            result.push(codeLine('jump', new StringValue(labelEnd)));
+            result.push(codeLine('jump', firstBlock.keepLocation(new StringValue(labelEnd))));
 
             // Jump target for else
             result.push(labelLine(labelElse));
 
             // Second 'else' block of code
-            const secondBlock = input.value[3] as ArrayValue;
+            const secondBlock = input.tokenList[3];
             result = result.concat(this.parseFlatten(secondBlock));
         }
         else
         {
             // We only have one block, so jump to the end of the block if the condition doesn't match
-            result.push(codeLine(jumpOperator, new StringValue(labelEnd)));
+            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(new StringValue(labelEnd))));
 
             result = result.concat(this.parseFlatten(firstBlock));
         }
@@ -220,11 +234,11 @@ export class VirtualMachineAssembler
         return result;
     }
 
-    public parseFlatten(input: ArrayValue)
+    public parseFlatten(input: Token)
     {
-        if (input.value.every(isIArrayValue))
+        if (input.tokenList.every(isTokenExpression))
         {
-            return input.value.map(v => this.parse(v)).flat(1);
+            return input.tokenList.map(v => this.parse(v)).flat(1);
         }
 
         return this.parse(input);
@@ -262,9 +276,9 @@ export class VirtualMachineAssembler
         return this.processTempFunction(parameters, tempCodeLines, name);
     }
 
-    public parseGlobalFunction(input: ArrayValue)
+    public parseGlobalFunction(input: Token)
     {
-        const tempCodeLines = input.value.map(v => this.parse(v)).flat(1);
+        const tempCodeLines = input.tokenList.map(v => this.parse(v)).flat(1);
         return this.processTempFunction([], tempCodeLines, 'global');
     }
 
@@ -298,14 +312,14 @@ export class VirtualMachineAssembler
         ];
     }
 
-    public parseJump(input: ArrayValue)
+    public parseJump(input: Token)
     {
-        let parse = this.parse(input.value[1]);
+        let parse = this.parse(input.tokenList[1]);
         if (parse.length === 1 && parse[0].operator === 'push' && parse[0].value !== undefined)
         {
             return [codeLine('jump', parse[0].value)];
         }
-        parse.push(codeLine('push'));
+        parse.push(codeLine('push', input.toEmpty()));
         return parse;
     }
 
@@ -498,7 +512,7 @@ export class VirtualMachineAssembler
     private optimiseCallSymbolValue(input: string, numArgs: number): TempCodeLine[]
     {
         const numArgsValue = new NumberValue(numArgs);
-        const propertyRequestInfo = VirtualMachineAssembler.isGetPropertyRequest(input);
+        const propertyRequestInfo = Assembler.isGetPropertyRequest(input);
 
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
         const foundParent = this.builtinScope.get(propertyRequestInfo.parentKey);
@@ -554,7 +568,7 @@ export class VirtualMachineAssembler
 
         const result: TempCodeLine[] = [];
 
-        const propertyRequestInfo = VirtualMachineAssembler.isGetPropertyRequest(input);
+        const propertyRequestInfo = Assembler.isGetPropertyRequest(input);
         const foundParent = this.builtinScope.get(propertyRequestInfo.parentKey);
         if (foundParent !== undefined)
         {

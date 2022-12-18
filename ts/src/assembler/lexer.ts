@@ -1,11 +1,9 @@
-import { ParserError } from "../errors/parserError";
+import { ParserError } from "../errors/errors";
 import { Editable } from "../standardLibrary/standardObjectLibrary";
-import { ArrayValue } from "../values/arrayValue";
 import { BoolValue } from "../values/boolValue";
 import { IValue } from "../values/ivalues";
 import { NullValue } from "../values/nullValue";
 import { NumberValue } from "../values/numberValue";
-import { ObjectValue } from "../values/objectValue";
 import { StringValue } from "../values/stringValue";
 import { VariableValue } from "../values/variableValue";
 import { EmptyCodeLocation } from "../virtualMachine";
@@ -47,9 +45,35 @@ export class Lexer
                     list.push(Lexer.readFromTokeniser(tokeniser));
                 }
 
-                return Token.list(tokeniser.createLocation(startLineNumber, startColumnNumber), list);
+                return Token.expression(tokeniser.createLocation(startLineNumber, startColumnNumber), list);
             }
             case ')':
+            {
+                throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected )');
+            }
+            case '[':
+            {
+                const startLineNumber = tokeniser.lineNumber;
+                const startColumnNumber = tokeniser.columnNumber;
+                const list: Token[] = [];
+                while (tokeniser.moveNext())
+                {
+                    if (tokeniser.current === ']')
+                    {
+                        break;
+                    }
+
+                    const value = Lexer.readFromTokeniser(tokeniser);
+                    if (value.type === 'expression')
+                    {
+                        throw new ParserError(value.location, '', 'Expression found in array literal');
+                    }
+                    list.push(Lexer.readFromTokeniser(tokeniser));
+                }
+
+                return Token.list(tokeniser.createLocation(startLineNumber, startColumnNumber), list);
+            }
+            case ']':
             {
                 throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected )');
             }
@@ -67,7 +91,12 @@ export class Lexer
 
                     const key = Lexer.readFromTokeniser(tokeniser).toString();
                     tokeniser.moveNext();
+
                     const value = Lexer.readFromTokeniser(tokeniser);
+                    if (value.type === 'expression')
+                    {
+                        throw new ParserError(value.location, '', 'Expression found in map literal');
+                    }
                     map[key] = value;
                 }
 

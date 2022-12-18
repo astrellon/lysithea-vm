@@ -3,7 +3,7 @@ import { IValue } from "../values/ivalues";
 import { ArrayValue, ObjectValue, ObjectValueMap } from "../index";
 import { Editable } from "../standardLibrary/standardObjectLibrary";
 
-export type TokenType = 'empty' | 'value' | 'list' | 'map';
+export type TokenType = 'empty' | 'value' | 'expression' | 'list' | 'map';
 
 export type TokenList = ReadonlyArray<Token>;
 export interface TokenMap { readonly [key: string]: Token }
@@ -38,6 +38,11 @@ export class Token
         return new Token(location, 'value', value);
     }
 
+    public static expression(location: CodeLocation, list: TokenList)
+    {
+        return new Token(location, 'expression', undefined, list);
+    }
+
     public static list(location: CodeLocation, list: TokenList)
     {
         return new Token(location, 'list', undefined, list);
@@ -55,6 +60,10 @@ export class Token
             case 'empty':
             {
                 throw new Error('Cannot get value of empty token');
+            }
+            case 'expression':
+            {
+                throw new Error('Cannot get value of expression');
             }
             case 'value':
             {
@@ -101,6 +110,7 @@ export class Token
         {
             default:
             case 'empty': return '<empty>';
+            case 'expression': return '<TokenExpression>';
             case 'value': return this.getValue().toString();
             case 'list': return '<TokenList>';
             case 'map': return '<TokenMap>';

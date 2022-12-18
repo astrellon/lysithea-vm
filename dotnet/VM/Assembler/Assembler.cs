@@ -32,7 +32,7 @@ namespace LysitheaVM
         private const string DefineKeyword = "define";
         private const string JumpKeyword = "jump";
         private const string ReturnKeyword = "return";
-        private static readonly string[] NewlineSeparators = new[] { "\n", "\r", "\r\n" };
+        private static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
 
         public readonly Scope BuiltinScope = new Scope();
         private int labelCount = 0;
@@ -118,6 +118,10 @@ namespace LysitheaVM
                 {
                     throw new AssemblerException(input, $"Expression needs to start with a function variable");
                 }
+            }
+            else if (input.Type == TokenType.List)
+            {
+                // Handle parsing of each element and check if they're all compile time values
             }
             else if (input.TokenValue is VariableValue varValue)
             {
@@ -247,7 +251,7 @@ namespace LysitheaVM
 
         public IEnumerable<ITempCodeLine> ParseFlatten(Token input)
         {
-            if (input.TokenList.All(i => i.Type == TokenType.List))
+            if (input.TokenList.All(i => i.Type == TokenType.Expression))
             {
                 return input.TokenList.SelectMany(Parse);
             }

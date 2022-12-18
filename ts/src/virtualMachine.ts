@@ -59,6 +59,10 @@ export const EmptyCodeLocation: CodeLocation = {
     endLineNumber: 0,
     endColumnNumber: 0
 }
+export function toStringCodeLocation(input: CodeLocation)
+{
+    return `${input.startLineNumber}:${input.startColumnNumber} -> ${input.endLineNumber}:${input.endColumnNumber}}`;
+}
 
 export class VirtualMachine
 {
