@@ -4,55 +4,46 @@ using System.Diagnostics;
 
 namespace LysitheaVM
 {
-    public interface ITempCodeLine
-    {
-        Token Token { get; }
-    }
-
     [DebuggerDisplay("{Description}")]
-    public class LabelCodeLine : ITempCodeLine
-    {
-        #region Fields
-        public readonly string Label;
-        public readonly Token Token;
-
-        Token ITempCodeLine.Token => this.Token;
-
-        public string Description => $"Label: {this.Label}";
-        #endregion
-
-        #region Constructor
-        public LabelCodeLine(string label, Token token)
-        {
-            this.Label = label;
-            this.Token = token;
-        }
-        #endregion
-    }
-
-    [DebuggerDisplay("{Description}")]
-    public class TempCodeLine : ITempCodeLine
+    public class TempCodeLine
     {
         #region Fields
         public readonly Operator Operator;
+        public readonly string LabelLine;
         public readonly Token Token;
-
-        Token ITempCodeLine.Token => this.Token;
 
         public string Description
         {
             get
             {
-                return $"Temp: {this.Operator}: {this.Token.ToString()}";
+                if (this.IsLabel)
+                {
+                    return $"Label: {this.Token.Location}: {this.LabelLine}";
+                }
+                return $"Code: {this.Token.Location}: {this.Operator}: {this.Token}";
             }
         }
+        public bool IsLabel => !string.IsNullOrEmpty(this.LabelLine);
         #endregion
 
         #region Constructor
-        public TempCodeLine(Operator op, Token token)
+        public TempCodeLine(Operator op, string labelLine, Token token)
         {
             this.Operator = op;
+            this.LabelLine = labelLine;
             this.Token = token;
+        }
+        #endregion
+
+        #region Methods
+        public static TempCodeLine Code(Operator op, Token token)
+        {
+            return new TempCodeLine(op, "", token);
+        }
+
+        public static TempCodeLine Label(string labelLine, Token token)
+        {
+            return new TempCodeLine(LysitheaVM.Operator.Unknown, labelLine, token);
         }
         #endregion
     }

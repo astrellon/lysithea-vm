@@ -141,12 +141,9 @@ namespace LysitheaVM
                             break;
                         }
 
-                        case '(':
-                        case ')':
-                        case '[':
-                        case ']':
-                        case '{':
-                        case '}':
+                        case '(': case ')':
+                        case '[': case ']':
+                        case '{': case '}':
                         {
                             if (this.accumulator.Length > 0)
                             {
@@ -184,6 +181,7 @@ namespace LysitheaVM
                 }
             }
 
+            this.Current = null;
             return false;
         }
 

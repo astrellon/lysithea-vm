@@ -20,6 +20,50 @@ namespace LysitheaVM
             return Token.Expression(CodeLocation.Empty, result);
         }
 
+        private static Token ParseList(Tokeniser tokeniser, string endToken)
+        {
+            var startLineNumber = tokeniser.LineNumber;
+            var startColumnNumber = tokeniser.ColumnNumber;
+            var list = new List<Token>();
+            while (tokeniser.MoveNext())
+            {
+                if (tokeniser.Current == endToken)
+                {
+                    break;
+                }
+                list.Add(ReadFromTokeniser(tokeniser));
+            }
+
+            return Token.Expression(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
+        }
+
+        private static Token ParseMap(Tokeniser tokeniser)
+        {
+            var startLineNumber = tokeniser.LineNumber;
+            var startColumnNumber = tokeniser.ColumnNumber;
+            var map = new Dictionary<string, Token>();
+            while (tokeniser.MoveNext())
+            {
+                if (tokeniser.Current == "}")
+                {
+                    break;
+                }
+
+                var key = ReadFromTokeniser(tokeniser).ToString();
+                tokeniser.MoveNext();
+
+                var value = ReadFromTokeniser(tokeniser);
+                if (value.Type == TokenType.Expression)
+                {
+                    throw new ParserException(value.Location, "", "Expression found in map literal");
+                }
+
+                map[key] = value;
+            }
+
+            return Token.Map(tokeniser.CreateLocation(startLineNumber, startColumnNumber), map);
+        }
+
         public static Token ReadFromTokeniser(Tokeniser tokeniser)
         {
             var token = tokeniser.Current;
@@ -29,76 +73,25 @@ namespace LysitheaVM
                 {
                     throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected end of tokens");
                 }
+
                 case "(":
                 {
-                    var startLineNumber = tokeniser.LineNumber;
-                    var startColumnNumber = tokeniser.ColumnNumber;
-                    var list = new List<Token>();
-                    while (tokeniser.MoveNext())
-                    {
-                        if (tokeniser.Current == ")")
-                        {
-                            break;
-                        }
-                        list.Add(ReadFromTokeniser(tokeniser));
-                    }
-
-                    return Token.Expression(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
-                }
-                case ")":
-                {
-                    throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected )");
+                    return ParseList(tokeniser, ")");
                 }
                 case "[":
                 {
-                    var startLineNumber = tokeniser.LineNumber;
-                    var startColumnNumber = tokeniser.ColumnNumber;
-                    var list = new List<Token>();
-                    while (tokeniser.MoveNext())
-                    {
-                        if (tokeniser.Current == "]")
-                        {
-                            break;
-                        }
-
-                        list.Add(ReadFromTokeniser(tokeniser));
-                    }
-
-                    return Token.List(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
-                }
-                case "]":
-                {
-                    throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected ]");
+                    return ParseList(tokeniser, "]");
                 }
                 case "{":
                 {
-                    var startLineNumber = tokeniser.LineNumber;
-                    var startColumnNumber = tokeniser.ColumnNumber;
-                    var map = new Dictionary<string, Token>();
-                    while (tokeniser.MoveNext())
-                    {
-                        if (tokeniser.Current == "}")
-                        {
-                            break;
-                        }
-
-                        var key = ReadFromTokeniser(tokeniser).ToString();
-                        tokeniser.MoveNext();
-
-                        var value = ReadFromTokeniser(tokeniser);
-                        if (value.Type == TokenType.Expression)
-                        {
-                            throw new ParserException(value.Location, "", "Expression found in map literal");
-                        }
-
-                        map[key] = value;
-                    }
-
-                    return Token.Map(tokeniser.CreateLocation(startLineNumber, startColumnNumber), map);
+                    return ParseMap(tokeniser);
                 }
+
+                case ")":
+                case "]":
                 case "}":
                 {
-                    throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected }");
+                    throw new ParserException(tokeniser.CurrentLocation, token, $"Unexpected {token}");
                 }
                 default:
                 {
