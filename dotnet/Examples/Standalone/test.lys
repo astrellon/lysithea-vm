@@ -1,4 +1,4 @@
 (define name "Alan")
 (define age 33)
-(define list ["Person" name age])
+(define list ["Person" "Alan" 33 (function callback() (print "Hello!"))])
 (print "List: " list)

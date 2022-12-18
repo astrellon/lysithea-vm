@@ -61,12 +61,7 @@ namespace LysitheaVM
                             break;
                         }
 
-                        var value = ReadFromTokeniser(tokeniser);
-                        if (value.Type == TokenType.Expression)
-                        {
-                            throw new ParserException(value.Location, "", "Expression found in array literal");
-                        }
-                        list.Add(value);
+                        list.Add(ReadFromTokeniser(tokeniser));
                     }
 
                     return Token.List(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);

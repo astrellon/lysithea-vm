@@ -4,21 +4,28 @@ using System.Diagnostics;
 
 namespace LysitheaVM
 {
-    public interface ITempCodeLine { }
+    public interface ITempCodeLine
+    {
+        Token Token { get; }
+    }
 
     [DebuggerDisplay("{Description}")]
     public class LabelCodeLine : ITempCodeLine
     {
         #region Fields
         public readonly string Label;
+        public readonly Token Token;
+
+        Token ITempCodeLine.Token => this.Token;
 
         public string Description => $"Label: {this.Label}";
         #endregion
 
         #region Constructor
-        public LabelCodeLine(string label)
+        public LabelCodeLine(string label, Token token)
         {
             this.Label = label;
+            this.Token = token;
         }
         #endregion
     }
@@ -29,6 +36,8 @@ namespace LysitheaVM
         #region Fields
         public readonly Operator Operator;
         public readonly Token Token;
+
+        Token ITempCodeLine.Token => this.Token;
 
         public string Description
         {

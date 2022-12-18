@@ -90,7 +90,7 @@ namespace LysitheaVM
                 {
                     if (firstSymbolValue.IsLabel)
                     {
-                        return new List<ITempCodeLine> { new LabelCodeLine(firstSymbolValue.Value) };
+                        return new List<ITempCodeLine> { new LabelCodeLine(firstSymbolValue.Value, first) };
                     }
 
                     // Check for keywords
@@ -122,6 +122,50 @@ namespace LysitheaVM
             else if (input.Type == TokenType.List)
             {
                 // Handle parsing of each element and check if they're all compile time values
+                var result = new List<IValue>();
+                foreach (var item in input.TokenList)
+                {
+                    var parsed = this.Parse(item);
+                    if (!parsed.Any())
+                    {
+                        continue;
+                    }
+
+                    if (parsed.Count == 1 && parsed[0] is TempCodeLine tempCodeLine && tempCodeLine.Operator == Operator.Push)
+                    {
+                        result.Add(tempCodeLine.Token.GetValue());
+                    }
+                    else
+                    {
+                        throw new AssemblerException(parsed[0].Token, "Unexpected token in list literal");
+                    }
+                }
+
+                return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input.KeepLocation(new ArrayValue(result))) };
+            }
+            else if (input.Type == TokenType.Map)
+            {
+                // Handle parsing of each element and check if they're all compile time values
+                var result = new Dictionary<string, IValue>();
+                foreach (var kvp in input.TokenMap)
+                {
+                    var parsed = this.Parse(kvp.Value);
+                    if (!parsed.Any())
+                    {
+                        continue;
+                    }
+
+                    if (parsed.Count == 1 && parsed[0] is TempCodeLine tempCodeLine && tempCodeLine.Operator == Operator.Push)
+                    {
+                        result[kvp.Key] = tempCodeLine.Token.GetValue();
+                    }
+                    else
+                    {
+                        throw new AssemblerException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
+                    }
+                }
+
+                return new List<ITempCodeLine> { new TempCodeLine(Operator.Push, input.KeepLocation(new ObjectValue(result))) };
             }
             else if (input.TokenValue is VariableValue varValue)
             {
@@ -178,7 +222,7 @@ namespace LysitheaVM
 
             this.loopStack.Push(new LoopLabels(labelStart, labelEnd));
 
-            var result = new List<ITempCodeLine> { new LabelCodeLine(labelStart.Value) };
+            var result = new List<ITempCodeLine> { new LabelCodeLine(labelStart.Value, input) };
             var comparisonCall = input.TokenList[1];
             result.AddRange(Parse(comparisonCall));
 
@@ -188,7 +232,7 @@ namespace LysitheaVM
                 result.AddRange(Parse(input.TokenList[i]));
             }
             result.Add(new TempCodeLine(Operator.Jump, comparisonCall.KeepLocation(labelStart)));
-            result.Add(new LabelCodeLine(labelEnd.Value));
+            result.Add(new LabelCodeLine(labelEnd.Value, input));
 
             this.loopStack.Pop();
 
@@ -229,7 +273,7 @@ namespace LysitheaVM
                 result.Add(new TempCodeLine(Operator.Jump, firstBlock.KeepLocation(new StringValue(labelEnd))));
 
                 // Jump target for else
-                result.Add(new LabelCodeLine(labelElse));
+                result.Add(new LabelCodeLine(labelElse, input));
 
                 // Second 'else' block of code
                 var secondBlock = input.TokenList[3];
@@ -244,7 +288,7 @@ namespace LysitheaVM
             }
 
             // Jump target after the condition
-            result.Add(new LabelCodeLine(labelEnd));
+            result.Add(new LabelCodeLine(labelEnd, input));
 
             return result;
         }
