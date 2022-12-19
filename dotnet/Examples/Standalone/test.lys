@@ -1,4 +1,15 @@
-(const name "Alan")
-(const age 33)
-(define list ["Person" name age (function callback() (print "Hello!"))])
-(print "List: " list)
+(define name "Pri")
+
+(function main()
+    (const name "Alan")
+    (const age 33)
+
+    (define list ["Person" name age (function callback() (print "Hello!"))])
+    (print "List: " list)
+)
+
+(print "Name before: " name)
+
+(main)
+
+(print "Name after: " name)

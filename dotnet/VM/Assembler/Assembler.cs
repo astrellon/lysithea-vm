@@ -59,7 +59,7 @@ namespace LysitheaVM
 
         public Script ParseFromText(string sourceName, IReadOnlyList<string> input)
         {
-            this.ConstScope = new Scope(this.BuiltinScope);
+            this.ConstScope = new Scope();
 
             this.fullText = input;
             this.sourceName = sourceName;
@@ -360,6 +360,8 @@ namespace LysitheaVM
 
         public Function ParseFunction(Token input)
         {
+            this.ConstScope = new Scope(this.ConstScope);
+
             var name = "";
             var offset = 0;
             if (input.TokenList[1].TokenValue is VariableValue || input.TokenList[1].TokenValue is StringValue)
@@ -371,7 +373,15 @@ namespace LysitheaVM
             var parameters = (input.TokenList[1 + offset]).TokenList.Select(arg => arg.ToString()).ToList();
             var tempCodeLines = input.TokenList.Skip(2 + offset).SelectMany(Parse).ToList();
 
-            return this.ProcessTempFunction(parameters, tempCodeLines, name);
+            var result = this.ProcessTempFunction(parameters, tempCodeLines, name);
+
+            if (this.ConstScope.Parent == null)
+            {
+                throw new AssemblerException(input, "Internal exception, const scope parent lost");
+            }
+            this.ConstScope = this.ConstScope.Parent;
+
+            return result;
         }
 
         public List<TempCodeLine> ParseJump(Token input)
@@ -575,47 +585,14 @@ namespace LysitheaVM
             }
 
             var numArgsValue = new NumberValue(numArgs);
-            var isProperty = IsGetPropertyRequest(input.TokenValue.ToString(), out var parentKey, out var property);
 
-            // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-            if (this.ConstScope.TryGetKey(parentKey, out var foundParent))
+            var result = this.OptimiseGet(input, input.TokenValue.ToString());
+            if (result.Count == 1 && result[0].Operator == Operator.Push)
             {
-                // If the get is for a property? (eg: string.length, length is the property)
-                if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
-                {
-                    if (foundProperty is IFunctionValue)
-                    {
-                        // If we found the property then we're done and we can just push that known value onto the stack.
-                        var callValue = new IValue[]{ foundProperty, numArgsValue };
-                        return new List<TempCodeLine> {
-                            TempCodeLine.Code(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
-                        };
-                    }
-
-                    throw new Exception($"Attempting to call a value that is not a function: {input.ToString()} = {foundProperty.ToString()}");
-                }
-                else if (!isProperty)
-                {
-                    // This was not a property request but we found the parent so just push onto the stack.
-                    if (foundParent is IFunctionValue)
-                    {
-                        var callValue = new IValue[]{ foundParent, numArgsValue };
-                        return new List<TempCodeLine> {
-                            TempCodeLine.Code(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
-                        };
-                    }
-
-                    throw new AssemblerException(input, $"Attempting to call a value that is not a function: {input.ToString()} = {foundParent.ToString()}");
-                }
-            }
-
-            // Could not find the parent right now, so look for the parent at runtime.
-            var result = new List<TempCodeLine> { TempCodeLine.Code(Operator.Get, input.KeepLocation(new StringValue(parentKey))) };
-
-            // If this was also a property check also look up the property at runtime.
-            if (isProperty)
-            {
-                result.Add(TempCodeLine.Code(Operator.GetProperty, input.KeepLocation(property)));
+                var callValue = new IValue[]{ result[0].Token.GetValue(), numArgsValue };
+                return new List<TempCodeLine> {
+                    TempCodeLine.Code(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
+                };
             }
 
             result.Add(TempCodeLine.Code(Operator.Call, input.KeepLocation(numArgsValue)));
@@ -630,18 +607,42 @@ namespace LysitheaVM
             }
 
             var isArgumentUnpack = false;
-            var inputStr = input.TokenValue.ToString();
-            if (inputStr.StartsWith("..."))
+            var key = input.TokenValue.ToString();
+            if (key.StartsWith("..."))
             {
                 isArgumentUnpack = true;
-                inputStr = inputStr.Substring(3);
+                key = key.Substring(3);
+            }
+
+            var result = this.OptimiseGet(input, key);
+
+            if (isArgumentUnpack)
+            {
+                result.Add(TempCodeLine.Code(Operator.ToArgument, input.ToEmpty()));
+            }
+
+            return result;
+        }
+
+        private List<TempCodeLine> OptimiseGet(Token input, string key)
+        {
+            if (input.Type != TokenType.Value)
+            {
+                throw new AssemblerException(input, "Get symbol token value cannot be null");
             }
 
             var result = new List<TempCodeLine>();
 
-            var isProperty = IsGetPropertyRequest(inputStr, out var parentKey, out var property);
+            if (this.ConstScope.TryGetKey(key, out var foundConst))
+            {
+                result.Add(TempCodeLine.Code(Operator.Push, input.KeepLocation(foundConst)));
+                return result;
+            }
+
+            var isProperty = IsGetPropertyRequest(key, out var parentKey, out var property);
+
             // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-            if (this.ConstScope.TryGetKey(parentKey, out var foundParent))
+            if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
                 if (isProperty)
@@ -674,11 +675,6 @@ namespace LysitheaVM
                 {
                     result.Add(TempCodeLine.Code(Operator.GetProperty, input.KeepLocation(property)));
                 }
-            }
-
-            if (isArgumentUnpack)
-            {
-                result.Add(TempCodeLine.Code(Operator.ToArgument, input.ToEmpty()));
             }
 
             return result;

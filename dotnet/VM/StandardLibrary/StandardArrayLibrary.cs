@@ -241,7 +241,7 @@ namespace LysitheaVM
         public static string GeneralToString(IArrayValue input)
         {
             var result = new StringBuilder();
-            result.Append('(');
+            result.Append('[');
             var first = true;
             foreach (var value in input.ArrayValues)
             {
@@ -254,7 +254,7 @@ namespace LysitheaVM
                 result.Append(value.ToString());
             }
 
-            result.Append(')');
+            result.Append(']');
             return result.ToString();
 
         }

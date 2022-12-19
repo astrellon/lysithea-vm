@@ -8,8 +8,8 @@ A list of the builtin types:
 - **Strings**: Based off the standard string type from the host programming language.
 - **Boolean**: true/false
 - **Number**: 64 bit double.
-- **Object/Dictionary/Map**: Key value pair with string keys and the value being another value.
-- **List/Array**: A list of values.
+- **Map**: Key value pair with string keys and the value being another value.
+- **List**: A list of values.
 - **Function**: A collection of code put into a value, it also contains the labels for jumps and input parameters.
 - **BuiltinFunction**: A reference to a builtin function that can be passed around like a value.
 
@@ -51,7 +51,7 @@ private static Scope CreateScope()
 {
     var result = new Scope();
 
-    result.Define("print", (vm, args) =>
+    result.TryDefine("print", (vm, args) =>
     {
         Console.WriteLine(string.Join("", args.Value));
     });
@@ -183,7 +183,7 @@ This is used in situations where we need to distinguish between arrays and argum
 
  For example:
  ```lisp
- (define list (5 10))
+ (define list [5 10])
  (define x (+ ...list)) ; This will throw an error because the add operator expects two number inputs.
  (print x)
  ```
@@ -191,7 +191,7 @@ This is used in situations where we need to distinguish between arrays and argum
 For reference this is a working example above, making use of a regular `math.sum` function call instead of using a the `+` operator:
 
 ```lisp
-(define list (5 10))
+(define list [5 10])
 (define x (math.sum ...list))
 (print x) ; Outputs 15
 ```
@@ -477,7 +477,7 @@ Concatenates all inputs input a single string value and pushes that onto the sta
 
 **Note:** Unlike the other operators string concatenation does support unpacking:
 ```lisp
-(define list (1 2 3 4))
+(define list [1 2 3 4])
 (print ($ "Joined list " ...list))
 ; Outputs Joined list 1234
 ```
@@ -715,6 +715,23 @@ Error example:
 
 Setting multiple variables follows the same logic as defining multiple variables.
 
+### `(const varName value)`
+This works slightly different from `define` and `set` in that only one constant can be set since the `value` must be a compile time constant, and right now there is no execution of code during the compile phase.
+
+```lisp
+(const name "Alan")
+(const age 33)
+
+(function main()
+    (define list ["Person" name age])
+    (print "List: " list) ; Outputs ["Person" "Alan" 33]
+)
+
+(main)
+```
+
+As constants are handled at compile time they effectively act like replacements. At the global level those values will exist within the global scope for retrieval outside of the script, however within a function the constants will **not** exist in the function scope because they would have to exist already and so are not kept around.
+
 ### `(if (conditionalCode) (whenTrueCode) (whenFalseCode?))`
 The conditional code is executed first and if result in a `true` value then the `whenTrueCode` is executed. If another block is provided then that will be executed if the value is not true.
 
@@ -782,6 +799,8 @@ The parameter list itself is parsed only as a list of strings.
 The `name` is optional and if it's left out the function will be anonymous.
 Additionally if the name is present and the function is not being used a value in a function call, the function will also be defined.
 
+By default a function is created as a `const`.
+
 ```lisp
 (function clamp(input lower upper)
     (if (< input lower)
@@ -830,7 +849,7 @@ Unpack arguments example:
 
 ; Outputs
 [Info]: Minimum Number: 1
-[Info]: Minimum Number: 20
+[Info]: Minimum Number: 10
 [Info]: Minimum Lexical: ABC
 [Info]: Minimum Empty: null
 ```
