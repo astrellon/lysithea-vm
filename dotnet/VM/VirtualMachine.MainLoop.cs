@@ -92,7 +92,10 @@ namespace LysitheaVM
                     {
                         var key = codeLine.Input ?? this.PopStack();
                         var value = this.PopStack();
-                        this.CurrentScope.Define(key.ToString(), value);
+                        if (!this.CurrentScope.TryDefine(key.ToString(), value))
+                        {
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to define {key}, value is defined as constant");
+                        }
                         break;
                     }
                 case Operator.Set:
@@ -101,7 +104,7 @@ namespace LysitheaVM
                         var value = this.PopStack();
                         if (!this.CurrentScope.TrySet(key.ToString(), value))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to set variable that has not been defined: {key.ToString()} = {value.ToString()}");
+                            throw new OperatorException(this.CreateStackTrace(), $"Unable to set variable that has not been defined or is constant: {key.ToString()} = {value.ToString()}");
                         }
                         break;
                     }

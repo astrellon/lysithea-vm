@@ -40,17 +40,17 @@ namespace LysitheaVM.Example
         {
             var result = new Scope();
 
-            result.Define("done", (vm, args) =>
+            result.TryConstant("done", (vm, args) =>
             {
                 Console.WriteLine("Done!");
             });
 
-            result.Define("rand", (vm, args) =>
+            result.TryConstant("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
             });
 
-            result.Define("newPerson", (vm, args) =>
+            result.TryConstant("newPerson", (vm, args) =>
             {
                 var name = args.GetIndex<StringValue>(0);
                 var age = args.GetIndex<NumberValue>(1);
@@ -60,7 +60,7 @@ namespace LysitheaVM.Example
                 vm.PushStack(new PersonValue(name.Value, age.IntValue, locationList));
             });
 
-            result.Define("newVector", (vm, args) =>
+            result.TryConstant("newVector", (vm, args) =>
             {
                 var x = args.GetIndex<NumberValue>(0);
                 var y = args.GetIndex<NumberValue>(1);
@@ -68,7 +68,7 @@ namespace LysitheaVM.Example
                 vm.PushStack(new VectorValue(x.FloatValue, y.FloatValue, z.FloatValue));
             });
 
-            result.Define("combinePerson", (vm, args) =>
+            result.TryConstant("combinePerson", (vm, args) =>
             {
                 var left = args.GetIndex<PersonValue>(0);
                 var right = args.GetIndex<PersonValue>(1);

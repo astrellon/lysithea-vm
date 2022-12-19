@@ -20,7 +20,7 @@ namespace LysitheaVM
             return Token.Expression(CodeLocation.Empty, result);
         }
 
-        private static Token ParseList(Tokeniser tokeniser, string endToken)
+        private static Token ParseList(Tokeniser tokeniser, bool isExpression, string endToken)
         {
             var startLineNumber = tokeniser.LineNumber;
             var startColumnNumber = tokeniser.ColumnNumber;
@@ -34,7 +34,8 @@ namespace LysitheaVM
                 list.Add(ReadFromTokeniser(tokeniser));
             }
 
-            return Token.Expression(tokeniser.CreateLocation(startLineNumber, startColumnNumber), list);
+            var tokenType = isExpression ? TokenType.Expression : TokenType.List;
+            return new Token(tokeniser.CreateLocation(startLineNumber, startColumnNumber), tokenType, list: list);
         }
 
         private static Token ParseMap(Tokeniser tokeniser)
@@ -76,11 +77,11 @@ namespace LysitheaVM
 
                 case "(":
                 {
-                    return ParseList(tokeniser, ")");
+                    return ParseList(tokeniser, true, ")");
                 }
                 case "[":
                 {
-                    return ParseList(tokeniser, "]");
+                    return ParseList(tokeniser, false, "]");
                 }
                 case "{":
                 {

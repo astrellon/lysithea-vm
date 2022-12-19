@@ -110,10 +110,6 @@ namespace LysitheaVM
                     }
 
                     this.AppendChar(ch);
-                    if (atEndOfLine)
-                    {
-                        this.AppendChar('\n');
-                    }
 
                     if (ch == this.inQuote)
                     {
@@ -121,6 +117,10 @@ namespace LysitheaVM
                         this.accumulator.Clear();
                         this.inQuote = '\0';
                         return true;
+                    }
+                    else if (atEndOfLine)
+                    {
+                        this.AppendChar('\n');
                     }
                 }
                 else

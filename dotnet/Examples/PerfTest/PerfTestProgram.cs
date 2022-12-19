@@ -45,12 +45,12 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.Define("rand", (vm, args) =>
+            result.TryConstant("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
             });
 
-            result.Define("print", (vm, args) =>
+            result.TryConstant("print", (vm, args) =>
             {
                 Console.WriteLine(string.Join("", args.Value));
             });

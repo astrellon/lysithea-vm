@@ -8,14 +8,14 @@ namespace LysitheaVM
         private static Random Rand = new Random();
         private static readonly IReadOnlyScope PerfTestScope = CreateScope();
         public readonly VirtualMachine VM;
-        public readonly VirtualMachineAssembler Assembler;
+        public readonly Assembler Assembler;
         #endregion
 
         #region Constructor
         public PerfTestVM()
         {
             this.VM = new VirtualMachine(8);
-            this.Assembler = new VirtualMachineAssembler();
+            this.Assembler = new Assembler();
             this.Assembler.BuiltinScope.CombineScope(PerfTestScope);
         }
         #endregion
@@ -25,11 +25,11 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.Define("rand", (vm, args) =>
+            result.TryConstant("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
             });
-            result.Define("print", (vm, args) =>
+            result.TryConstant("print", (vm, args) =>
             {
                 Console.WriteLine(string.Join("", args.Value));
             });

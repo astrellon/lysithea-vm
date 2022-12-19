@@ -30,6 +30,7 @@ namespace LysitheaVM
         private const string UnlessKeyword = "unless";
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
+        private const string ConstKeyword = "const";
         private const string JumpKeyword = "jump";
         private const string ReturnKeyword = "return";
         private static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
@@ -39,6 +40,7 @@ namespace LysitheaVM
         private List<string> keywordParsingStack = new List<string>();
         private IReadOnlyList<string> fullText = new string[1]{""};
         private string sourceName = "";
+        private Scope ConstScope = new Scope();
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
 
@@ -57,6 +59,8 @@ namespace LysitheaVM
 
         public Script ParseFromText(string sourceName, IReadOnlyList<string> input)
         {
+            this.ConstScope = new Scope(this.BuiltinScope);
+
             this.fullText = input;
             this.sourceName = sourceName;
             var parsed = Lexer.ReadFromLines(input);
@@ -64,6 +68,7 @@ namespace LysitheaVM
             var code = this.ParseGlobalFunction(parsed);
             var scriptScope = new Scope();
             scriptScope.CombineScope(this.BuiltinScope);
+            scriptScope.CombineScope(this.ConstScope);
 
             return new Script(scriptScope, code);
         }
@@ -97,6 +102,10 @@ namespace LysitheaVM
                     var keywordParse = ParseKeyword(firstSymbolValue, input);
                     if (keywordParse.Any())
                     {
+                        if (IsNoOperator(keywordParse))
+                        {
+                            return new List<TempCodeLine>();
+                        }
                         return keywordParse;
                     }
 
@@ -185,6 +194,15 @@ namespace LysitheaVM
             var function = ParseFunction(arrayValue);
             var functionValue = new FunctionValue(function);
             var functionToken = arrayValue.KeepLocation(functionValue);
+
+            if (this.keywordParsingStack.Count == 1 && function.HasName)
+            {
+                // At the global level, define as constant
+                this.ConstScope.TryDefine(function.Name, functionValue);
+                this.ConstScope.SetConstant(function.Name);
+                return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
+            }
+
             var result = new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, functionToken) };
             var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : FunctionKeyword;
             if (function.HasName && currentKeyword == FunctionKeyword)
@@ -204,8 +222,34 @@ namespace LysitheaVM
             // Multiple variables can be set when a function returns multiple results.
             for (var i = input.TokenList.Count - 2; i >= 1; i--)
             {
+                var key = input.TokenList[i].ToString();
+                if (this.ConstScope.TryGetKey(key, out var temp))
+                {
+                    throw new AssemblerException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
+                }
+
                 result.Add(TempCodeLine.Code(opCode, input.TokenList[i]));
             }
+            return result;
+        }
+
+        public List<TempCodeLine> ParseConst(Token input)
+        {
+            if (input.TokenList.Count != 3)
+            {
+                throw new AssemblerException(input, "Const requires 2 inputs");
+            }
+
+            var result = this.Parse(input.TokenList.Last());
+            if (result.Count != 1 || result[0].Operator != Operator.Push)
+            {
+                throw new AssemblerException(input, "Const value is not a compile time constant");
+            }
+
+            var key = input.TokenList[1].ToString();
+            this.ConstScope.TryDefine(key, result[0].Token.GetValue());
+            this.ConstScope.SetConstant(key);
+
             return result;
         }
 
@@ -474,6 +518,7 @@ namespace LysitheaVM
                 case BreakKeyword: result = this.ParseLoopJump(arrayValue, BreakKeyword, false); break;
                 case SetKeyword: result = this.ParseDefineSet(arrayValue, false); break;
                 case DefineKeyword: result = this.ParseDefineSet(arrayValue, true); break;
+                case ConstKeyword: result = this.ParseConst(arrayValue); break;
                 case LoopKeyword: result = this.ParseLoop(arrayValue); break;
                 case IfKeyword: result = this.ParseCond(arrayValue, true); break;
                 case UnlessKeyword: result = this.ParseCond(arrayValue, false); break;
@@ -533,7 +578,7 @@ namespace LysitheaVM
             var isProperty = IsGetPropertyRequest(input.TokenValue.ToString(), out var parentKey, out var property);
 
             // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-            if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
+            if (this.ConstScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
                 if (isProperty && ValuePropertyAccess.TryGetProperty(foundParent, property, out var foundProperty))
@@ -596,7 +641,7 @@ namespace LysitheaVM
 
             var isProperty = IsGetPropertyRequest(inputStr, out var parentKey, out var property);
             // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-            if (this.BuiltinScope.TryGetKey(parentKey, out var foundParent))
+            if (this.ConstScope.TryGetKey(parentKey, out var foundParent))
             {
                 // If the get is for a property? (eg: string.length, length is the property)
                 if (isProperty)
@@ -676,6 +721,16 @@ namespace LysitheaVM
             var debugSymbols = new DebugSymbols(this.sourceName, this.fullText, locations);
 
             return new Function(code, parameters, labels, name, debugSymbols);
+        }
+
+        private static bool IsNoOperator(IReadOnlyList<TempCodeLine> input)
+        {
+            if (input.Count == 1)
+            {
+                return input[0].Operator == Operator.Unknown;
+            }
+
+            return false;
         }
         #endregion
 

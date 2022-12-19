@@ -138,11 +138,11 @@ namespace LysitheaVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    this.CurrentScope.Define(argName.Substring(3), args.SubList(i));
+                    this.CurrentScope.TryDefine(argName.Substring(3), args.SubList(i));
                     i++;
                     break;
                 }
-                this.CurrentScope.Define(argName, args[i]);
+                this.CurrentScope.TryDefine(argName, args[i]);
             }
 
             if (i < function.Parameters.Count)
@@ -150,7 +150,7 @@ namespace LysitheaVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    this.CurrentScope.Define(argName.Substring(3), ArgumentsValue.Empty);
+                    this.CurrentScope.TryDefine(argName.Substring(3), ArgumentsValue.Empty);
                 }
                 else
                 {

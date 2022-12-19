@@ -1,8 +1,11 @@
 (function personObjects ()
     (print "Testing person objects")
+    (const name "Alan")
+    (const age 33)
+
     (define personObj {
-        name "Alan"
-        age 33
+        name name
+        age age
         address ["location 1" "location 2"]
     })
     (print "PersonObj: " (toString personObj))
