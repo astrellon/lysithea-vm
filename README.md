@@ -829,6 +829,42 @@ This works slightly different from `define` and `set` in that only one constant 
 
 As constants are handled at compile time they effectively act like replacements. At the global level those values will exist within the global scope for retrieval outside of the script, however within a function the constants will **not** exist in the function scope because they would have to exist already and so are not kept around.
 
+For example if you try to use `isDefined` to check if a value exists in the current scope, a constant will be false.
+
+```lisp
+(const name "Alan")
+(define age 33)
+
+(print "Name " name ", is defined:  " (isDefined name))
+; Outputs Name Alan, is defined: false
+
+(print "Age " age ", is defined:  " (isDefined age))
+; Outputs Age 33, is defined: true
+```
+
+However as constants are a compile time aspect, global ones do get stored in the `BuiltinScope` of a `Script` which means that they can still be accessed from outside of the script.
+
+This will create a constant called `testFunc`.
+```lisp
+(function testFunc ()
+    (print "Called from test func!")
+)
+```
+
+And you can access that value from the scripts builtin scope.
+```cs
+if (script.BuiltinScope.TryGetKey<IFunctionValue>("testFunc", out var func))
+{
+    Console.WriteLine("Calling test function");
+    vm.CallFunction(func, 0, false);
+    vm.Execute();
+}
+else
+{
+    Console.WriteLine("Failed to find testFunc to call");
+}
+```
+
 ### `(if (conditionalCode) (whenTrueCode) (whenFalseCode?))`
 The conditional code is executed first and if result in a `true` value then the `whenTrueCode` is executed. If another block is provided then that will be executed if the value is not true.
 

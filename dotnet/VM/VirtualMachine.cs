@@ -64,7 +64,11 @@ namespace LysitheaVM
         public void Execute(Script script)
         {
             this.ChangeToScript(script);
+            this.Execute();
+        }
 
+        public void Execute()
+        {
             this.Running = true;
             this.Paused = false;
             while (this.Running && !this.Paused)
@@ -120,7 +124,7 @@ namespace LysitheaVM
             value.Invoke(this, args, pushToStackTrace);
         }
 
-        public void ExecuteFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
+        public void SwitchToFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
         {
             if (pushToStackTrace)
             {

@@ -8,6 +8,7 @@ namespace LysitheaVM
     public interface IReadOnlyScope
     {
         bool TryGetKey(string key, out IValue value);
+        bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue;
         bool IsConstant(string key);
 
         IReadOnlyDictionary<string, IValue> Values { get; }
