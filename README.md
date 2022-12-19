@@ -117,6 +117,103 @@ Internally the assembler sees only the last argument as the code line argument e
 
 The internals of the virtual machine is fairly simple and broken into general purpose operators, math operators, comparison operators, boolean operators and one bonus string concatenation operators.
 
+## Types
+The number of builtin types is fairly limited and extended the number of supported types is done through the host platform and not from within the script itself.
+
+**Note:** All the systems are built with the mindset that they are immutable or at the very least will always be safe to pass around. Which means strings, lists and maps are all immutable.
+
+Any new type doesn't have to be immutable, but it should be safe that numerous different places could be interacting with it at the same time, like a manager class that already expects different places to talk to it.
+
+### Number
+Numbers are all stored internally as a 64bit double, and by default does not have any bitwise operators or support as it's not intended for that sort of low level number manipulation. These make use of the platforms native `double` type generally and so any quirks of that platform will be present.
+
+```lisp
+(define age 33)
+(define distanceToShops 1.54)
+(print "Person is " age " years old and is " distanceToShops "km away from shops")
+; Outputs Person is 33 years old and is 1.54km away from shops
+```
+
+### Boolean
+Booleans are just `true` or `false`. These are also used with `loop` and `if` statements.
+
+```lisp
+(define isRunning true)
+(define counter 0)
+(loop (isRunning)
+    (++ counter)
+    (set isRunning (< counter 10))
+)
+(print "Counter is at: " counter) ; Outputs Counter is at: 10
+```
+
+### Strings
+Strings are just an array of characters. This type will be built on top of the default string data structure from the host platform.
+Strings are created using either a pair of double quotes or a pair of single quotes. They also support multiline input without needing escaped characters.
+
+```lisp
+(define name "Alan")
+(print "Name is " name " and the name length is " name.length " bytes long") ; Outputs Name is Alan and the name length is 4 bytes long.
+```
+
+A multiline string
+```lisp
+(define introText "Welcome to the program, choose an option:
+- 1: Option 1
+- 2: Option 2")
+
+(print introText) ; Outputs
+; Welcome to the program, choose an option:
+; - 1: Option 1
+; - 2: Option 2
+```
+
+### Lists
+A list is as defined in the code is considered to be a literal, and as such is immutable. They are created using a pair of square brackets.
+
+```lisp
+(define list ["Hello" "there" "how" "are" "you?"])
+(print list) ; Outputs [Hello there how are you?]
+```
+
+They can contain any constant value.
+```lisp
+(const name "Alan")
+(function callback()
+    (print "From callback")
+)
+
+(define list ["Person" name callback])
+(print list) ; Output [Person Alan function:callback]
+```
+
+### Maps
+A map is a string key to any type value pair dictionary. They are created using pairs of keys and values within a pair of curly brackets.
+
+```lisp
+(define map {
+    name "Alan"
+    age 33
+})
+(print map) ; Outputs {"name" Alan "age" 33}
+```
+
+The value can be any constant value.
+```lisp
+(const personName "Alan")
+(const personAge 33)
+(function debugPrint ()
+    (print "Debug print")
+)
+
+(define map {
+    name personName
+    age personAge
+    callback debugPrint
+})
+(print map) ; Outputs {"name" Alan "age" 33 "callback" function:debugPrint}
+```
+
 ## General Purpose Operators
 
 **Note:** Internal operators that the virtual machine uses, these are used by the *internals* of the virtual machine and are not the actual code that is written by a user.
