@@ -68,7 +68,7 @@ Result: 17
 
 ## Labels
 
-Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `print` function.
+Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `print` function and that there's some sort of custom `done` function.
 
 ```lisp
 (function main()
@@ -211,10 +211,12 @@ The value can be any constant value.
     age personAge
     callback debugPrint
 })
-(print map) ; Outputs {"name" Alan "age" 33 "callback" function:debugPrint}
+
+(print map)
+; Outputs {"name" Alan "age" 33 "callback" function:debugPrint}
 ```
 
-## General Purpose Operators
+## Internal Operators
 
 **Note:** Internal operators that the virtual machine uses, these are used by the *internals* of the virtual machine and are not the actual code that is written by a user.
 
@@ -429,7 +431,7 @@ But for custom types there's nothing stopping you from having something that let
 
 ```lisp
 (define myVec (newVector 1 2 3))
-(define myArr (1 2 3))
+(define myArr [1 2 3])
 (print (== myVec myArr)) ; Uses custom comparison from myVec, outputs 0
 (print (== myArr myVec)) ; Uses the builtin array comparison, outputs 1
 ```
@@ -856,7 +858,11 @@ And you can access that value from the scripts builtin scope.
 if (script.BuiltinScope.TryGetKey<IFunctionValue>("testFunc", out var func))
 {
     Console.WriteLine("Calling test function");
+
+    // Calling the function puts the function code next to execute.
     vm.CallFunction(func, 0, false);
+
+    // Execute the code until a halt.
     vm.Execute();
 }
 else
