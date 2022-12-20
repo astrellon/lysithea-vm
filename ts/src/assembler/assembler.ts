@@ -8,7 +8,7 @@ import { NumberValue, isNumberValue } from "../values/numberValue";
 import { StringValue } from "../values/stringValue";
 import { getProperty } from "../values/valuePropertyAccess";
 import { VariableValue } from "../values/variableValue";
-import { CodeLine, Operator } from "../virtualMachine";
+import { CodeLine, CodeLocation, Operator } from "../virtualMachine";
 import { VMFunction } from "../vmFunction";
 import { Lexer } from "./lexer";
 import { Token } from "./token";
@@ -41,6 +41,7 @@ const IfKeyword = 'if';
 const UnlessKeyword = 'unless';
 const SetKeyword = 'set';
 const DefineKeyword = 'define';
+const ConstKeyword = 'const';
 const JumpKeyword = 'jump';
 const ReturnKeyword = 'return';
 
@@ -125,6 +126,14 @@ export class Assembler
             {
                 throw new AssemblerError(input, 'Expression needs to start with a function variable');
             }
+        }
+        else if (input.type === 'list')
+        {
+
+        }
+        else if (input.type === 'map')
+        {
+
         }
         else if (input.value instanceof VariableValue)
         {
@@ -244,34 +253,29 @@ export class Assembler
         return this.parse(input);
     }
 
-    public parseLoopJump(keyword: string, jumpToStart: boolean)
+    public parseLoopJump(token: Token, keyword: string, jumpToStart: boolean)
     {
         if (this.loopStack.length === 0)
         {
-            throw new Error(`Unexpected ${keyword} outside of loop`);
+            throw new AssemblerError(token, `Unexpected ${keyword} outside of loop`);
         }
 
         const loopLabel = this.loopStack[this.loopStack.length - 1];
-        return [codeLine('jump', new StringValue(jumpToStart ? loopLabel.start : loopLabel.end))];
+        return [codeLine('jump', token.keepLocation(new StringValue(jumpToStart ? loopLabel.start : loopLabel.end)))];
     }
 
-    public parseFunction(input: ArrayValue)
+    public parseFunction(input: Token)
     {
         let name = '';
         let offset = 0;
-        if (input.value[1] instanceof VariableValue || input.value[1] instanceof StringValue)
+        if (input.tokenList[1].value instanceof VariableValue || input.tokenList[1].value instanceof StringValue)
         {
-            name = input.value[1].toString();
+            name = input.tokenList[1].toString();
             offset = 1;
         }
 
-        if (!isIArrayValue(input.value[1 + offset]))
-        {
-            throw new Error('Function needs parameter array');
-        }
-
-        const parameters = (input.value[1 + offset] as IArrayValue).arrayValues().map(e => e.toString());
-        const tempCodeLines = input.value.slice(2 + offset).map(v => this.parse(v)).flat(1);
+        const parameters = input.tokenList[1 + offset].tokenList.map(e => e.toString());
+        const tempCodeLines = input.tokenList.slice(2 + offset).map(v => this.parse(v)).flat(1);
 
         return this.processTempFunction(parameters, tempCodeLines, name);
     }
@@ -286,30 +290,22 @@ export class Assembler
     {
         const labels: { [label: string]: number } = {}
         const code: CodeLine[] = [];
+        const locations: CodeLocation[] = [];
 
         for (const tempLine of tempCodeLines)
         {
-            if (tempLine.label !== undefined && tempLine.label != '')
+            if (tempLine.label !== undefined && tempLine.label !== '')
             {
                 labels[tempLine.label] = code.length;
             }
-            else if (tempLine.operator !== undefined)
+            else if (tempLine.operator !== undefined && tempLine.value !== undefined)
             {
-                code.push({ operator: tempLine.operator, value: tempLine.value });
+                locations.push(tempLine.value.location);
+                code.push({ operator: tempLine.operator, value: tempLine.value.getValueCanBeEmpty() });
             }
         }
 
         return new VMFunction(code, parameters, labels, name);
-    }
-
-    public parseChangeVariable(input: IValue, changeFunc: IFunctionValue)
-    {
-        const varName = new StringValue(input.toString());
-        return [
-            codeLine('get', varName),
-            codeLine('callDirect', new ArrayValue([changeFunc, new NumberValue(1)])),
-            codeLine('set', varName)
-        ];
     }
 
     public parseJump(input: Token)
@@ -323,134 +319,135 @@ export class Assembler
         return parse;
     }
 
-    public parseReturn(input: ArrayValue)
+    public parseReturn(input: Token)
     {
-        const result = input.value.slice(1).map(v => this.parse(v)).flat(1);
-        result.push(codeLine('return'));
+        const result = input.tokenList.slice(1).map(v => this.parse(v)).flat(1);
+        result.push(codeLine('return', input.toEmpty()));
         return result;
     }
 
-    public parseFunctionKeyword(arrayValue: ArrayValue): TempCodeLine[]
+    public parseFunctionKeyword(arrayValue: Token): TempCodeLine[]
     {
         const func = this.parseFunction(arrayValue);
         const funcValue = new FunctionValue(func);
-        const result = [codeLine('push', funcValue)];
+        const result = [codeLine('push', arrayValue.keepLocation(funcValue))];
 
         const currentKeyword = this.keywordParsingStack.length > 1 ? this.keywordParsingStack[this.keywordParsingStack.length - 1] : FunctionKeyword;
         if (func.hasName && currentKeyword === FunctionKeyword)
         {
-            result.push(codeLine('define', new StringValue(func.name)));
+            result.push(codeLine('define', arrayValue.keepLocation(new StringValue(func.name))));
         }
 
         return result;
     }
 
-    public parseNegative(input: ArrayValue): TempCodeLine[]
+    public parseNegative(input: Token): TempCodeLine[]
     {
-        if (input.value.length >= 3)
+        if (input.tokenList.length >= 3)
         {
             return this.parseOperator('-', input);
         }
-        else if (input.value.length === 2)
+        else if (input.tokenList.length === 2)
         {
-            if (isNumberValue(input.value[1]))
+            const firstToken = input.tokenList[1];
+            if (isNumberValue(firstToken.value))
             {
-                return [codeLine('push', new NumberValue(-input.value[1].value))];
+                return [codeLine('push', firstToken.keepLocation(new NumberValue(-firstToken.value.value)))];
             }
 
-            const result = this.parse(input.value[1]);
-            result.push(codeLine('unaryNegative'));
+            const result = this.parse(firstToken);
+            result.push(codeLine('unaryNegative', firstToken.toEmpty()));
             return result;
         }
         else
         {
-            throw new Error('Negative/Sub operator expects at least 1 input');
+            throw new AssemblerError(input, 'Negative/Sub operator expects at least 1 input');
         }
     }
 
-    public parseOnePushInput(opCode: Operator, input: ArrayValue): TempCodeLine[]
+    public parseOnePushInput(opCode: Operator, input: Token): TempCodeLine[]
     {
-        if (input.value.length < 2)
+        if (input.tokenList.length < 2)
         {
-            throw new Error(`Expecting at least 1 input for: ${opCode}`);
+            throw new AssemblerError(input, `Expecting at least 1 input for: ${opCode}`);
         }
 
         let result: TempCodeLine[] = [];
-        for (let i = 1; i < input.value.length; i++)
+        for (let i = 1; i < input.tokenList.length; i++)
         {
-            result = result.concat(this.parse(input.value[i]));
-            result.push(codeLine(opCode));
+            result = result.concat(this.parse(input.tokenList[i]));
+            result.push(codeLine(opCode, input.tokenList[i].toEmpty()));
         }
         return result;
     }
 
-    public parseOperator(opCode: Operator, input: ArrayValue): TempCodeLine[]
+    public parseOperator(opCode: Operator, input: Token): TempCodeLine[]
     {
-        if (input.value.length < 3)
+        if (input.tokenList.length < 3)
         {
-            throw new Error(`Expecting at least 3 inputs for: ${opCode}`);
+            throw new AssemblerError(input, `Expecting at least 3 inputs for: ${opCode}`);
         }
 
-        let result = this.parse(input.value[1]);
-        for (let i = 2; i < input.value.length; i++)
+        let result = this.parse(input.tokenList[1]);
+        for (let i = 2; i < input.tokenList.length; i++)
         {
-            const item = input.value[i];
-            if (isNumberValue(item))
+            const item = input.tokenList[i];
+            if (isNumberValue(item.value))
             {
                 result.push(codeLine(opCode, item));
             }
             else
             {
                 result = result.concat(this.parse(item));
-                result.push(codeLine(opCode));
+                result.push(codeLine(opCode, input.toEmpty()));
             }
         }
 
         return result;
     }
 
-    public parseOneVariableUpdate(opCode: Operator, input: ArrayValue): TempCodeLine[]
+    public parseOneVariableUpdate(opCode: Operator, input: Token): TempCodeLine[]
     {
-        if (input.value.length < 2)
+        if (input.tokenList.length < 2)
         {
-            throw new Error(`Expecting at least 1 input for: ${opCode}`);
+            throw new AssemblerError(input, `Expecting at least 1 input for: ${opCode}`);
         }
 
         let result: TempCodeLine[] = [];
-        for (let i = 1; i < input.value.length; i++)
+        for (let i = 1; i < input.tokenList.length; i++)
         {
-            const varName = new StringValue(input.value[i].toString());
-            result.push(codeLine(opCode, varName));
+            const varName = new StringValue(input.tokenList[i].getValue().toString());
+            result.push(codeLine(opCode, input.tokenList[i].keepLocation(varName)));
         }
         return result;
     }
 
-    public parseStringConcat(input: ArrayValue): TempCodeLine[]
+    public parseStringConcat(input: Token): TempCodeLine[]
     {
-        const result = input.value.slice(1).map(v => this.parse(v)).flat(1);
-        result.push(codeLine('stringConcat', new NumberValue(input.value.length - 1)));
+        const result = input.tokenList.slice(1).map(v => this.parse(v)).flat(1);
+        result.push(codeLine('stringConcat', input.keepLocation(new NumberValue(input.tokenList.length - 1))));
         return result;
     }
 
-    public transformAssignmentOperator(arrayValue: ArrayValue): TempCodeLine[]
+    public transformAssignmentOperator(arrayValue: Token): TempCodeLine[]
     {
-        let opCode = arrayValue.value[0].toString();
+        let opCode = arrayValue.tokenList[0].getValue().toString();
         opCode = opCode.substring(0, opCode.length - 1);
 
-        const varName = arrayValue.value[1].toString();
-        const newCode = [...arrayValue.value];
-        newCode[0] = new VariableValue(opCode);
+        const varName = arrayValue.tokenList[1].getValue().toString();
+        const newCode = [...arrayValue.tokenList];
+        newCode[0] = arrayValue.tokenList[0].keepLocation(new VariableValue(opCode));
 
         const wrappedCode = [
-            new VariableValue('set'),
-            new VariableValue(varName),
-            new ArrayValue(newCode)
+            arrayValue.keepLocation(new VariableValue('set')),
+            arrayValue.keepLocation(new VariableValue(varName)),
+            Token.expression(arrayValue.location, newCode)
         ];
 
-        return this.parse(new ArrayValue(wrappedCode));
+        return this.parse(Token.expression(arrayValue.location, wrappedCode));
     }
 
-    public parseKeyword(input: string, arrayValue: ArrayValue): TempCodeLine[]
+    public parseKeyword(input: string, arrayValue: Token): TempCodeLine[]
     {
         let result: TempCodeLine[] | null = null;
 
@@ -459,10 +456,11 @@ export class Assembler
         {
             // General Operators
             case FunctionKeyword: result = this.parseFunctionKeyword(arrayValue); break;
-            case ContinueKeyword: result = this.parseLoopJump(ContinueKeyword, true); break;
-            case BreakKeyword: result = this.parseLoopJump(BreakKeyword, false); break;
+            case ContinueKeyword: result = this.parseLoopJump(arrayValue, ContinueKeyword, true); break;
+            case BreakKeyword: result = this.parseLoopJump(arrayValue, BreakKeyword, false); break;
             case SetKeyword: result = this.parseDefineSet(arrayValue, false); break;
             case DefineKeyword: result = this.parseDefineSet(arrayValue, true); break;
+            // case ConstKeyword: result = this.parseConst(arrayValue); break;
             case LoopKeyword: result = this.parseLoop(arrayValue); break;
             case IfKeyword: result = this.parseCond(arrayValue, true); break;
             case UnlessKeyword: result = this.parseCond(arrayValue, false); break;
@@ -509,100 +507,87 @@ export class Assembler
         return result != null ? result : [];
     }
 
-    private optimiseCallSymbolValue(input: string, numArgs: number): TempCodeLine[]
+    private optimiseCallSymbolValue(input: Token, numArgs: number): TempCodeLine[]
     {
+        if (input.type !== 'value')
+        {
+            throw new AssemblerError(input, 'Call token must be a value');
+        }
+
         const numArgsValue = new NumberValue(numArgs);
-        const propertyRequestInfo = Assembler.isGetPropertyRequest(input);
 
-        // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-        const foundParent = this.builtinScope.get(propertyRequestInfo.parentKey);
-        if (foundParent !== undefined)
+        const result = this.optimiseGet(input, input.getValue().toString());
+        if (result.length === 1 && result[0].operator === 'push' && result[0].value !== undefined)
         {
-            // If the get is for a property? (eg: string.length, length is the property)
-            let foundProperty: IValue | undefined = undefined;
-            if (propertyRequestInfo.isPropertyRequest && (foundProperty = getProperty(foundParent, propertyRequestInfo.property)) !== undefined)
-            {
-                if (isIFunctionValue(foundProperty))
-                {
-                    // If we found the property then we're done and we can just push that known value onto the stack.
-                    const callValue = new ArrayValue([foundProperty, numArgsValue]);
-                    return [codeLine('callDirect', callValue)];
-                }
-
-                throw new Error(`Attempting to call a value that is not a function: ${input} = ${foundProperty.toString()}`);
-            }
-            else if (!propertyRequestInfo.isPropertyRequest)
-            {
-                // This was not a property request but we found the parent so just push onto the stack.
-                if (isIFunctionValue(foundParent))
-                {
-                    const callValue = new ArrayValue([foundParent, numArgsValue]);
-                    return [codeLine('callDirect', callValue)];
-                }
-
-                throw new Error(`Attempting to call a value that is not a function: ${input} = ${foundParent.toString()}`);
-            }
+            const callValue = new ArrayValue([result[0].value.getValue(), numArgsValue]);
+            return [codeLine('callDirect', input.keepLocation(callValue))];
         }
 
-        // Could not find the parent right now, so look for the parent at runtime.
-        const result: TempCodeLine[] = [codeLine('get', new StringValue(propertyRequestInfo.parentKey))];
-
-        // If this was also a property check also look up the property at runtime.
-        if (propertyRequestInfo.isPropertyRequest)
-        {
-            result.push(codeLine('getProperty', propertyRequestInfo.property));
-        }
-
-        result.push(codeLine('call', numArgsValue));
+        result.push(codeLine('call', input.keepLocation(numArgsValue)));
         return result;
     }
 
-    private optimiseGetSymbolValue(input: string): TempCodeLine[]
+    private optimiseGetSymbolValue(input: Token): TempCodeLine[]
     {
         let isArgumentUnpack = false;
-        if (input.startsWith('...'))
+        let key = input.getValue().toString();
+        if (key.startsWith('...'))
         {
             isArgumentUnpack = true;
-            input = input.substring(3);
+            key = key.substring(3);
         }
 
+        const result = this.optimiseGet(input, key)
+
+        if (isArgumentUnpack)
+        {
+            result.push(codeLine('toArgument', input.toEmpty()));
+        }
+
+        return result;
+    }
+
+    private optimiseGet(input: Token, key: string)
+    {
         const result: TempCodeLine[] = [];
 
-        const propertyRequestInfo = Assembler.isGetPropertyRequest(input);
+        const propertyRequestInfo = Assembler.isGetPropertyRequest(key);
         const foundParent = this.builtinScope.get(propertyRequestInfo.parentKey);
+
+        // Check if we know about the parent object? (eg: string.length, the parent is the string object)
         if (foundParent !== undefined)
         {
+            // If the get is for a property? (eg: string.length, length is the property)
             if (propertyRequestInfo.isPropertyRequest)
             {
                 const foundProperty = getProperty(foundParent, propertyRequestInfo.property);
                 if (foundProperty !== undefined)
                 {
-                    result.push(codeLine('push', foundProperty));
+                    // If we found the property then we're done and we can just push that known value onto the stack.
+                    result.push(codeLine('push', input.keepLocation(foundProperty)));
                 }
                 else
                 {
-                    result.push(codeLine('push', foundParent));
-                    result.push(codeLine('getProperty', propertyRequestInfo.property));
+                    // We didn't find the property at compile time, so look it up at run time.
+                    result.push(codeLine('push', input.keepLocation(foundParent)));
+                    result.push(codeLine('getProperty', input.keepLocation(propertyRequestInfo.property)));
                 }
             }
             else if (!propertyRequestInfo.isPropertyRequest)
             {
-                result.push(codeLine('push', foundParent));
+                // This was not a property request but we found the parent so just push onto the stack.
+                result.push(codeLine('push', input.keepLocation(foundParent)));
             }
         }
         else
         {
-            result.push(codeLine('get', new StringValue(propertyRequestInfo.parentKey)));
+            result.push(codeLine('get', input.keepLocation(new StringValue(propertyRequestInfo.parentKey))));
 
+            // If this was also a property check also look up the property at runtime.
             if (propertyRequestInfo.isPropertyRequest)
             {
-                result.push(codeLine('getProperty', propertyRequestInfo.property));
+                result.push(codeLine('getProperty', input.keepLocation(propertyRequestInfo.property)));
             }
-        }
-
-        if (isArgumentUnpack)
-        {
-            result.push(codeLine('toArgument', undefined));
         }
 
         return result;

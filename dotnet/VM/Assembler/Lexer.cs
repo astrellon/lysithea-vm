@@ -20,51 +20,6 @@ namespace LysitheaVM
             return Token.Expression(CodeLocation.Empty, result);
         }
 
-        private static Token ParseList(Tokeniser tokeniser, bool isExpression, string endToken)
-        {
-            var startLineNumber = tokeniser.LineNumber;
-            var startColumnNumber = tokeniser.ColumnNumber;
-            var list = new List<Token>();
-            while (tokeniser.MoveNext())
-            {
-                if (tokeniser.Current == endToken)
-                {
-                    break;
-                }
-                list.Add(ReadFromTokeniser(tokeniser));
-            }
-
-            var tokenType = isExpression ? TokenType.Expression : TokenType.List;
-            return new Token(tokeniser.CreateLocation(startLineNumber, startColumnNumber), tokenType, list: list);
-        }
-
-        private static Token ParseMap(Tokeniser tokeniser)
-        {
-            var startLineNumber = tokeniser.LineNumber;
-            var startColumnNumber = tokeniser.ColumnNumber;
-            var map = new Dictionary<string, Token>();
-            while (tokeniser.MoveNext())
-            {
-                if (tokeniser.Current == "}")
-                {
-                    break;
-                }
-
-                var key = ReadFromTokeniser(tokeniser).ToString();
-                tokeniser.MoveNext();
-
-                var value = ReadFromTokeniser(tokeniser);
-                if (value.Type == TokenType.Expression)
-                {
-                    throw new ParserException(value.Location, "", "Expression found in map literal");
-                }
-
-                map[key] = value;
-            }
-
-            return Token.Map(tokeniser.CreateLocation(startLineNumber, startColumnNumber), map);
-        }
-
         public static Token ReadFromTokeniser(Tokeniser tokeniser)
         {
             var token = tokeniser.Current;
@@ -100,6 +55,52 @@ namespace LysitheaVM
                 }
             }
         }
+
+        public static Token ParseList(Tokeniser tokeniser, bool isExpression, string endToken)
+        {
+            var startLineNumber = tokeniser.LineNumber;
+            var startColumnNumber = tokeniser.ColumnNumber;
+            var list = new List<Token>();
+            while (tokeniser.MoveNext())
+            {
+                if (tokeniser.Current == endToken)
+                {
+                    break;
+                }
+                list.Add(ReadFromTokeniser(tokeniser));
+            }
+
+            var tokenType = isExpression ? TokenType.Expression : TokenType.List;
+            return new Token(tokeniser.CreateLocation(startLineNumber, startColumnNumber), tokenType, list: list);
+        }
+
+        public static Token ParseMap(Tokeniser tokeniser)
+        {
+            var startLineNumber = tokeniser.LineNumber;
+            var startColumnNumber = tokeniser.ColumnNumber;
+            var map = new Dictionary<string, Token>();
+            while (tokeniser.MoveNext())
+            {
+                if (tokeniser.Current == "}")
+                {
+                    break;
+                }
+
+                var key = ReadFromTokeniser(tokeniser).ToString();
+                tokeniser.MoveNext();
+
+                var value = ReadFromTokeniser(tokeniser);
+                if (value.Type == TokenType.Expression)
+                {
+                    throw new ParserException(value.Location, "", "Expression found in map literal");
+                }
+
+                map[key] = value;
+            }
+
+            return Token.Map(tokeniser.CreateLocation(startLineNumber, startColumnNumber), map);
+        }
+
 
         public static IValue ParseConstant(string input)
         {

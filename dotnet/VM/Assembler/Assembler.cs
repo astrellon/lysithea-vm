@@ -414,14 +414,15 @@ namespace LysitheaVM
             }
             else if (input.TokenList.Count == 2)
             {
+                var firstToken = input.TokenList[1];
                 // If it's a constant already, just push the negative.
-                if (input.TokenList[1].TokenValue is NumberValue numValue)
+                if (firstToken.TokenValue is NumberValue numValue)
                 {
-                    return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.TokenList[1].KeepLocation(new NumberValue(-numValue.Value))) };
+                    return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, firstToken.KeepLocation(new NumberValue(-numValue.Value))) };
                 }
 
-                var result = this.Parse(input.TokenList[1]);
-                result.Add(TempCodeLine.Code(Operator.UnaryNegative, input.TokenList[1].ToEmpty()));
+                var result = this.Parse(firstToken);
+                result.Add(TempCodeLine.Code(Operator.UnaryNegative, firstToken.ToEmpty()));
                 return result;
             }
             else
@@ -481,7 +482,7 @@ namespace LysitheaVM
             var result = new List<TempCodeLine>();
             foreach (var item in input.TokenList.Skip(1))
             {
-                var varName = new StringValue(item.ToString());
+                var varName = new StringValue(item.GetValue().ToString());
                 result.Add(TempCodeLine.Code(opCode, item.KeepLocation(varName)));
             }
 
@@ -501,10 +502,10 @@ namespace LysitheaVM
 
         public List<TempCodeLine> TransformAssignmentOperator(Token arrayValue)
         {
-            var opCode = arrayValue.TokenList[0].ToString();
+            var opCode = arrayValue.TokenList[0].GetValue().ToString();
             opCode = opCode.Substring(0, opCode.Length - 1);
 
-            var varName = arrayValue.TokenList[1].ToString();
+            var varName = arrayValue.TokenList[1].GetValue().ToString();
             var newCode = arrayValue.TokenList.ToList();
             newCode[0] = arrayValue.TokenList[0].KeepLocation(new VariableValue(opCode));
 
@@ -581,12 +582,12 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Call token cannot be null");
+                throw new AssemblerException(input, "Call token must be a value");
             }
 
             var numArgsValue = new NumberValue(numArgs);
 
-            var result = this.OptimiseGet(input, input.TokenValue.ToString());
+            var result = this.OptimiseGet(input, input.GetValue().ToString());
             if (result.Count == 1 && result[0].Operator == Operator.Push)
             {
                 var callValue = new IValue[]{ result[0].Token.GetValue(), numArgsValue };
@@ -607,7 +608,7 @@ namespace LysitheaVM
             }
 
             var isArgumentUnpack = false;
-            var key = input.TokenValue.ToString();
+            var key = input.GetValue().ToString();
             if (key.StartsWith("..."))
             {
                 isArgumentUnpack = true;

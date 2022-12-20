@@ -1,7 +1,7 @@
 import { CodeLocation } from "../virtualMachine";
 import { IValue } from "../values/ivalues";
-import { ArrayValue, ObjectValue, ObjectValueMap } from "../index";
-import { Editable } from "../standardLibrary/standardObjectLibrary";
+import { NullValue } from "../index";
+import { AssemblerError } from "../errors/errors";
 
 export type TokenType = 'empty' | 'value' | 'expression' | 'list' | 'map';
 
@@ -14,7 +14,7 @@ const EmptyTokenMap: TokenMap = {};
 export class Token
 {
     public readonly location: CodeLocation;
-    public readonly value: IValue | undefined;
+    public readonly value: IValue;
     public readonly type: TokenType;
     public readonly tokenList: TokenList;
     public readonly tokenMap: TokenMap;
@@ -22,7 +22,7 @@ export class Token
     constructor (location: CodeLocation, type: TokenType, value: IValue | undefined = undefined, tokenList: TokenList = EmptyTokenList, tokenMap: TokenMap = EmptyTokenMap)
     {
         this.location = location;
-        this.value = value;
+        this.value = value ?? NullValue.Value;
         this.type = type;
         this.tokenList = tokenList;
         this.tokenMap = tokenMap;
@@ -55,43 +55,17 @@ export class Token
 
     public getValue(): IValue
     {
-        switch (this.type)
+        if (this.type === 'value')
         {
-            case 'empty':
-            {
-                throw new Error('Cannot get value of empty token');
-            }
-            case 'expression':
-            {
-                throw new Error('Cannot get value of expression');
-            }
-            case 'value':
-            {
-                if (this.value === undefined)
-                {
-                    throw new Error('Cannot get value of empty token');
-                }
-                return this.value;
-            }
-            case 'list':
-            {
-                return new ArrayValue(this.tokenList.map(t => t.getValue()));
-            }
-            case 'map':
-            {
-                const map: Editable<ObjectValueMap> = {};
-                for (const prop in this.tokenMap)
-                {
-                    map[prop] = this.tokenMap[prop].getValue();
-                }
-                return new ObjectValue(map);
-            }
+            return this.value;
         }
+
+        throw new AssemblerError(this, `Cannot get value of ${this.type} token`);
     }
 
-    public getValueCanBeEmpty()
+    public getValueCanBeEmpty() : IValue | undefined
     {
-        return this.value;
+        return this.type === 'empty' ? undefined : this.getValue();
     }
 
     public keepLocation(value: IValue | undefined)
@@ -111,7 +85,7 @@ export class Token
             default:
             case 'empty': return '<empty>';
             case 'expression': return '<TokenExpression>';
-            case 'value': return this.getValue().toString();
+            case 'value': return this.value.toString();
             case 'list': return '<TokenList>';
             case 'map': return '<TokenMap>';
         }

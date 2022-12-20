@@ -7,7 +7,7 @@ import { NumberValue } from "../values/numberValue";
 import { StringValue } from "../values/stringValue";
 import { VariableValue } from "../values/variableValue";
 import { EmptyCodeLocation } from "../virtualMachine";
-import { Token, TokenMap } from "./token";
+import { Token, TokenMap, TokenType } from "./token";
 import { Tokeniser } from "./tokeniser";
 
 export class Lexer
@@ -32,86 +32,77 @@ export class Lexer
         {
             case '(':
             {
-                const startLineNumber = tokeniser.lineNumber;
-                const startColumnNumber = tokeniser.columnNumber;
-                const list: Token[] = [];
-                while (tokeniser.moveNext())
-                {
-                    if (tokeniser.current === ')')
-                    {
-                        break;
-                    }
-
-                    list.push(Lexer.readFromTokeniser(tokeniser));
-                }
-
-                return Token.expression(tokeniser.createLocation(startLineNumber, startColumnNumber), list);
-            }
-            case ')':
-            {
-                throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected )');
+                return Lexer.parseList(tokeniser, true, ')');
             }
             case '[':
             {
-                const startLineNumber = tokeniser.lineNumber;
-                const startColumnNumber = tokeniser.columnNumber;
-                const list: Token[] = [];
-                while (tokeniser.moveNext())
-                {
-                    if (tokeniser.current === ']')
-                    {
-                        break;
-                    }
-
-                    const value = Lexer.readFromTokeniser(tokeniser);
-                    if (value.type === 'expression')
-                    {
-                        throw new ParserError(value.location, '', 'Expression found in array literal');
-                    }
-                    list.push(Lexer.readFromTokeniser(tokeniser));
-                }
-
-                return Token.list(tokeniser.createLocation(startLineNumber, startColumnNumber), list);
-            }
-            case ']':
-            {
-                throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected )');
+                return Lexer.parseList(tokeniser, false, ']');
             }
             case '{':
             {
-                const startLineNumber = tokeniser.lineNumber;
-                const startColumnNumber = tokeniser.columnNumber;
-                const map: Editable<TokenMap> = {};
-                while (tokeniser.moveNext())
-                {
-                    if (tokeniser.current === '}')
-                    {
-                        break;
-                    }
-
-                    const key = Lexer.readFromTokeniser(tokeniser).toString();
-                    tokeniser.moveNext();
-
-                    const value = Lexer.readFromTokeniser(tokeniser);
-                    if (value.type === 'expression')
-                    {
-                        throw new ParserError(value.location, '', 'Expression found in map literal');
-                    }
-                    map[key] = value;
-                }
-
-                return Token.map(tokeniser.createLocation(startLineNumber, startColumnNumber), map);
+                return Lexer.parseMap(tokeniser);
             }
+
+            case ')':
+            case ']':
             case '}':
             {
-                throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected }');
+                throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected ' + token);
             }
+
             default:
             {
                 return Token.value(tokeniser.currentLocation(), Lexer.parseConstant(token));
             }
         }
     }
+
+    public static parseList(tokeniser: Tokeniser, isExpression: boolean, endToken: string)
+    {
+        const startLineNumber = tokeniser.lineNumber;
+        const startColumnNumber = tokeniser.columnNumber;
+        const list: Token[] = [];
+        while (tokeniser.moveNext())
+        {
+            if (tokeniser.current === ')')
+            {
+                break;
+            }
+
+            list.push(Lexer.readFromTokeniser(tokeniser));
+        }
+
+        const location = tokeniser.createLocation(startLineNumber, startColumnNumber);
+        const tokenType: TokenType = isExpression ? 'expression' : 'list';
+        return new Token(location, tokenType, undefined, list);
+    }
+
+    public static parseMap(tokeniser: Tokeniser)
+    {
+        const startLineNumber = tokeniser.lineNumber;
+        const startColumnNumber = tokeniser.columnNumber;
+        const map: Editable<TokenMap> = {};
+        while (tokeniser.moveNext())
+        {
+            if (tokeniser.current === '}')
+            {
+                break;
+            }
+
+            const key = Lexer.readFromTokeniser(tokeniser).toString();
+            tokeniser.moveNext();
+
+            const value = Lexer.readFromTokeniser(tokeniser);
+            if (value.type === 'expression')
+            {
+                throw new ParserError(value.location, '', 'Expression found in map literal');
+            }
+            map[key] = value;
+        }
+
+        return Token.map(tokeniser.createLocation(startLineNumber, startColumnNumber), map);
+    }
+
 
     public static parseConstant(input: string): IValue
     {

@@ -1,6 +1,6 @@
 import fs from "fs";
 import { VirtualMachine } from "../src/virtualMachine";
-import { VirtualMachineAssembler } from "../src/assembler";
+import { Assembler } from "../src/assembler/assembler";
 import { Scope } from "../src/scope";
 
 function createScope()
@@ -23,7 +23,7 @@ const perfScope = createScope();
 
 const file = fs.readFileSync('../examples/perfTest.lys', {encoding: 'utf-8'});
 
-const assembler = new VirtualMachineAssembler();
+const assembler = new Assembler();
 assembler.builtinScope.combineScope(perfScope);
 const script = assembler.parseFromText(file);
 

@@ -47,26 +47,12 @@ namespace LysitheaVM
 
         public IValue GetValue()
         {
-            switch (this.Type)
+            if (this.Type == TokenType.Value)
             {
-                case TokenType.Empty:
-                {
-                    throw new AssemblerException(this, "Cannot get value of empty token");
-                }
-                case TokenType.Value:
-                {
-                    return this.TokenValue;
-                }
-                case TokenType.List:
-                {
-                    return new ArrayValue(this.TokenList.Select(t => t.GetValue()).ToList());
-                }
-                case TokenType.Map:
-                {
-                    return new ObjectValue(this.TokenMap.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetValue()));
-                }
+                return this.TokenValue;
             }
-            return this.TokenValue;
+
+            throw new AssemblerException(this, $"Cannot get value of {this.Type} token");
         }
 
         public Token KeepLocation(IValue? input)
