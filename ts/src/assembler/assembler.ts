@@ -1,14 +1,11 @@
 import { AssemblerError } from "../errors/errors";
+import { IValue, ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap } from "../index";
 import { Scope } from "../scope";
 import { Script } from "../script";
-import { ArrayValue } from "../values/arrayValue";
-import { FunctionValue } from "../values/functionValue";
-import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "../values/ivalues";
-import { NumberValue, isNumberValue } from "../values/numberValue";
+import { Editable } from "../standardLibrary/standardObjectLibrary";
 import { StringValue } from "../values/stringValue";
 import { getProperty } from "../values/valuePropertyAccess";
-import { VariableValue } from "../values/variableValue";
-import { CodeLine, CodeLocation, Operator } from "../virtualMachine";
+import { CodeLine, CodeLocation, EmptyCodeLocation, Operator } from "../virtualMachine";
 import { VMFunction } from "../vmFunction";
 import { Lexer } from "./lexer";
 import { Token } from "./token";
@@ -66,6 +63,16 @@ function isTokenExpression(input: Token)
     return input.type === 'expression';
 }
 
+function isNoOperator(input: TempCodeLine[])
+{
+    if (input.length === 1)
+    {
+        return input[0].operator === 'unknown';
+    }
+
+    return false;
+}
+
 export class Assembler
 {
     public builtinScope: Scope = new Scope();
@@ -73,6 +80,7 @@ export class Assembler
     private labelCount: number = 0;
     private loopStack: LoopLabels[] = [];
     private keywordParsingStack: string[] = [];
+    private constScope = new Scope();
 
     public parseFromText(input: string)
     {
@@ -82,6 +90,7 @@ export class Assembler
         const code = this.parseGlobalFunction(parsed);
         const scriptScope = new Scope();
         scriptScope.combineScope(this.builtinScope);
+        scriptScope.combineScope(this.constScope);
 
         return new Script(scriptScope, code);
     }
@@ -109,6 +118,11 @@ export class Assembler
                 const keywordParse = this.parseKeyword(firstString, input);
                 if (keywordParse.length > 0)
                 {
+                    if (isNoOperator(keywordParse))
+                    {
+                        return [];
+                    }
+
                     return keywordParse;
                 }
 
@@ -129,11 +143,51 @@ export class Assembler
         }
         else if (input.type === 'list')
         {
+            const result: IValue[] = [];
 
+            for (const item of input.tokenList)
+            {
+                const parsed = this.parse(item);
+                if (parsed.length === 0)
+                {
+                    continue;
+                }
+
+                if (parsed.length === 1 && parsed[0].operator === 'push' && parsed[0].value !== undefined)
+                {
+                    result.push(parsed[0].value.getValue());
+                }
+                else
+                {
+                    throw new AssemblerError(parsed[0].value as Token, 'Unexpected token in list literal');
+                }
+            }
+
+            return [codeLine('push', input.keepLocation(new ArrayValue(result, false)))];
         }
         else if (input.type === 'map')
         {
+            const result: Editable<ObjectValueMap> = {};
+            for (const key in input.tokenMap)
+            {
+                const item = input.tokenMap[key];
+                const parsed = this.parse(item);
+                if (parsed.length === 0)
+                {
+                    continue;
+                }
 
+                if (parsed.length === 1 && parsed[0].operator === 'push' && parsed[0].value !== undefined)
+                {
+                    result[key] = parsed[0].value.getValue();
+                }
+                else
+                {
+                    throw new AssemblerError(parsed[0].value as Token, 'Unexpected token in map literal');
+                }
+            }
+
+            return [codeLine('push', input.keepLocation(new ObjectValue(result)))];
         }
         else if (input.value instanceof VariableValue)
         {
@@ -156,8 +210,33 @@ export class Assembler
         // Multiple variables can be set when a function returns multiple results.
         for (let i = input.tokenList.length - 2; i >= 1; i--)
         {
+            const key = input.tokenList[i].getValue().toString();
+            if (this.constScope.get(key) !== undefined)
+            {
+                throw new AssemblerError(input.tokenList[i], `Attempting to ${opCode} a constant: ${key}`);
+            }
+
             result.push(codeLine(opCode, input.tokenList[i]));
         }
+        return result;
+    }
+
+    public parseConst(input: Token)
+    {
+        if (input.tokenList.length != 2)
+        {
+            throw new AssemblerError(input, 'Const requires 2 inputs');
+        }
+
+        const result = this.parse(input.tokenList[input.tokenList.length - 1]);
+        if (result.length !== 1 || result[0].operator !== 'push' || result[0].value === undefined)
+        {
+            throw new AssemblerError(input, 'Const value is not a compile time constant');
+        }
+
+        const key = input.tokenList[1].getValue().toString();
+        this.constScope.constant(key, result[0].value.getValue());
+
         return result;
     }
 
@@ -266,6 +345,8 @@ export class Assembler
 
     public parseFunction(input: Token)
     {
+        this.constScope = new Scope(this.constScope);
+
         let name = '';
         let offset = 0;
         if (input.tokenList[1].value instanceof VariableValue || input.tokenList[1].value instanceof StringValue)
@@ -277,7 +358,15 @@ export class Assembler
         const parameters = input.tokenList[1 + offset].tokenList.map(e => e.toString());
         const tempCodeLines = input.tokenList.slice(2 + offset).map(v => this.parse(v)).flat(1);
 
-        return this.processTempFunction(parameters, tempCodeLines, name);
+        const result = this.processTempFunction(parameters, tempCodeLines, name);
+
+        if (this.constScope.parent === undefined)
+        {
+            throw new AssemblerError(input, 'Internal error, const scope parent lost');
+        }
+        this.constScope = this.constScope.parent;
+
+        return result;
     }
 
     public parseGlobalFunction(input: Token)
@@ -330,8 +419,16 @@ export class Assembler
     {
         const func = this.parseFunction(arrayValue);
         const funcValue = new FunctionValue(func);
-        const result = [codeLine('push', arrayValue.keepLocation(funcValue))];
+        const funcToken = arrayValue.keepLocation(funcValue);
 
+        if (this.keywordParsingStack.length === 1 && func.hasName)
+        {
+            this.constScope.constant(func.name, funcValue);
+            // Special return case
+            return [codeLine('unknown', Token.empty(EmptyCodeLocation))];
+        }
+
+        const result = [codeLine('push', funcToken)];
         const currentKeyword = this.keywordParsingStack.length > 1 ? this.keywordParsingStack[this.keywordParsingStack.length - 1] : FunctionKeyword;
         if (func.hasName && currentKeyword === FunctionKeyword)
         {
@@ -460,7 +557,7 @@ export class Assembler
             case BreakKeyword: result = this.parseLoopJump(arrayValue, BreakKeyword, false); break;
             case SetKeyword: result = this.parseDefineSet(arrayValue, false); break;
             case DefineKeyword: result = this.parseDefineSet(arrayValue, true); break;
-            // case ConstKeyword: result = this.parseConst(arrayValue); break;
+            case ConstKeyword: result = this.parseConst(arrayValue); break;
             case LoopKeyword: result = this.parseLoop(arrayValue); break;
             case IfKeyword: result = this.parseCond(arrayValue, true); break;
             case UnlessKeyword: result = this.parseCond(arrayValue, false); break;
@@ -549,7 +646,19 @@ export class Assembler
 
     private optimiseGet(input: Token, key: string)
     {
+        if (input.type !== 'value')
+        {
+            throw new AssemblerError(input, 'Get symbol token must be a value');
+        }
+
         const result: TempCodeLine[] = [];
+
+        const foundConst = this.constScope.get(key);
+        if (foundConst !== undefined)
+        {
+            result.push(codeLine('push', input.keepLocation(foundConst)));
+            return result;
+        }
 
         const propertyRequestInfo = Assembler.isGetPropertyRequest(key);
         const foundParent = this.builtinScope.get(propertyRequestInfo.parentKey);

@@ -3,10 +3,9 @@ import { VirtualMachineRunner } from "../src/virtualMachineRunner";
 import fs from "fs";
 import readline from "readline";
 import { Scope } from "../src/scope";
-import { VirtualMachineAssembler } from "../src/assembler";
+import { Assembler } from "../src/assembler/assembler";
 import { arrayScope } from "../src/standardLibrary/standardArrayLibrary";
-import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "../src/values/ivalues";
-import { StringValue } from "../src/values/stringValue";
+import { IArrayValue, IFunctionValue, isIArrayValue, isIFunctionValue, IValue, StringValue } from "../src/values/index";
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -17,11 +16,11 @@ let isShopEnabled = false;
 let choiceBuffer: IFunctionValue[] = [];
 
 const dialogueScope = new Scope();
-dialogueScope.defineFunc('say', (vm, args) =>
+dialogueScope.constantFunc('say', (vm, args) =>
 {
     say(args.getIndex(0));
 });
-dialogueScope.defineFunc('getPlayerName', (vm, args) =>
+dialogueScope.constantFunc('getPlayerName', (vm, args) =>
 {
     vm.paused = true;
     rl.question('', (name) =>
@@ -30,18 +29,18 @@ dialogueScope.defineFunc('getPlayerName', (vm, args) =>
         vm.paused = false;
     });
 });
-dialogueScope.defineFunc('randomSay', (vm, args) =>
+dialogueScope.constantFunc('randomSay', (vm, args) =>
 {
     randomSay(args.getIndexCast(0, isIArrayValue));
 });
-dialogueScope.defineFunc('choice', (vm, args) =>
+dialogueScope.constantFunc('choice', (vm, args) =>
 {
     const choiceText = args.getIndex(0);
     const choiceFunc = args.getIndexCast(1, isIFunctionValue);
     choiceBuffer.push(choiceFunc);
     sayChoice(choiceText);
 });
-dialogueScope.defineFunc('waitForChoice', (vm, args) =>
+dialogueScope.constantFunc('waitForChoice', (vm, args) =>
 {
     if (choiceBuffer.length === 0)
     {
@@ -64,19 +63,19 @@ dialogueScope.defineFunc('waitForChoice', (vm, args) =>
         }
     });
 });
-dialogueScope.defineFunc('openTheShop', (vm, args) =>
+dialogueScope.constantFunc('openTheShop', (vm, args) =>
 {
     isShopEnabled = true;
 });
-dialogueScope.defineFunc('openShop', (vm, args) =>
+dialogueScope.constantFunc('openShop', (vm, args) =>
 {
     console.log('Opening the shop to the player and quitting dialogue');
 });
-dialogueScope.defineFunc('isShopEnabled', (vm, args) =>
+dialogueScope.constantFunc('isShopEnabled', (vm, args) =>
 {
     vm.pushStackBool(isShopEnabled);
 });
-dialogueScope.defineFunc('moveTo', (vm, args) =>
+dialogueScope.constantFunc('moveTo', (vm, args) =>
 {
     const proc = args.getIndexCast(0, isIFunctionValue);
     const label = args.getIndex(1).toString();
@@ -118,7 +117,7 @@ function doChoice(index: number, vm: VirtualMachine): boolean
 
 const file = fs.readFileSync('../examples/testDialogue.lys', { encoding: 'utf-8' });
 
-const assembler = new VirtualMachineAssembler();
+const assembler = new Assembler();
 assembler.builtinScope.combineScope(dialogueScope);
 assembler.builtinScope.combineScope(arrayScope);
 const script = assembler.parseFromText(file);

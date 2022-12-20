@@ -157,10 +157,9 @@ export class Tokeniser
                         break;
                     }
 
-                    case '(':
-                    case ')':
-                    case '{':
-                    case '}':
+                    case '(': case ')':
+                    case '[': case ']':
+                    case '{': case '}':
                     {
                         if (this._accumulator.length > 0)
                         {

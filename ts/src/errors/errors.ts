@@ -27,3 +27,14 @@ export class AssemblerError extends Error
 
     }
 }
+
+export class VirtualMachineError extends Error
+{
+    public readonly stackTrace: string[];
+
+    constructor (stackTrace: string[], message: string)
+    {
+        super(message);
+        this.stackTrace = stackTrace;
+    }
+}

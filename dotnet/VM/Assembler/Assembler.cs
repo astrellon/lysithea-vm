@@ -59,8 +59,6 @@ namespace LysitheaVM
 
         public Script ParseFromText(string sourceName, IReadOnlyList<string> input)
         {
-            this.ConstScope = new Scope();
-
             this.fullText = input;
             this.sourceName = sourceName;
             var parsed = Lexer.ReadFromLines(input);
@@ -197,9 +195,8 @@ namespace LysitheaVM
 
             if (this.keywordParsingStack.Count == 1 && function.HasName)
             {
-                // At the global level, define as constant
-                this.ConstScope.TryDefine(function.Name, functionValue);
-                this.ConstScope.SetConstant(function.Name);
+                this.ConstScope.TryConstant(function.Name, functionValue);
+                // Special return case
                 return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
             }
 
@@ -222,7 +219,7 @@ namespace LysitheaVM
             // Multiple variables can be set when a function returns multiple results.
             for (var i = input.TokenList.Count - 2; i >= 1; i--)
             {
-                var key = input.TokenList[i].ToString();
+                var key = input.TokenList[i].GetValue().ToString();
                 if (this.ConstScope.TryGetKey(key, out var temp))
                 {
                     throw new AssemblerException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
@@ -246,9 +243,8 @@ namespace LysitheaVM
                 throw new AssemblerException(input, "Const value is not a compile time constant");
             }
 
-            var key = input.TokenList[1].ToString();
-            this.ConstScope.TryDefine(key, result[0].Token.GetValue());
-            this.ConstScope.SetConstant(key);
+            var key = input.TokenList[1].GetValue().ToString();
+            this.ConstScope.TryConstant(key, result[0].Token.GetValue());
 
             return result;
         }
@@ -629,7 +625,7 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Get symbol token value cannot be null");
+                throw new AssemblerException(input, "Get symbol token must be a value");
             }
 
             var result = new List<TempCodeLine>();

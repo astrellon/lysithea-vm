@@ -64,7 +64,7 @@ export class Lexer
         const list: Token[] = [];
         while (tokeniser.moveNext())
         {
-            if (tokeniser.current === ')')
+            if (tokeniser.current === endToken)
             {
                 break;
             }
