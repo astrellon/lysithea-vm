@@ -6,7 +6,6 @@
 #include "src/values/values.hpp"
 #include "src/virtual_machine.hpp"
 #include "src/assembler/assembler.hpp"
-#include "src/assembler/parser.hpp"
 #include "src/standard_library/standard_array_library.hpp"
 
 using namespace lysithea_vm;

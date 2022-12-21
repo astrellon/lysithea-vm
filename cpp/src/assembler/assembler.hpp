@@ -34,6 +34,7 @@ namespace lysithea_vm
             static const std::string keyword_unless;
             static const std::string keyword_set;
             static const std::string keyword_define;
+            static const std::string keyword_const;
             static const std::string keyword_jump;
             static const std::string keyword_return;
 

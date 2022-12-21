@@ -1,15 +1,8 @@
-#include "parser.hpp"
-
-#include <iostream>
-
-#include "../values/array_value.hpp"
-#include "../values/object_value.hpp"
-#include "../values/string_value.hpp"
-#include "../values/variable_value.hpp"
+#include "tokeniser.hpp"
 
 namespace lysithea_vm
 {
-    parser::parser(const std::vector<std::string> &input) : in_quote('\0'), return_symbol('\0'),
+    tokeniser::tokeniser(const std::vector<std::string> &input) : in_quote('\0'), return_symbol('\0'),
         escaped(false), in_comment(false), line_number(0), column_number(0),
         start_line_number(0), start_column_number(0),
         accumulator(), accumulator_size(0), input(input)
@@ -17,7 +10,7 @@ namespace lysithea_vm
 
     }
 
-    bool parser::move_next()
+    bool tokeniser::move_next()
     {
         if (return_symbol != '\0')
         {
@@ -118,10 +111,9 @@ namespace lysithea_vm
                         break;
                     }
 
-                    case '(':
-                    case ')':
-                    case '{':
-                    case '}':
+                    case '(': case ')':
+                    case '[': case ']':
+                    case '{': case '}':
                     {
                         if (accumulator_size > 0)
                         {
@@ -163,117 +155,12 @@ namespace lysithea_vm
         return false;
     }
 
-    code_location parser::current_location() const
+    code_location tokeniser::current_location() const
     {
         return code_location(start_line_number, start_column_number, line_number, column_number);
     }
 
-    token parser::read_from_text(const std::vector<std::string> &input_lines)
-    {
-        parser input_parser(input_lines);
-
-        std::vector<token_ptr> result;
-        while (input_parser.move_next())
-        {
-            result.emplace_back(std::make_shared<token>(read_from_parser(input_parser)));
-        }
-
-        return token(code_location(), result);
-    }
-
-    token parser::read_from_parser(parser &input)
-    {
-        const auto &input_token = input.current;
-        if (input_token.size() == 0)
-        {
-            throw std::runtime_error("Unexpected end of tokens");
-        }
-        if (input_token == "(")
-        {
-            auto line_number = input.line_number;
-            auto column_number = input.column_number;
-
-            std::vector<token_ptr> list;
-            while (input.move_next())
-            {
-                if (input.current == ")")
-                {
-                    break;
-                }
-
-                list.emplace_back(std::make_shared<token>(read_from_parser(input)));
-            }
-
-            code_location location(line_number, column_number, input.line_number, input.column_number);
-            return token(location, list);
-        }
-        if (input_token == ")")
-        {
-            throw std::runtime_error("Unexpected )");
-        }
-        if (input_token == "{")
-        {
-            auto line_number = input.line_number;
-            auto column_number = input.column_number;
-
-            std::unordered_map<std::string, token_ptr> map;
-            while (input.move_next())
-            {
-                if (input.current == "}")
-                {
-                    break;
-                }
-
-                auto key = read_from_parser(input);
-                input.move_next();
-
-                map.emplace(key.get_value().to_string(), std::make_shared<token>(read_from_parser(input)));
-            }
-
-            code_location location(line_number, column_number, input.line_number, input.column_number);
-            return token(location, map);
-        }
-        if (input_token == "}")
-        {
-            throw std::runtime_error("Unexpected }");
-        }
-
-        return token(input.current_location(), atom(input_token));
-    }
-
-    value parser::atom(const std::string &input)
-    {
-        if (input.size() == 0 || input == "null")
-        {
-            return value::make_null();
-        }
-
-        double num;
-        if (std::sscanf(input.c_str(), "%lf", &num) == 1)
-        {
-            return value(num);
-        }
-        if (input == "true")
-        {
-            return value(true);
-        }
-        if (input == "false")
-        {
-            return value(false);
-        }
-
-        auto first = input.front();
-        auto last = input.back();
-        if ((first == '"' && last == '"') ||
-            (first == '\'' && last == '\''))
-        {
-            return value(std::make_shared<string_value>(input.substr(1, input.size() - 2)));
-        }
-
-        return value(std::make_shared<variable_value>(input));
-    }
-
-    void parser::append_char(char ch)
+    void tokeniser::append_char(char ch)
     {
         if (accumulator_size == 0)
         {
@@ -285,14 +172,14 @@ namespace lysithea_vm
         accumulator_size++;
     }
 
-    void parser::reset_accumulator()
+    void tokeniser::reset_accumulator()
     {
         accumulator_size = 0;
         accumulator.str("");
         accumulator.clear();
     }
 
-    std::shared_ptr<std::vector<std::string>> parser::split_stream(std::istream &input)
+    std::shared_ptr<std::vector<std::string>> tokeniser::split_stream(std::istream &input)
     {
         auto result = std::make_shared<std::vector<std::string>>();
 
@@ -326,7 +213,7 @@ namespace lysithea_vm
         return result;
     }
 
-    std::shared_ptr<std::vector<std::string>> parser::split_text(const std::string &input)
+    std::shared_ptr<std::vector<std::string>> tokeniser::split_text(const std::string &input)
     {
         std::stringstream stream(input);
         return split_stream(stream);

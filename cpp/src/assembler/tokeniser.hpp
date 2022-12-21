@@ -13,14 +13,14 @@
 
 namespace lysithea_vm
 {
-    class parser
+    class tokeniser
     {
         public:
             // Fields
             std::string current;
 
             // Constructor
-            parser(const std::vector<std::string> &input);
+            tokeniser(const std::vector<std::string> &input);
 
             // Methods
             bool move_next();
@@ -31,9 +31,8 @@ namespace lysithea_vm
                 return input;
             }
 
-            static token read_from_text(const std::vector<std::string> &input_lines);
-            static token read_from_parser(parser &input);
-            static value atom(const std::string &input);
+            int end_line_number() const { return line_number; }
+            int end_column_number() const { return column_number; }
 
             static std::shared_ptr<std::vector<std::string>> split_stream(std::istream &input);
             static std::shared_ptr<std::vector<std::string>> split_text(const std::string &input);

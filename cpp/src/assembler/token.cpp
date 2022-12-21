@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include "../errors/assembler_error.hpp"
+
 namespace lysithea_vm
 {
     std::string token::to_string(int indent) const
@@ -23,6 +25,15 @@ namespace lysithea_vm
             case token_type::empty:
             {
                 ss << " (empty)";
+                break;
+            }
+            case token_type::expression:
+            {
+                ss << " (expression): " << list_data.size() << '\n';
+                for (auto iter : list_data)
+                {
+                    ss << iter->to_string(indent + 2);
+                }
                 break;
             }
             case token_type::value:
@@ -55,40 +66,30 @@ namespace lysithea_vm
 
     value token::get_value() const
     {
-        switch (type)
+        if (type == token_type::value)
         {
-            case token_type::value:
-            {
-                return token_value;
-            }
-            case token_type::list:
-            {
-                array_vector result(list_data.size());
-                std::transform(list_data.begin(), list_data.end(), result.begin(), token::convert_token);
-                return array_value::make_value(result, false);
-            }
-            case token_type::map:
-            {
-                object_map result;
-                for (auto kvp : map_data)
-                {
-                    result[kvp.first] = kvp.second->get_value();
-                }
-                return object_value::make_value(result);
-            }
-            default:
-            {
-                return token_value;
-            }
+            return token_value;
         }
+
+        throw assembler_error::create(*this, "Cannot get value of token");
     }
 
-    token token::copy(value new_token_value) const
+    value token::get_value_can_be_empty() const
+    {
+        if (type == token_type::empty)
+        {
+            return value();
+        }
+
+        return get_value();
+    }
+
+    token token::keep_location(value new_token_value) const
     {
         return token(location, new_token_value);
     }
 
-    token token::copy(complex_ptr new_token_value) const
+    token token::keep_location(complex_ptr new_token_value) const
     {
         return token(location, value(new_token_value));
     }

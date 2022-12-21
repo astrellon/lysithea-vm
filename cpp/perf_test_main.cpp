@@ -5,7 +5,6 @@
 #include <chrono>
 
 #include "src/assembler/assembler.hpp"
-#include "src/assembler/parser.hpp"
 #include "src/errors/virtual_machine_error.hpp"
 #include "src/values/values.hpp"
 #include "src/virtual_machine.hpp"

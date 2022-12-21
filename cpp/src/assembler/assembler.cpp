@@ -4,11 +4,14 @@
 #include <sstream>
 #include <unordered_map>
 
-#include "./parser.hpp"
+#include "./tokeniser.hpp"
+#include "./lexer.hpp"
 #include "../utils.hpp"
 #include "../values/function_value.hpp"
 #include "../values/variable_value.hpp"
+#include "../values/object_value.hpp"
 #include "../values/value_property_access.hpp"
+#include "../errors/assembler_error.hpp"
 #include "../standard_library/standard_math_library.hpp"
 #include "../virtual_machine.hpp"
 
@@ -22,6 +25,7 @@ namespace lysithea_vm
     const std::string assembler::keyword_unless("unless");
     const std::string assembler::keyword_set("set");
     const std::string assembler::keyword_define("define");
+    const std::string assembler::keyword_const("const");
     const std::string assembler::keyword_jump("jump");
     const std::string assembler::keyword_return("return");
 
@@ -38,10 +42,10 @@ namespace lysithea_vm
 
     std::shared_ptr<script> assembler::parse_from_stream(const std::string &source_name, std::istream &input)
     {
-        this->source_text = parser::split_stream(input);
+        this->source_text = tokeniser::split_stream(input);
         this->source_name = source_name;
 
-        auto parsed = parser::read_from_text(*source_text);
+        auto parsed = lexer::read_from_text(*source_text);
         return parse_from_value(parsed);
     }
 
@@ -73,8 +77,7 @@ namespace lysithea_vm
     assembler::code_line_list assembler::parse(const token &input)
     {
         code_line_list result;
-        // auto array_input = dynamic_cast<const token_list *>(&input);
-        if (input.type == token_type::list)
+        if (input.type == token_type::expression)
         {
             if (input.list_data.size() == 0)
             {
@@ -118,6 +121,54 @@ namespace lysithea_vm
                 }
             }
         }
+        else if (input.type == token_type::list)
+        {
+            array_vector list_result;
+            for (const auto &item : input.list_data)
+            {
+                auto parsed = parse(*item);
+                if (parsed.size() == 0)
+                {
+                    continue;
+                }
+
+                if (parsed.size() == 1 && parsed[0].op == vm_operator::push)
+                {
+                    list_result.push_back(parsed[0].argument.get_value());
+                }
+                else
+                {
+                    throw assembler_error(parsed[0].argument, "Unexpected token in list literal");
+                }
+            }
+
+            result.emplace_back(vm_operator::push, input.keep_location(array_value::make_value(list_result, false)));
+            return result;
+        }
+        else if (input.type == token_type::map)
+        {
+            object_map map_result;
+            for (const auto &pair : input.map_data)
+            {
+                auto parsed = parse(*pair.second);
+                if (parsed.size() == 0)
+                {
+                    continue;
+                }
+
+                if (parsed.size() == 1 && parsed[0].op == vm_operator::push)
+                {
+                    map_result.emplace(pair.first, parsed[0].argument.get_value());
+                }
+                else
+                {
+                    throw assembler_error(parsed[0].argument, "Unexpected token in map literal");
+                }
+            }
+
+            result.emplace_back(vm_operator::push, input.keep_location(object_value::make_value(map_result)));
+            return result;
+        }
         else
         {
             // auto input_token = dynamic_cast<const token *>(&input);
@@ -154,7 +205,7 @@ namespace lysithea_vm
     {
         if (input.list_data.size() < 3)
         {
-            throw std::runtime_error("Loop input has too few inputs");
+            throw assembler_error::create(input, "Loop input has too few inputs");
         }
 
         auto loop_label_num = label_count++;
@@ -172,20 +223,20 @@ namespace lysithea_vm
         result.emplace_back(ss_label_start.str());
 
         const auto &comparison_token = *input.list_data[1];
-        if (comparison_token.type != token_type::list)
+        if (comparison_token.type != token_type::expression)
         {
-            throw std::runtime_error("Loop comparison input needs to be an array");
+            throw assembler_error::create(input, "Loop comparison input needs to be an array");
         }
 
         push_range(result, parse(comparison_token));
-        result.emplace_back(vm_operator::jump_false, comparison_token.copy(label_end));
+        result.emplace_back(vm_operator::jump_false, comparison_token.keep_location(label_end));
 
         for (auto i = 2; i < input.list_data.size(); i++)
         {
             push_range(result, parse(*input.list_data[i]));
         }
 
-        result.emplace_back(vm_operator::jump, comparison_token.copy(label_start));
+        result.emplace_back(vm_operator::jump, comparison_token.keep_location(label_start));
         result.emplace_back(ss_label_end.str());
 
         loop_stack.pop_back();
@@ -196,11 +247,11 @@ namespace lysithea_vm
     {
         if (input.list_data.size() < 3)
         {
-            throw std::runtime_error("Condition input has too few inputs");
+            throw assembler_error::create(input, "Condition input has too few inputs");
         }
         if (input.list_data.size() < 3)
         {
-            throw std::runtime_error("Condition input has too many inputs!");
+            throw assembler_error::create(input, "Condition input has too many inputs!");
         }
 
         auto if_label_num = label_count++;
@@ -217,15 +268,15 @@ namespace lysithea_vm
         auto jump_operator = is_if_statement ? vm_operator::jump_false : vm_operator::jump_true;
 
         const auto &comparison_token = *input.list_data[1];
-        if (comparison_token.type != token_type::list)
+        if (comparison_token.type != token_type::expression)
         {
-            throw std::runtime_error("Condition needs comparison to be an array");
+            throw assembler_error::create(comparison_token, "Condition needs comparison to be an array");
         }
 
         const auto &first_block_token = *input.list_data[2];
-        if (first_block_token.type != token_type::list)
+        if (first_block_token.type != token_type::expression)
         {
-            throw std::runtime_error("Condition needs first block to be an array");
+            throw assembler_error::create(first_block_token, "Condition needs first block to be an array");
         }
 
         auto result = parse(comparison_token);
@@ -233,28 +284,28 @@ namespace lysithea_vm
         if (has_else_call)
         {
             // Jump to else if the condition doesn't match
-            result.emplace_back(jump_operator, comparison_token.copy(label_else));
+            result.emplace_back(jump_operator, comparison_token.keep_location(label_else));
 
             // First block of code
             push_range(result, parse_flatten(first_block_token));
             // Jump after the condition, skipping second block of code.
-            result.emplace_back(vm_operator::jump, first_block_token.copy(label_end));
+            result.emplace_back(vm_operator::jump, first_block_token.keep_location(label_end));
 
             // Jump target for else
             result.emplace_back(ss_label_else.str());
 
             // Second 'else' block of code
             const auto &second_block_token = *input.list_data[3];
-            if (second_block_token.type != token_type::list)
+            if (second_block_token.type != token_type::expression)
             {
-                throw std::runtime_error("Condition else needs second block to be an array");
+                throw assembler_error::create(second_block_token, "Condition else needs second block to be an array");
             }
 
             push_range(result, parse_flatten(second_block_token));
         }
         else
         {
-            result.emplace_back(jump_operator, comparison_token.copy(label_end));
+            result.emplace_back(jump_operator, comparison_token.keep_location(label_end));
 
             push_range(result, parse_flatten(first_block_token));
         }
@@ -266,12 +317,12 @@ namespace lysithea_vm
 
     assembler::code_line_list assembler::parse_flatten(const token &input)
     {
-        if (input.type == token_type::list)
+        if (input.type == token_type::expression)
         {
             auto all_array = true;
             for (const auto &iter : input.list_data)
             {
-                if (iter->type != token_type::list)
+                if (iter->type != token_type::expression)
                 {
                     all_array = false;
                     break;
@@ -296,13 +347,13 @@ namespace lysithea_vm
     {
         if (loop_stack.size() == 0)
         {
-            throw std::runtime_error("Unexpected keyword outside of loop");
+            throw assembler_error::create(token, "Unexpected keyword outside of loop");
         }
 
         auto loop_label = loop_stack.back();
 
         code_line_list result;
-        result.emplace_back(vm_operator::jump, token.copy(jump_to_start ? loop_label.start : loop_label.end));
+        result.emplace_back(vm_operator::jump, token.keep_location(jump_to_start ? loop_label.start : loop_label.end));
         return result;
     }
 
@@ -343,24 +394,6 @@ namespace lysithea_vm
         return process_temp_function(parameters, temp_code_lines, name);
     }
 
-    // assembler::code_line_list assembler::parse_change_variable(value input, builtin_function_value change_func)
-    // {
-    //     auto var_name = std::make_shared<string_value>(input.to_string());
-    //     value num_args(1);
-
-    //     array_vector call_array_args;
-    //     call_array_args.emplace_back(std::make_shared<builtin_function_value>(change_func));
-    //     call_array_args.emplace_back(num_args);
-    //     auto call_array_values = std::make_shared<array_value>(call_array_args, false);
-
-    //     code_line_list result;
-    //     result.emplace_back(vm_operator::get, token(value(var_name)));
-    //     result.emplace_back(vm_operator::call_direct, call_array_values);
-    //     result.emplace_back(vm_operator::set, value(var_name));
-
-    //     return result;
-    // }
-
     assembler::code_line_list assembler::parse_jump(const token &input)
     {
         auto result = parse(*input.list_data[1]);
@@ -395,12 +428,12 @@ namespace lysithea_vm
         auto function_value = std::make_shared<lysithea_vm::function_value>(function);
 
         code_line_list result;
-        result.emplace_back(vm_operator::push, input.copy(value(function_value)));
+        result.emplace_back(vm_operator::push, input.keep_location(value(function_value)));
 
         auto current_keyword = keyword_parsing_stack.size() > 1 ? keyword_parsing_stack[keyword_parsing_stack.size() - 2] : keyword_function;
         if (function->has_name && current_keyword == keyword_function)
         {
-            result.emplace_back(vm_operator::define, input.copy(value(function->name)));
+            result.emplace_back(vm_operator::define, input.keep_location(value(function->name)));
         }
         return result;
     }
@@ -418,7 +451,7 @@ namespace lysithea_vm
             if (first.is_number())
             {
                 code_line_list result;
-                result.emplace_back(vm_operator::push, input.list_data[1]->copy(value(-first.get_number())));
+                result.emplace_back(vm_operator::push, input.list_data[1]->keep_location(value(-first.get_number())));
                 return result;
             }
             else
@@ -430,7 +463,7 @@ namespace lysithea_vm
         }
         else
         {
-            throw std::runtime_error("Negative/Sub operator expects 1 or 2 inputs");
+            throw assembler_error::create(input, "Negative/Sub operator expects 1 or 2 inputs");
         }
     }
 
@@ -438,7 +471,7 @@ namespace lysithea_vm
     {
         if (input.list_data.size() < 2)
         {
-            throw std::runtime_error("Operator expects ast least 1 input");
+            throw assembler_error::create(input, "Operator expects ast least 1 input");
         }
 
         code_line_list result;
@@ -454,14 +487,14 @@ namespace lysithea_vm
     {
         if (input.list_data.size() < 3)
         {
-            throw std::runtime_error("Operator expects at least 2 inputs");
+            throw assembler_error::create(input, "Operator expects at least 2 inputs");
         }
 
         auto result = parse(*input.list_data[1]);
         for (auto iter = input.list_data.cbegin() + 2; iter != input.list_data.cend(); ++iter)
         {
             const auto &token = **iter;
-            auto token_value = token.get_value();
+            const auto &token_value = token.token_value;
             if (token_value.is_number())
             {
                 result.emplace_back(op_code, token);
@@ -479,14 +512,14 @@ namespace lysithea_vm
     {
         if (input.list_data.size() < 2)
         {
-            throw std::runtime_error("Operator expects at least 1 input");
+            throw assembler_error::create(input, "Operator expects at least 1 input");
         }
 
         code_line_list result;
         for (auto iter = input.list_data.cbegin() + 1; iter != input.list_data.cend(); ++iter)
         {
             auto var_name = (*iter)->get_value().to_string();
-            result.emplace_back(op_code, (*iter)->copy(value(var_name)));
+            result.emplace_back(op_code, (*iter)->keep_location(value(var_name)));
         }
 
         return result;
@@ -499,7 +532,7 @@ namespace lysithea_vm
         {
             push_range(result, parse(**iter));
         }
-        result.emplace_back(vm_operator::string_concat, input.copy(value(input.list_data.size() - 1)));
+        result.emplace_back(vm_operator::string_concat, input.keep_location(value(input.list_data.size() - 1)));
         return result;
     }
 
@@ -510,14 +543,14 @@ namespace lysithea_vm
 
         auto var_name = input.list_data[1]->get_value().to_string();
         std::vector<token_ptr> new_code(input.list_data);
-        new_code[0] = std::make_shared<token>(input.list_data[0]->copy(value(std::make_shared<variable_value>(op_code))));
+        new_code[0] = std::make_shared<token>(input.list_data[0]->keep_location(value(std::make_shared<variable_value>(op_code))));
 
         std::vector<token_ptr> wrapped_code;
-        wrapped_code.emplace_back(std::make_shared<token>(input.copy(value(std::make_shared<variable_value>("set")))));
-        wrapped_code.emplace_back(std::make_shared<token>(input.list_data[1]->copy(value(std::make_shared<variable_value>(var_name)))));
-        wrapped_code.emplace_back(std::make_shared<token>(input.location, new_code));
+        wrapped_code.emplace_back(std::make_shared<token>(input.keep_location(value(std::make_shared<variable_value>("set")))));
+        wrapped_code.emplace_back(std::make_shared<token>(input.list_data[1]->keep_location(value(std::make_shared<variable_value>(var_name)))));
+        wrapped_code.emplace_back(std::make_shared<token>(input.location, token_type::expression, new_code));
 
-        token wrapped_code_value(input.location, wrapped_code);
+        token wrapped_code_value(input.location, token_type::expression, wrapped_code);
         return parse(wrapped_code_value);
     }
 
@@ -599,11 +632,11 @@ namespace lysithea_vm
                     call_vector.emplace_back(num_arg_value);
 
                     auto call_value = std::make_shared<array_value>(call_vector, false);
-                    result.emplace_back(vm_operator::call_direct, input.copy(call_value));
+                    result.emplace_back(vm_operator::call_direct, input.keep_location(call_value));
                     return result;
                 }
 
-                throw std::runtime_error("Attempting to call a value that is not a function");
+                throw assembler_error::create(input, "Attempting to call a value that is not a function");
             }
             else if (!is_property)
             {
@@ -615,23 +648,23 @@ namespace lysithea_vm
                     call_vector.emplace_back(num_arg_value);
 
                     auto call_value = std::make_shared<array_value>(call_vector, false);
-                    result.emplace_back(vm_operator::call_direct, input.copy(call_value));
+                    result.emplace_back(vm_operator::call_direct, input.keep_location(call_value));
                     return result;
                 }
 
-                throw std::runtime_error("Attempting to call a value that is not a function");
+                throw assembler_error::create(input, "Attempting to call a value that is not a function");
             }
         }
 
         // Could not find the parent right now, so look for the parent at runtime.
-        result.emplace_back(vm_operator::get, input.copy(parent_key));
+        result.emplace_back(vm_operator::get, input.keep_location(parent_key));
 
         // If this was also a property check also look up the property at runtime.
         if (is_property)
         {
-            result.emplace_back(vm_operator::get_property, input.copy(property));
+            result.emplace_back(vm_operator::get_property, input.keep_location(property));
         }
-        result.emplace_back(vm_operator::call, input.copy(num_arg_value));
+        result.emplace_back(vm_operator::call, input.keep_location(num_arg_value));
 
         return result;
     }
@@ -662,30 +695,30 @@ namespace lysithea_vm
                 if (try_get_property(found_parent, *property, found_property))
                 {
                     // If we found the property then we're done and we can just push that known value onto the stack.
-                    result.emplace_back(vm_operator::push, input.copy(found_property));
+                    result.emplace_back(vm_operator::push, input.keep_location(found_property));
                 }
                 else
                 {
                     // We didn't find the property at compile time, so look it up at run time.
-                    result.emplace_back(vm_operator::push, input.copy(found_parent));
-                    result.emplace_back(vm_operator::get_property, input.copy(property));
+                    result.emplace_back(vm_operator::push, input.keep_location(found_parent));
+                    result.emplace_back(vm_operator::get_property, input.keep_location(property));
                 }
             }
             else
             {
                 // This was not a property request but we found the parent so just push onto the stack.
-                result.emplace_back(vm_operator::push, input.copy(found_parent));
+                result.emplace_back(vm_operator::push, input.keep_location(found_parent));
             }
         }
         else
         {
             // Could not find the parent right now, so look for the parent at runtime.
-            result.emplace_back(vm_operator::get, input.copy(parent_key));
+            result.emplace_back(vm_operator::get, input.keep_location(parent_key));
 
             // If this was also a property check also look up the property at runtime.
             if (is_property)
             {
-                result.emplace_back(vm_operator::get_property, input.copy(property));
+                result.emplace_back(vm_operator::get_property, input.keep_location(property));
             }
         }
 
@@ -735,7 +768,7 @@ namespace lysithea_vm
             {
                 locations.emplace_back(temp_line.argument.location);
                 // TODO: Check if the get_value needs to handle empty
-                code.emplace_back(temp_line.op, temp_line.argument.get_value());
+                code.emplace_back(temp_line.op, temp_line.argument.get_value_can_be_empty());
             }
         }
 

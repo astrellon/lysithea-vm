@@ -6,7 +6,6 @@
 
 #include "src/virtual_machine.hpp"
 #include "src/assembler/assembler.hpp"
-#include "src/assembler/parser.hpp"
 #include "src/standard_library/standard_library.hpp"
 #include "src/standard_library/standard_assert_library.hpp"
 

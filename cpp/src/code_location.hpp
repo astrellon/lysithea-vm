@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <sstream>
+
 namespace lysithea_vm
 {
     class code_location
@@ -19,5 +22,11 @@ namespace lysithea_vm
                 end_line_number(end_line_number), end_column_number(end_column_number) { }
 
             // Methods
+            std::string to_string() const
+            {
+                std::stringstream ss;
+                ss << start_line_number << ':' << start_column_number << " -> " << end_line_number << ':' << end_column_number;
+                return ss.str();
+            }
     };
 } // lysithea_vm
