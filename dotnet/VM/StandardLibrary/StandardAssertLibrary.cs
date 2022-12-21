@@ -63,7 +63,7 @@ namespace LysitheaVM
                 }, "assert.notEquals")}
             };
 
-            result.TryConstant("assert", new ObjectValue(assertFunctions));
+            result.TrySetConstant("assert", new ObjectValue(assertFunctions));
 
             return result;
         }

@@ -55,7 +55,7 @@ export class Scope implements IReadOnlyScope
     {
         for (const prop in input.values)
         {
-            this.define(prop, input.values[prop]);
+            this.tryDefine(prop, input.values[prop]);
         }
 
         for (const prop in input.constants)
@@ -64,30 +64,41 @@ export class Scope implements IReadOnlyScope
         }
     }
 
-    public constant(key: string, value: IValue)
+    public trySetConstant(key: string, value: IValue)
     {
-        if (this.get(key) !== undefined)
+        if (this._values[key] != null)
         {
             return false;
         }
 
-        this.define(key, value);
+        this.tryDefine(key, value);
         this.setConstant(key);
         return true;
     }
 
-    public constantFunc(key: string, value: BuiltinFunctionCallback, name: string | null = null)
+    public trySetConstantFunc(key: string, value: BuiltinFunctionCallback, name: string | null = null)
     {
-        this.constant(key, new BuiltinFunctionValue(value, name ?? key));
+        return this.trySetConstant(key, new BuiltinFunctionValue(value, name ?? key));
     }
 
-    public define(key: string, value: IValue)
+    public tryDefine(key: string, value: IValue)
     {
+        if (this.isConstant(key))
+        {
+            return false;
+        }
+
         this._values[key] = value;
+        return true;
     }
 
-    public set(key: string, value: IValue): boolean
+    public trySet(key: string, value: IValue): boolean
     {
+        if (this.isConstant(key))
+        {
+            return false;
+        }
+
         if (this._values.hasOwnProperty(key))
         {
             this._values[key] = value;
@@ -96,7 +107,7 @@ export class Scope implements IReadOnlyScope
 
         if (this._parent)
         {
-            return this._parent.set(key, value);
+            return this._parent.trySet(key, value);
         }
 
         return false;

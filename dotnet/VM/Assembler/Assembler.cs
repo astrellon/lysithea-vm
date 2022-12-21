@@ -195,7 +195,10 @@ namespace LysitheaVM
 
             if (this.keywordParsingStack.Count == 1 && function.HasName)
             {
-                this.ConstScope.TryConstant(function.Name, functionValue);
+                if (!this.ConstScope.TrySetConstant(function.Name, functionValue))
+                {
+                    throw new AssemblerException(arrayValue, "Unable to define function, constant already exists");
+                }
                 // Special return case
                 return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
             }
@@ -244,7 +247,10 @@ namespace LysitheaVM
             }
 
             var key = input.TokenList[1].GetValue().ToString();
-            this.ConstScope.TryConstant(key, result[0].Token.GetValue());
+            if (!this.ConstScope.TrySetConstant(key, result[0].Token.GetValue()))
+            {
+                throw new AssemblerException(input, "Cannot redefine a constant");
+            }
 
             return result;
         }

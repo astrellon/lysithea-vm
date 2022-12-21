@@ -235,7 +235,10 @@ export class Assembler
         }
 
         const key = input.tokenList[1].getValue().toString();
-        this.constScope.constant(key, result[0].value.getValue());
+        if (!this.constScope.trySetConstant(key, result[0].value.getValue()))
+        {
+            throw new AssemblerError(input, 'Cannot redefine a constant');
+        }
 
         return result;
     }
@@ -423,7 +426,7 @@ export class Assembler
 
         if (this.keywordParsingStack.length === 1 && func.hasName)
         {
-            this.constScope.constant(func.name, funcValue);
+            this.constScope.trySetConstant(func.name, funcValue);
             // Special return case
             return [codeLine('unknown', Token.empty(EmptyCodeLocation))];
         }

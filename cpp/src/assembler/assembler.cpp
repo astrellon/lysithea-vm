@@ -29,7 +29,7 @@ namespace lysithea_vm
     const std::string assembler::keyword_jump("jump");
     const std::string assembler::keyword_return("return");
 
-    assembler::assembler() : label_count(0)
+    assembler::assembler() : label_count(0), const_scope(std::make_shared<scope>())
     {
 
     }
@@ -55,6 +55,7 @@ namespace lysithea_vm
 
         auto script_scope = std::make_shared<scope>();
         script_scope->combine_scope(builtin_scope);
+        script_scope->combine_scope(const_scope);
 
         return std::make_shared<script>(script_scope, code);
     }
@@ -102,6 +103,10 @@ namespace lysithea_vm
                     auto keyword_parse = parse_keyword(first_symbol_value->data, input);
                     if (keyword_parse.size() > 0)
                     {
+                        if (keyword_parse.size() == 1 && keyword_parse[0].op == vm_operator::unknown)
+                        {
+                            return result;
+                        }
                         return keyword_parse;
                     }
 
@@ -198,6 +203,28 @@ namespace lysithea_vm
         {
             result.emplace_back(op_code, *input.list_data[i]);
         }
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_const(const token &input)
+    {
+        if (input.list_data.size() != 3)
+        {
+            throw assembler_error::create(input, "Const requires 2 inputs");
+        }
+
+        auto result = parse(*input.list_data.back());
+        if (result.size() != 1 || result[0].op != vm_operator::push)
+        {
+            throw assembler_error::create(input, "Const value is not a compile time constant");
+        }
+
+        auto key = input.list_data[1]->get_value().to_string();
+        if (!const_scope->try_set_constant(key, result[0].argument.get_value()))
+        {
+            throw assembler_error::create(input, "Cannot redefine a constant");
+        }
+
         return result;
     }
 
@@ -359,6 +386,8 @@ namespace lysithea_vm
 
     std::shared_ptr<function> assembler::parse_function(const token &input)
     {
+        const_scope = std::make_shared<scope>(const_scope);
+
         std::string name;
         auto offset = 0;
 
@@ -391,7 +420,15 @@ namespace lysithea_vm
             push_range(temp_code_lines, parse(*input.list_data[i]));
         }
 
-        return process_temp_function(parameters, temp_code_lines, name);
+        auto result = process_temp_function(parameters, temp_code_lines, name);
+        if (!const_scope->parent)
+        {
+            throw assembler_error::create(input, "Internal exception, const scope parent lost");
+        }
+
+        const_scope = const_scope->parent;
+
+        return result;
     }
 
     assembler::code_line_list assembler::parse_jump(const token &input)
@@ -426,8 +463,20 @@ namespace lysithea_vm
     {
         auto function = parse_function(input);
         auto function_value = std::make_shared<lysithea_vm::function_value>(function);
-
         code_line_list result;
+
+        if (keyword_parsing_stack.size() == 1 && function->has_name)
+        {
+            if (!const_scope->try_set_constant(function->name, value(function_value)))
+            {
+                throw assembler_error::create(input, "Unable to define function, constant already exists");
+            }
+
+            // Special return case
+            result.emplace_back(vm_operator::unknown, token(code_location()));
+            return result;
+        }
+
         result.emplace_back(vm_operator::push, input.keep_location(value(function_value)));
 
         auto current_keyword = keyword_parsing_stack.size() > 1 ? keyword_parsing_stack[keyword_parsing_stack.size() - 2] : keyword_function;
@@ -554,7 +603,7 @@ namespace lysithea_vm
         return parse(wrapped_code_value);
     }
 
-    std::vector<temp_code_line> assembler::parse_keyword(const std::string &keyword, const token &input)
+    assembler::code_line_list assembler::parse_keyword(const std::string &keyword, const token &input)
     {
         code_line_list result;
         keyword_parsing_stack.push_back(keyword);
@@ -565,6 +614,7 @@ namespace lysithea_vm
         else if (keyword == keyword_break) { result = parse_loop_jump(input, keyword, false); }
         else if (keyword == keyword_set) { result = parse_define_set(input, false); }
         else if (keyword == keyword_define) { result = parse_define_set(input, true); }
+        else if (keyword == keyword_const) { result = parse_const(input); }
         else if (keyword == keyword_loop) { result = parse_loop(input); }
         else if (keyword == keyword_if) { result = parse_cond(input, true); }
         else if (keyword == keyword_unless) { result = parse_cond(input, false); }
@@ -607,69 +657,30 @@ namespace lysithea_vm
         return result;
     }
 
-    std::vector<temp_code_line> assembler::optimise_call_symbol_value(const token &input, const std::string &variable, int num_args)
+    assembler::code_line_list assembler::optimise_call_symbol_value(const token &input, const std::string &variable, int num_args)
     {
-        code_line_list result;
         value num_arg_value(num_args);
 
-        std::shared_ptr<string_value> parent_key;
-        std::shared_ptr<array_value> property;
-        auto is_property = is_get_property_request(variable, parent_key, property);
-
-        // Check if we know about the parent object? (eg: string.length, the parent is the string object)
-        value found_parent;
-        if (builtin_scope.try_get_key(parent_key->data, found_parent))
+        auto result = optimise_get(input, variable);
+        if (result.size() == 1 && result[0].op == vm_operator::push)
         {
-            // If the get is for a property? (eg: string.length, length is the property)
-            value found_property;
-            if (is_property && try_get_property(found_parent, *property, found_property))
-            {
-                if (found_property.is_function())
-                {
-                    // If we found the property then we're done and we can just push that known value onto the stack.
-                    array_vector call_vector;
-                    call_vector.emplace_back(found_property);
-                    call_vector.emplace_back(num_arg_value);
+            array_vector call_vector;
+            call_vector.emplace_back(result[0].argument.get_value());
+            call_vector.emplace_back(num_arg_value);
 
-                    auto call_value = std::make_shared<array_value>(call_vector, false);
-                    result.emplace_back(vm_operator::call_direct, input.keep_location(call_value));
-                    return result;
-                }
+            auto call_value = std::make_shared<array_value>(call_vector, false);
 
-                throw assembler_error::create(input, "Attempting to call a value that is not a function");
-            }
-            else if (!is_property)
-            {
-                // This was not a property request but we found the parent so just push onto the stack.
-                if (found_parent.is_function())
-                {
-                    array_vector call_vector;
-                    call_vector.emplace_back(found_parent);
-                    call_vector.emplace_back(num_arg_value);
-
-                    auto call_value = std::make_shared<array_value>(call_vector, false);
-                    result.emplace_back(vm_operator::call_direct, input.keep_location(call_value));
-                    return result;
-                }
-
-                throw assembler_error::create(input, "Attempting to call a value that is not a function");
-            }
+            code_line_list direct_result;
+            direct_result.emplace_back(vm_operator::call_direct, input.keep_location(call_value));
+            return direct_result;
         }
 
-        // Could not find the parent right now, so look for the parent at runtime.
-        result.emplace_back(vm_operator::get, input.keep_location(parent_key));
-
-        // If this was also a property check also look up the property at runtime.
-        if (is_property)
-        {
-            result.emplace_back(vm_operator::get_property, input.keep_location(property));
-        }
         result.emplace_back(vm_operator::call, input.keep_location(num_arg_value));
 
         return result;
     }
 
-    std::vector<temp_code_line> assembler::optimise_get_symbol_value(const token &input, const std::string &variable)
+    assembler::code_line_list assembler::optimise_get_symbol_value(const token &input, const std::string &variable)
     {
         std::string get_name = variable;
         auto is_argument_unpack = starts_with_unpack(variable);
@@ -678,11 +689,35 @@ namespace lysithea_vm
             get_name = get_name.substr(3);
         }
 
-        std::shared_ptr<string_value> parent_key;
-        std::shared_ptr<array_value> property;
-        auto is_property = is_get_property_request(get_name, parent_key, property);
+        auto result = optimise_get(input, get_name);
+
+        if (is_argument_unpack)
+        {
+            result.emplace_back(vm_operator::to_argument, input.to_empty());
+        }
+
+        return result;
+    }
+
+    assembler::code_line_list assembler::optimise_get(const token &input, const std::string &variable)
+    {
+        if (input.type != token_type::value)
+        {
+            throw assembler_error::create(input, "Get symbol token must be a value");
+        }
 
         code_line_list result;
+
+        value found_const;
+        if (const_scope->try_get_key(variable, found_const))
+        {
+            result.emplace_back(vm_operator::push, input.keep_location(found_const));
+            return result;
+        }
+
+        std::shared_ptr<string_value> parent_key;
+        std::shared_ptr<array_value> property;
+        auto is_property = is_get_property_request(variable, parent_key, property);
 
         value found_parent;
         // Check if we know about the parent object? (eg: string.length, the parent is the string object)
@@ -720,11 +755,6 @@ namespace lysithea_vm
             {
                 result.emplace_back(vm_operator::get_property, input.keep_location(property));
             }
-        }
-
-        if (is_argument_unpack)
-        {
-            result.emplace_back(vm_operator::to_argument, input.to_empty());
         }
 
         return result;

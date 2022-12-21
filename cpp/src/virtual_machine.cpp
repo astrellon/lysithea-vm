@@ -141,7 +141,7 @@ namespace lysithea_vm
             {
                 auto key = get_operator_arg(code_line);
                 auto value = pop_stack();
-                current_scope->define(key.to_string(), value);
+                current_scope->try_define(key.to_string(), value);
                 break;
             }
             case vm_operator::set:
@@ -464,11 +464,11 @@ namespace lysithea_vm
             auto is_unpack = starts_with_unpack(arg_name);
             if (is_unpack)
             {
-                current_scope->define(arg_name.substr(3), standard_array_library::sublist(args->data, i, -1));
+                current_scope->try_define(arg_name.substr(3), standard_array_library::sublist(args->data, i, -1));
                 i++;
                 break;
             }
-            current_scope->define(arg_name, args->data[i]);
+            current_scope->try_define(arg_name, args->data[i]);
         }
 
         if (i < code->parameters.size())
@@ -477,7 +477,7 @@ namespace lysithea_vm
             auto is_unpack = starts_with_unpack(arg_name);
             if (is_unpack)
             {
-                current_scope->define(arg_name.substr(3), array_value::empty);
+                current_scope->try_define(arg_name.substr(3), array_value::empty);
             }
             else
             {

@@ -66,7 +66,7 @@ namespace lysithea_vm
             }
         });
 
-        result->define("assert", value(functions));
+        result->try_set_constant("assert", value(functions));
 
         return result;
     }

@@ -16,31 +16,31 @@ let isShopEnabled = false;
 let choiceBuffer: IFunctionValue[] = [];
 
 const dialogueScope = new Scope();
-dialogueScope.constantFunc('say', (vm, args) =>
+dialogueScope.trySetConstantFunc('say', (vm, args) =>
 {
     say(args.getIndex(0));
 });
-dialogueScope.constantFunc('getPlayerName', (vm, args) =>
+dialogueScope.trySetConstantFunc('getPlayerName', (vm, args) =>
 {
     vm.paused = true;
     rl.question('', (name) =>
     {
-        vm.globalScope.define('playerName', new StringValue(name));
+        vm.globalScope.tryDefine('playerName', new StringValue(name));
         vm.paused = false;
     });
 });
-dialogueScope.constantFunc('randomSay', (vm, args) =>
+dialogueScope.trySetConstantFunc('randomSay', (vm, args) =>
 {
     randomSay(args.getIndexCast(0, isIArrayValue));
 });
-dialogueScope.constantFunc('choice', (vm, args) =>
+dialogueScope.trySetConstantFunc('choice', (vm, args) =>
 {
     const choiceText = args.getIndex(0);
     const choiceFunc = args.getIndexCast(1, isIFunctionValue);
     choiceBuffer.push(choiceFunc);
     sayChoice(choiceText);
 });
-dialogueScope.constantFunc('waitForChoice', (vm, args) =>
+dialogueScope.trySetConstantFunc('waitForChoice', (vm, args) =>
 {
     if (choiceBuffer.length === 0)
     {
@@ -63,19 +63,19 @@ dialogueScope.constantFunc('waitForChoice', (vm, args) =>
         }
     });
 });
-dialogueScope.constantFunc('openTheShop', (vm, args) =>
+dialogueScope.trySetConstantFunc('openTheShop', (vm, args) =>
 {
     isShopEnabled = true;
 });
-dialogueScope.constantFunc('openShop', (vm, args) =>
+dialogueScope.trySetConstantFunc('openShop', (vm, args) =>
 {
     console.log('Opening the shop to the player and quitting dialogue');
 });
-dialogueScope.constantFunc('isShopEnabled', (vm, args) =>
+dialogueScope.trySetConstantFunc('isShopEnabled', (vm, args) =>
 {
     vm.pushStackBool(isShopEnabled);
 });
-dialogueScope.constantFunc('moveTo', (vm, args) =>
+dialogueScope.trySetConstantFunc('moveTo', (vm, args) =>
 {
     const proc = args.getIndexCast(0, isIFunctionValue);
     const label = args.getIndex(1).toString();

@@ -6,22 +6,22 @@ export function createMiscScope()
 {
     const result = new Scope();
 
-    result.constantFunc('toString', (vm, args) =>
+    result.trySetConstantFunc('toString', (vm, args) =>
     {
         vm.pushStackString(args.getIndex(0).toString());
     });
 
-    result.constantFunc('typeof', (vm, args) =>
+    result.trySetConstantFunc('typeof', (vm, args) =>
     {
         vm.pushStackString(args.getIndex(0).typename());
     });
 
-    result.constantFunc('compareTo', (vm, args) =>
+    result.trySetConstantFunc('compareTo', (vm, args) =>
     {
         vm.pushStackNumber(args.getIndex(0).compareTo(args.getIndex(1)));
     });
 
-    result.constantFunc('print', (vm, args) =>
+    result.trySetConstantFunc('print', (vm, args) =>
     {
         console.log(args.value.map(c => c.toString()).join(''));
     });

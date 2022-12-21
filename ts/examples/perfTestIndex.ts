@@ -6,12 +6,12 @@ import { Scope } from "../src/scope";
 function createScope()
 {
     const result = new Scope();
-    result.constantFunc('rand', (vm, args) =>
+    result.trySetConstantFunc('rand', (vm, args) =>
     {
         vm.pushStackNumber(Math.random());
     });
 
-    result.constantFunc('print', (vm, args) =>
+    result.trySetConstantFunc('print', (vm, args) =>
     {
         console.log(args.value.map(c => c.toString()).join(''));
     });

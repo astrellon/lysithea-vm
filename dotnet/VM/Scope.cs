@@ -69,9 +69,9 @@ namespace LysitheaVM
             }
         }
 
-        public bool TryConstant(string key, IValue value)
+        public bool TrySetConstant(string key, IValue value)
         {
-            if (this.TryGetKey(key, out var temp))
+            if (this.values != null && this.values.ContainsKey(key))
             {
                 return false;
             }
@@ -81,10 +81,10 @@ namespace LysitheaVM
             return true;
         }
 
-        public bool TryConstant(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
+        public bool TrySetConstant(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
         {
             var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
-            return this.TryConstant(key, value);
+            return this.TrySetConstant(key, value);
         }
 
         public bool TryDefine(string key, IValue value)

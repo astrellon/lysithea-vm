@@ -66,7 +66,7 @@ namespace lysithea_vm
             vm.push_stack(join(separator, args.data.cbegin() + 1, args.data.cend()));
         });
 
-        result->define("string", value(functions));
+        result->try_set_constant("string", value(functions));
 
         return result;
     }

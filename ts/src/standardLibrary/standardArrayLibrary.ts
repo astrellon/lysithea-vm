@@ -108,7 +108,7 @@ export function createArrayScope()
         }, "array.sublist"),
     }
 
-    result.define('array', new ObjectValue(arrayFunctions));
+    result.trySetConstant('array', new ObjectValue(arrayFunctions));
 
     return result;
 }

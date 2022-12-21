@@ -57,7 +57,7 @@ export function createAssertScope()
         }, "assert.notEquals")
     };
 
-    result.define('assert', new ObjectValue(assertFunctions));
+    result.trySetConstant('assert', new ObjectValue(assertFunctions));
 
     return result;
 }

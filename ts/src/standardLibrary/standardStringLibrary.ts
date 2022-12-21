@@ -75,7 +75,7 @@ export function createStringScope()
         }, "string.removeAll")
     }
 
-    result.define('string', new ObjectValue(stringFunctions));
+    result.trySetConstant('string', new ObjectValue(stringFunctions));
 
     return result;
 }

@@ -42,28 +42,28 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.TryConstant("say", (vm, args) =>
+            result.TrySetConstant("say", (vm, args) =>
             {
                 Say(args.GetIndex(0));
             });
 
-            result.TryConstant("getPlayerName", (vm, args) =>
+            result.TrySetConstant("getPlayerName", (vm, args) =>
             {
                 var name = Console.ReadLine()?.Trim() ?? "<Empty>";
                 vm.GlobalScope.TryDefine("playerName", new StringValue(name));
             });
 
-            result.TryConstant("randomSay", (vm, args) =>
+            result.TrySetConstant("randomSay", (vm, args) =>
             {
                 RandomSay(args.GetIndex<ArrayValue>(0));
             });
 
-            result.TryConstant("isShopEnabled", (vm, args) =>
+            result.TrySetConstant("isShopEnabled", (vm, args) =>
             {
                 vm.PushStack(IsShopEnabled);
             });
 
-            result.TryConstant("moveTo", (vm, args) =>
+            result.TrySetConstant("moveTo", (vm, args) =>
             {
                 var proc = args.GetIndex<FunctionValue>(0);
                 var label = args.GetIndex(1);
@@ -72,7 +72,7 @@ namespace LysitheaVM
                 vm.Jump(label.ToString());
             });
 
-            result.TryConstant("choice", (vm, args) =>
+            result.TrySetConstant("choice", (vm, args) =>
             {
                 var choiceText = args.GetIndex(0);
                 var choiceJumpLabel = args.GetIndex(1);
@@ -87,7 +87,7 @@ namespace LysitheaVM
                 SayChoice(choiceText);
             });
 
-            result.TryConstant("waitForChoice", (vm, args) =>
+            result.TrySetConstant("waitForChoice", (vm, args) =>
             {
                 if (!ChoiceBuffer.Any())
                 {
@@ -118,12 +118,12 @@ namespace LysitheaVM
                 } while (!choiceValid);
             });
 
-            result.TryConstant("openTheShop", (vm, args) =>
+            result.TrySetConstant("openTheShop", (vm, args) =>
             {
                 IsShopEnabled = true;
             });
 
-            result.TryConstant("openShop", (vm, args) =>
+            result.TrySetConstant("openShop", (vm, args) =>
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
             });

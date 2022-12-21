@@ -10,6 +10,7 @@ namespace lysithea_vm
     void scope::clear()
     {
         values.clear();
+        constants.clear();
     }
 
     void scope::combine_scope(const scope &input)
@@ -18,20 +19,55 @@ namespace lysithea_vm
         {
             values[iter.first] = iter.second;
         }
+
+        for (auto iter : input.constants)
+        {
+            constants[iter.first] = iter.second;
+        }
     }
 
-    void scope::define(const std::string &key, value input)
+    bool scope::has_key(const std::string &key) const
     {
+        auto find = values.find(key);
+        return find != values.cend();
+    }
+
+    bool scope::try_define(const std::string &key, value input)
+    {
+        if (is_constant(key))
+        {
+            return false;
+        }
+
         values[key] = input;
+        return true;
     }
 
-    void scope::define(const std::string &key, builtin_function_callback callback)
+    bool scope::try_set_constant(const std::string &key, value input)
     {
-        values[key] = value::make_builtin(callback);
+        if (has_key(key))
+        {
+            return false;
+        }
+
+        try_define(key, input);
+        set_constant(key);
+
+        return true;
+    }
+
+    bool scope::try_set_constant(const std::string &key, builtin_function_callback callback)
+    {
+        return try_set_constant(key, value::make_builtin(callback));
     }
 
     bool scope::try_set(const std::string &key, value input)
     {
+        if (is_constant(key))
+        {
+            return false;
+        }
+
         auto find = values.find(key);
         if (find != values.end())
         {
@@ -92,5 +128,16 @@ namespace lysithea_vm
         }
 
         return false;
+    }
+
+    bool scope::is_constant(const std::string &key) const
+    {
+        auto find = constants.find(key);
+        return find != constants.cend();
+    }
+
+    void scope::set_constant(const std::string &key)
+    {
+        constants.emplace(key, true);
     }
 } // lysithea_vm

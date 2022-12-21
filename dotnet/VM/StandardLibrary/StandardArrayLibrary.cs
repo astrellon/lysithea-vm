@@ -113,7 +113,7 @@ namespace LysitheaVM
                 }, "array.sublist")}
             };
 
-            result.TryConstant("array", new ObjectValue(arrayFunctions));
+            result.TrySetConstant("array", new ObjectValue(arrayFunctions));
 
             return result;
         }

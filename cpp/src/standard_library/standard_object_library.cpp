@@ -53,7 +53,7 @@ namespace lysithea_vm
             vm.push_stack(removeValues(obj, values));
         });
 
-        result->define("object", value(functions));
+        result->try_set_constant("object", value(functions));
 
         return result;
     }

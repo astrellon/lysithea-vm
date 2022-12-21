@@ -17,12 +17,12 @@ std::shared_ptr<lysithea_vm::scope> create_custom_scope()
 {
     auto result = std::make_shared<lysithea_vm::scope>();
 
-    result->define("rand", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
+    result->try_set_constant("rand", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
     {
         vm.push_stack(dist(_rand));
     });
 
-    result->define("print", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
+    result->try_set_constant("print", [](lysithea_vm::virtual_machine &vm, const lysithea_vm::array_value &args) -> void
     {
         for (auto iter : args.data)
         {
