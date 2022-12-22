@@ -101,7 +101,7 @@ export function join(args: ArrayValue)
         }
         else if (isIObjectValue(arg))
         {
-            for (const key in arg.objectKeys)
+            for (const key of arg.objectKeys())
             {
                 const value = arg.tryGetKey(key);
                 if (value !== undefined)

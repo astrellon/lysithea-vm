@@ -358,7 +358,7 @@ export class Assembler
             offset = 1;
         }
 
-        const parameters = input.tokenList[1 + offset].tokenList.map(e => e.toString());
+        const parameters = input.tokenList[1 + offset].tokenList.map(e => e.getValue().toString());
         const tempCodeLines = input.tokenList.slice(2 + offset).map(v => this.parse(v)).flat(1);
 
         const result = this.processTempFunction(parameters, tempCodeLines, name);
