@@ -20,39 +20,39 @@ export function createMathScope()
         sin: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.sin(args.getNumber(0)));
-        }, "math.sin"),
+        }, 'math.sin'),
         cos: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.cos(args.getNumber(0)));
-        }, "math.cos"),
+        }, 'math.cos'),
         tan: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.tan(args.getNumber(0)));
-        }, "math.tan"),
+        }, 'math.tan'),
         exp: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.exp(args.getNumber(0)));
-        }, "math.exp"),
+        }, 'math.exp'),
         ceil: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.ceil(args.getNumber(0)));
-        }, "math.ceil"),
+        }, 'math.ceil'),
         floor: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.floor(args.getNumber(0)));
-        }, "math.floor"),
+        }, 'math.floor'),
         round: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.round(args.getNumber(0)));
-        }, "math.round"),
+        }, 'math.round'),
         isFinite: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackBool(Number.isFinite(args.getNumber(0)));
-        }, "math.isFinite"),
+        }, 'math.isFinite'),
         isNaN: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackBool(isNaN(args.getNumber(0)));
-        }, "math.isNaN"),
+        }, 'math.isNaN'),
         parse: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndex(0);
@@ -64,15 +64,15 @@ export function createMathScope()
             {
                 vm.pushStackNumber(parseFloat(top.toString()));
             }
-        }, "math.parse"),
+        }, 'math.parse'),
         log: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.log(args.getNumber(0)));
-        }, "math.log"),
+        }, 'math.log'),
         abs: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.abs(args.getNumber(0)));
-        }, "math.abs"),
+        }, 'math.abs'),
         max: new BuiltinFunctionValue((vm, args) =>
         {
             let max = args.value[0];
@@ -85,7 +85,7 @@ export function createMathScope()
                 }
             }
             vm.pushStack(max);
-        }, "math.max"),
+        }, 'math.max'),
         min: new BuiltinFunctionValue((vm, args) =>
         {
             let min = args.value[0];
@@ -98,7 +98,7 @@ export function createMathScope()
                 }
             }
             vm.pushStack(min);
-        }, "math.min"),
+        }, 'math.min'),
         sum: new BuiltinFunctionValue((vm, args) =>
         {
             let result = 0.0;
@@ -115,7 +115,7 @@ export function createMathScope()
                 }
             }
             vm.pushStackNumber(result);
-        }, "math.sum")
+        }, 'math.sum')
     };
 
     result.trySetConstant('math', new ObjectValue(mathFunctions));

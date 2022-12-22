@@ -214,7 +214,7 @@ export class VirtualMachine
                     }
                     else
                     {
-                        throw new VirtualMachineError(`${this.getScopeLine()}: Unable to get property: ${key.toString()}`);
+                        throw new Error(`${this.getScopeLine()}: Unable to get property: ${key.toString()}`);
                     }
                     break;
                 }

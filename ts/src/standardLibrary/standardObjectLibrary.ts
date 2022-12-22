@@ -1,10 +1,10 @@
 import { Scope, IReadOnlyScope } from "../scope";
 import { ArrayValue } from "../values/arrayValue";
 import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
-import { IValue } from "../values/ivalues";
+import { IArrayValue, isIObjectValue, IValue } from "../values/ivalues";
 import { NullValue } from "../values/nullValue";
 import { ObjectValue, isObjectValue, ObjectValueMap } from "../values/objectValue";
-import { StringValue } from "../values/stringValue";
+import { isStringValue, StringValue } from "../values/stringValue";
 
 export const objectScope: IReadOnlyScope = createObjectScope();
 
@@ -19,6 +19,11 @@ export function createObjectScope()
 
     const objectFunctions: ObjectValueMap =
     {
+        join: new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.pushStack(join(args));
+        }, 'object.join'),
+
         set: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isObjectValue);
@@ -78,6 +83,42 @@ export function createObjectScope()
     result.trySetConstant('object', new ObjectValue(objectFunctions));
 
     return result;
+}
+
+export function join(args: ArrayValue)
+{
+    const map: Editable<ObjectValueMap> = {};
+    const argValues = args.arrayValues();
+
+    for (let i = 0; i < argValues.length; i++)
+    {
+        const arg = argValues[i];
+        if (isStringValue(arg))
+        {
+            const key = arg.value;
+            const value = argValues[++i];
+            map[key] = value;
+        }
+        else if (isIObjectValue(arg))
+        {
+            for (const key in arg.objectKeys)
+            {
+                const value = arg.tryGetKey(key);
+                if (value !== undefined)
+                {
+                    map[key] = value;
+                }
+            }
+        }
+        else
+        {
+            const key = arg.toString();
+            const value = argValues[++i];
+            map[key] = value;
+        }
+    }
+
+    return new ObjectValue(map);
 }
 
 export function set(target: ObjectValue, key: string, value: IValue)

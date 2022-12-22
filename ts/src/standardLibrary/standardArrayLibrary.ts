@@ -16,13 +16,13 @@ export function createArrayScope()
         join: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStack(new ArrayValue(args.value));
-        }, "array.join"),
+        }, 'array.join'),
 
         length: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isArrayValue);
             vm.pushStackNumber(top.arrayValues().length);
-        }, "array.length"),
+        }, 'array.length'),
 
         get: new BuiltinFunctionValue((vm, args) =>
         {
@@ -37,7 +37,7 @@ export function createArrayScope()
             {
                 vm.pushStack(NullValue.Value);
             }
-        }, "array.get"),
+        }, 'array.get'),
 
         set: new BuiltinFunctionValue((vm, args) =>
         {
@@ -46,7 +46,7 @@ export function createArrayScope()
             const value = args.getIndex(2);
             vm.pushStack(set(top, index, value));
 
-        }, "array.set"),
+        }, 'array.set'),
 
         insert: new BuiltinFunctionValue((vm, args) =>
         {
@@ -54,7 +54,7 @@ export function createArrayScope()
             const index = args.getNumber(1);
             const value = args.getIndex(2);
             vm.pushStack(insert(top, index, value));
-        }, "array.insert"),
+        }, 'array.insert'),
 
         insertFlatten: new BuiltinFunctionValue((vm, args) =>
         {
@@ -62,42 +62,42 @@ export function createArrayScope()
             const index = args.getNumber(1);
             const value = args.getIndexCast(2, isIArrayValue);
             vm.pushStack(insertFlatten(top, index, value));
-        }, "array.insertFlatten"),
+        }, 'array.insertFlatten'),
 
         remove: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isArrayValue);
             const value = args.getIndex(1);
             vm.pushStack(remove(top, value));
-        }, "array.remove"),
+        }, 'array.remove'),
 
         removeAt: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isArrayValue);
             const index = args.getNumber(1);
             vm.pushStack(removeAt(top, index));
-        }, "array.removeAt"),
+        }, 'array.removeAt'),
 
         removeAll: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isArrayValue);
             const value = args.getIndex(1);
             vm.pushStack(removeAll(top, value));
-        }, "array.removeAll"),
+        }, 'array.removeAll'),
 
         contains: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isArrayValue);
             const value = args.getIndex(1);
             vm.pushStackBool(contains(top, value));
-        }, "array.contains"),
+        }, 'array.contains'),
 
         indexOf: new BuiltinFunctionValue((vm, args) =>
         {
             const top = args.getIndexCast(0, isArrayValue);
             const value = args.getIndex(1);
             vm.pushStackNumber(indexOf(top, value));
-        }, "array.indexOf"),
+        }, 'array.indexOf'),
 
         sublist: new BuiltinFunctionValue((vm, args) =>
         {
@@ -105,7 +105,7 @@ export function createArrayScope()
             const index = args.getNumber(1);
             const length = args.getNumber(2);
             vm.pushStack(sublist(top, index, length));
-        }, "array.sublist"),
+        }, 'array.sublist'),
     }
 
     result.trySetConstant('array', new ObjectValue(arrayFunctions));

@@ -3,8 +3,8 @@
 if [ $? -eq 0 ]; then
     cd ./Release
     # ./mapBenchmark
-    ./perfTest
-    # ./standardLibraryTest
+    # ./perfTest
+    ./standardLibraryTest
     # ./dialogueTree
     cd ../
 fi

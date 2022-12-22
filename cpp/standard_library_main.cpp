@@ -13,7 +13,7 @@ using namespace lysithea_vm;
 
 int main()
 {
-    const char *filename = "../../examples/readmeExamples.lys";
+    const char *filename = "../../examples/testStandardLibrary.lys";
     std::ifstream input_file;
     input_file.open(filename);
     if (!input_file)
