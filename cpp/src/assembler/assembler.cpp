@@ -176,7 +176,6 @@ namespace lysithea_vm
         }
         else
         {
-            // auto input_token = dynamic_cast<const token *>(&input);
             if (input.type == token_type::value)
             {
                 auto symbol_value = input.token_value.get_complex<variable_value>();
@@ -411,7 +410,7 @@ namespace lysithea_vm
         auto parameters_array = input.list_data[1 + offset]->list_data;
         for (auto iter : parameters_array)
         {
-            parameters.emplace_back(iter->to_string(0));
+            parameters.emplace_back(iter->get_value().to_string());
         }
 
         code_line_list temp_code_lines;
@@ -797,7 +796,6 @@ namespace lysithea_vm
             else
             {
                 locations.emplace_back(temp_line.argument.location);
-                // TODO: Check if the get_value needs to handle empty
                 code.emplace_back(temp_line.op, temp_line.argument.get_value_can_be_empty());
             }
         }

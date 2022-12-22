@@ -5,6 +5,7 @@
 #include <chrono>
 
 #include "src/virtual_machine.hpp"
+#include "src/errors/virtual_machine_error.hpp"
 #include "src/assembler/assembler.hpp"
 #include "src/standard_library/standard_library.hpp"
 #include "src/standard_library/standard_assert_library.hpp"
@@ -30,11 +31,22 @@ int main()
 
     lysithea_vm::virtual_machine vm(32);
 
-    auto start = std::chrono::steady_clock::now();
-    vm.execute(script);
-    auto end = std::chrono::steady_clock::now();
+    try
+    {
+        auto start = std::chrono::steady_clock::now();
+        vm.execute(script);
+        auto end = std::chrono::steady_clock::now();
 
-    std::cout << "Time taken: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
+        std::cout << "Time taken: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
+    }
+    catch (lysithea_vm::virtual_machine_error exp)
+    {
+        std::cerr << "Error: " << exp.message << "\nVM Stack:\n";
+        for (const auto &line : exp.stack_trace)
+        {
+            std::cerr << "- " << line << '\n';
+        }
+    }
 
     return 0;
 }
