@@ -13,33 +13,33 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.Define("toString", (vm, args) =>
+            result.TrySetConstant("toString", (vm, args) =>
             {
                 var top = args.GetIndex(0);
                 vm.PushStack(top.ToString());
             });
 
-            result.Define("typeof", (vm, args) =>
+            result.TrySetConstant("typeof", (vm, args) =>
             {
                 var top = args.GetIndex(0);
                 vm.PushStack(top.TypeName);
             });
 
-            result.Define("isDefined", (vm, args) =>
+            result.TrySetConstant("isDefined", (vm, args) =>
             {
                 var top = args.GetIndex(0).ToString();
                 var isDefined = vm.CurrentScope.TryGetKey(top, out var temp);
                 vm.PushStack(isDefined);
             });
 
-            result.Define("compareTo", (vm, args) =>
+            result.TrySetConstant("compareTo", (vm, args) =>
             {
                 var left = args.GetIndex(0);
                 var right = args.GetIndex(1);
                 vm.PushStack(left.CompareTo(right));
             });
 
-            result.Define("print", (vm, args) =>
+            result.TrySetConstant("print", (vm, args) =>
             {
                 Console.WriteLine(string.Join("", args.Value));
             });

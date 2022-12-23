@@ -13,14 +13,19 @@ namespace LysitheaVM.Unity
         #region Methods
         public void BeginDrawing()
         {
+            Debug.Log("Started drawing");
             try
             {
                 var script = this.UICodeEdit.CreateScript();
                 DrawingVM.Instance.StartDrawing(this.CommonScripts, script);
             }
-            catch (System.Exception exp)
+            catch (AssemblerException exp)
             {
-                Debug.Log($"Error parsing code: {exp.Message}");
+                Debug.LogError($"Error parsing code: {exp.Message}:\n{exp.Token}");
+            }
+            catch (VirtualMachineException exp)
+            {
+                Debug.LogError($"Error running code: {exp.Message}:\n{string.Join("\n", exp.VirtualMachineStackTrace)}");
             }
         }
         #endregion

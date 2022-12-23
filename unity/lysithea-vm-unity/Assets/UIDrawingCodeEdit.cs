@@ -9,7 +9,7 @@ namespace LysitheaVM.Unity
 
         public IDrawingScript CreateScript()
         {
-            var script = DrawingVM.Instance.AssembleScript(this.CodeText.text);
+            var script = DrawingVM.Instance.AssembleScript("CodeEditor", this.CodeText.text);
             return new DynamicDrawingScript(script);
         }
     }

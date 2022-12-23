@@ -103,6 +103,12 @@ namespace LysitheaVM
             return true;
         }
 
+        public bool TryDefine(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
+        {
+            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
+            return this.TryDefine(key, value);
+        }
+
         public bool TrySet(string key, IValue value)
         {
             if (this.IsConstant(key))

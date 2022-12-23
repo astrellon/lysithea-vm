@@ -64,7 +64,11 @@ namespace LysitheaVM
         public void Execute(Script script)
         {
             this.ChangeToScript(script);
+            this.Execute();
+        }
 
+        public void Execute()
+        {
             this.Running = true;
             this.Paused = false;
             while (this.Running && !this.Paused)
@@ -82,7 +86,7 @@ namespace LysitheaVM
             }
             else
             {
-                throw new OperatorException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
+                throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
             }
         }
 
@@ -120,8 +124,7 @@ namespace LysitheaVM
             value.Invoke(this, args, pushToStackTrace);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ExecuteFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
+        public void SwitchToFunction(Function function, ArgumentsValue args, bool pushToStackTrace = false)
         {
             if (pushToStackTrace)
             {
@@ -139,11 +142,11 @@ namespace LysitheaVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    this.CurrentScope.Define(argName.Substring(3), args.SubList(i));
+                    this.CurrentScope.TryDefine(argName.Substring(3), args.SubList(i));
                     i++;
                     break;
                 }
-                this.CurrentScope.Define(argName, args[i]);
+                this.CurrentScope.TryDefine(argName, args[i]);
             }
 
             if (i < function.Parameters.Count)
@@ -151,11 +154,11 @@ namespace LysitheaVM
                 var argName = function.Parameters[i];
                 if (argName.StartsWith("..."))
                 {
-                    this.CurrentScope.Define(argName.Substring(3), ArgumentsValue.Empty);
+                    this.CurrentScope.TryDefine(argName.Substring(3), ArgumentsValue.Empty);
                 }
                 else
                 {
-                    throw new OperatorException(this.CreateStackTrace(), $"Function called without enough arguments: {function.Name}");
+                    throw new VirtualMachineException(this.CreateStackTrace(), $"Function called without enough arguments: {function.Name}");
                 }
             }
         }
@@ -165,7 +168,7 @@ namespace LysitheaVM
         {
             if (!this.stackTrace.TryPush(scopeFrame))
             {
-                throw new StackException(this.CreateStackTrace(), "Unable to call, call stack full");
+                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to call, call stack full");
             }
         }
 
@@ -187,7 +190,7 @@ namespace LysitheaVM
         {
             if (!this.TryReturn())
             {
-                throw new StackException(this.CreateStackTrace(), "Unable to return, call stack empty");
+                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to return, call stack empty");
             }
         }
 
@@ -212,7 +215,7 @@ namespace LysitheaVM
         {
             if (!this.stack.TryPop(out var obj))
             {
-                throw new StackException(this.CreateStackTrace(), "Unable to pop stack, empty");
+                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to pop stack, empty");
             }
 
             return obj;
@@ -223,7 +226,7 @@ namespace LysitheaVM
         {
             if (!this.stack.TryPeek(out var obj))
             {
-                throw new StackException(this.CreateStackTrace(), "Unable to peek stack, empty");
+                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to peek stack, empty");
             }
 
             return obj;
@@ -234,7 +237,7 @@ namespace LysitheaVM
         {
             if (!this.stack.TryPush(value))
             {
-                throw new StackException(this.CreateStackTrace(), "Unable to push stack, stack is full");
+                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to push stack, stack is full");
             }
         }
         #endregion
@@ -266,19 +269,20 @@ namespace LysitheaVM
 
         private static string DebugScopeLine(Function function, int line)
         {
+            var text = $"  at [{function.Name}] in {function.DebugSymbols.SourceName}:line ";
             if (line >= function.Code.Count)
             {
-                return $"[{function.Name}:{line}: end of code";
+                return $"{text}{line} end of code";
             }
             if (line < 0)
             {
-                return $"[{function.Name}:{line}: before start of code";
+                return $"{text}{line} before start of code";
             }
 
             var codeLine = function.Code[line];
-            var codeLocation = function.DebugSymbols.CodeLineToText[line];
+            function.DebugSymbols.TryGetLocation(line, out var codeLocation);
             var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            var text = $"[{function.Name}]: line:{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
+            text += $"{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
 
             var fromLineIndex = Math.Max(0, codeLocation.StartLineNumber - 1);
             var toLineIndex = Math.Min(function.DebugSymbols.FullText.Count, codeLocation.StartLineNumber + 2);

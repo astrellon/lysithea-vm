@@ -9,17 +9,19 @@ namespace LysitheaVM.Unity
         public TextAsset CodeText;
 
         private Script script = Script.Empty;
+        private bool assembled = false;
         public Script Script
         {
             get
             {
-                if (!this.script.Code.IsEmpty)
+                if (this.assembled)
                 {
                     return this.script;
                 }
 
                 var codeString = this.CodeText.text;
-                this.script = DrawingVM.Instance.AssembleScript(codeString);
+                this.script = DrawingVM.Instance.AssembleScript(this.name, codeString);
+                this.assembled = true;
                 return this.script;
             }
         }

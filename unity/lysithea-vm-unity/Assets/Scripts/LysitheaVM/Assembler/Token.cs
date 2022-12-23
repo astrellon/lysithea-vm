@@ -1,181 +1,112 @@
 using System.Linq;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
 
 namespace LysitheaVM
 {
-    public interface IToken
+    public enum TokenType
     {
-        CodeLocation Location { get; }
-
-        bool TryGetValue<T>([NotNullWhen(true)] out T? result);
-        IValue GetValue();
-        IValue? GetValueCanBeEmpty();
-        Token Copy(IValue? input);
-        Token ToEmpty();
-        string ToString();
+        Empty, Value, Expression, List, Map
     }
 
-    public class Token : IToken
+    public class Token
     {
         #region Fields
-        public CodeLocation Location { get; private set; }
-        public readonly IValue? Value;
+        private static readonly IReadOnlyList<Token> EmptyList = new Token[0];
+        private static readonly IReadOnlyDictionary<string, Token> EmptyMap = new Dictionary<string, Token>();
+
+        public readonly CodeLocation Location;
+        public readonly TokenType Type;
+
+        public readonly IValue TokenValue;
+        public readonly IReadOnlyList<Token> TokenList;
+        public readonly IReadOnlyDictionary<string, Token> TokenMap;
         #endregion
 
         #region Constructor
-        public Token(CodeLocation location, IValue? value)
+        public Token(CodeLocation location, TokenType type, IValue? value = null, IReadOnlyList<Token>? list = null, IReadOnlyDictionary<string, Token>? map = null)
         {
             this.Location = location;
-            this.Value = value;
+            this.Type = type;
+            this.TokenValue = value ?? NullValue.Value;
+            this.TokenList = list ?? EmptyList;
+            this.TokenMap = map ?? EmptyMap;
         }
         #endregion
 
         #region Methods
-        public bool TryGetValue<T>([NotNullWhen(true)] out T? result)
-        {
-            if (this.Value is T temp)
-            {
-                result = temp;
-                return true;
-            }
-
-            result = default(T);
-            return false;
-        }
-
-        public IValue GetValue()
-        {
-            if (this.Value == null)
-            {
-                throw new System.Exception("Cannot get value of empty token");
-            }
-            return this.Value;
-        }
-
         public IValue? GetValueCanBeEmpty()
         {
-            return this.Value;
-        }
-
-        public Token Copy(IValue? input)
-        {
-            return new Token(this.Location, input);
-        }
-
-        public override string ToString()
-        {
-            if (this.Value != null)
+            if (this.Type == TokenType.Empty)
             {
-                return this.Value.ToString();
+                return null;
             }
-            return "null";
-        }
-
-        public Token ToEmpty()
-        {
-            return new Token(this.Location, null);
-        }
-        #endregion
-    }
-
-    public class TokenList : IToken
-    {
-        #region Fields
-        public CodeLocation Location { get; private set; }
-        public readonly IReadOnlyList<IToken> Data;
-        #endregion
-
-        #region Constructor
-        public TokenList(CodeLocation location, IReadOnlyList<IToken> data)
-        {
-            this.Location = location;
-            this.Data = data;
-        }
-        #endregion
-
-        #region Methods
-        public bool TryGetValue<T>([NotNullWhen(true)] out T? result)
-        {
-            result = default(T);
-            return false;
-        }
-
-        public IValue GetValue()
-        {
-            return new ArrayValue(this.Data.Select(t => t.GetValue()).ToList());
-        }
-
-        public IValue? GetValueCanBeEmpty()
-        {
             return this.GetValue();
         }
 
-        public Token Copy(IValue? input)
-        {
-            return new Token(this.Location, input);
-        }
-
-        public override string ToString()
-        {
-            return "TokenList";
-        }
-
-        public Token ToEmpty()
-        {
-            return new Token(this.Location, null);
-        }
-        #endregion
-    }
-
-    public class TokenMap : IToken
-    {
-        #region Fields
-        public CodeLocation Location { get; private set; }
-        public readonly IReadOnlyDictionary<string, IToken> Data;
-        #endregion
-
-        #region Constructor
-        public TokenMap(CodeLocation location, IReadOnlyDictionary<string, IToken> data)
-        {
-            this.Location = location;
-            this.Data = data;
-        }
-        #endregion
-
-        #region Methods
-        public bool TryGetValue<T>([NotNullWhen(true)] out T? result)
-        {
-            result = default(T);
-            return false;
-        }
-
         public IValue GetValue()
         {
-            return new ObjectValue(this.Data.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GetValue()));
+            if (this.Type == TokenType.Value)
+            {
+                return this.TokenValue;
+            }
+
+            throw new AssemblerException(this, $"Cannot get value of {this.Type} token");
         }
 
-        public IValue? GetValueCanBeEmpty()
+        public Token KeepLocation(IValue? input)
         {
-            return this.GetValue();
-        }
-
-        public Token Copy(IValue? input)
-        {
-            return new Token(this.Location, input);
+            if (input == null)
+            {
+                return this.ToEmpty();
+            }
+            return Token.Value(this.Location, input);
         }
 
         public override string ToString()
         {
-            return "TokenMap";
+            switch (this.Type)
+            {
+                default:
+                case TokenType.Empty: return "<empty>";
+                case TokenType.Value: return this.TokenValue.ToString();
+                case TokenType.List: return "<TokenList>";
+                case TokenType.Map: return "<TokenMap>";
+                case TokenType.Expression: return "<TokenExpression>";
+            }
         }
 
         public Token ToEmpty()
         {
-            return new Token(this.Location, null);
+            return new Token(this.Location, TokenType.Empty);
         }
+
+        public static Token Empty(CodeLocation location)
+        {
+            return new Token(location, TokenType.Empty);
+        }
+
+        public static Token Value(CodeLocation location, IValue value)
+        {
+            return new Token(location, TokenType.Value, value: value);
+        }
+
+        public static Token List(CodeLocation location, IReadOnlyList<Token> list)
+        {
+            return new Token(location, TokenType.List, list: list);
+        }
+
+        public static Token Map(CodeLocation location, IReadOnlyDictionary<string, Token> map)
+        {
+            return new Token(location, TokenType.Map, map: map);
+        }
+
+        public static Token Expression(CodeLocation location, IReadOnlyList<Token> expression)
+        {
+            return new Token(location, TokenType.Expression, list: expression);
+        }
+
         #endregion
     }
 }
