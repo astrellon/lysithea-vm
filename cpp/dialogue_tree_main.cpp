@@ -5,8 +5,7 @@
 
 #include "src/values/values.hpp"
 #include "src/virtual_machine.hpp"
-#include "src/assembler.hpp"
-#include "src/parser.hpp"
+#include "src/assembler/assembler.hpp"
 #include "src/standard_library/standard_array_library.hpp"
 
 using namespace lysithea_vm;
@@ -54,29 +53,29 @@ std::shared_ptr<scope> create_dialogue_scope()
 {
     auto result = std::make_shared<scope>();
 
-    result->define("say", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("say", [](virtual_machine &vm, const array_value &args) -> void
     {
         say(args.get_index(0));
     });
 
-    result->define("getPlayerName", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("getPlayerName", [](virtual_machine &vm, const array_value &args) -> void
     {
         std::string player_name;
         std::cin >> player_name;
-        vm.global_scope->define("playerName", value(player_name));
+        vm.global_scope->try_define("playerName", value(player_name));
     });
 
-    result->define("randomSay", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("randomSay", [](virtual_machine &vm, const array_value &args) -> void
     {
         random_say(*args.get_index<const array_value>(0));
     });
 
-    result->define("isShopEnabled", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("isShopEnabled", [](virtual_machine &vm, const array_value &args) -> void
     {
         vm.push_stack(is_shop_enabled);
     });
 
-    result->define("moveTo", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("moveTo", [](virtual_machine &vm, const array_value &args) -> void
     {
         auto proc = args.get_index(0).get_complex();
         auto label = args.get_index(1);
@@ -85,7 +84,7 @@ std::shared_ptr<scope> create_dialogue_scope()
         vm.jump(label.to_string());
     });
 
-    result->define("choice", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("choice", [](virtual_machine &vm, const array_value &args) -> void
     {
         auto choice_text = args.get_index(0);
         auto choice_jump = args.get_index(1);
@@ -93,7 +92,7 @@ std::shared_ptr<scope> create_dialogue_scope()
         say_choice(choice_text);
     });
 
-    result->define("waitForChoice", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("waitForChoice", [](virtual_machine &vm, const array_value &args) -> void
     {
         if (choice_buffer.size() == 0)
         {
@@ -119,12 +118,12 @@ std::shared_ptr<scope> create_dialogue_scope()
         } while (!choice_valid);
     });
 
-    result->define("openTheShop", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("openTheShop", [](virtual_machine &vm, const array_value &args) -> void
     {
         is_shop_enabled = true;
     });
 
-    result->define("openShop", [](virtual_machine &vm, const array_value &args) -> void
+    result->try_set_constant("openShop", [](virtual_machine &vm, const array_value &args) -> void
     {
         std::cout << "Opening the shop to the player and quitting dialogue\n";
     });
@@ -134,8 +133,10 @@ std::shared_ptr<scope> create_dialogue_scope()
 
 int main()
 {
+    const char *filename = "../../examples/testDialogue.lys";
+
     std::ifstream input_file;
-    input_file.open("../../examples/testDialogue.lys");
+    input_file.open(filename);
     if (!input_file)
     {
         std::cout << "Could not find file to open!\n";
@@ -144,12 +145,11 @@ int main()
 
     auto custom_scope = create_dialogue_scope();
 
-    auto parsed = lysithea_vm::parser::read_from_stream(input_file);
     lysithea_vm::assembler assembler;
     assembler.builtin_scope.combine_scope(*custom_scope);
     assembler.builtin_scope.combine_scope(*standard_array_library::library_scope);
 
-    auto script = assembler.parse_from_value(parsed);
+    auto script = assembler.parse_from_stream(filename, input_file);
 
     lysithea_vm::virtual_machine vm(16);
     vm.execute(script);

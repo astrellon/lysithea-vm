@@ -19,6 +19,7 @@ namespace lysithea_vm
             string_value(const char *data) : data(data) { }
 
             // Methods
+            virtual bool is_string() const { return true; }
             virtual int compare_to(const complex_value *input) const
             {
                 auto other = dynamic_cast<const string_value *>(input);

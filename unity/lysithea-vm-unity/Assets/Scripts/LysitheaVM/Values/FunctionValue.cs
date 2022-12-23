@@ -40,7 +40,7 @@ namespace LysitheaVM
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace)
         {
-            vm.ExecuteFunction(this.Value, args, pushToStackTrace);
+            vm.SwitchToFunction(this.Value, args, pushToStackTrace);
         }
         #endregion
     }

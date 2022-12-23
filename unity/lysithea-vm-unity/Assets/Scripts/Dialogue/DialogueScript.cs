@@ -19,7 +19,7 @@ namespace LysitheaVM.Unity
                 }
 
                 var codeString = this.CodeText.text;
-                this.script = DialogueVM.Instance.AssembleScript(codeString);
+                this.script = DialogueVM.Instance.AssembleScript(this.name, codeString);
                 return this.script;
             }
         }

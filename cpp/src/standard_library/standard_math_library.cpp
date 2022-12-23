@@ -150,6 +150,8 @@ namespace lysithea_vm
             vm.push_stack(total);
         });
 
+        result->try_set_constant("math", value(functions));
+
         return result;
     }
 } // lysithea_vm

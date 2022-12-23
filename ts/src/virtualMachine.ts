@@ -1,3 +1,4 @@
+import { VirtualMachineError } from "./errors/errors";
 import { Scope, IReadOnlyScope } from "./scope";
 import { Script } from "./script";
 import { sublist } from "./standardLibrary/standardArrayLibrary";
@@ -44,6 +45,24 @@ export interface ScopeFrame
     readonly lineNumber: number;
     readonly function: VMFunction;
     readonly scope: Scope;
+}
+
+export interface CodeLocation
+{
+    readonly startLineNumber: number;
+    readonly startColumnNumber: number;
+    readonly endLineNumber: number;
+    readonly endColumnNumber: number;
+}
+export const EmptyCodeLocation: CodeLocation = {
+    startLineNumber: 0,
+    startColumnNumber: 0,
+    endLineNumber: 0,
+    endColumnNumber: 0
+}
+export function toStringCodeLocation(input: CodeLocation)
+{
+    return `${input.startLineNumber}:${input.startColumnNumber} -> ${input.endLineNumber}:${input.endColumnNumber}}`;
 }
 
 export class VirtualMachine
@@ -203,14 +222,14 @@ export class VirtualMachine
                 {
                     const key = codeLine.value ?? this.popStack();
                     const value = this.popStack();
-                    this._currentScope.define(key.toString(), value);
+                    this._currentScope.tryDefine(key.toString(), value);
                     break;
                 }
             case 'set':
                 {
                     const key = codeLine.value ?? this.popStack();
                     const value = this.popStack();
-                    if (!this._currentScope.set(key.toString(), value))
+                    if (!this._currentScope.trySet(key.toString(), value))
                     {
                         throw new Error(`${this.getScopeLine()}: Unable to set variable that has not been defined: ${key.toString()} = ${value.toString()}`);
                     }
@@ -336,7 +355,7 @@ export class VirtualMachine
                     {
                         throw new Error(`${this.getScopeLine()}: Inc operator could not find variable: ${key}`);
                     }
-                    this._currentScope.set(key, new NumberValue(num + 1));
+                    this._currentScope.trySet(key, new NumberValue(num + 1));
                     break;
                 }
             case '--':
@@ -352,7 +371,7 @@ export class VirtualMachine
                     {
                         throw new Error(`${this.getScopeLine()}: Dec operator could not find variable: ${key}`);
                     }
-                    this._currentScope.set(key, new NumberValue(num - 1));
+                    this._currentScope.trySet(key, new NumberValue(num - 1));
                     break;
                 }
 
@@ -541,11 +560,11 @@ export class VirtualMachine
             if (argName.startsWith('...'))
             {
                 args = sublist(args, i, -1);
-                this._currentScope.define(argName.substring(3), args);
+                this._currentScope.tryDefine(argName.substring(3), args);
                 i++;
                 break;
             }
-            this._currentScope.define(argName, args.value[i]);
+            this._currentScope.tryDefine(argName, args.value[i]);
         }
 
         if (i < func.parameters.length)
@@ -553,7 +572,7 @@ export class VirtualMachine
             const argName = func.parameters[i];
             if (argName.startsWith('...'))
             {
-                this._currentScope.define(argName.substring(3), ArrayValue.Empty);
+                this._currentScope.tryDefine(argName.substring(3), ArrayValue.Empty);
             }
             else
             {

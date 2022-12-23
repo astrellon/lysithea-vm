@@ -90,7 +90,7 @@ namespace lysithea_vm
             vm.push_stack(sublist(top->data, index, length));
         });
 
-        result->define("array", value(functions));
+        result->try_set_constant("array", value(functions));
 
         return result;
     }

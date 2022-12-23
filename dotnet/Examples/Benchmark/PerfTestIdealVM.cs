@@ -32,7 +32,7 @@ namespace LysitheaVM
                 new CodeLine(Operator.Return, null)
             };
 
-            var stepFunc = new Function(stepFuncCode, Function.EmptyParameters, Function.EmptyLabels, "step");
+            var stepFunc = new Function(stepFuncCode, Function.EmptyParameters, Function.EmptyLabels, "step", DebugSymbols.Empty);
             var stepFuncValue = new FunctionValue(stepFunc);
 
             var mainFuncCode = new List<CodeLine>
@@ -67,7 +67,7 @@ namespace LysitheaVM
                 { ":StartLoop", 4 },
                 { ":EndLoop", 13 },
             };
-            var mainFunc = new Function(mainFuncCode, Function.EmptyParameters, mainLabels, "main");
+            var mainFunc = new Function(mainFuncCode, Function.EmptyParameters, mainLabels, "main", DebugSymbols.Empty);
             var mainFuncValue = new FunctionValue(mainFunc);
 
             var globalFuncCode = new List<CodeLine>
@@ -78,7 +78,7 @@ namespace LysitheaVM
                 new CodeLine(Operator.Define, new StringValue("step")),
                 new CodeLine(Operator.CallDirect, new ArrayValue(new IValue[] { mainFuncValue, zeroNum}))
             };
-            var globalFunc = new Function(globalFuncCode, Function.EmptyParameters, Function.EmptyLabels, "global");
+            var globalFunc = new Function(globalFuncCode, Function.EmptyParameters, Function.EmptyLabels, "global", DebugSymbols.Empty);
 
             return new Script(Scope.Empty, globalFunc);
         }

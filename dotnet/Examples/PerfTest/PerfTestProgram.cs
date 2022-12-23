@@ -12,7 +12,7 @@ namespace LysitheaVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             assembler.BuiltinScope.CombineScope(PerfTestScope);
             var script = assembler.ParseFromFile("../../../examples/perfTest.lys");
 
@@ -45,12 +45,12 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.Define("rand", (vm, args) =>
+            result.TrySetConstant("rand", (vm, args) =>
             {
                 vm.PushStack(Rand.NextDouble());
             });
 
-            result.Define("print", (vm, args) =>
+            result.TrySetConstant("print", (vm, args) =>
             {
                 Console.WriteLine(string.Join("", args.Value));
             });

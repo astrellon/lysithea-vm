@@ -11,16 +11,17 @@ namespace LysitheaVM
     {
         #region Fields
         private const string PathOffset = "../../../../../../../";
-        private static string CodeText = File.ReadAllText(Path.Combine(PathOffset, "testStandardLibraryNoAssert.lys"));
-        private static readonly VirtualMachineAssembler Assembler = CreateAssembler();
-        private static readonly Script Code = Assembler.ParseFromText(CodeText);
+        private const string FileName = "testStandardLibraryNoAssert.lys";
+        private static string CodeText = File.ReadAllText(Path.Combine(PathOffset, FileName));
+        private static readonly Assembler Assembler = CreateAssembler();
+        private static readonly Script Code = Assembler.ParseFromText(FileName, CodeText);
         private static readonly VirtualMachine SharedVM = new VirtualMachine(8);
         #endregion
 
         #region Methods
-        private static VirtualMachineAssembler CreateAssembler()
+        private static Assembler CreateAssembler()
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             return assembler;
         }
@@ -35,7 +36,7 @@ namespace LysitheaVM
         [Benchmark]
         public void TestStdLibCreateCode()
         {
-            var code = Assembler.ParseFromText(CodeText);
+            var code = Assembler.ParseFromText(FileName, CodeText);
             var vm = new VirtualMachine(8);
             vm.Execute(code);
         }

@@ -17,15 +17,13 @@ namespace LysitheaVM
                 return;
             }
 
-            // Console.WriteLine(DebugScopeLine(this.CurrentCode, this.lineCounter));
-            // Console.WriteLine($"- Stack size: {this.stack.StackSize}");
             var codeLine = this.CurrentCode.Code[this.lineCounter++];
 
             switch (codeLine.Operator)
             {
                 default:
                     {
-                        throw new UnknownOperatorException(this.CreateStackTrace(), $"Unknown operator: {codeLine.Operator}");
+                        throw new VirtualMachineException(this.CreateStackTrace(), $"Unknown operator: {codeLine.Operator}");
                     }
                 case Operator.Push:
                     {
@@ -45,7 +43,7 @@ namespace LysitheaVM
                         var top = codeLine.Input ?? this.PopStack();
                         if (!(top is IArrayValue arrayValue))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to convert argument value onto stack: {top.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to convert argument value onto stack: {top.ToString()}");
                         }
 
                         this.PushStack(new ArgumentsValue(arrayValue.ArrayValues));
@@ -56,7 +54,7 @@ namespace LysitheaVM
                         var key = codeLine.Input ?? this.PopStack();
                         if (!(key is StringValue))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable, input needs to be a string: {key.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to get variable, input needs to be a string: {key.ToString()}");
                         }
 
                         var keyString = key.ToString();
@@ -67,7 +65,7 @@ namespace LysitheaVM
                         }
                         else
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get variable: {key.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to get variable: {key.ToString()}");
                         }
                         break;
                     }
@@ -76,7 +74,7 @@ namespace LysitheaVM
                         var key = codeLine.Input ?? this.PopStack();
                         if (!(key is ArrayValue arrayInput))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {key.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to get property, input needs to be an array: {key.ToString()}");
                         }
 
                         var top = this.PopStack();
@@ -86,7 +84,7 @@ namespace LysitheaVM
                         }
                         else
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to get property: {key.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to get property: {key.ToString()}");
                         }
                         break;
                     }
@@ -94,7 +92,10 @@ namespace LysitheaVM
                     {
                         var key = codeLine.Input ?? this.PopStack();
                         var value = this.PopStack();
-                        this.CurrentScope.Define(key.ToString(), value);
+                        if (!this.CurrentScope.TryDefine(key.ToString(), value))
+                        {
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to define {key}, value is defined as constant");
+                        }
                         break;
                     }
                 case Operator.Set:
@@ -103,7 +104,7 @@ namespace LysitheaVM
                         var value = this.PopStack();
                         if (!this.CurrentScope.TrySet(key.ToString(), value))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Unable to set variable that has not been defined: {key.ToString()} = {value.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to set variable that has not been defined or is constant: {key.ToString()} = {value.ToString()}");
                         }
                         break;
                     }
@@ -143,7 +144,7 @@ namespace LysitheaVM
                     {
                         if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a num args code line input");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Call needs a num args code line input");
                         }
 
                         var top = this.PopStack();
@@ -153,7 +154,7 @@ namespace LysitheaVM
                         }
                         else
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Call needs a function to run: {top.ToString()}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Call needs a function to run: {top.ToString()}");
                         }
                         break;
                     }
@@ -162,7 +163,7 @@ namespace LysitheaVM
                         if (codeLine.Input == null || !(codeLine.Input is ArrayValue arrayInput) ||
                            !(arrayInput[0] is IFunctionValue procTop) || !(arrayInput[1] is NumberValue numArgs))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Call direct needs an array of the function and num args code line input");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Call direct needs an array of the function and num args code line input");
                         }
 
                         this.CallFunction(procTop, numArgs.IntValue, true);
@@ -174,7 +175,7 @@ namespace LysitheaVM
                     {
                         if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"StringConcat operator needs the number of args to concat");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"StringConcat operator needs the number of args to concat");
                         }
 
                         var args = this.GetArgs(numArgs.IntValue);
@@ -216,13 +217,13 @@ namespace LysitheaVM
                     {
                         if (codeLine.Input == null)
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Inc operator needs code line variable");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Inc operator needs code line variable");
                         }
 
                         var key = codeLine.Input.ToString();
                         if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Inc operator could not find variable: {key}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Inc operator could not find variable: {key}");
                         }
                         this.CurrentScope.TrySet(key, new NumberValue((foundValue).Value + 1));
                         break;
@@ -231,13 +232,13 @@ namespace LysitheaVM
                     {
                         if (codeLine.Input == null)
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Dec operator needs code line variable");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Dec operator needs code line variable");
                         }
 
                         var key = codeLine.Input.ToString();
                         if (!this.CurrentScope.TryGetKey<NumberValue>(key, out var foundValue))
                         {
-                            throw new OperatorException(this.CreateStackTrace(), $"Dec operator could not find variable: {key}");
+                            throw new VirtualMachineException(this.CreateStackTrace(), $"Dec operator could not find variable: {key}");
                         }
                         this.CurrentScope.TrySet(key, new NumberValue((foundValue).Value - 1));
                         break;

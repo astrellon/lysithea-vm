@@ -1,7 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <unordered_map>
 #include <string>
 #include <memory>
 #include <stdexcept>
@@ -248,5 +247,8 @@ namespace lysithea_vm
 
                 throw std::runtime_error("Unable to get boolean argument");
             }
+
+            std::vector<std::string> create_stack_trace();
+            static std::string debug_scope_line(const function &func, int line);
     };
 } // lysithea_vm

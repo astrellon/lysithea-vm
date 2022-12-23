@@ -17,11 +17,11 @@ namespace LysitheaVM
         #region Methods
         public static void Main(string[] args)
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             assembler.BuiltinScope.CombineScope(CustomScope);
             assembler.BuiltinScope.CombineScope(StandardArrayLibrary.Scope);
 
-            var script = assembler.ParseFromText(File.ReadAllText("../../../examples/testDialogue.lys"));
+            var script = assembler.ParseFromFile("../../../examples/testDialogue.lys");
 
             var vm = new VirtualMachine(8);
 
@@ -42,28 +42,28 @@ namespace LysitheaVM
         {
             var result = new Scope();
 
-            result.Define("say", (vm, args) =>
+            result.TrySetConstant("say", (vm, args) =>
             {
                 Say(args.GetIndex(0));
             });
 
-            result.Define("getPlayerName", (vm, args) =>
+            result.TrySetConstant("getPlayerName", (vm, args) =>
             {
                 var name = Console.ReadLine()?.Trim() ?? "<Empty>";
-                vm.GlobalScope.Define("playerName", new StringValue(name));
+                vm.GlobalScope.TryDefine("playerName", new StringValue(name));
             });
 
-            result.Define("randomSay", (vm, args) =>
+            result.TrySetConstant("randomSay", (vm, args) =>
             {
                 RandomSay(args.GetIndex<ArrayValue>(0));
             });
 
-            result.Define("isShopEnabled", (vm, args) =>
+            result.TrySetConstant("isShopEnabled", (vm, args) =>
             {
                 vm.PushStack(IsShopEnabled);
             });
 
-            result.Define("moveTo", (vm, args) =>
+            result.TrySetConstant("moveTo", (vm, args) =>
             {
                 var proc = args.GetIndex<FunctionValue>(0);
                 var label = args.GetIndex(1);
@@ -72,7 +72,7 @@ namespace LysitheaVM
                 vm.Jump(label.ToString());
             });
 
-            result.Define("choice", (vm, args) =>
+            result.TrySetConstant("choice", (vm, args) =>
             {
                 var choiceText = args.GetIndex(0);
                 var choiceJumpLabel = args.GetIndex(1);
@@ -87,7 +87,7 @@ namespace LysitheaVM
                 SayChoice(choiceText);
             });
 
-            result.Define("waitForChoice", (vm, args) =>
+            result.TrySetConstant("waitForChoice", (vm, args) =>
             {
                 if (!ChoiceBuffer.Any())
                 {
@@ -118,12 +118,12 @@ namespace LysitheaVM
                 } while (!choiceValid);
             });
 
-            result.Define("openTheShop", (vm, args) =>
+            result.TrySetConstant("openTheShop", (vm, args) =>
             {
                 IsShopEnabled = true;
             });
 
-            result.Define("openShop", (vm, args) =>
+            result.TrySetConstant("openShop", (vm, args) =>
             {
                 Console.WriteLine("Opening the shop to the player and quitting dialogue");
             });

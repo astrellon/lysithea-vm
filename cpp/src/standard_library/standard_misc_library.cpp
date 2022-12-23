@@ -17,13 +17,13 @@ namespace lysithea_vm
     {
         auto result = std::make_shared<scope>();
 
-        result->define("typeof", [](virtual_machine &vm, const array_value &args) -> void
+        result->try_set_constant("typeof", [](virtual_machine &vm, const array_value &args) -> void
         {
             auto top = args.data[0];
             vm.push_stack(top.type_name());
         });
 
-        result->define("isDefined", [](virtual_machine &vm, const array_value &args) -> void
+        result->try_set_constant("isDefined", [](virtual_machine &vm, const array_value &args) -> void
         {
             auto top = args.data[0].to_string();
             value temp;
@@ -31,20 +31,20 @@ namespace lysithea_vm
             vm.push_stack(is_defined);
         });
 
-        result->define("toString", [](virtual_machine &vm, const array_value &args) -> void
+        result->try_set_constant("toString", [](virtual_machine &vm, const array_value &args) -> void
         {
             auto top = args.data[0];
             vm.push_stack(top.to_string());
         });
 
-        result->define("compareTo", [](virtual_machine &vm, const array_value &args) -> void
+        result->try_set_constant("compareTo", [](virtual_machine &vm, const array_value &args) -> void
         {
             auto left = args.data[0];
             auto right = args.data[1];
             vm.push_stack(left.compare_to(right));
         });
 
-        result->define("print", [](virtual_machine &vm, const array_value &args) -> void
+        result->try_set_constant("print", [](virtual_machine &vm, const array_value &args) -> void
         {
             for (auto iter : args.data)
             {

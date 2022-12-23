@@ -1,5 +1,5 @@
 (define drawRandomElement (function ()
-    (define type (random.pick ("Box" "Sphere" "Capsule")))
+    (define type (random.pick ["Box" "Sphere" "Capsule"]))
     (define position (randomVector
         {"x" -20 "y" 2 "z" -20}
         {"x" 20  "y" 14 "z" 20}

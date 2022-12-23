@@ -54,7 +54,23 @@ namespace LysitheaVM.Unity
 
                     // Debug.Log(string.Join('\n', this.VM.PrintStackDebug()));
 
-                    this.VM.Step();
+                    try
+                    {
+                        this.VM.Step();
+                    }
+                    catch (VirtualMachineException exp)
+                    {
+                        this.Running = false;
+                        var stackTrace = string.Join("\n -", exp.VirtualMachineStackTrace);
+                        Debug.LogError("VM Runner Error: " + exp.Message + "\n- " + stackTrace);
+                        return;
+                    }
+                    catch (Exception exp)
+                    {
+                        this.Running = false;
+                        Debug.LogError("Unknown VM Runner Error: " + exp.Message);
+                        return;
+                    }
                     count++;
 
                     if (this.MaxStepsPerFrame > 0 && count > this.MaxStepsPerFrame)

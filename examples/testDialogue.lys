@@ -1,4 +1,5 @@
 (define playerName "Unset")
+
 (function main ()
     (say "Here is the test dialogue tree")
     (say "What is your name?")
@@ -12,13 +13,14 @@
             (randomSay (array.join ($ "Welcome to my shop " playerName) ($ "Come on in! What can I do for you " playerName "?")))
             (choice "Open Shop" openShop)
         )
-        (randomSay ("Welcome stranger" "Hey, come on in"))
+        (randomSay ["Welcome stranger" "Hey, come on in"])
     )
 
     (choice "Questions" questions)
     (choice "Good bye" goodBye)
     (waitForChoice)
 )
+
 
 (function questions ()
     (:start)

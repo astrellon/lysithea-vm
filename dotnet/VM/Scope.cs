@@ -8,8 +8,11 @@ namespace LysitheaVM
     public interface IReadOnlyScope
     {
         bool TryGetKey(string key, out IValue value);
+        bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue;
+        bool IsConstant(string key);
 
         IReadOnlyDictionary<string, IValue> Values { get; }
+        IReadOnlyCollection<string> Constants { get; }
     }
 
     public class Scope : IReadOnlyScope
@@ -17,9 +20,12 @@ namespace LysitheaVM
         #region Fields
         public static readonly IReadOnlyScope Empty = new Scope();
         private static readonly IReadOnlyDictionary<string, IValue> EmptyScopeValues = new Dictionary<string, IValue>();
+        private static readonly IReadOnlyCollection<string> EmptyConstants = new string[0];
 
         private Dictionary<string, IValue>? values = null;
+        private HashSet<string>? constants = null;
         public IReadOnlyDictionary<string, IValue> Values => this.values ?? EmptyScopeValues;
+        public IReadOnlyCollection<string> Constants => this.constants ?? EmptyConstants;
 
         public Scope? Parent;
         #endregion
@@ -38,36 +44,78 @@ namespace LysitheaVM
             {
                 this.values.Clear();
             }
+
+            if (this.constants != null)
+            {
+                this.constants.Clear();
+            }
         }
 
         public void CombineScope(IReadOnlyScope input)
         {
             foreach (var kvp in input.Values)
             {
-                this.Define(kvp.Key, kvp.Value);
+                this.TryDefine(kvp.Key, kvp.Value);
+            }
+
+            if (input.Constants.Count > 0 && this.constants == null)
+            {
+                this.constants = new HashSet<string>();
+            }
+
+            foreach (var item in input.Constants)
+            {
+                this.SetConstant(item);
             }
         }
 
-        public void Define(string key, IValue value)
+        public bool TrySetConstant(string key, IValue value)
         {
+            if (this.values != null && this.values.ContainsKey(key))
+            {
+                return false;
+            }
+
+            this.TryDefine(key, value);
+            this.SetConstant(key);
+            return true;
+        }
+
+        public bool TrySetConstant(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
+        {
+            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
+            return this.TrySetConstant(key, value);
+        }
+
+        public bool TryDefine(string key, IValue value)
+        {
+            if (this.IsConstant(key))
+            {
+                return false;
+            }
+
             if (this.values == null)
             {
                 this.values = new Dictionary<string, IValue>();
             }
             this.values[key] = value;
+
+            return true;
         }
 
-        public void Define(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
+        public bool TryDefine(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
         {
-            if (this.values == null)
-            {
-                this.values = new Dictionary<string, IValue>();
-            }
-            this.values[key] = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
+            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
+            return this.TryDefine(key, value);
         }
 
         public bool TrySet(string key, IValue value)
         {
+            if (this.IsConstant(key))
+            {
+                return false;
+            }
+
             if (this.values != null && this.values.ContainsKey(key))
             {
                 this.values[key] = value;
@@ -112,6 +160,25 @@ namespace LysitheaVM
 
             value = default(T);
             return false;
+        }
+
+        public void SetConstant(string key)
+        {
+            if (this.constants == null)
+            {
+                this.constants = new HashSet<string>();
+            }
+
+            this.constants.Add(key);
+        }
+
+        public bool IsConstant(string key)
+        {
+            if (this.constants == null)
+            {
+                return false;
+            }
+            return this.constants.Contains(key);
         }
         #endregion
     }

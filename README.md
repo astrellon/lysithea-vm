@@ -8,8 +8,8 @@ A list of the builtin types:
 - **Strings**: Based off the standard string type from the host programming language.
 - **Boolean**: true/false
 - **Number**: 64 bit double.
-- **Object/Dictionary/Map**: Key value pair with string keys and the value being another value.
-- **List/Array**: A list of values.
+- **Map**: Key value pair with string keys and the value being another value.
+- **List**: A list of values.
 - **Function**: A collection of code put into a value, it also contains the labels for jumps and input parameters.
 - **BuiltinFunction**: A reference to a builtin function that can be passed around like a value.
 
@@ -51,7 +51,7 @@ private static Scope CreateScope()
 {
     var result = new Scope();
 
-    result.Define("print", (vm, args) =>
+    result.TryDefine("print", (vm, args) =>
     {
         Console.WriteLine(string.Join("", args.Value));
     });
@@ -68,7 +68,7 @@ Result: 17
 
 ## Labels
 
-Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `print` function.
+Labels are used to let you jump around the code, optionally based on some condition. This example assume that some of the standard library is included for the `print` function and that there's some sort of custom `done` function.
 
 ```lisp
 (function main()
@@ -117,7 +117,106 @@ Internally the assembler sees only the last argument as the code line argument e
 
 The internals of the virtual machine is fairly simple and broken into general purpose operators, math operators, comparison operators, boolean operators and one bonus string concatenation operators.
 
-## General Purpose Operators
+## Types
+The number of builtin types is fairly limited and extended the number of supported types is done through the host platform and not from within the script itself.
+
+**Note:** All the systems are built with the mindset that they are immutable or at the very least will always be safe to pass around. Which means strings, lists and maps are all immutable.
+
+Any new type doesn't have to be immutable, but it should be safe that numerous different places could be interacting with it at the same time, like a manager class that already expects different places to talk to it.
+
+### Number
+Numbers are all stored internally as a 64bit double, and by default does not have any bitwise operators or support as it's not intended for that sort of low level number manipulation. These make use of the platforms native `double` type generally and so any quirks of that platform will be present.
+
+```lisp
+(define age 33)
+(define distanceToShops 1.54)
+(print "Person is " age " years old and is " distanceToShops "km away from shops")
+; Outputs Person is 33 years old and is 1.54km away from shops
+```
+
+### Boolean
+Booleans are just `true` or `false`. These are also used with `loop` and `if` statements.
+
+```lisp
+(define isRunning true)
+(define counter 0)
+(loop (isRunning)
+    (++ counter)
+    (set isRunning (< counter 10))
+)
+(print "Counter is at: " counter) ; Outputs Counter is at: 10
+```
+
+### Strings
+Strings are just an array of characters. This type will be built on top of the default string data structure from the host platform.
+Strings are created using either a pair of double quotes or a pair of single quotes. They also support multiline input without needing escaped characters.
+
+```lisp
+(define name "Alan")
+(print "Name is " name " and the name length is " name.length " bytes long") ; Outputs Name is Alan and the name length is 4 bytes long.
+```
+
+A multiline string
+```lisp
+(define introText "Welcome to the program, choose an option:
+- 1: Option 1
+- 2: Option 2")
+
+(print introText) ; Outputs
+; Welcome to the program, choose an option:
+; - 1: Option 1
+; - 2: Option 2
+```
+
+### Lists
+A list is as defined in the code is considered to be a literal, and as such is immutable. They are created using a pair of square brackets.
+
+```lisp
+(define list ["Hello" "there" "how" "are" "you?"])
+(print list) ; Outputs [Hello there how are you?]
+```
+
+They can contain any constant value.
+```lisp
+(const name "Alan")
+(function callback()
+    (print "From callback")
+)
+
+(define list ["Person" name callback])
+(print list) ; Output [Person Alan function:callback]
+```
+
+### Maps
+A map is a string key to any type value pair dictionary. They are created using pairs of keys and values within a pair of curly brackets.
+
+```lisp
+(define map {
+    name "Alan"
+    age 33
+})
+(print map) ; Outputs {"name" Alan "age" 33}
+```
+
+The value can be any constant value.
+```lisp
+(const personName "Alan")
+(const personAge 33)
+(function debugPrint ()
+    (print "Debug print")
+)
+
+(define map {
+    name personName
+    age personAge
+    callback debugPrint
+})
+
+(print map)
+; Outputs {"name" Alan "age" 33 "callback" function:debugPrint}
+```
+
+## Internal Operators
 
 **Note:** Internal operators that the virtual machine uses, these are used by the *internals* of the virtual machine and are not the actual code that is written by a user.
 
@@ -183,7 +282,7 @@ This is used in situations where we need to distinguish between arrays and argum
 
  For example:
  ```lisp
- (define list (5 10))
+ (define list [5 10])
  (define x (+ ...list)) ; This will throw an error because the add operator expects two number inputs.
  (print x)
  ```
@@ -191,7 +290,7 @@ This is used in situations where we need to distinguish between arrays and argum
 For reference this is a working example above, making use of a regular `math.sum` function call instead of using a the `+` operator:
 
 ```lisp
-(define list (5 10))
+(define list [5 10])
 (define x (math.sum ...list))
 (print x) ; Outputs 15
 ```
@@ -332,7 +431,7 @@ But for custom types there's nothing stopping you from having something that let
 
 ```lisp
 (define myVec (newVector 1 2 3))
-(define myArr (1 2 3))
+(define myArr [1 2 3])
 (print (== myVec myArr)) ; Uses custom comparison from myVec, outputs 0
 (print (== myArr myVec)) ; Uses the builtin array comparison, outputs 1
 ```
@@ -477,7 +576,7 @@ Concatenates all inputs input a single string value and pushes that onto the sta
 
 **Note:** Unlike the other operators string concatenation does support unpacking:
 ```lisp
-(define list (1 2 3 4))
+(define list [1 2 3 4])
 (print ($ "Joined list " ...list))
 ; Outputs Joined list 1234
 ```
@@ -715,6 +814,63 @@ Error example:
 
 Setting multiple variables follows the same logic as defining multiple variables.
 
+### `(const varName value)`
+This works slightly different from `define` and `set` in that only one constant can be set since the `value` must be a compile time constant, and right now there is no execution of code during the compile phase.
+
+```lisp
+(const name "Alan")
+(const age 33)
+
+(function main()
+    (define list ["Person" name age])
+    (print "List: " list) ; Outputs ["Person" "Alan" 33]
+)
+
+(main)
+```
+
+As constants are handled at compile time they effectively act like replacements. At the global level those values will exist within the global scope for retrieval outside of the script, however within a function the constants will **not** exist in the function scope because they would have to exist already and so are not kept around.
+
+For example if you try to use `isDefined` to check if a value exists in the current scope, a constant will be false.
+
+```lisp
+(const name "Alan")
+(define age 33)
+
+(print "Name " name ", is defined:  " (isDefined name))
+; Outputs Name Alan, is defined: false
+
+(print "Age " age ", is defined:  " (isDefined age))
+; Outputs Age 33, is defined: true
+```
+
+However as constants are a compile time aspect, global ones do get stored in the `BuiltinScope` of a `Script` which means that they can still be accessed from outside of the script.
+
+This will create a constant called `testFunc`.
+```lisp
+(function testFunc ()
+    (print "Called from test func!")
+)
+```
+
+And you can access that value from the scripts builtin scope.
+```cs
+if (script.BuiltinScope.TryGetKey<IFunctionValue>("testFunc", out var func))
+{
+    Console.WriteLine("Calling test function");
+
+    // Calling the function puts the function code next to execute.
+    vm.CallFunction(func, 0, false);
+
+    // Execute the code until a halt.
+    vm.Execute();
+}
+else
+{
+    Console.WriteLine("Failed to find testFunc to call");
+}
+```
+
 ### `(if (conditionalCode) (whenTrueCode) (whenFalseCode?))`
 The conditional code is executed first and if result in a `true` value then the `whenTrueCode` is executed. If another block is provided then that will be executed if the value is not true.
 
@@ -782,6 +938,8 @@ The parameter list itself is parsed only as a list of strings.
 The `name` is optional and if it's left out the function will be anonymous.
 Additionally if the name is present and the function is not being used a value in a function call, the function will also be defined.
 
+By default a function is created as a `const`.
+
 ```lisp
 (function clamp(input lower upper)
     (if (< input lower)
@@ -830,7 +988,7 @@ Unpack arguments example:
 
 ; Outputs
 [Info]: Minimum Number: 1
-[Info]: Minimum Number: 20
+[Info]: Minimum Number: 10
 [Info]: Minimum Lexical: ABC
 [Info]: Minimum Empty: null
 ```

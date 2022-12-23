@@ -7,22 +7,43 @@ export interface ScopeData
     [key: string]: IValue;
 }
 
+interface ConstantMap
+{
+    [key: string]: boolean;
+}
+
 export interface IReadOnlyScope
 {
     readonly get: (key: string) => IValue | undefined;
+    readonly isConstant: (key: string) => boolean;
+
+    get parent(): Scope | undefined;
     get values(): Readonly<ScopeData>;
+    get constants(): Readonly<ConstantMap>;
 }
 
 export class Scope implements IReadOnlyScope
 {
     public static readonly Empty: IReadOnlyScope = new Scope(undefined);
+    private static readonly EmptyConstants: Readonly<ConstantMap> = {};
 
     private readonly _values: ScopeData = {};
     private readonly _parent: Scope | undefined;
+    private _constants: ConstantMap | undefined;
 
     public get values(): Readonly<ScopeData>
     {
         return this._values;
+    }
+
+    public get constants(): Readonly<ConstantMap>
+    {
+        return this._constants ?? Scope.EmptyConstants;
+    }
+
+    public get parent(): Scope | undefined
+    {
+        return this._parent;
     }
 
     constructor(parent: Scope | undefined = undefined)
@@ -34,22 +55,50 @@ export class Scope implements IReadOnlyScope
     {
         for (const prop in input.values)
         {
-            this.define(prop, input.values[prop]);
+            this.tryDefine(prop, input.values[prop]);
+        }
+
+        for (const prop in input.constants)
+        {
+            this.setConstant(prop);
         }
     }
 
-    public define(key: string, value: IValue)
+    public trySetConstant(key: string, value: IValue)
     {
+        if (this._values[key] != null)
+        {
+            return false;
+        }
+
+        this.tryDefine(key, value);
+        this.setConstant(key);
+        return true;
+    }
+
+    public trySetConstantFunc(key: string, value: BuiltinFunctionCallback, name: string | null = null)
+    {
+        return this.trySetConstant(key, new BuiltinFunctionValue(value, name ?? key));
+    }
+
+    public tryDefine(key: string, value: IValue)
+    {
+        if (this.isConstant(key))
+        {
+            return false;
+        }
+
         this._values[key] = value;
+        return true;
     }
 
-    public defineFunc(key: string, value: BuiltinFunctionCallback, name: string | null = null)
+    public trySet(key: string, value: IValue): boolean
     {
-        this._values[key] = new BuiltinFunctionValue(value, name ?? key);
-    }
+        if (this.isConstant(key))
+        {
+            return false;
+        }
 
-    public set(key: string, value: IValue): boolean
-    {
         if (this._values.hasOwnProperty(key))
         {
             this._values[key] = value;
@@ -58,7 +107,7 @@ export class Scope implements IReadOnlyScope
 
         if (this._parent)
         {
-            return this._parent.set(key, value);
+            return this._parent.trySet(key, value);
         }
 
         return false;
@@ -89,5 +138,20 @@ export class Scope implements IReadOnlyScope
         }
 
         return undefined;
+    }
+
+    public setConstant(key: string)
+    {
+        if (this._constants === undefined)
+        {
+            this._constants = {};
+        }
+
+        this._constants[key] = true;
+    }
+
+    public isConstant(key: string): boolean
+    {
+        return !!this._constants && this._constants[key] === true;
     }
 }

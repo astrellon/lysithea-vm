@@ -15,6 +15,8 @@ file(GLOB FILE_SRC
     "src/*.cpp"
     "src/values/*.hpp"
     "src/values/*.cpp"
+    "src/assembler/*.hpp"
+    "src/assembler/*.cpp"
     "src/standard_library/*.hpp"
     "src/standard_library/*.cpp"
 )

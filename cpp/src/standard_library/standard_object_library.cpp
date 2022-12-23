@@ -12,6 +12,10 @@ namespace lysithea_vm
         auto result = std::make_shared<scope>();
 
         auto functions = std::make_shared<object_value>();
+        functions->data["join"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
+        {
+            vm.push_stack(join(args));
+        });
         functions->data["set"] = value::make_builtin([](virtual_machine &vm, const array_value &args) -> void
         {
             auto obj = args.get_index<const object_value>(0);
@@ -53,9 +57,44 @@ namespace lysithea_vm
             vm.push_stack(removeValues(obj, values));
         });
 
-        result->define("object", value(functions));
+        result->try_set_constant("object", value(functions));
 
         return result;
+    }
+
+    value standard_object_library::join(const array_value &args)
+    {
+        object_map obj;
+
+        for (auto iter = args.data.cbegin(); iter != args.data.cend(); ++iter)
+        {
+            if (iter->is_string())
+            {
+                auto key = iter->to_string();
+                ++iter;
+                obj.emplace(key, *iter);
+            }
+            else if (iter->is_object())
+            {
+                auto complex = iter->get_complex();
+                for (auto key : complex->object_keys())
+                {
+                    value obj_value;
+                    if (complex->try_get(key, obj_value))
+                    {
+                        obj.emplace(key, obj_value);
+                    }
+                }
+            }
+            else
+            {
+                auto key = iter->to_string();
+                ++iter;
+                obj.emplace(key, *iter);
+            }
+        }
+
+        return object_value::make_value(obj);
     }
 
     value standard_object_library::set(const object_map &target, const std::string &key, const value &input)

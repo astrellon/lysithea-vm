@@ -42,7 +42,7 @@ namespace LysitheaVM.Unity
                 }, "draw.nativeExample")},
             };
 
-            result.Define("draw", new ObjectValue(drawingFunctions));
+            result.TrySetConstant("draw", new ObjectValue(drawingFunctions));
 
             return result;
         }

@@ -6,6 +6,9 @@
 			"include": "#keywords"
 		},
 		{
+			"include": "#expression-operators"
+		},
+		{
 			"include": "#function-call"
 		},
 		{
@@ -53,7 +56,7 @@
 		},
 		"keywords": {
 			"patterns": [{
-				"match": "\\(\\s*(function|if|unless|define|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b",
+				"match": "\\(\\s*(function|if|unless|define|const|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b",
 				"captures": {
 						"1": {
 							"name": "keyword.lysithea"
@@ -90,7 +93,7 @@
 					"name": "punctuation.definition.string.begin.lysithea"
 				}
 			},
-			"end": "(\")|((?:[^\\\\\\n])$)",
+			"end": "\"(?=[^\"])",
 			"endCaptures": {
 				"1": {
 					"name": "punctuation.definition.string.end.lysithea"
@@ -113,7 +116,7 @@
 					"name": "punctuation.definition.string.begin.lysithea"
 				}
 			},
-			"end": "(\\')|((?:[^\\\\\\n])$)",
+			"end": "'(?=[^'])",
 			"endCaptures": {
 				"1": {
 					"name": "punctuation.definition.string.end.lysithea"
@@ -131,6 +134,47 @@
 		"string-character-escape": {
 			"name": "constant.character.escape.lysithea",
 			"match": "\\\\(x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|u\\{[0-9A-Fa-f]+\\}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)"
+		},
+		"expression-operators": {
+			"name": "keyword.operator",
+			"patterns": [
+				{
+					"name": "keyword.operator.assignment.compound.lysithea",
+					"match": "\\*=|/=|\\+=|-=|\\&\\&=|\\|\\|=|\\$="
+				},
+				{
+					"name": "keyword.operator.comparison.lysithea",
+					"match": "==|!="
+				},
+				{
+					"name": "keyword.operator.relational.lysithea",
+					"match": "<=|>=|<|>"
+				},
+				{
+					"name": "keyword.operator.logical.lysithea",
+					"match": "\\!|&&|\\|\\|"
+				},
+				{
+					"name": "keyword.operator.assignment.lysithea",
+					"match": "\\="
+				},
+				{
+					"name": "keyword.operator.decrement.lysithea",
+					"match": "--"
+				},
+				{
+					"name": "keyword.operator.increment.lysithea",
+					"match": "\\+\\+"
+				},
+				{
+					"name": "keyword.operator.arithmetic.lysithea",
+					"match": "\\*|/|-|\\+"
+				},
+				{
+					"name": "keyword.other.lysithea",
+					"match": "\\$"
+				}
+			]
 		}
 	},
 	"scopeName": "source.lysithea"

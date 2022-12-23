@@ -16,9 +16,9 @@ namespace LysitheaVM
                 return 1;
             }
 
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
-            var script = assembler.ParseFromText(File.ReadAllText(args[0]));
+            var script = assembler.ParseFromFile(args[0]);
 
             var vm = new VirtualMachine(64);
 

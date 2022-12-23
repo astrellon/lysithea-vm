@@ -1,4 +1,8 @@
 ; A simple performance test script.
+(function step ()
+    (return (+ (rand) (rand)))
+)
+
 (function main ()
     (define total 0)
     (define counter 0)
@@ -9,10 +13,6 @@
     )
 
     (print "Done: " total)
-)
-
-(function step ()
-    (return (+ (rand) (rand)))
 )
 
 (main)

@@ -69,6 +69,15 @@ namespace lysithea_vm
                 return false;
             }
 
+            inline bool is_string() const
+            {
+                if (is_complex())
+                {
+                    return get_complex()->is_string();
+                }
+                return false;
+            }
+
             inline bool is_array() const
             {
                 if (is_complex())

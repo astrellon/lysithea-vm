@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-#include <unordered_map>
 
 namespace lysithea_vm
 {
@@ -22,6 +21,7 @@ namespace lysithea_vm
             virtual int compare_to(const complex_value *input) const = 0;
             virtual std::string to_string() const = 0;
             virtual std::string type_name() const = 0;
+            virtual bool is_string() const { return false; }
 
             // Boolean methods
             virtual bool is_true() const { return false; }

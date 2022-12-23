@@ -24,7 +24,7 @@ namespace LysitheaVM.Unity
 
             var result = new Scope();
 
-            result.Define("input", CreateInteractionFunctions());
+            result.TrySetConstant("input", CreateInteractionFunctions());
 
             this.scope = result;
             return result;

@@ -254,7 +254,7 @@
 ; )
 
 (function sumUnpackExample ()
-    (define list (5 10))
+    (define list [5 10])
     (define x (math.sum ...list))
     (print x) ; Outputs 15
 )

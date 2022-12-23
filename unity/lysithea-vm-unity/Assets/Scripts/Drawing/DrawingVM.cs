@@ -6,7 +6,7 @@ namespace LysitheaVM.Unity
     public class DrawingVM : MonoBehaviour
     {
         public static DrawingVM Instance { get; private set; }
-        private VirtualMachineAssembler assembler;
+        private Assembler assembler;
 
         public InputLibrary InputLibrary;
 
@@ -23,9 +23,9 @@ namespace LysitheaVM.Unity
             this.assembler = CreateAssembler();
         }
 
-        public Script AssembleScript(string text)
+        public Script AssembleScript(string sourceName, string text)
         {
-            return this.assembler.ParseFromText(text);
+            return this.assembler.ParseFromText(sourceName, text);
         }
 
         public void StartDrawing(IEnumerable<IDrawingScript> includeScripts, IDrawingScript mainScript)
@@ -35,26 +35,27 @@ namespace LysitheaVM.Unity
 
             foreach (var drawingScript in includeScripts)
             {
+                this.vm.GlobalScope.CombineScope(drawingScript.Script.BuiltinScope);
                 this.vm.Execute(drawingScript.Script);
             }
 
             this.VMRunner.StartScript(mainScript.Script);
         }
 
-        private VirtualMachineAssembler CreateAssembler()
+        private Assembler CreateAssembler()
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(DrawingLibrary.Scope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
             assembler.BuiltinScope.CombineScope(InputLibrary.GetScope());
 
-            assembler.BuiltinScope.Define("nativeCalcPosition", (vm, args) =>
+            assembler.BuiltinScope.TrySetConstant("nativeCalcPosition", (vm, args) =>
             {
                 var pos = NativeDrawCircle.CalcPosition(args.GetIndex<NumberValue>(0).IntValue);
                 vm.PushStack(new Vector3Value(pos));
             });
-            assembler.BuiltinScope.Define("nativeCalcColour", (vm, args) =>
+            assembler.BuiltinScope.TrySetConstant("nativeCalcColour", (vm, args) =>
             {
                 var colour = NativeDrawCircle.CalcColour(args.GetIndex<NumberValue>(0).IntValue);
                 vm.PushStack(new ColourValue(colour));

@@ -34,7 +34,7 @@ namespace LysitheaVM.Unity
         public VMRunner VMRunner;
         public List<ActorPair> Actors;
 
-        private VirtualMachineAssembler assembler;
+        private Assembler assembler;
         private VirtualMachine vm => this.VMRunner.VM;
         private readonly List<IValue> choiceBuffer = new List<IValue>();
 
@@ -51,9 +51,9 @@ namespace LysitheaVM.Unity
             };
         }
 
-        public Script AssembleScript(string text)
+        public Script AssembleScript(string sourceName, string text)
         {
-            return this.assembler.ParseFromText(text);
+            return this.assembler.ParseFromText(sourceName, text);
         }
 
         public void StartDialogue(DialogueScript dialogue, DialogueActor selfActor)
@@ -61,9 +61,9 @@ namespace LysitheaVM.Unity
             this.vm.GlobalScope.Clear();
             foreach (var actorPair in this.Actors)
             {
-                this.vm.GlobalScope.Define(actorPair.ScriptId, new DialogueActorValue(actorPair.Actor));
+                this.vm.GlobalScope.TryDefine(actorPair.ScriptId, new DialogueActorValue(actorPair.Actor));
             }
-            this.vm.GlobalScope.Define("SELF", new DialogueActorValue(selfActor));
+            this.vm.GlobalScope.TryDefine("SELF", new DialogueActorValue(selfActor));
 
             this.VMRunner.StartScript(dialogue.Script);
         }
@@ -106,20 +106,20 @@ namespace LysitheaVM.Unity
             this.OnShowChoice?.Invoke(choiceLabel, index);
         }
 
-        private VirtualMachineAssembler CreateAssembler()
+        private Assembler CreateAssembler()
         {
-            var assembler = new VirtualMachineAssembler();
+            var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
 
-            assembler.BuiltinScope.Define("actor", this.ActorFunc);
-            assembler.BuiltinScope.Define("emotion", this.EmotionFunc);
-            assembler.BuiltinScope.Define("beginLine", this.BeginLineFunc);
-            assembler.BuiltinScope.Define("text", this.TextFunc);
-            assembler.BuiltinScope.Define("endLine", this.EndLineFunc);
-            assembler.BuiltinScope.Define("choice", this.ChoiceFunc);
-            assembler.BuiltinScope.Define("wait", this.WaitFunc);
-            assembler.BuiltinScope.Define("moveTo", this.MoveToFunc);
+            assembler.BuiltinScope.TryDefine("actor", this.ActorFunc);
+            assembler.BuiltinScope.TryDefine("emotion", this.EmotionFunc);
+            assembler.BuiltinScope.TryDefine("beginLine", this.BeginLineFunc);
+            assembler.BuiltinScope.TryDefine("text", this.TextFunc);
+            assembler.BuiltinScope.TryDefine("endLine", this.EndLineFunc);
+            assembler.BuiltinScope.TryDefine("choice", this.ChoiceFunc);
+            assembler.BuiltinScope.TryDefine("wait", this.WaitFunc);
+            assembler.BuiltinScope.TryDefine("moveTo", this.MoveToFunc);
 
             return assembler;
         }

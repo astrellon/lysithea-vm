@@ -38,6 +38,18 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "build-standalone",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Examples/Standalone/standalone.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build-more-complex-program",
             "command": "dotnet",
             "type": "process",
