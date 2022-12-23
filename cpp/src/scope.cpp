@@ -43,6 +43,11 @@ namespace lysithea_vm
         return true;
     }
 
+    bool scope::try_define(const std::string &key, builtin_function_callback callback)
+    {
+        return try_define(key, value::make_builtin(callback));
+    }
+
     bool scope::try_set_constant(const std::string &key, value input)
     {
         if (has_key(key))

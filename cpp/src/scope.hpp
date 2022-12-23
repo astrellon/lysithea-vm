@@ -27,6 +27,7 @@ namespace lysithea_vm
 
             bool has_key(const std::string &key) const;
             bool try_define(const std::string &key, value input);
+            bool try_define(const std::string &key, builtin_function_callback input);
             bool try_set_constant(const std::string &key, value input);
             bool try_set_constant(const std::string &key, builtin_function_callback callback);
             bool try_set(const std::string &key, value input);
