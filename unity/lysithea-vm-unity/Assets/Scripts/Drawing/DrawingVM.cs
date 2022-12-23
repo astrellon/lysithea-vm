@@ -35,7 +35,7 @@ namespace LysitheaVM.Unity
 
             foreach (var drawingScript in includeScripts)
             {
-                this.vm.GlobalScope.CombineScope(drawingScript.Script.BuiltinScope);
+                // this.vm.GlobalScope.CombineScope(drawingScript.Script.BuiltinScope);
                 this.vm.Execute(drawingScript.Script);
             }
 

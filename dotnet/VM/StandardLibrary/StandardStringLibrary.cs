@@ -76,7 +76,7 @@ namespace LysitheaVM
                 }, "string.join")}
             };
 
-            result.TrySetConstant("string", new ObjectValue(stringFunctions));
+            result.TryDefine("string", new ObjectValue(stringFunctions));
 
             return result;
         }

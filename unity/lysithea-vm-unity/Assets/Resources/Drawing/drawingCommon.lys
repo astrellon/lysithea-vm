@@ -1,19 +1,21 @@
-(function randomColour ()
+; Makes use of defining the functions instead of the regular
+; (function name) syntax for use in other files.
+(define randomColour (function randomColour ()
     (define hue (random.range 0.0 1.0))
     (define saturation (random.range 0.5 1.0))
     (define value (random.range 0.5 1.0))
 
     (return (colour.hsv hue saturation value))
-)
+))
 
-(function randomVector (from to)
+(define randomVector (function randomVector (from to)
     (define x (random.range from.x to.x))
     (define y (random.range from.y to.y))
     (define z (random.range from.z to.z))
 
     (return (vector3.new x y z))
-)
+))
 
-(function makeGround ()
+(define makeGround (function makeGround ()
     (draw.element "plane" vector3.zero (randomColour) 100)
-)
+))

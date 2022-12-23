@@ -148,7 +148,7 @@ namespace LysitheaVM
                 }, "math.sum")}
             };
 
-            result.TrySetConstant("math", new ObjectValue(mathFunctions));
+            result.TryDefine("math", new ObjectValue(mathFunctions));
 
             return result;
         }
