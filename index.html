@@ -10,6 +10,10 @@
 )
 (print "Done")</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="code2_output" class="code-output code-section"></pre> </div> </div> </article> <article> <h2>Performance Test</h2> <details> <summary>Includes the standard library with a <code>rand</code> functions.</summary> </details> <p> A basic performance test, the main thing this is testing is calling functions from outside of the VM. Ideally this should not take longer than 1 second to run. </p> <div class="code-example-section"> <div> <div class="code-example-section__title"> <strong> Code Input </strong> <button onclick="runPerfTest()">Run</button> </div> <textarea id="codePerfTest" class="code-section" placeholder="Placeholder code">
 ; A simple performance test script.
+(function step ()
+    (return (+ (rand) (rand)))
+)
+
 (function main ()
     (define total 0)
     (define counter 0)
@@ -22,10 +26,6 @@
     (print "Done: " total)
 )
 
-(function step ()
-    (return (+ (rand) (rand)))
-)
-
 (main)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePerfTest_output" class="code-output code-section"></pre> </div> </div> </article> <article> <h2>Page Set</h2> <details> <summary>Includes the standard library with <code>setBackground</code>, <code>setTheme</code> and <code>random</code> functions.</summary> </details> <p> A somewhat contrived example of adding some extra functions for interacting with the page. </p> <p> In this example there are two extra functions <code>setBackground</code> and <code>setTheme</code>. </p> <p> <code>setBackground</code> has three inputs <code>purple</code>, <code>grey</code> and <code>green</code>. </p> <p> <code>setTheme</code> has two inputs <code>light</code> and <code>dark</code>. </p> <p> <code>random.pick</code> takes a list of arguments and will randomly return one of the values. </p> <div class="code-example-section"> <div> <div class="code-example-section__title"> <strong> Code Input </strong> <button onclick="runPageSetup()">Run</button> </div> <textarea id="codePageSetup" class="code-section" placeholder="Placeholder code">
 (define background (random.pick "purple" "green" "grey"))
 (define theme (random.pick "light" "dark"))
@@ -34,4 +34,4 @@
 (print "Setting theme to: " theme)
 
 (setBackground background)
-(setTheme theme)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePageSetup_output" class="code-output code-section"></pre> </div> </div> </article> </section> <footer> Alan Lawrey 2022 </footer> <script type="module" src="/lysithea-vm/index.4141a8b0.js"></script> </body></html>
+(setTheme theme)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePageSetup_output" class="code-output code-section"></pre> </div> </div> </article> </section> <footer> Alan Lawrey 2022 </footer> <script type="module" src="/lysithea-vm/index.dd742c9c.js"></script> </body></html>
