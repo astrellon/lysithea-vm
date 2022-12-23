@@ -92,6 +92,11 @@ export class Scope implements IReadOnlyScope
         return true;
     }
 
+    public tryDefineFunc(key: string, value: BuiltinFunctionCallback, name: string | null = null)
+    {
+        return this.tryDefine(key, new BuiltinFunctionValue(value, name ?? key));
+    }
+
     public trySet(key: string, value: IValue): boolean
     {
         if (this.isConstant(key))

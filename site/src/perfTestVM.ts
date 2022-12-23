@@ -1,9 +1,9 @@
 import { getTextFor } from './common';
 
-import { VirtualMachine, VirtualMachineAssembler, Scope } from 'lysithea-vm';
+import { VirtualMachine, Assembler, Scope } from 'lysithea-vm';
 
 const perfTestScope = new Scope();
-perfTestScope.defineFunc("rand", (vm, args) =>
+perfTestScope.tryDefineFunc("rand", (vm, args) =>
 {
     vm.pushStackNumber(Math.random());
 });
@@ -16,9 +16,9 @@ function runPerfTest()
         return;
     }
 
-    const assembler = new VirtualMachineAssembler();
+    const assembler = new Assembler();
     assembler.builtinScope.combineScope(perfTestScope);
-    assembler.builtinScope.defineFunc("print", (vm, args) =>
+    assembler.builtinScope.tryDefineFunc("print", (vm, args) =>
     {
         const text = args.value.map(c => c.toString()).join('');
         console.log(text);

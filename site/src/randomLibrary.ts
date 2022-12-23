@@ -23,7 +23,7 @@ function createScope()
         }, "random.pick")
     }
 
-    result.define("random", new ObjectValue(randomFunctions));
+    result.tryDefine("random", new ObjectValue(randomFunctions));
 
     return result;
 }

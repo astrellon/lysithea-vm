@@ -118,7 +118,7 @@ export function createMathScope()
         }, 'math.sum')
     };
 
-    result.trySetConstant('math', new ObjectValue(mathFunctions));
+    result.tryDefine('math', new ObjectValue(mathFunctions));
 
     return result;
 }

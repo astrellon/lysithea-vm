@@ -80,7 +80,7 @@ export function createObjectScope()
         }, "object.length")
     }
 
-    result.trySetConstant('object', new ObjectValue(objectFunctions));
+    result.tryDefine('object', new ObjectValue(objectFunctions));
 
     return result;
 }

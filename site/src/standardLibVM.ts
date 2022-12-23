@@ -1,6 +1,6 @@
 import { getTextFor } from "./common";
 
-import { VirtualMachine, VirtualMachineAssembler, LibraryType, addToScope } from 'lysithea-vm';
+import { VirtualMachine, Assembler, LibraryType, addToScope } from 'lysithea-vm';
 
 function runStdLib(codeId: string)
 {
@@ -10,10 +10,10 @@ function runStdLib(codeId: string)
         return;
     }
 
-    const assembler = new VirtualMachineAssembler();
+    const assembler = new Assembler();
     addToScope(assembler.builtinScope, LibraryType.all);
 
-    assembler.builtinScope.defineFunc("print", (vm, args) =>
+    assembler.builtinScope.tryDefineFunc("print", (vm, args) =>
     {
         const text = args.value.map(c => c.toString()).join('');
         console.log(text);

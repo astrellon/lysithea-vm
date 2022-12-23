@@ -1,14 +1,14 @@
 import { getTextFor } from './common';
 import { randomScope } from './randomLibrary';
 
-import { VirtualMachine, VirtualMachineAssembler, Scope, addToScope, LibraryType } from 'lysithea-vm';
+import { VirtualMachine, Assembler, Scope, addToScope, LibraryType } from 'lysithea-vm';
 
 const pageSetupScope = new Scope();
-pageSetupScope.defineFunc("setBackground", (vm, args) =>
+pageSetupScope.trySetConstantFunc("setBackground", (vm, args) =>
 {
     document.body.setAttribute('background', args.getString(0));
 });
-pageSetupScope.defineFunc("setTheme", (vm, args) =>
+pageSetupScope.trySetConstantFunc("setTheme", (vm, args) =>
 {
     document.body.setAttribute('theme', args.getString(0));
 });
@@ -21,11 +21,11 @@ function runPageSetup()
         return;
     }
 
-    const assembler = new VirtualMachineAssembler();
+    const assembler = new Assembler();
     addToScope(assembler.builtinScope, LibraryType.all);
     assembler.builtinScope.combineScope(pageSetupScope);
     assembler.builtinScope.combineScope(randomScope);
-    assembler.builtinScope.defineFunc("print", (vm, args) =>
+    assembler.builtinScope.tryDefineFunc("print", (vm, args) =>
     {
         const text = args.value.map(c => c.toString()).join('');
         console.log(text);
