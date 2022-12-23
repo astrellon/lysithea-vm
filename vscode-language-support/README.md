@@ -24,6 +24,10 @@ Does not make use of a language server, so it cannot highlight builtin functions
 
 Basic handling of language, highlights value types and keywords.
 
+### 0.1.0
+
+Adds support for new square bracket list syntax and fixes highlighting for multi-line strings.
+
 ### 0.0.4
 
 Mostly fixes to the market place entry.
