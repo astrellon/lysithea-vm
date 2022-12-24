@@ -1,7 +1,7 @@
-import { getTextFor } from './common';
+import { getTextFor, tryAssemble, tryExecute } from './common';
 import { randomScope } from './randomLibrary';
 
-import { VirtualMachine, Assembler, Scope, addToScope, LibraryType } from 'lysithea-vm';
+import { VirtualMachine, Assembler, Scope, addToScope, LibraryType, AssemblerError, ParserError, VirtualMachineError, toStringCodeLocation, stringScope } from 'lysithea-vm';
 
 const pageSetupScope = new Scope();
 pageSetupScope.trySetConstantFunc("setBackground", (vm, args) =>
@@ -32,9 +32,14 @@ function runPageSetup()
         codeContext.output.innerHTML += text + '<br/>';
     });
 
-    const script = assembler.parseFromText(codeContext.text as string);
     const vm = new VirtualMachine(16);
-    vm.execute(script);
+    const script = tryAssemble(assembler, codeContext.text as string);
+    if (script === undefined)
+    {
+        return;
+    }
+
+    tryExecute(script, vm);
 }
 
 (globalThis as any).runPageSetup = runPageSetup;

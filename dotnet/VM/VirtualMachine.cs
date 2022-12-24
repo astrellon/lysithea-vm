@@ -86,7 +86,7 @@ namespace LysitheaVM
             }
             else
             {
-                throw new VirtualMachineException(this.CreateStackTrace(), $"Unable to jump to label: {label}");
+                throw new VirtualMachineException(this, this.CreateStackTrace(), $"Unable to jump to label: {label}");
             }
         }
 
@@ -158,7 +158,7 @@ namespace LysitheaVM
                 }
                 else
                 {
-                    throw new VirtualMachineException(this.CreateStackTrace(), $"Function called without enough arguments: {function.Name}");
+                    throw new VirtualMachineException(this, this.CreateStackTrace(), $"Function called without enough arguments: {function.Name}");
                 }
             }
         }
@@ -168,7 +168,7 @@ namespace LysitheaVM
         {
             if (!this.stackTrace.TryPush(scopeFrame))
             {
-                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to call, call stack full");
+                throw new VirtualMachineException(this, this.CreateStackTrace(), "Unable to call, call stack full");
             }
         }
 
@@ -190,7 +190,7 @@ namespace LysitheaVM
         {
             if (!this.TryReturn())
             {
-                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to return, call stack empty");
+                throw new VirtualMachineException(this, this.CreateStackTrace(), "Unable to return, call stack empty");
             }
         }
 
@@ -215,7 +215,7 @@ namespace LysitheaVM
         {
             if (!this.stack.TryPop(out var obj))
             {
-                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to pop stack, empty");
+                throw new VirtualMachineException(this, this.CreateStackTrace(), "Unable to pop stack, empty");
             }
 
             return obj;
@@ -226,7 +226,7 @@ namespace LysitheaVM
         {
             if (!this.stack.TryPeek(out var obj))
             {
-                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to peek stack, empty");
+                throw new VirtualMachineException(this, this.CreateStackTrace(), "Unable to peek stack, empty");
             }
 
             return obj;
@@ -237,7 +237,7 @@ namespace LysitheaVM
         {
             if (!this.stack.TryPush(value))
             {
-                throw new VirtualMachineException(this.CreateStackTrace(), "Unable to push stack, stack is full");
+                throw new VirtualMachineException(this, this.CreateStackTrace(), "Unable to push stack, stack is full");
             }
         }
         #endregion

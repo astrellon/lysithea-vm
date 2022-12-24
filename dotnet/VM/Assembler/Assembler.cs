@@ -36,10 +36,11 @@ namespace LysitheaVM
         private static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
 
         public readonly Scope BuiltinScope = new Scope();
+        public IReadOnlyList<string> FullText { get; private set; } = new string[1]{""};
+        public string SourceName { get; private set; } = "";
+
         private int labelCount = 0;
         private List<string> keywordParsingStack = new List<string>();
-        private IReadOnlyList<string> fullText = new string[1]{""};
-        private string sourceName = "";
         private Scope ConstScope = new Scope();
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
@@ -59,16 +60,24 @@ namespace LysitheaVM
 
         public Script ParseFromText(string sourceName, IReadOnlyList<string> input)
         {
-            this.fullText = input;
-            this.sourceName = sourceName;
-            var parsed = Lexer.ReadFromLines(input);
+            this.FullText = input;
+            this.SourceName = sourceName;
 
-            var code = this.ParseGlobalFunction(parsed);
-            var scriptScope = new Scope();
-            scriptScope.CombineScope(this.BuiltinScope);
-            scriptScope.CombineScope(this.ConstScope);
+            try
+            {
+                var parsed = Lexer.ReadFromLines(input);
 
-            return new Script(scriptScope, code);
+                var code = this.ParseGlobalFunction(parsed);
+                var scriptScope = new Scope();
+                scriptScope.CombineScope(this.BuiltinScope);
+                scriptScope.CombineScope(this.ConstScope);
+
+                return new Script(scriptScope, code);
+            }
+            catch (ParserException exp)
+            {
+                throw new AssemblerException(this, Token.Value(exp.Location, new StringValue(exp.Token)), exp.Message);
+            }
         }
 
         public Function ParseGlobalFunction(Token input)
@@ -123,7 +132,7 @@ namespace LysitheaVM
                 }
                 else
                 {
-                    throw new AssemblerException(input, $"Expression needs to start with a function variable");
+                    throw new AssemblerException(this, input, $"Expression needs to start with a function variable");
                 }
             }
             else if (input.Type == TokenType.List)
@@ -140,11 +149,11 @@ namespace LysitheaVM
 
                     if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
                     {
-                        result.Add(parsed[0].Token.GetValue());
+                        result.Add(this.GetValue(parsed[0].Token));
                     }
                     else
                     {
-                        throw new AssemblerException(parsed[0].Token, "Unexpected token in list literal");
+                        throw new AssemblerException(this, parsed[0].Token, "Unexpected token in list literal");
                     }
                 }
 
@@ -164,11 +173,11 @@ namespace LysitheaVM
 
                     if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
                     {
-                        result[kvp.Key] = parsed[0].Token.GetValue();
+                        result[kvp.Key] = this.GetValue(parsed[0].Token);
                     }
                     else
                     {
-                        throw new AssemblerException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
+                        throw new AssemblerException(this, parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
                     }
                 }
 
@@ -197,7 +206,7 @@ namespace LysitheaVM
             {
                 if (!this.ConstScope.TrySetConstant(function.Name, functionValue))
                 {
-                    throw new AssemblerException(arrayValue, "Unable to define function, constant already exists");
+                    throw new AssemblerException(this, arrayValue, "Unable to define function, constant already exists");
                 }
                 // Special return case
                 return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
@@ -222,10 +231,10 @@ namespace LysitheaVM
             // Multiple variables can be set when a function returns multiple results.
             for (var i = input.TokenList.Count - 2; i >= 1; i--)
             {
-                var key = input.TokenList[i].GetValue().ToString();
+                var key = this.GetValue(input.TokenList[i]).ToString();
                 if (this.ConstScope.TryGetKey(key, out var temp))
                 {
-                    throw new AssemblerException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
+                    throw new AssemblerException(this, input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
                 }
 
                 result.Add(TempCodeLine.Code(opCode, input.TokenList[i]));
@@ -237,19 +246,19 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count != 3)
             {
-                throw new AssemblerException(input, "Const requires 2 inputs");
+                throw new AssemblerException(this, input, "Const requires 2 inputs");
             }
 
             var result = this.Parse(input.TokenList.Last());
             if (result.Count != 1 || result[0].Operator != Operator.Push)
             {
-                throw new AssemblerException(input, "Const value is not a compile time constant");
+                throw new AssemblerException(this, input, "Const value is not a compile time constant");
             }
 
-            var key = input.TokenList[1].GetValue().ToString();
-            if (!this.ConstScope.TrySetConstant(key, result[0].Token.GetValue()))
+            var key = this.GetValue(input.TokenList[1]).ToString();
+            if (!this.ConstScope.TrySetConstant(key, this.GetValue(result[0].Token)))
             {
-                throw new AssemblerException(input, "Cannot redefine a constant");
+                throw new AssemblerException(this, input, "Cannot redefine a constant");
             }
 
             return result;
@@ -259,7 +268,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw new AssemblerException(input, "Loop input has too few inputs");
+                throw new AssemblerException(this, input, "Loop input has too few inputs");
             }
 
             var loopLabelNum = this.labelCount++;
@@ -289,11 +298,11 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw new AssemblerException(input, "Condition input has too few inputs");
+                throw new AssemblerException(this, input, "Condition input has too few inputs");
             }
             if (input.TokenList.Count > 4)
             {
-                throw new AssemblerException(input, "Condition input has too many inputs!");
+                throw new AssemblerException(this, input, "Condition input has too many inputs!");
             }
 
             var ifLabelNum = this.labelCount++;
@@ -353,7 +362,7 @@ namespace LysitheaVM
         {
             if (!this.loopStack.Any())
             {
-                throw new AssemblerException(token, $"Unexpected {keyword} outside of loop");
+                throw new AssemblerException(this, token, $"Unexpected {keyword} outside of loop");
             }
 
             var loopLabel = this.loopStack.Last();
@@ -379,7 +388,7 @@ namespace LysitheaVM
 
             if (this.ConstScope.Parent == null)
             {
-                throw new AssemblerException(input, "Internal exception, const scope parent lost");
+                throw new AssemblerException(this, input, "Internal exception, const scope parent lost");
             }
             this.ConstScope = this.ConstScope.Parent;
 
@@ -429,7 +438,7 @@ namespace LysitheaVM
             }
             else
             {
-                throw new AssemblerException(input, $"Negative/Sub operator expects at least 1 input");
+                throw new AssemblerException(this, input, $"Negative/Sub operator expects at least 1 input");
             }
         }
 
@@ -437,7 +446,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 2)
             {
-                throw new AssemblerException(input, $"Expecting at least 1 input for: {opCode}");
+                throw new AssemblerException(this, input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<TempCodeLine>();
@@ -454,7 +463,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw new AssemblerException(input, $"Expecting at least 3 inputs for: {opCode}");
+                throw new AssemblerException(this, input, $"Expecting at least 3 inputs for: {opCode}");
             }
 
             var result = this.Parse(input.TokenList[1]);
@@ -478,13 +487,13 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 2)
             {
-                throw new Exception($"Expecting at least 1 input for: {opCode}");
+                throw new AssemblerException(this, input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<TempCodeLine>();
             foreach (var item in input.TokenList.Skip(1))
             {
-                var varName = new StringValue(item.GetValue().ToString());
+                var varName = new StringValue(this.GetValue(item).ToString());
                 result.Add(TempCodeLine.Code(opCode, item.KeepLocation(varName)));
             }
 
@@ -504,10 +513,10 @@ namespace LysitheaVM
 
         public List<TempCodeLine> TransformAssignmentOperator(Token arrayValue)
         {
-            var opCode = arrayValue.TokenList[0].GetValue().ToString();
+            var opCode = this.GetValue(arrayValue.TokenList[0]).ToString();
             opCode = opCode.Substring(0, opCode.Length - 1);
 
-            var varName = arrayValue.TokenList[1].GetValue().ToString();
+            var varName = this.GetValue(arrayValue.TokenList[1]).ToString();
             var newCode = arrayValue.TokenList.ToList();
             newCode[0] = arrayValue.TokenList[0].KeepLocation(new VariableValue(opCode));
 
@@ -584,15 +593,15 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Call token must be a value");
+                throw new AssemblerException(this, input, "Call token must be a value");
             }
 
             var numArgsValue = new NumberValue(numArgs);
 
-            var result = this.OptimiseGet(input, input.GetValue().ToString());
+            var result = this.OptimiseGet(input, this.GetValue(input).ToString());
             if (result.Count == 1 && result[0].Operator == Operator.Push)
             {
-                var callValue = new IValue[]{ result[0].Token.GetValue(), numArgsValue };
+                var callValue = new IValue[]{ this.GetValue(result[0].Token), numArgsValue };
                 return new List<TempCodeLine> {
                     TempCodeLine.Code(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
                 };
@@ -606,11 +615,11 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Get symbol token value cannot be null");
+                throw new AssemblerException(this, input, "Get symbol token value cannot be null");
             }
 
             var isArgumentUnpack = false;
-            var key = input.GetValue().ToString();
+            var key = this.GetValue(input).ToString();
             if (key.StartsWith("..."))
             {
                 isArgumentUnpack = true;
@@ -631,7 +640,7 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Get symbol token must be a value");
+                throw new AssemblerException(this, input, "Get symbol token must be a value");
             }
 
             var result = new List<TempCodeLine>();
@@ -713,13 +722,32 @@ namespace LysitheaVM
                 else
                 {
                     locations.Add(tempLine.Token.Location);
-                    code.Add(new CodeLine(tempLine.Operator, tempLine.Token.GetValueCanBeEmpty()));
+                    code.Add(new CodeLine(tempLine.Operator, this.GetValueCanBeEmpty(tempLine.Token)));
                 }
             }
 
-            var debugSymbols = new DebugSymbols(this.sourceName, this.fullText, locations);
+            var debugSymbols = new DebugSymbols(this.SourceName, this.FullText, locations);
 
             return new Function(code, parameters, labels, name, debugSymbols);
+        }
+
+        private IValue? GetValueCanBeEmpty(Token input)
+        {
+            if (input.Type == TokenType.Empty)
+            {
+                return null;
+            }
+
+            return this.GetValue(input);
+        }
+        private IValue GetValue(Token input)
+        {
+            if (input.Type == TokenType.Value)
+            {
+                return input.TokenValue;
+            }
+
+            throw new AssemblerException(this, input, "Unable to get value of non value token");
         }
 
         private static bool IsNoOperator(IReadOnlyList<TempCodeLine> input)

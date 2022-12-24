@@ -36,25 +36,6 @@ namespace LysitheaVM
         #endregion
 
         #region Methods
-        public IValue? GetValueCanBeEmpty()
-        {
-            if (this.Type == TokenType.Empty)
-            {
-                return null;
-            }
-            return this.GetValue();
-        }
-
-        public IValue GetValue()
-        {
-            if (this.Type == TokenType.Value)
-            {
-                return this.TokenValue;
-            }
-
-            throw new AssemblerException(this, $"Cannot get value of {this.Type} token");
-        }
-
         public Token KeepLocation(IValue? input)
         {
             if (input == null)
@@ -106,7 +87,6 @@ namespace LysitheaVM
         {
             return new Token(location, TokenType.Expression, list: expression);
         }
-
         #endregion
     }
 }

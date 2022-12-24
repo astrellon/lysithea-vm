@@ -1,3 +1,5 @@
+import { Assembler, AssemblerError, ParserError, Script, toStringCodeLocation, VirtualMachine, VirtualMachineError } from "lysithea-vm";
+
 export interface CodeContext
 {
     readonly output: HTMLElement;
@@ -23,4 +25,53 @@ export function getTextFor(codeId: string) : CodeContext | false
     output.innerHTML = '';
 
     return { output, text };
+}
+
+export function tryAssemble(assembler: Assembler, text: string)
+{
+    try
+    {
+        return assembler.parseFromText(text);
+    }
+    catch (error)
+    {
+        if (error instanceof ParserError)
+        {
+            alert('Parser error: ' + error.message +
+                '\nat location: ' + toStringCodeLocation(error.location) +
+                '\nat token: ' + error.token);
+        }
+        else if (error instanceof AssemblerError)
+        {
+            alert('Assembling error: ' + error.message +
+                '\nat location: ' + toStringCodeLocation(error.token.location) +
+                '\nat token: ' + JSON.stringify(error.token));
+        }
+        else
+        {
+            alert('Unknown error: ' + error);
+        }
+    }
+
+    return undefined;
+}
+
+export function tryExecute(script: Script, vm: VirtualMachine)
+{
+    try
+    {
+        vm.execute(script);
+    }
+    catch (error)
+    {
+        if (error instanceof VirtualMachineError)
+        {
+            alert('Runtime error: ' + error.message +
+                '\nStack Trace: ' + error.stackTrace.join('\n'));
+        }
+        else
+        {
+            alert('Unknown error: ' + error);
+        }
+    }
 }
