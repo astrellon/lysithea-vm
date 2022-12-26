@@ -1,5 +1,5 @@
 import { AssemblerError } from "../errors/errors";
-import { IValue, ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap } from "../index";
+import { IValue, ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap, BoolValue } from "../index";
 import { Scope } from "../scope";
 import { Script } from "../script";
 import { Editable } from "../standardLibrary/standardObjectLibrary";
@@ -36,6 +36,7 @@ const ContinueKeyword = 'continue';
 const BreakKeyword = 'break';
 const IfKeyword = 'if';
 const UnlessKeyword = 'unless';
+const SwitchKeyword = 'switch';
 const SetKeyword = 'set';
 const DefineKeyword = 'define';
 const ConstKeyword = 'const';
@@ -258,13 +259,13 @@ export class Assembler
 
         const comparisonCall = input.tokenList[1];
         let result = [ labelLine(labelStart), ...this.parse(comparisonCall) ];
-        result.push(codeLine('jumpFalse', comparisonCall.keepLocation(new StringValue(labelEnd))));
+        result.push(codeLine('jumpFalse', comparisonCall.keepLocation(labelEnd)));
         for (let i = 2; i < input.tokenList.length; i++)
         {
             result = result.concat(this.parse(input.tokenList[i]));
         }
 
-        result.push(codeLine('jump', comparisonCall.keepLocation(new StringValue(labelStart))));
+        result.push(codeLine('jump', comparisonCall.keepLocation(labelStart)));
         result.push(labelLine(labelEnd));
 
         this.loopStack.pop();
@@ -272,7 +273,7 @@ export class Assembler
         return result;
     }
 
-    public parseCond(input: Token, isIfStatement: boolean)
+    public parseIfUnless(input: Token, isIfStatement: boolean)
     {
         if (input.tokenList.length < 3)
         {
@@ -298,12 +299,12 @@ export class Assembler
         if (hasElseCall)
         {
             // Jump to else if the condition doesn't match
-            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(new StringValue(labelElse))));
+            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(labelElse)));
 
             // First block of code
             result = result.concat(this.parseFlatten(firstBlock));
             // Jump after the condition, skipping second block of code.
-            result.push(codeLine('jump', firstBlock.keepLocation(new StringValue(labelEnd))));
+            result.push(codeLine('jump', firstBlock.keepLocation(labelEnd)));
 
             // Jump target for else
             result.push(labelLine(labelElse));
@@ -315,9 +316,49 @@ export class Assembler
         else
         {
             // We only have one block, so jump to the end of the block if the condition doesn't match
-            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(new StringValue(labelEnd))));
+            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(labelEnd)));
 
             result = result.concat(this.parseFlatten(firstBlock));
+        }
+
+        result.push(labelLine(labelEnd));
+
+        return result;
+    }
+
+    public parseSwitch(input: Token)
+    {
+        const labelNum = this.labelCount++;
+        const labelEnd = `:CondNext${input.tokenList.length}_${labelNum}`;
+
+        let result: TempCodeLine[] = [];
+
+        for (let i = 1; i < input.tokenList.length; i++)
+        {
+            const expression = input.tokenList[i];
+            const thisLabelJump = `$:CondNext${i}_${labelNum}`;
+            const nextLabelJump = `$:CondNext${i + 1}_${labelNum}`;
+            if (i > 1)
+            {
+                result.push(labelLine(thisLabelJump));
+            }
+
+            const comparisonCall = expression.tokenList[0];
+            if (comparisonCall.value.compareTo(BoolValue.True) !== 0)
+            {
+                result = result.concat(this.parse(comparisonCall));
+                result.push(codeLine('jumpFalse', expression.keepLocation(nextLabelJump)));
+            }
+
+            for (let j = 1; j < expression.tokenList.length; j++)
+            {
+                result = result.concat(this.parse(expression.tokenList[j]));
+            }
+
+            if (i < input.tokenList.length - 1)
+            {
+                result.push(codeLine('jump', expression.keepLocation(labelEnd)));
+            }
         }
 
         result.push(labelLine(labelEnd));
@@ -343,7 +384,7 @@ export class Assembler
         }
 
         const loopLabel = this.loopStack[this.loopStack.length - 1];
-        return [codeLine('jump', token.keepLocation(new StringValue(jumpToStart ? loopLabel.start : loopLabel.end)))];
+        return [codeLine('jump', token.keepLocation(jumpToStart ? loopLabel.start : loopLabel.end))];
     }
 
     public parseFunction(input: Token)
@@ -435,7 +476,7 @@ export class Assembler
         const currentKeyword = this.keywordParsingStack.length > 1 ? this.keywordParsingStack[this.keywordParsingStack.length - 1] : FunctionKeyword;
         if (func.hasName && currentKeyword === FunctionKeyword)
         {
-            result.push(codeLine('define', arrayValue.keepLocation(new StringValue(func.name))));
+            result.push(codeLine('define', arrayValue.keepLocation(func.name)));
         }
 
         return result;
@@ -547,34 +588,35 @@ export class Assembler
         return this.parse(Token.expression(arrayValue.location, wrappedCode));
     }
 
-    public parseKeyword(input: string, arrayValue: Token): TempCodeLine[]
+    public parseKeyword(firstSymbol: string, input: Token): TempCodeLine[]
     {
         let result: TempCodeLine[] | null = null;
 
-        this.keywordParsingStack.push(input);
-        switch (input)
+        this.keywordParsingStack.push(firstSymbol);
+        switch (firstSymbol)
         {
             // General Operators
-            case FunctionKeyword: result = this.parseFunctionKeyword(arrayValue); break;
-            case ContinueKeyword: result = this.parseLoopJump(arrayValue, ContinueKeyword, true); break;
-            case BreakKeyword: result = this.parseLoopJump(arrayValue, BreakKeyword, false); break;
-            case SetKeyword: result = this.parseDefineSet(arrayValue, false); break;
-            case DefineKeyword: result = this.parseDefineSet(arrayValue, true); break;
-            case ConstKeyword: result = this.parseConst(arrayValue); break;
-            case LoopKeyword: result = this.parseLoop(arrayValue); break;
-            case IfKeyword: result = this.parseCond(arrayValue, true); break;
-            case UnlessKeyword: result = this.parseCond(arrayValue, false); break;
-            case JumpKeyword: result = this.parseJump(arrayValue); break;
-            case ReturnKeyword: result = this.parseReturn(arrayValue); break;
+            case FunctionKeyword: result = this.parseFunctionKeyword(input); break;
+            case ContinueKeyword: result = this.parseLoopJump(input, ContinueKeyword, true); break;
+            case BreakKeyword: result = this.parseLoopJump(input, BreakKeyword, false); break;
+            case SetKeyword: result = this.parseDefineSet(input, false); break;
+            case DefineKeyword: result = this.parseDefineSet(input, true); break;
+            case ConstKeyword: result = this.parseConst(input); break;
+            case LoopKeyword: result = this.parseLoop(input); break;
+            case IfKeyword: result = this.parseIfUnless(input, true); break;
+            case UnlessKeyword: result = this.parseIfUnless(input, false); break;
+            case SwitchKeyword: result = this.parseSwitch(input); break;
+            case JumpKeyword: result = this.parseJump(input); break;
+            case ReturnKeyword: result = this.parseReturn(input); break;
 
             // Math Operators
             case '+':
             case '*':
-            case '/': result = this.parseOperator(input as Operator, arrayValue); break;
-            case '-': result = this.parseNegative(arrayValue); break;
+            case '/': result = this.parseOperator(firstSymbol as Operator, input); break;
+            case '-': result = this.parseNegative(input); break;
 
             case '++':
-            case '--': result = this.parseOneVariableUpdate(input as Operator, arrayValue); break;
+            case '--': result = this.parseOneVariableUpdate(firstSymbol as Operator, input); break;
 
             // Comparison Operators
             case '<':
@@ -582,15 +624,15 @@ export class Assembler
             case '==':
             case '!=':
             case '>':
-            case '>=': result = this.parseOperator(input as Operator, arrayValue); break;
+            case '>=': result = this.parseOperator(firstSymbol as Operator, input); break;
 
             // Boolean Operators
             case '&&':
-            case '||': result = this.parseOperator(input as Operator, arrayValue); break;
-            case '!':  result = this.parseOnePushInput('!', arrayValue); break;
+            case '||': result = this.parseOperator(firstSymbol as Operator, input); break;
+            case '!':  result = this.parseOnePushInput('!', input); break;
 
             // Misc Operators
-            case '$': result = this.parseStringConcat(arrayValue); break;
+            case '$': result = this.parseStringConcat(input); break;
 
             // Conjoined Operators
             case '+=':
@@ -599,7 +641,7 @@ export class Assembler
             case '/=':
             case '&&=':
             case '||=':
-            case '$=': result = this.transformAssignmentOperator(arrayValue); break;
+            case '$=': result = this.transformAssignmentOperator(input); break;
         }
 
         this.keywordParsingStack.pop();
@@ -693,7 +735,7 @@ export class Assembler
         }
         else
         {
-            result.push(codeLine('get', input.keepLocation(new StringValue(propertyRequestInfo.parentKey))));
+            result.push(codeLine('get', input.keepLocation(propertyRequestInfo.parentKey)));
 
             // If this was also a property check also look up the property at runtime.
             if (propertyRequestInfo.isPropertyRequest)

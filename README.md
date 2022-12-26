@@ -876,18 +876,15 @@ The conditional code is executed first and if result in a `true` value then the 
 
 Simple example:
 ```lisp
-(function logCounter ()
+(function logCounter (counter)
     (if (< counter 10)
         (print "Counter less than 10")
         (print "Counter more than 10")
     )
 )
 
-(define counter 0)
-(logCounter) ; Prints Counter less than 10
-
-(define counter 20)
-(logCounter) ; Prints Counter more than 10
+(logCounter 5) ; Prints Counter less than 10
+(logCounter 20) ; Prints Counter more than 10
 ```
 
 Example of wrapping a code block for single when true block.

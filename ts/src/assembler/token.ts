@@ -1,6 +1,6 @@
 import { CodeLocation } from "../virtualMachine";
 import { IValue } from "../values/ivalues";
-import { NullValue } from "../index";
+import { NullValue, StringValue } from "../index";
 import { AssemblerError } from "../errors/errors";
 
 export type TokenType = 'empty' | 'value' | 'expression' | 'list' | 'map';
@@ -68,8 +68,12 @@ export class Token
         return this.type === 'empty' ? undefined : this.getValue();
     }
 
-    public keepLocation(value: IValue | undefined)
+    public keepLocation(value: string | IValue | undefined)
     {
+        if (typeof (value) === 'string')
+        {
+            return Token.value(this.location, new StringValue(value));
+        }
         return Token.value(this.location, value);
     }
 
