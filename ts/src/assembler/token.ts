@@ -77,6 +77,11 @@ export class Token
         return Token.value(this.location, value);
     }
 
+    public isNestedExpression()
+    {
+        return this.tokenList.length > 0 && this.tokenList.every(t => t.type === 'expression');
+    }
+
     public toEmpty()
     {
         return Token.empty(this.location);

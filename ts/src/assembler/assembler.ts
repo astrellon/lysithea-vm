@@ -74,6 +74,26 @@ function isNoOperator(input: TempCodeLine[])
     return false;
 }
 
+function push<T>(target: T[], input: ReadonlyArray<T>)
+{
+    for (let i = 0; i < input.length; i++)
+    {
+        target.push(input[i]);
+    }
+}
+
+function addHandleNested(target: Token[], input: Token)
+{
+    if (input.isNestedExpression())
+    {
+        push(target, input.tokenList);
+    }
+    else
+    {
+        target.push(input);
+    }
+}
+
 export class Assembler
 {
     public builtinScope: Scope = new Scope();
@@ -131,7 +151,7 @@ export class Assembler
 
                 // Handle general opcode or function call.
                 let result = input.tokenList.slice(1).map(v => this.parse(v)).flat(1);
-                result = result.concat(this.optimiseCallSymbolValue(first, input.tokenList.length - 1));
+                push(result, this.optimiseCallSymbolValue(first, input.tokenList.length - 1));
 
                 this.keywordParsingStack.pop();
 
@@ -262,7 +282,7 @@ export class Assembler
         result.push(codeLine('jumpFalse', comparisonCall.keepLocation(labelEnd)));
         for (let i = 2; i < input.tokenList.length; i++)
         {
-            result = result.concat(this.parse(input.tokenList[i]));
+            push(result, this.parse(input.tokenList[i]));
         }
 
         result.push(codeLine('jump', comparisonCall.keepLocation(labelStart)));
@@ -284,46 +304,24 @@ export class Assembler
             throw new AssemblerError(input, 'Condition input has too many inputs!');
         }
 
-        const ifLabelNum = this.labelCount++;
-        const labelElse = `:CondElse${ifLabelNum}`;
-        const labelEnd = `:CondEnd${ifLabelNum}`;
+        let tempTokens: Token[] = [input.keepLocation(isIfStatement ? IfKeyword : UnlessKeyword)];
+        const comparisonToken = input.tokenList[1];
+        const firstBlockToken = input.tokenList[2];
 
-        const hasElseCall = input.tokenList.length === 4;
-        const jumpOperator = isIfStatement ? 'jumpFalse' : 'jumpTrue';
+        let newComparison: Token[] = [ comparisonToken ];
+        addHandleNested(newComparison, firstBlockToken);
+        tempTokens.push(Token.expression(comparisonToken.location, newComparison));
 
-        const comparisonCall = input.tokenList[1];
-        const firstBlock = input.tokenList[2];
-
-        let result = this.parse(comparisonCall);
-
-        if (hasElseCall)
+        if (input.tokenList.length === 4)
         {
-            // Jump to else if the condition doesn't match
-            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(labelElse)));
-
-            // First block of code
-            result = result.concat(this.parseFlatten(firstBlock));
-            // Jump after the condition, skipping second block of code.
-            result.push(codeLine('jump', firstBlock.keepLocation(labelEnd)));
-
-            // Jump target for else
-            result.push(labelLine(labelElse));
-
-            // Second 'else' block of code
-            const secondBlock = input.tokenList[3];
-            result = result.concat(this.parseFlatten(secondBlock));
-        }
-        else
-        {
-            // We only have one block, so jump to the end of the block if the condition doesn't match
-            result.push(codeLine(jumpOperator, comparisonCall.keepLocation(labelEnd)));
-
-            result = result.concat(this.parseFlatten(firstBlock));
+            const elseToken = input.tokenList[3];
+            const newElse: Token[] = [ elseToken.keepLocation(BoolValue.True) ];
+            addHandleNested(newElse, elseToken);
+            tempTokens.push(Token.expression(comparisonToken.location, newElse));
         }
 
-        result.push(labelLine(labelEnd));
-
-        return result;
+        const transformedToken = Token.expression(input.location, tempTokens);
+        return this.parseSwitch(transformedToken);
     }
 
     public parseSwitch(input: Token)
@@ -346,13 +344,13 @@ export class Assembler
             const comparisonCall = expression.tokenList[0];
             if (comparisonCall.value.compareTo(BoolValue.True) !== 0)
             {
-                result = result.concat(this.parse(comparisonCall));
+                push(result, this.parse(comparisonCall));
                 result.push(codeLine('jumpFalse', expression.keepLocation(nextLabelJump)));
             }
 
             for (let j = 1; j < expression.tokenList.length; j++)
             {
-                result = result.concat(this.parse(expression.tokenList[j]));
+                push(result, this.parse(expression.tokenList[j]));
             }
 
             if (i < input.tokenList.length - 1)
@@ -516,7 +514,7 @@ export class Assembler
         let result: TempCodeLine[] = [];
         for (let i = 1; i < input.tokenList.length; i++)
         {
-            result = result.concat(this.parse(input.tokenList[i]));
+            push(result, this.parse(input.tokenList[i]));
             result.push(codeLine(opCode, input.tokenList[i].toEmpty()));
         }
         return result;
@@ -539,7 +537,7 @@ export class Assembler
             }
             else
             {
-                result = result.concat(this.parse(item));
+                push(result, this.parse(item));
                 result.push(codeLine(opCode, input.toEmpty()));
             }
         }
