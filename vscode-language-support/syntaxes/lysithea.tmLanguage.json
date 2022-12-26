@@ -56,7 +56,7 @@
 		},
 		"keywords": {
 			"patterns": [{
-				"match": "\\(\\s*(function|if|unless|define|const|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b",
+				"match": "\\(\\s*(function|if|unless|switch|define|const|loop|continue|break|set|inc|dec|jump|return)\\b|\\b(true|false)\\b",
 				"captures": {
 						"1": {
 							"name": "keyword.lysithea"
