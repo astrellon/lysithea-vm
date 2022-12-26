@@ -327,7 +327,7 @@ export class Assembler
 
     public parseFlatten(input: Token)
     {
-        if (input.tokenList.every(isTokenExpression))
+        if (input.tokenList.length > 0 && input.tokenList.every(isTokenExpression))
         {
             return input.tokenList.map(v => this.parse(v)).flat(1);
         }

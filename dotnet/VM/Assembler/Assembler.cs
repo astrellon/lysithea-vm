@@ -28,6 +28,7 @@ namespace LysitheaVM
         private const string BreakKeyword = "break";
         private const string IfKeyword = "if";
         private const string UnlessKeyword = "unless";
+        private const string SwitchKeyword = "switch";
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
         private const string ConstKeyword = "const";
@@ -201,17 +202,17 @@ namespace LysitheaVM
         #endregion
 
         #region Keyword Parsing
-        public List<TempCodeLine> ParseFunctionKeyword(Token arrayValue)
+        public List<TempCodeLine> ParseFunctionKeyword(Token input)
         {
-            var function = ParseFunction(arrayValue);
+            var function = ParseFunction(input);
             var functionValue = new FunctionValue(function);
-            var functionToken = arrayValue.KeepLocation(functionValue);
+            var functionToken = input.KeepLocation(functionValue);
 
             if (this.keywordParsingStack.Count == 1 && function.HasName)
             {
                 if (!this.ConstScope.TrySetConstant(function.Name, functionValue))
                 {
-                    throw this.ThrowException(arrayValue, "Unable to define function, constant already exists");
+                    throw this.ThrowException(input, "Unable to define function, constant already exists");
                 }
                 // Special return case
                 return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
@@ -221,7 +222,7 @@ namespace LysitheaVM
             var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : FunctionKeyword;
             if (function.HasName && currentKeyword == FunctionKeyword)
             {
-                result.Add(TempCodeLine.Code(Operator.Define, arrayValue.KeepLocation(new StringValue(function.Name))));
+                result.Add(TempCodeLine.Code(Operator.Define, input.KeepLocation(function.Name)));
             }
             return result;
         }
@@ -299,7 +300,45 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<TempCodeLine> ParseCond(Token input, bool isIfStatement)
+        public List<TempCodeLine> ParseSwitch(Token input)
+        {
+            var labelNum = this.labelCount++;
+            var labelEnd = $":CondNext{input.TokenList.Count}_{labelNum}";
+
+            var result = new List<TempCodeLine>();
+
+            for (var i = 1; i < input.TokenList.Count; i++)
+            {
+                var expression = input.TokenList[i];
+                var thisLabelJump = $":CondNext{i}_{labelNum}";
+                var nextLabelJump = $":CondNext{i + 1}_{labelNum}";
+                if (i > 1)
+                {
+                    result.Add(TempCodeLine.Label(thisLabelJump, expression));
+                }
+
+                var comparisonCall = expression.TokenList[0];
+                if (!comparisonCall.TokenValue.Equals(BoolValue.True))
+                {
+                    result.AddRange(this.Parse(comparisonCall));
+                    result.Add(TempCodeLine.Code(Operator.JumpFalse, expression.KeepLocation(nextLabelJump)));
+                }
+
+                result.AddRange(expression.TokenList.Skip(1).SelectMany(this.Parse));
+
+                if (i < input.TokenList.Count - 1)
+                {
+                    result.Add(TempCodeLine.Code(Operator.Jump, expression.KeepLocation(labelEnd)));
+                }
+            }
+
+            // Jump target after the condition
+            result.Add(TempCodeLine.Label(labelEnd, input));
+
+            return result;
+        }
+
+        public List<TempCodeLine> ParseIfUnless(Token input, bool isIfStatement)
         {
             if (input.TokenList.Count < 3)
             {
@@ -310,57 +349,31 @@ namespace LysitheaVM
                 throw this.ThrowException(input, "Condition input has too many inputs!");
             }
 
-            var ifLabelNum = this.labelCount++;
-            var labelElse = $":CondElse{ifLabelNum}";
-            var labelEnd = $":CondEnd{ifLabelNum}";
+            // Turn the an if/unless statement into a switch statement.
+            // (if/unless (comparison) (ifComparison) (else))
+            // ->
+            // (switch ((comparison) comparisonBody) (true elseBody))
+            var tempTokens = new List<Token>{
+                input.KeepLocation(isIfStatement ? IfKeyword : UnlessKeyword)
+            };
 
-            var hasElseCall = input.TokenList.Count == 4;
-            var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
+            var comparisonToken = input.TokenList[1];
+            var firstBlockToken = input.TokenList[2];
 
-            var comparisonCall = input.TokenList[1];
-            var firstBlock = input.TokenList[2];
+            var newComparison = new List<Token>{ comparisonToken };
+            AddHandleNested(newComparison, firstBlockToken);
+            tempTokens.Add(Token.Expression(comparisonToken.Location, newComparison));
 
-            var result = Parse(comparisonCall);
-
-            if (hasElseCall)
+            if (input.TokenList.Count == 4)
             {
-                // Jump to else if the condition doesn't match
-                result.Add(TempCodeLine.Code(jumpOperator, comparisonCall.KeepLocation(new StringValue(labelElse))));
-
-                // First block of code
-                result.AddRange(this.ParseFlatten(firstBlock));
-                // Jump after the condition, skipping second block of code.
-                result.Add(TempCodeLine.Code(Operator.Jump, firstBlock.KeepLocation(new StringValue(labelEnd))));
-
-                // Jump target for else
-                result.Add(TempCodeLine.Label(labelElse, input));
-
-                // Second 'else' block of code
-                var secondBlock = input.TokenList[3];
-                result.AddRange(this.ParseFlatten(secondBlock));
-            }
-            else
-            {
-                // We only have one block, so jump to the end of the block if the condition doesn't match
-                result.Add(TempCodeLine.Code(jumpOperator, comparisonCall.KeepLocation(new StringValue(labelEnd))));
-
-                result.AddRange(ParseFlatten(firstBlock));
+                var elseToken = input.TokenList[3];
+                var newElse = new List<Token> { elseToken.KeepLocation(BoolValue.True) };
+                AddHandleNested(newElse, elseToken);
+                tempTokens.Add(Token.Expression(comparisonToken.Location, newElse));
             }
 
-            // Jump target after the condition
-            result.Add(TempCodeLine.Label(labelEnd, input));
-
-            return result;
-        }
-
-        public IEnumerable<TempCodeLine> ParseFlatten(Token input)
-        {
-            if (input.TokenList.All(i => i.Type == TokenType.Expression))
-            {
-                return input.TokenList.SelectMany(Parse);
-            }
-
-            return Parse(input);
+            var transformedToken = Token.Expression(input.Location, tempTokens);
+            return this.ParseSwitch(transformedToken);
         }
 
         public List<TempCodeLine> ParseLoopJump(Token token, string keyword, bool jumpToStart)
@@ -516,65 +529,66 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<TempCodeLine> TransformAssignmentOperator(Token arrayValue)
+        public List<TempCodeLine> TransformAssignmentOperator(Token input)
         {
-            var opCode = this.GetValue(arrayValue.TokenList[0]).ToString();
+            var opCode = this.GetValue(input.TokenList[0]).ToString();
             opCode = opCode.Substring(0, opCode.Length - 1);
 
-            var varName = this.GetValue(arrayValue.TokenList[1]).ToString();
-            var newCode = arrayValue.TokenList.ToList();
-            newCode[0] = arrayValue.TokenList[0].KeepLocation(new VariableValue(opCode));
+            var varName = this.GetValue(input.TokenList[1]).ToString();
+            var newCode = input.TokenList.ToList();
+            newCode[0] = input.TokenList[0].KeepLocation(new VariableValue(opCode));
 
             var wrappedCode = new List<Token>();
-            wrappedCode.Add(arrayValue.KeepLocation(new VariableValue("set")));
-            wrappedCode.Add(arrayValue.TokenList[1].KeepLocation(new VariableValue(varName)));
-            wrappedCode.Add(Token.Expression(arrayValue.Location, newCode));
+            wrappedCode.Add(input.KeepLocation(new VariableValue("set")));
+            wrappedCode.Add(input.TokenList[1].KeepLocation(new VariableValue(varName)));
+            wrappedCode.Add(Token.Expression(input.Location, newCode));
 
-            return this.Parse(Token.Expression(arrayValue.Location, wrappedCode));
+            return this.Parse(Token.Expression(input.Location, wrappedCode));
         }
 
-        public virtual List<TempCodeLine> ParseKeyword(VariableValue firstSymbol, Token arrayValue)
+        public virtual List<TempCodeLine> ParseKeyword(VariableValue firstSymbol, Token input)
         {
             List<TempCodeLine>? result = null;
             this.keywordParsingStack.Add(firstSymbol.Value);
             switch (firstSymbol.Value)
             {
                 // General Operators
-                case FunctionKeyword: result = this.ParseFunctionKeyword(arrayValue); break;
-                case ContinueKeyword: result = this.ParseLoopJump(arrayValue, ContinueKeyword, true); break;
-                case BreakKeyword: result = this.ParseLoopJump(arrayValue, BreakKeyword, false); break;
-                case SetKeyword: result = this.ParseDefineSet(arrayValue, false); break;
-                case DefineKeyword: result = this.ParseDefineSet(arrayValue, true); break;
-                case ConstKeyword: result = this.ParseConst(arrayValue); break;
-                case LoopKeyword: result = this.ParseLoop(arrayValue); break;
-                case IfKeyword: result = this.ParseCond(arrayValue, true); break;
-                case UnlessKeyword: result = this.ParseCond(arrayValue, false); break;
-                case JumpKeyword: result = this.ParseJump(arrayValue); break;
-                case ReturnKeyword: result = this.ParseReturn(arrayValue); break;
+                case FunctionKeyword: result = this.ParseFunctionKeyword(input); break;
+                case ContinueKeyword: result = this.ParseLoopJump(input, ContinueKeyword, true); break;
+                case BreakKeyword: result = this.ParseLoopJump(input, BreakKeyword, false); break;
+                case SetKeyword: result = this.ParseDefineSet(input, false); break;
+                case DefineKeyword: result = this.ParseDefineSet(input, true); break;
+                case ConstKeyword: result = this.ParseConst(input); break;
+                case LoopKeyword: result = this.ParseLoop(input); break;
+                case IfKeyword: result = this.ParseIfUnless(input, true); break;
+                case UnlessKeyword: result = this.ParseIfUnless(input, false); break;
+                case SwitchKeyword: result = this.ParseSwitch(input); break;
+                case JumpKeyword: result = this.ParseJump(input); break;
+                case ReturnKeyword: result = this.ParseReturn(input); break;
 
                 // Math Operators
-                case "+":  result = this.ParseOperator(Operator.Add, arrayValue); break;
-                case "-":  result = this.ParseNegative(arrayValue); break;
-                case "*":  result = this.ParseOperator(Operator.Multiply, arrayValue); break;
-                case "/":  result = this.ParseOperator(Operator.Divide, arrayValue); break;
-                case "++": result = this.ParseOneVariableUpdate(Operator.Inc, arrayValue); break;
-                case "--": result = this.ParseOneVariableUpdate(Operator.Dec, arrayValue); break;
+                case "+":  result = this.ParseOperator(Operator.Add, input); break;
+                case "-":  result = this.ParseNegative(input); break;
+                case "*":  result = this.ParseOperator(Operator.Multiply, input); break;
+                case "/":  result = this.ParseOperator(Operator.Divide, input); break;
+                case "++": result = this.ParseOneVariableUpdate(Operator.Inc, input); break;
+                case "--": result = this.ParseOneVariableUpdate(Operator.Dec, input); break;
 
                 // Comparison Operators
-                case "<":  result = this.ParseOperator(Operator.LessThan, arrayValue); break;
-                case "<=": result = this.ParseOperator(Operator.LessThanEquals, arrayValue); break;
-                case "==": result = this.ParseOperator(Operator.Equals, arrayValue); break;
-                case "!=": result = this.ParseOperator(Operator.NotEquals, arrayValue); break;
-                case ">":  result = this.ParseOperator(Operator.GreaterThan, arrayValue); break;
-                case ">=": result = this.ParseOperator(Operator.GreaterThanEquals, arrayValue); break;
+                case "<":  result = this.ParseOperator(Operator.LessThan, input); break;
+                case "<=": result = this.ParseOperator(Operator.LessThanEquals, input); break;
+                case "==": result = this.ParseOperator(Operator.Equals, input); break;
+                case "!=": result = this.ParseOperator(Operator.NotEquals, input); break;
+                case ">":  result = this.ParseOperator(Operator.GreaterThan, input); break;
+                case ">=": result = this.ParseOperator(Operator.GreaterThanEquals, input); break;
 
                 // Boolean Operators
-                case "&&": result = this.ParseOperator(Operator.And, arrayValue); break;
-                case "||": result = this.ParseOperator(Operator.Or, arrayValue); break;
-                case "!":  result = this.ParseOnePushInput(Operator.Not, arrayValue); break;
+                case "&&": result = this.ParseOperator(Operator.And, input); break;
+                case "||": result = this.ParseOperator(Operator.Or, input); break;
+                case "!":  result = this.ParseOnePushInput(Operator.Not, input); break;
 
                 // Misc Operators
-                case "$":  result = this.ParseStringConcat(arrayValue); break;
+                case "$":  result = this.ParseStringConcat(input); break;
 
                 // Conjoined Operators
                 case "+=":
@@ -584,7 +598,7 @@ namespace LysitheaVM
                 case "&&=":
                 case "||=":
                 case "$=":
-                    result = this.TransformAssignmentOperator(arrayValue); break;
+                    result = this.TransformAssignmentOperator(input); break;
             }
 
             this.keywordParsingStack.PopBack();
@@ -685,7 +699,7 @@ namespace LysitheaVM
             else
             {
                 // Could not find the parent right now, so look for the parent at runtime.
-                result.Add(TempCodeLine.Code(Operator.Get, input.KeepLocation(new StringValue(parentKey))));
+                result.Add(TempCodeLine.Code(Operator.Get, input.KeepLocation(parentKey)));
 
                 // If this was also a property check also look up the property at runtime.
                 if (isProperty)
@@ -763,6 +777,18 @@ namespace LysitheaVM
             }
 
             return false;
+        }
+
+        private static void AddHandleNested(List<Token> target, Token input)
+        {
+            if (input.IsNestedExpression())
+            {
+                target.AddRange(input.TokenList);
+            }
+            else
+            {
+                target.Add(input);
+            }
         }
         #endregion
 

@@ -36,6 +36,11 @@ namespace LysitheaVM
         #endregion
 
         #region Methods
+        public Token KeepLocation(string input)
+        {
+            return this.KeepLocation(new StringValue(input));
+        }
+
         public Token KeepLocation(IValue? input)
         {
             if (input == null)
@@ -56,6 +61,11 @@ namespace LysitheaVM
                 case TokenType.Map: return "<TokenMap>";
                 case TokenType.Expression: return "<TokenExpression>";
             }
+        }
+
+        public bool IsNestedExpression()
+        {
+            return this.TokenList.Any() && this.TokenList.All(i => i.Type == TokenType.Expression);
         }
 
         public Token ToEmpty()

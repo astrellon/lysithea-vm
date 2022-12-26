@@ -345,7 +345,7 @@ namespace lysithea_vm
     {
         if (input.type == token_type::expression)
         {
-            auto all_array = true;
+            auto all_array = input.list_data.size() > 0;
             for (const auto &iter : input.list_data)
             {
                 if (iter->type != token_type::expression)

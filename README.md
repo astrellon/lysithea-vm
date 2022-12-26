@@ -909,6 +909,20 @@ Still in progress
 Please wait...
 ```
 
+Inlining `if` statements. As `if` statements are block expressions then you can use them inside other statements.
+
+```lisp
+(define progress 0)
+(define message (if (< progress 100) "Still in progress" "All done"))
+(print "Progress " progress "%: " message)
+; Outputs Progress 0%: Still in progress
+
+(define progress 100)
+(define message (if (< progress 100) "Still in progress" "All done"))
+(print "Progress " progress "%: " message)
+; Outputs Progress 100%: All done
+```
+
 ### `(unless (conditionalCode) (whenFalseCode) (whenTrueCode?))`
 The conditional code is executed first and if result in a `false` value then the `whenFalseCode` is executed. If another block is provided then that will be executed if the value is not false.
 
@@ -928,6 +942,135 @@ The conditional code is executed first and if result in a `false` value then the
 ; Outputs
 Still in progress
 Please wait...
+```
+
+### `(switch (comparisons...))`
+This creates a conditional block, this is what the `if` and `unless` statements are built upon. This isn't quite like a C-language style `switch` as it's not focused on a single value but rather it is a series of comparison calls until one is found to be true.
+
+```lisp
+(define width 100)
+(define length 70)
+(switch
+    ((< width 70) (print "Not wide enough"))
+    ((< length 70) (print "Not long enough"))
+
+    ; The true line is considered the else block
+    (true (print "All good"))
+)
+
+; Outputs
+; Not long enough
+```
+
+Internally each comparison is run in order until one equals `true` and then the rest are skipped. It does handle the `true` part specially and won't check if `true` equals `true`. If no block equals true then nothing happens.
+
+```lisp
+(function menu (timeOfDay)
+    (print "For: " timeOfDay)
+    (switch
+        ((< timeOfDay "09:00")
+            (print "Too early")
+            (print "Come back later")
+        )
+        ((< timeOfDay "15:00")
+            (print "Welcome")
+            (print "Please choose a menu item")
+        )
+        ((< timeOfDay "19:00")
+            (print "Good evening")
+            (print "Please choose a menu item")
+        )
+        (true
+            (print "Sorry we are closed")
+        )
+    )
+    (print "Thank you")
+)
+
+(menu "08:00")
+; Outputs
+; For: 08:00
+; Too early
+; Come back later
+; Thank you
+
+(menu "12:00")
+; Outputs
+; For: 12:00
+; Welcome
+; Please choose a menu item
+; Thank you
+
+(menu "16:00")
+; Outputs
+; For: 16:00
+; Good evening
+; Please choose a menu item
+; Thank you
+
+(menu "20:00")
+; Outputs
+; For: 20:00
+; Sorry we are closed
+; Thank you
+```
+
+Switch statements like the `if` and `unless` statements can be used as an expression for getting a value as well. Here a function simply returns the value of a `switch`.
+
+```lisp
+(function getProgress (progress)
+    (return (switch
+        ((< progress 5) "Not even started")
+        ((< progress 25) "A little bit done")
+        ((< progress 50) "Somewhat done")
+        ((< progress 75) "It's getting there")
+        ((< progress 100) "Almost done")
+        ((== progress 100) "All done!")
+        (true "Unknown progress")
+    ))
+)
+
+(define i 0)
+(loop (<= i 5)
+    (define progress (* i 20))
+    (print "Progress " progress "%: " (getProgress progress))
+    (++ i)
+)
+
+; Outputs
+; Progress 0%: Not even started
+; Progress 20%: A little bit done
+; Progress 40%: Somewhat done
+; Progress 60%: It's getting there
+; Progress 80%: Almost done
+; Progress 100%: All done!
+```
+
+An even more inlined version of the one above, I wouldn't recommend a long switch statement being used inlined but it does work.
+
+```lisp
+(define i 0)
+(loop (<= i 5)
+    (define progress (* i 20))
+    (print "Progress " progress "%: " (switch
+        ((< progress 5) "Not even started")
+        ((< progress 25) "A little bit done")
+        ((< progress 50) "Somewhat done")
+        ((< progress 75) "It's getting there")
+        ((< progress 100) "Almost done")
+        ((== progress 100) "All done!")
+        (true "Unknown progress")
+    ))
+    (++ i)
+)
+
+; Outputs
+; Progress 0%: Not even started
+; Progress 20%: A little bit done
+; Progress 40%: Somewhat done
+; Progress 60%: It's getting there
+; Progress 80%: Almost done
+; Progress 100%: All done!
 ```
 
 ### `(function name? (parameterList) (codeBody))`
