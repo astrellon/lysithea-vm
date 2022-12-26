@@ -98,4 +98,22 @@ namespace lysithea_vm
     {
         return token(location);
     }
+
+    bool token::is_nested_expression() const
+    {
+        if (list_data.size() == 0)
+        {
+            return false;
+        }
+
+        for (const auto &iter : list_data)
+        {
+            if (iter->type != token_type::expression)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 } // lysithea_vm

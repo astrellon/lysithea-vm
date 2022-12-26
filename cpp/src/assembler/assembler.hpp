@@ -32,6 +32,7 @@ namespace lysithea_vm
             static const std::string keyword_break;
             static const std::string keyword_if;
             static const std::string keyword_unless;
+            static const std::string keyword_switch;
             static const std::string keyword_set;
             static const std::string keyword_define;
             static const std::string keyword_const;
@@ -52,7 +53,8 @@ namespace lysithea_vm
             code_line_list parse_define_set(const token &input, bool is_define);
             code_line_list parse_const(const token &input);
             code_line_list parse_loop(const token &input);
-            code_line_list parse_cond(const token &input, bool is_if_statement);
+            code_line_list parse_if_unless(const token &input, bool is_if_statement);
+            code_line_list parse_switch(const token &input);
             code_line_list parse_flatten(const token &input);
             code_line_list parse_loop_jump(const token &token, const std::string &keyword, bool jump_to_start);
             std::shared_ptr<function> parse_function(const token &input);
@@ -98,6 +100,10 @@ namespace lysithea_vm
             std::shared_ptr<script> parse_from_value(const token &input);
 
             std::shared_ptr<function> process_temp_function(const std::vector<std::string> &parameters, const code_line_list &temp_code_lines, const std::string &name);
+
+            std::string make_cond_label(int index, int label_num);
+
+            static void add_handle_nested(std::vector<token_ptr> &target, token_ptr input);
 
     };
 } // lysithea_vm

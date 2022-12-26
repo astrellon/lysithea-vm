@@ -310,16 +310,17 @@ namespace LysitheaVM
             for (var i = 1; i < input.TokenList.Count; i++)
             {
                 var expression = input.TokenList[i];
-                var thisLabelJump = $":CondNext{i}_{labelNum}";
-                var nextLabelJump = $":CondNext{i + 1}_{labelNum}";
+
                 if (i > 1)
                 {
+                    var thisLabelJump = $":CondNext{i}_{labelNum}";
                     result.Add(TempCodeLine.Label(thisLabelJump, expression));
                 }
 
                 var comparisonCall = expression.TokenList[0];
                 if (!comparisonCall.TokenValue.Equals(BoolValue.True))
                 {
+                    var nextLabelJump = $":CondNext{i + 1}_{labelNum}";
                     result.AddRange(this.Parse(comparisonCall));
                     result.Add(TempCodeLine.Code(Operator.JumpFalse, expression.KeepLocation(nextLabelJump)));
                 }
@@ -332,7 +333,6 @@ namespace LysitheaVM
                 }
             }
 
-            // Jump target after the condition
             result.Add(TempCodeLine.Label(labelEnd, input));
 
             return result;

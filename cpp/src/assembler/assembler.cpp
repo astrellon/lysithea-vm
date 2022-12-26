@@ -23,6 +23,7 @@ namespace lysithea_vm
     const std::string assembler::keyword_break("break");
     const std::string assembler::keyword_if("if");
     const std::string assembler::keyword_unless("unless");
+    const std::string assembler::keyword_switch("switch");
     const std::string assembler::keyword_set("set");
     const std::string assembler::keyword_define("define");
     const std::string assembler::keyword_const("const");
@@ -269,7 +270,48 @@ namespace lysithea_vm
         return result;
     }
 
-    assembler::code_line_list assembler::parse_cond(const token &input, bool is_if_statement)
+    assembler::code_line_list assembler::parse_switch(const token &input)
+    {
+        auto label_num = label_count++;
+        auto label_end = make_cond_label(input.list_data.size(), label_num);
+
+        code_line_list result;
+
+        for (auto i = 1; i < input.list_data.size(); ++i)
+        {
+            const auto &expression = *input.list_data[i];
+
+            if (i > 1)
+            {
+                auto this_label_jump = make_cond_label(i, label_num);
+                result.emplace_back(this_label_jump);
+            }
+
+            const auto &comparison_call = *expression.list_data[0];
+            if (!comparison_call.token_value.is_true())
+            {
+                auto next_label_jump = make_cond_label(i + 1, label_num);
+                push_range(result, parse(comparison_call));
+                result.emplace_back(vm_operator::jump_false, expression.keep_location(next_label_jump));
+            }
+
+            for (auto j = 1; j < expression.list_data.size(); ++j)
+            {
+                push_range(result, parse(*expression.list_data[j]));
+            }
+
+            if (i < input.list_data.size() - 1)
+            {
+                result.emplace_back(vm_operator::jump, expression.keep_location(label_end));
+            }
+        }
+
+        result.emplace_back(label_end);
+
+        return result;
+    }
+
+    assembler::code_line_list assembler::parse_if_unless(const token &input, bool is_if_statement)
     {
         if (input.list_data.size() < 3)
         {
@@ -280,65 +322,28 @@ namespace lysithea_vm
             throw assembler_error::create(input, "Condition input has too many inputs!");
         }
 
-        auto if_label_num = label_count++;
+        std::vector<token_ptr> temp_tokens;
+        temp_tokens.emplace_back(std::make_shared<token>(input.location, value(is_if_statement ? keyword_if : keyword_unless)));
 
-        std::stringstream ss_label_else(":CondElse");
-        ss_label_else << if_label_num;
-        auto label_else = std::make_shared<string_value>(ss_label_else.str());
+        auto comparison_token = input.list_data[1];
+        auto first_block_token = input.list_data[2];
 
-        std::stringstream ss_label_end(":CondEnd");
-        ss_label_end << if_label_num;
-        auto label_end = std::make_shared<string_value>(ss_label_end.str());
+        std::vector<token_ptr> new_comparison;
+        new_comparison.emplace_back(comparison_token);
+        add_handle_nested(new_comparison, first_block_token);
+        temp_tokens.emplace_back(std::make_shared<token>(comparison_token->location, token_type::expression, new_comparison));
 
-        auto has_else_call = input.list_data.size() == 4;
-        auto jump_operator = is_if_statement ? vm_operator::jump_false : vm_operator::jump_true;
-
-        const auto &comparison_token = *input.list_data[1];
-        if (comparison_token.type != token_type::expression)
+        if (input.list_data.size() == 4)
         {
-            throw assembler_error::create(comparison_token, "Condition needs comparison to be an array");
+            auto else_token = input.list_data[3];
+            std::vector<token_ptr> new_else;
+            new_else.emplace_back(std::make_shared<token>(input.location, value(true)));
+            add_handle_nested(new_else, else_token);
+            temp_tokens.emplace_back(std::make_shared<token>(comparison_token->location, token_type::expression, new_else));
         }
 
-        const auto &first_block_token = *input.list_data[2];
-        if (first_block_token.type != token_type::expression)
-        {
-            throw assembler_error::create(first_block_token, "Condition needs first block to be an array");
-        }
-
-        auto result = parse(comparison_token);
-
-        if (has_else_call)
-        {
-            // Jump to else if the condition doesn't match
-            result.emplace_back(jump_operator, comparison_token.keep_location(label_else));
-
-            // First block of code
-            push_range(result, parse_flatten(first_block_token));
-            // Jump after the condition, skipping second block of code.
-            result.emplace_back(vm_operator::jump, first_block_token.keep_location(label_end));
-
-            // Jump target for else
-            result.emplace_back(ss_label_else.str());
-
-            // Second 'else' block of code
-            const auto &second_block_token = *input.list_data[3];
-            if (second_block_token.type != token_type::expression)
-            {
-                throw assembler_error::create(second_block_token, "Condition else needs second block to be an array");
-            }
-
-            push_range(result, parse_flatten(second_block_token));
-        }
-        else
-        {
-            result.emplace_back(jump_operator, comparison_token.keep_location(label_end));
-
-            push_range(result, parse_flatten(first_block_token));
-        }
-
-        result.emplace_back(ss_label_end.str());
-
-        return result;
+        auto transformed_token = std::make_shared<token>(input.location, token_type::expression, temp_tokens);
+        return parse_switch(*transformed_token);
     }
 
     assembler::code_line_list assembler::parse_flatten(const token &input)
@@ -615,8 +620,9 @@ namespace lysithea_vm
         else if (keyword == keyword_define) { result = parse_define_set(input, true); }
         else if (keyword == keyword_const) { result = parse_const(input); }
         else if (keyword == keyword_loop) { result = parse_loop(input); }
-        else if (keyword == keyword_if) { result = parse_cond(input, true); }
-        else if (keyword == keyword_unless) { result = parse_cond(input, false); }
+        else if (keyword == keyword_if) { result = parse_if_unless(input, true); }
+        else if (keyword == keyword_unless) { result = parse_if_unless(input, false); }
+        else if (keyword == keyword_switch) { result = parse_switch(input); }
         else if (keyword == keyword_jump) { result = parse_jump(input); }
         else if (keyword == keyword_return) { result = parse_return(input); }
 
@@ -803,5 +809,24 @@ namespace lysithea_vm
         auto symbols = std::make_shared<debug_symbols>(source_name, source_text, locations);
 
         return std::make_shared<function>(code, parameters, labels, name, symbols);
+    }
+
+    std::string assembler::make_cond_label(int index, int label_num)
+    {
+        std::stringstream ss(":CondNext");
+        ss << index << '_' << label_num;
+        return ss.str();
+    }
+
+    void assembler::add_handle_nested(std::vector<token_ptr> &target, token_ptr input)
+    {
+        if (input->is_nested_expression())
+        {
+            push_range(target, input->list_data);
+        }
+        else
+        {
+            target.emplace_back(input);
+        }
     }
 } // lysithea_vm

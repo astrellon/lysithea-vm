@@ -59,11 +59,6 @@ function splitInput(input: string)
     return input.split(regexSplit);
 }
 
-function isTokenExpression(input: Token)
-{
-    return input.type === 'expression';
-}
-
 function isNoOperator(input: TempCodeLine[])
 {
     if (input.length === 1)
@@ -362,16 +357,6 @@ export class Assembler
         result.push(labelLine(labelEnd));
 
         return result;
-    }
-
-    public parseFlatten(input: Token)
-    {
-        if (input.tokenList.length > 0 && input.tokenList.every(isTokenExpression))
-        {
-            return input.tokenList.map(v => this.parse(v)).flat(1);
-        }
-
-        return this.parse(input);
     }
 
     public parseLoopJump(token: Token, keyword: string, jumpToStart: boolean)

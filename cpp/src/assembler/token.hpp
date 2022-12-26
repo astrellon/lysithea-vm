@@ -47,5 +47,6 @@ namespace lysithea_vm
             token keep_location(value new_token_value) const;
             token keep_location(complex_ptr new_token_value) const;
             token to_empty() const;
+            bool is_nested_expression() const;
     };
 } // lysithea_vm
