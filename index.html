@@ -26,7 +26,58 @@
     (print "Done: " total)
 )
 
-(main)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePerfTest_output" class="code-output code-section"></pre> </div> </div> </article> <article> <h2>Page Set</h2> <details> <summary>Includes the standard library with <code>setBackground</code>, <code>setTheme</code> and <code>random</code> functions.</summary> </details> <p> A somewhat contrived example of adding some extra functions for interacting with the page. </p> <p> In this example there are two extra functions <code>setBackground</code> and <code>setTheme</code>. </p> <p> <code>setBackground</code> has three inputs <code>purple</code>, <code>grey</code> and <code>green</code>. </p> <p> <code>setTheme</code> has two inputs <code>light</code> and <code>dark</code>. </p> <p> <code>random.pick</code> takes a list of arguments and will randomly return one of the values. </p> <div class="code-example-section"> <div> <div class="code-example-section__title"> <strong> Code Input </strong> <button onclick="runPageSetup()">Run</button> </div> <textarea id="codePageSetup" class="code-section" placeholder="Placeholder code">
+(main)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePerfTest_output" class="code-output code-section"></pre> </div> </div> </article> <article> <h2>Conditionals</h2> <details> <summary>Includes the standard library with a function for getting user input, waiting and random number.</summary> </details> <p> An example of how conditionals work and how they can be used as expressions too. Note that there is a deliberate delay between prompts otherwise you would not see the output in the console. </p> <div class="code-example-section"> <div> <div class="code-example-section__title"> <strong> Code Input </strong> <button onclick="runPrompt('conditionals')">Run</button> </div> <textarea id="conditionals" class="code-section" placeholder="Placeholder code">
+(:Start)
+(define name (prompt "What is your name?"))
+(print "You entered " name)
+(if (== name null)
+    (jump :End)
+)
+
+(if (== name.length 0) (
+    (set name (if (> (rand) 0.5) "Fred" "Fredrika"))
+    (print "All good, I'll come up with a name, how about " name "?")
+    (wait 1500)
+))
+
+(print "Hello " name)
+(print (if (> (rand) 0.5) "It's a fine day" "It's a good day"))
+
+(wait 2000)
+
+(:Options)
+(define input (prompt "Choose an option:
+- 1: Hello
+- 2: Who are you?
+- 3: Can I have a new name?
+- 4: Good bye"))
+
+(switch
+    ((== input "1")
+        (print "Hello there! How are you " name "?")
+        (wait 2000)
+        (jump :Options)
+    )
+    ((== input "2")
+        (print "You see " name ", I'm just a text box")
+        (wait 2000)
+        (jump :Options)
+    )
+    ((== input "3")
+        (jump :Start)
+    )
+    ((|| (== input "4") (== input null))
+        (print "See ya late " name)
+        (jump :End)
+    )
+
+    (true
+        (print "I don't know that option")
+        (jump :Options)
+    )
+)
+
+(:End)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="conditionals_output" class="code-output code-section"></pre> </div> </div> </article> <article> <h2>Page Set</h2> <details> <summary>Includes the standard library with <code>setBackground</code>, <code>setTheme</code> and <code>random</code> functions.</summary> </details> <p> A somewhat contrived example of adding some extra functions for interacting with the page. </p> <p> In this example there are two extra functions <code>setBackground</code> and <code>setTheme</code>. </p> <p> <code>setBackground</code> has three inputs <code>purple</code>, <code>grey</code> and <code>green</code>. </p> <p> <code>setTheme</code> has two inputs <code>light</code> and <code>dark</code>. </p> <p> <code>random.pick</code> takes a list of arguments and will randomly return one of the values. </p> <div class="code-example-section"> <div> <div class="code-example-section__title"> <strong> Code Input </strong> <button onclick="runPageSetup()">Run</button> </div> <textarea id="codePageSetup" class="code-section" placeholder="Placeholder code">
 (define background (random.pick "purple" "green" "grey"))
 (define theme (random.pick "light" "dark"))
 
@@ -34,4 +85,4 @@
 (print "Setting theme to: " theme)
 
 (setBackground background)
-(setTheme theme)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePageSetup_output" class="code-output code-section"></pre> </div> </div> </article> </section> <footer> Alan Lawrey 2022 </footer> <script type="module" src="/lysithea-vm/index.dd742c9c.js"></script> </body></html>
+(setTheme theme)</textarea> </div> <div> <div class="code-example-section__title"><strong>Console Output</strong></div> <pre id="codePageSetup_output" class="code-output code-section"></pre> </div> </div> </article> </section> <footer> Alan Lawrey 2022 </footer> <script type="module" src="/lysithea-vm/index.61593d2e.js"></script> </body></html>
