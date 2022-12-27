@@ -536,23 +536,22 @@ namespace lysithea_vm
     std::string virtual_machine::debug_scope_line(const function &func, int line)
     {
         std::stringstream ss;
-        ss << func.symbols->source_name << ": [" << func.name << "]: line:";
+        ss << "  at [" << func.name << "] in " << func.symbols->source_name;
         if (line >= func.code.size())
         {
-            ss << line << ": end of code";
+            ss << " end of code";
             return ss.str();
         }
         else if (line < 0)
         {
-            ss << line << ": before start of code";
+            ss << " before start of code";
             return ss.str();
         }
 
-        const auto &code_line = func.code[line];
         code_location location;
         func.symbols->try_get_location(line, location);
 
-        ss << (location.start_line_number + 1) << ", column:" << location.start_column_number << "\n";
+        ss << ':' << (location.start_line_number + 1) << ":" << location.start_column_number << "\n";
 
         auto from_line_index = std::max(0, location.start_line_number - 1);
         auto to_line_index = std::min(static_cast<int>(func.symbols->full_text->size()), location.start_line_number + 2);
@@ -564,7 +563,9 @@ namespace lysithea_vm
 
             auto line_number = line_number_ss.str();
 
-            if (i == location.start_line_number + 1)
+            ss << line_number << ": " << func.symbols->full_text->at(i) << '\n';
+
+            if (i == location.start_line_number)
             {
                 ss << std::string(location.start_column_number + line_number.size() + 1, ' ') << '^';
                 auto diff = location.end_column_number - location.start_column_number;
@@ -574,8 +575,6 @@ namespace lysithea_vm
                 }
                 ss << '\n';
             }
-
-            ss << line_number << ": " << func.symbols->full_text->at(i) << '\n';
         }
 
         return ss.str();

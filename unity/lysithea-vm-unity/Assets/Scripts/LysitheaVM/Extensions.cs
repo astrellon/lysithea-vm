@@ -40,7 +40,7 @@ namespace LysitheaVM
                 return (T)obj;
             }
 
-            throw new VirtualMachineException(self.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
+            throw new VirtualMachineException(self, self.CreateStackTrace(), $"Unable to pop stack, type cast error: wanted {typeof(T).FullName} and got {obj.GetType().FullName}");
         }
 
         public static bool PopStackBool(this VirtualMachine self)
@@ -63,7 +63,7 @@ namespace LysitheaVM
             {
                 return numValue.Value;
             }
-            throw new VirtualMachineException(self.CreateStackTrace(), "Error attempting to get number argument");
+            throw new VirtualMachineException(self, self.CreateStackTrace(), "Error attempting to get number argument");
         }
 
         public static bool GetBoolArg(this VirtualMachine self, CodeLine input)
@@ -76,7 +76,7 @@ namespace LysitheaVM
             {
                 return boolValue.Value;
             }
-            throw new VirtualMachineException(self.CreateStackTrace(), "Error attempting to get boolean argument");
+            throw new VirtualMachineException(self, self.CreateStackTrace(), "Error attempting to get boolean argument");
         }
         #endregion
     }

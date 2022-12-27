@@ -10,8 +10,9 @@ export class VirtualMachineRunner
     public vmStepTiming: number = -1.0;
 
     public isWaiting: boolean = false;
-    private interval: number = -1;
+    private interval: number | NodeJS.Timer = -1;
     private onComplete: (value: any) => void = () => {}
+    private onError: (error: any) => void = () => {}
 
     constructor (vm: VirtualMachine)
     {
@@ -47,7 +48,15 @@ export class VirtualMachineRunner
 
             runOnce = true;
             this.isWaiting = false;
-            this._vm.step();
+            try
+            {
+                this._vm.step();
+            }
+            catch (err)
+            {
+                this.running = false;
+                this.onError(err);
+            }
         }
 
         if (!this._vm.running)
@@ -58,15 +67,16 @@ export class VirtualMachineRunner
         }
     }
 
-    public start(): Promise<any>
+    public start(frameDt: number = 1000 / 60): Promise<any>
     {
         this.running = true;
         this._vm.running = true;
-        this.interval = setInterval(this.step, 1);
+        this.interval = setInterval(this.step, frameDt, frameDt);
 
         return new Promise((resolve, reject) =>
         {
             this.onComplete = resolve;
+            this.onError = reject;
         });
     }
 }

@@ -4,12 +4,13 @@ import { assertScope } from "../src/standardLibrary/standardAssertLibrary";
 import { VirtualMachine } from "../src/virtualMachine";
 import { Assembler } from "../src/assembler/assembler";
 
-const file = fs.readFileSync('../examples/testStandardLibrary.lys', {encoding: 'utf-8'});
+const filename = '../examples/testStandardLibrary.lys';
+const file = fs.readFileSync(filename, {encoding: 'utf-8'});
 
 const assembler = new Assembler();
 addToScope(assembler.builtinScope, LibraryType.all);
 assembler.builtinScope.combineScope(assertScope);
-const script = assembler.parseFromText(file);
+const script = assembler.parseFromText(filename, file);
 
 const vm = new VirtualMachine(16);
 

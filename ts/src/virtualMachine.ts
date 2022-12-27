@@ -146,7 +146,7 @@ export class VirtualMachine
         {
             default:
                 {
-                    throw new Error(`Unknown operator: ${codeLine.operator}`);
+                    throw new VirtualMachineError(this.createStackTrace(), `Unknown operator: ${codeLine.operator}`);
                 }
 
             // General Operators
@@ -158,7 +158,7 @@ export class VirtualMachine
                     }
                     else
                     {
-                        throw new Error(`${this.getScopeLine()}: Push needs an input`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Push needs an input`);
                     }
                     break;
                 }
@@ -167,7 +167,7 @@ export class VirtualMachine
                     const top = codeLine.value ?? this.popStack();
                     if (!(isIArrayValue(top)))
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to convert argument value onto stack: ${top.toString()}`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to convert argument value onto stack: ${top.toString()}`);
                     }
 
                     this.pushStack(new ArrayValue(top.arrayValues(), true));
@@ -178,7 +178,7 @@ export class VirtualMachine
                     const key = codeLine.value ?? this.popStack();
                     if (!(key instanceof StringValue))
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to get, input must be a string not: ${key.toString()}`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to get, input must be a string not: ${key.toString()}`);
                     }
 
                     let foundValue = this._currentScope.get(key.value);
@@ -196,14 +196,14 @@ export class VirtualMachine
                             break;
                         }
                     }
-                    throw new Error(`${this.getScopeLine()}: Unable to get variable: ${key.toString()}`);
+                    throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to get variable: ${key.toString()}`);
                 }
             case 'getProperty':
                 {
                     const key = codeLine.value ?? this.popStack();
                     if (!isIArrayValue(key))
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to get property, input needs to be an array: ${key.toString()}`)
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to get property, input needs to be an array: ${key.toString()}`)
                     }
 
                     const top = this.popStack();
@@ -214,7 +214,7 @@ export class VirtualMachine
                     }
                     else
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to get property: ${key.toString()}`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to get property: ${key.toString()}`);
                     }
                     break;
                 }
@@ -231,7 +231,7 @@ export class VirtualMachine
                     const value = this.popStack();
                     if (!this._currentScope.trySet(key.toString(), value))
                     {
-                        throw new Error(`${this.getScopeLine()}: Unable to set variable that has not been defined: ${key.toString()} = ${value.toString()}`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to set variable that has not been defined: ${key.toString()} = ${value.toString()}`);
                     }
                     break;
                 }
@@ -270,7 +270,7 @@ export class VirtualMachine
                 {
                     if (!(codeLine.value instanceof NumberValue))
                     {
-                        throw new Error(`${this.getScopeLine()}: Call needs a num args code line input`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Call needs a num args code line input`);
                     }
 
                     const numArgs = codeLine.value;
@@ -281,7 +281,7 @@ export class VirtualMachine
                     }
                     else
                     {
-                        throw new Error(`${this.getScopeLine()}: Call needs a function to run: ${top.toString()}`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Call needs a function to run: ${top.toString()}`);
                     }
                     break;
                 }
@@ -292,7 +292,7 @@ export class VirtualMachine
                         !isIFunctionValue(funcCall.tryGetIndex(0)) ||
                         !(funcCall.tryGetIndex(1) instanceof NumberValue))
                     {
-                        throw new Error(`${this.getScopeLine()}: Call direct needs an array of the function and num args code line input`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Call direct needs an array of the function and num args code line input`);
                     }
 
                     this.callFunction(funcCall.tryGetIndex(0) as IFunctionValue, (funcCall.tryGetIndex(1) as NumberValue).value, true);
@@ -304,7 +304,7 @@ export class VirtualMachine
                 {
                     if (!isNumberValue(codeLine.value))
                     {
-                        throw new Error(`${this.getScopeLine()}: StringConcat operator needs the number of args to concat`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: StringConcat operator needs the number of args to concat`);
                     }
 
                     const args = this.getArgs(codeLine.value.value);
@@ -346,14 +346,14 @@ export class VirtualMachine
                 {
                     if (codeLine.value == undefined)
                     {
-                        throw new Error(`${this.getScopeLine()}: Inc operator needs code line variable`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Inc operator needs code line variable`);
                     }
 
                     const key = codeLine.value.toString();
                     const num = this._currentScope.getNumber(key);
                     if (num === undefined)
                     {
-                        throw new Error(`${this.getScopeLine()}: Inc operator could not find variable: ${key}`);
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Inc operator could not find variable: ${key}`);
                     }
                     this._currentScope.trySet(key, new NumberValue(num + 1));
                     break;
@@ -362,14 +362,14 @@ export class VirtualMachine
                 {
                     if (codeLine.value == undefined)
                     {
-                        throw new Error(`${this.getScopeLine()}: Dec operator needs code line variable`);
-                    }
+                            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Dec operator needs code line variable`);
+                        }
 
-                    const key = codeLine.value.toString();
-                    const num = this._currentScope.getNumber(key);
-                    if (num === undefined)
-                    {
-                        throw new Error(`${this.getScopeLine()}: Dec operator could not find variable: ${key}`);
+                        const key = codeLine.value.toString();
+                        const num = this._currentScope.getNumber(key);
+                        if (num === undefined)
+                        {
+                            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Dec operator could not find variable: ${key}`);
                     }
                     this._currentScope.trySet(key, new NumberValue(num - 1));
                     break;
@@ -456,7 +456,7 @@ export class VirtualMachine
     {
         if (!this.tryCallReturn())
         {
-            throw new Error(`${this.getScopeLine()}: Unable to return, call stack empty`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to return, call stack empty`);
         }
     }
 
@@ -508,7 +508,7 @@ export class VirtualMachine
         {
             return codeLine.value.value;
         }
-        throw new Error(`${this.getScopeLine()}: Error attempt to get number argument`);
+        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Error attempt to get number argument`);
     }
 
     public getBoolArg(codeLine: CodeLine): boolean
@@ -521,7 +521,7 @@ export class VirtualMachine
         {
             return codeLine.value.value;
         }
-        throw new Error(`${this.getScopeLine()}: Error attempt to get boolean argument`);
+        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Error attempt to get boolean argument`);
     }
 
     public jump(label: string)
@@ -529,7 +529,7 @@ export class VirtualMachine
         const line = this.currentCode.labels[label];
         if (line == null)
         {
-            throw new Error(`${this.getScopeLine()}: Unable to jump to label: ${label}`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to jump to label: ${label}`);
         }
 
         this._lineCounter = line;
@@ -576,7 +576,7 @@ export class VirtualMachine
             }
             else
             {
-                throw new Error('Function called without enough arguments: ' + func.name);
+                throw new VirtualMachineError(this.createStackTrace(), 'Function called without enough arguments: ' + func.name);
             }
         }
     }
@@ -594,7 +594,7 @@ export class VirtualMachine
     {
         if (this._stackTrace.length >= this._stackSize)
         {
-            throw new Error(`${this.getScopeLine()}: Unable to push to stack trace, stack is full`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to push to stack trace, stack is full`);
         }
 
         this._stackTrace.push(scopeFrame);
@@ -604,7 +604,7 @@ export class VirtualMachine
     {
         if (this._stack.length >= this._stackSize)
         {
-            throw new Error(`${this.getScopeLine()}: Unable to push, stack full`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Unable to push, stack full`);
         }
         this._stack.push(value);
     }
@@ -629,7 +629,7 @@ export class VirtualMachine
         const result = this._stack.pop();
         if (result === undefined)
         {
-            throw new Error(`${this.getScopeLine()}: Popped empty stack`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Popped empty stack`);
         }
         return result;
     }
@@ -642,7 +642,7 @@ export class VirtualMachine
             return top as T;
         }
 
-        throw new Error(`${this.getScopeLine()}: Pop stack cast error`);
+        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Pop stack cast error`);
     }
 
     public popStackNumber(): number
@@ -650,7 +650,7 @@ export class VirtualMachine
         const result = this._stack.pop();
         if (!isNumberValue(result))
         {
-            throw new Error(`${this.getScopeLine()}: Pop stack error, not a number`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Pop stack error, not a number`);
         }
         return result.value;
     }
@@ -660,7 +660,7 @@ export class VirtualMachine
         const result = this._stack.pop();
         if (!isBoolValue(result))
         {
-            throw new Error(`${this.getScopeLine()}: Pop stack error, not a boolean`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Pop stack error, not a boolean`);
         }
         return result.value;
     }
@@ -669,7 +669,7 @@ export class VirtualMachine
     {
         if (this._stack.length === 0)
         {
-            throw new Error(`${this.getScopeLine()}: Peek empty stack`);
+            throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Peek empty stack`);
         }
 
         return this._stack[this._stack.length - 1];
@@ -690,18 +690,39 @@ export class VirtualMachine
 
     public debugScopeLine(func: VMFunction, line: number)
     {
+        let text = `  at [${func.name}] in ${func.debugSymbols.sourceName}`;
         if (line >= func.code.length)
         {
-            return `[${func.name}]:${line - 1}: end of code`;
+            return `${text} end of code`;
         }
         if (line < 0)
         {
-            return `[${func.name}]:${line - 1}: before start of code`;
+            return `${text} before start of code`;
         }
 
-        const codeLine = func.code[line];
-        const codeLineInput = codeLine.value != null ? codeLine.value.toString() : '<empty>';
-        return `[${func.name}]:${line - 1}:${codeLine.operator}: [${codeLineInput}]`;
+        const codeLocation = func.debugSymbols.getLocation(line);
+        text += `:${codeLocation.startLineNumber + 1}:${codeLocation.startColumnNumber}\n`;
+
+        const fromLineIndex = Math.max(0, codeLocation.startLineNumber - 1);
+        const toLineIndex = Math.min(func.debugSymbols.fullText.length, codeLocation.startLineNumber + 2);
+        for (let i = fromLineIndex; i < toLineIndex; i++)
+        {
+            const lineNum = (i + 1).toString(10);
+            text += `${lineNum}: ${func.debugSymbols.fullText[i]}\n`;
+
+            if (i === codeLocation.startLineNumber)
+            {
+                text += ' '.repeat(codeLocation.startColumnNumber + lineNum.length) + '^';
+                const diff = codeLocation.endColumnNumber - codeLocation.startColumnNumber;
+                if (diff > 0)
+                {
+                    text += '-'.repeat(diff) + '^';
+                }
+                text += '\n';
+            }
+        }
+
+        return text;
     }
 
     private getScopeLine()

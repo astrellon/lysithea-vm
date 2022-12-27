@@ -21,11 +21,12 @@ function createScope()
 
 const perfScope = createScope();
 
-const file = fs.readFileSync('../examples/perfTest.lys', {encoding: 'utf-8'});
+const filename = '../examples/perfTest.lys';
+const file = fs.readFileSync(filename, {encoding: 'utf-8'});
 
 const assembler = new Assembler();
 assembler.builtinScope.combineScope(perfScope);
-const script = assembler.parseFromText(file);
+const script = assembler.parseFromText(filename, file);
 
 const vm = new VirtualMachine(8);
 

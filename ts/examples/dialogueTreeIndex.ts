@@ -115,12 +115,13 @@ function doChoice(index: number, vm: VirtualMachine): boolean
     return true;
 }
 
-const file = fs.readFileSync('../examples/testDialogue.lys', { encoding: 'utf-8' });
+const filename = '../examples/testDialogue.lys';
+const file = fs.readFileSync(filename, { encoding: 'utf-8' });
 
 const assembler = new Assembler();
 assembler.builtinScope.combineScope(dialogueScope);
 assembler.builtinScope.combineScope(arrayScope);
-const script = assembler.parseFromText(file);
+const script = assembler.parseFromText(filename, file);
 
 const vm = new VirtualMachine(64);
 // Some functions are looked up dynamically, so the VM must know then as well as the assembler.
@@ -133,4 +134,8 @@ runner.start()
     {
         console.log('Program done!');
         process.exit(1);
+    })
+    .catch((err) =>
+    {
+        console.error('Error: ', err);
     });

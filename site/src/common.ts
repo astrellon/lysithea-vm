@@ -27,33 +27,31 @@ export function getTextFor(codeId: string) : CodeContext | false
     return { output, text };
 }
 
-export function tryAssemble(assembler: Assembler, text: string)
+export function tryAssemble(assembler: Assembler, sourceName: string, text: string)
 {
     try
     {
-        return assembler.parseFromText(text);
+        return assembler.parseFromText(sourceName, text);
     }
     catch (error)
     {
         if (error instanceof ParserError)
         {
-            alert('Parser error: ' + error.message +
+            return ('Parser error: ' + error.message +
                 '\nat location: ' + toStringCodeLocation(error.location) +
                 '\nat token: ' + error.token);
         }
         else if (error instanceof AssemblerError)
         {
-            alert('Assembling error: ' + error.message +
+            return ('Assembling error: ' + error.message +
                 '\nat location: ' + toStringCodeLocation(error.token.location) +
                 '\nat token: ' + JSON.stringify(error.token));
         }
         else
         {
-            alert('Unknown error: ' + error);
+            return ('Unknown error: ' + error);
         }
     }
-
-    return undefined;
 }
 
 export function tryExecute(script: Script, vm: VirtualMachine)
@@ -61,17 +59,18 @@ export function tryExecute(script: Script, vm: VirtualMachine)
     try
     {
         vm.execute(script);
+        return true;
     }
     catch (error)
     {
         if (error instanceof VirtualMachineError)
         {
-            alert('Runtime error: ' + error.message +
+            return ('Runtime error: ' + error.message +
                 '\nStack Trace: ' + error.stackTrace.join('\n'));
         }
         else
         {
-            alert('Unknown error: ' + error);
+            return ('Unknown error: ' + error);
         }
     }
 }

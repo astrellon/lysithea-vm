@@ -28,6 +28,7 @@ namespace LysitheaVM
         private const string BreakKeyword = "break";
         private const string IfKeyword = "if";
         private const string UnlessKeyword = "unless";
+        private const string SwitchKeyword = "switch";
         private const string SetKeyword = "set";
         private const string DefineKeyword = "define";
         private const string ConstKeyword = "const";
@@ -36,15 +37,21 @@ namespace LysitheaVM
         private static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
 
         public readonly Scope BuiltinScope = new Scope();
+        public IReadOnlyList<string> FullText { get; private set; } = new string[1]{""};
+        public string SourceName { get; private set; } = "";
+
         private int labelCount = 0;
         private List<string> keywordParsingStack = new List<string>();
-        private IReadOnlyList<string> fullText = new string[1]{""};
-        private string sourceName = "";
         private Scope ConstScope = new Scope();
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
         #endregion
 
         #region Methods
+        private AssemblerException ThrowException(Token token, string message)
+        {
+            var fullMessage = $"{this.SourceName}:line {token.Location.StartLineNumber} column: {token.Location.StartColumnNumber}: {message}";
+            return new AssemblerException(this, token, fullMessage);
+        }
 
         #region Parse From Input
         public Script ParseFromFile(string filePath)
@@ -59,17 +66,24 @@ namespace LysitheaVM
 
         public Script ParseFromText(string sourceName, IReadOnlyList<string> input)
         {
-            this.fullText = input;
-            this.sourceName = sourceName;
-            var parsed = Lexer.ReadFromLines(input);
+            this.FullText = input;
+            this.SourceName = sourceName;
 
-            var code = this.ParseGlobalFunction(parsed);
-            var scriptScope = new Scope();
-            scriptScope.CombineScope(this.BuiltinScope);
-            scriptScope.CombineScope(this.ConstScope);
-            UnityEngine.Debug.Log($"Assembling: {sourceName}: code length: {code.Code.Count}, const size: {this.ConstScope.Values.Count}");
+            try
+            {
+                var parsed = Lexer.ReadFromLines(input);
 
-            return new Script(scriptScope, code);
+                var code = this.ParseGlobalFunction(parsed);
+                var scriptScope = new Scope();
+                scriptScope.CombineScope(this.BuiltinScope);
+                scriptScope.CombineScope(this.ConstScope);
+
+                return new Script(scriptScope, code);
+            }
+            catch (ParserException exp)
+            {
+                throw this.ThrowException(Token.Value(exp.Location, new StringValue(exp.Token)), exp.Message);
+            }
         }
 
         public Function ParseGlobalFunction(Token input)
@@ -124,7 +138,7 @@ namespace LysitheaVM
                 }
                 else
                 {
-                    throw new AssemblerException(input, $"Expression needs to start with a function variable");
+                    throw this.ThrowException(input, $"Expression needs to start with a function variable");
                 }
             }
             else if (input.Type == TokenType.List)
@@ -141,11 +155,11 @@ namespace LysitheaVM
 
                     if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
                     {
-                        result.Add(parsed[0].Token.GetValue());
+                        result.Add(this.GetValue(parsed[0].Token));
                     }
                     else
                     {
-                        throw new AssemblerException(parsed[0].Token, "Unexpected token in list literal");
+                        throw this.ThrowException(parsed[0].Token, "Unexpected token in list literal");
                     }
                 }
 
@@ -165,11 +179,11 @@ namespace LysitheaVM
 
                     if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
                     {
-                        result[kvp.Key] = parsed[0].Token.GetValue();
+                        result[kvp.Key] = this.GetValue(parsed[0].Token);
                     }
                     else
                     {
-                        throw new AssemblerException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
+                        throw this.ThrowException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
                     }
                 }
 
@@ -188,17 +202,17 @@ namespace LysitheaVM
         #endregion
 
         #region Keyword Parsing
-        public List<TempCodeLine> ParseFunctionKeyword(Token arrayValue)
+        public List<TempCodeLine> ParseFunctionKeyword(Token input)
         {
-            var function = ParseFunction(arrayValue);
+            var function = ParseFunction(input);
             var functionValue = new FunctionValue(function);
-            var functionToken = arrayValue.KeepLocation(functionValue);
+            var functionToken = input.KeepLocation(functionValue);
 
             if (this.keywordParsingStack.Count == 1 && function.HasName)
             {
                 if (!this.ConstScope.TrySetConstant(function.Name, functionValue))
                 {
-                    throw new AssemblerException(arrayValue, "Unable to define function, constant already exists");
+                    throw this.ThrowException(input, "Unable to define function, constant already exists");
                 }
                 // Special return case
                 return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
@@ -208,7 +222,7 @@ namespace LysitheaVM
             var currentKeyword = this.keywordParsingStack.Count > 1 ? this.keywordParsingStack[this.keywordParsingStack.Count - 2] : FunctionKeyword;
             if (function.HasName && currentKeyword == FunctionKeyword)
             {
-                result.Add(TempCodeLine.Code(Operator.Define, arrayValue.KeepLocation(new StringValue(function.Name))));
+                result.Add(TempCodeLine.Code(Operator.Define, input.KeepLocation(function.Name)));
             }
             return result;
         }
@@ -223,10 +237,10 @@ namespace LysitheaVM
             // Multiple variables can be set when a function returns multiple results.
             for (var i = input.TokenList.Count - 2; i >= 1; i--)
             {
-                var key = input.TokenList[i].GetValue().ToString();
+                var key = this.GetValue(input.TokenList[i]).ToString();
                 if (this.ConstScope.TryGetKey(key, out var temp))
                 {
-                    throw new AssemblerException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
+                    throw this.ThrowException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
                 }
 
                 result.Add(TempCodeLine.Code(opCode, input.TokenList[i]));
@@ -238,19 +252,19 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count != 3)
             {
-                throw new AssemblerException(input, "Const requires 2 inputs");
+                throw this.ThrowException(input, "Const requires 2 inputs");
             }
 
             var result = this.Parse(input.TokenList.Last());
             if (result.Count != 1 || result[0].Operator != Operator.Push)
             {
-                throw new AssemblerException(input, "Const value is not a compile time constant");
+                throw this.ThrowException(input, "Const value is not a compile time constant");
             }
 
-            var key = input.TokenList[1].GetValue().ToString();
-            if (!this.ConstScope.TrySetConstant(key, result[0].Token.GetValue()))
+            var key = this.GetValue(input.TokenList[1]).ToString();
+            if (!this.ConstScope.TrySetConstant(key, this.GetValue(result[0].Token)))
             {
-                throw new AssemblerException(input, "Cannot redefine a constant");
+                throw this.ThrowException(input, "Cannot redefine a constant");
             }
 
             return result;
@@ -260,7 +274,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw new AssemblerException(input, "Loop input has too few inputs");
+                throw this.ThrowException(input, "Loop input has too few inputs");
             }
 
             var loopLabelNum = this.labelCount++;
@@ -286,75 +300,87 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<TempCodeLine> ParseCond(Token input, bool isIfStatement)
+        public List<TempCodeLine> ParseSwitch(Token input)
         {
-            if (input.TokenList.Count < 3)
+            var labelNum = this.labelCount++;
+            var labelEnd = $":CondNext{input.TokenList.Count}_{labelNum}";
+
+            var result = new List<TempCodeLine>();
+
+            for (var i = 1; i < input.TokenList.Count; i++)
             {
-                throw new AssemblerException(input, "Condition input has too few inputs");
-            }
-            if (input.TokenList.Count > 4)
-            {
-                throw new AssemblerException(input, "Condition input has too many inputs!");
-            }
+                var expression = input.TokenList[i];
 
-            var ifLabelNum = this.labelCount++;
-            var labelElse = $":CondElse{ifLabelNum}";
-            var labelEnd = $":CondEnd{ifLabelNum}";
+                if (i > 1)
+                {
+                    var thisLabelJump = $":CondNext{i}_{labelNum}";
+                    result.Add(TempCodeLine.Label(thisLabelJump, expression));
+                }
 
-            var hasElseCall = input.TokenList.Count == 4;
-            var jumpOperator = isIfStatement ? Operator.JumpFalse : Operator.JumpTrue;
+                var comparisonCall = expression.TokenList[0];
+                if (!comparisonCall.TokenValue.Equals(BoolValue.True))
+                {
+                    var nextLabelJump = $":CondNext{i + 1}_{labelNum}";
+                    result.AddRange(this.Parse(comparisonCall));
+                    result.Add(TempCodeLine.Code(Operator.JumpFalse, expression.KeepLocation(nextLabelJump)));
+                }
 
-            var comparisonCall = input.TokenList[1];
-            var firstBlock = input.TokenList[2];
+                result.AddRange(expression.TokenList.Skip(1).SelectMany(this.Parse));
 
-            var result = Parse(comparisonCall);
-
-            if (hasElseCall)
-            {
-                // Jump to else if the condition doesn't match
-                result.Add(TempCodeLine.Code(jumpOperator, comparisonCall.KeepLocation(new StringValue(labelElse))));
-
-                // First block of code
-                result.AddRange(this.ParseFlatten(firstBlock));
-                // Jump after the condition, skipping second block of code.
-                result.Add(TempCodeLine.Code(Operator.Jump, firstBlock.KeepLocation(new StringValue(labelEnd))));
-
-                // Jump target for else
-                result.Add(TempCodeLine.Label(labelElse, input));
-
-                // Second 'else' block of code
-                var secondBlock = input.TokenList[3];
-                result.AddRange(this.ParseFlatten(secondBlock));
-            }
-            else
-            {
-                // We only have one block, so jump to the end of the block if the condition doesn't match
-                result.Add(TempCodeLine.Code(jumpOperator, comparisonCall.KeepLocation(new StringValue(labelEnd))));
-
-                result.AddRange(ParseFlatten(firstBlock));
+                if (i < input.TokenList.Count - 1)
+                {
+                    result.Add(TempCodeLine.Code(Operator.Jump, expression.KeepLocation(labelEnd)));
+                }
             }
 
-            // Jump target after the condition
             result.Add(TempCodeLine.Label(labelEnd, input));
 
             return result;
         }
 
-        public IEnumerable<TempCodeLine> ParseFlatten(Token input)
+        public List<TempCodeLine> ParseIfUnless(Token input, bool isIfStatement)
         {
-            if (input.TokenList.All(i => i.Type == TokenType.Expression))
+            if (input.TokenList.Count < 3)
             {
-                return input.TokenList.SelectMany(Parse);
+                throw this.ThrowException(input, "Condition input has too few inputs");
+            }
+            if (input.TokenList.Count > 4)
+            {
+                throw this.ThrowException(input, "Condition input has too many inputs!");
             }
 
-            return Parse(input);
+            // Turn the an if/unless statement into a switch statement.
+            // (if/unless (comparison) (ifComparison) (else))
+            // ->
+            // (switch ((comparison) comparisonBody) (true elseBody))
+            var tempTokens = new List<Token>{
+                input.KeepLocation(isIfStatement ? IfKeyword : UnlessKeyword)
+            };
+
+            var comparisonToken = input.TokenList[1];
+            var firstBlockToken = input.TokenList[2];
+
+            var newComparison = new List<Token>{ comparisonToken };
+            AddHandleNested(newComparison, firstBlockToken);
+            tempTokens.Add(Token.Expression(comparisonToken.Location, newComparison));
+
+            if (input.TokenList.Count == 4)
+            {
+                var elseToken = input.TokenList[3];
+                var newElse = new List<Token> { elseToken.KeepLocation(BoolValue.True) };
+                AddHandleNested(newElse, elseToken);
+                tempTokens.Add(Token.Expression(comparisonToken.Location, newElse));
+            }
+
+            var transformedToken = Token.Expression(input.Location, tempTokens);
+            return this.ParseSwitch(transformedToken);
         }
 
         public List<TempCodeLine> ParseLoopJump(Token token, string keyword, bool jumpToStart)
         {
             if (!this.loopStack.Any())
             {
-                throw new AssemblerException(token, $"Unexpected {keyword} outside of loop");
+                throw this.ThrowException(token, $"Unexpected {keyword} outside of loop");
             }
 
             var loopLabel = this.loopStack.Last();
@@ -380,7 +406,7 @@ namespace LysitheaVM
 
             if (this.ConstScope.Parent == null)
             {
-                throw new AssemblerException(input, "Internal exception, const scope parent lost");
+                throw this.ThrowException(input, "Internal exception, const scope parent lost");
             }
             this.ConstScope = this.ConstScope.Parent;
 
@@ -430,7 +456,7 @@ namespace LysitheaVM
             }
             else
             {
-                throw new AssemblerException(input, $"Negative/Sub operator expects at least 1 input");
+                throw this.ThrowException(input, $"Negative/Sub operator expects at least 1 input");
             }
         }
 
@@ -438,7 +464,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 2)
             {
-                throw new AssemblerException(input, $"Expecting at least 1 input for: {opCode}");
+                throw this.ThrowException(input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<TempCodeLine>();
@@ -455,7 +481,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw new AssemblerException(input, $"Expecting at least 3 inputs for: {opCode}");
+                throw this.ThrowException(input, $"Expecting at least 3 inputs for: {opCode}");
             }
 
             var result = this.Parse(input.TokenList[1]);
@@ -479,13 +505,13 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 2)
             {
-                throw new Exception($"Expecting at least 1 input for: {opCode}");
+                throw this.ThrowException(input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<TempCodeLine>();
             foreach (var item in input.TokenList.Skip(1))
             {
-                var varName = new StringValue(item.GetValue().ToString());
+                var varName = new StringValue(this.GetValue(item).ToString());
                 result.Add(TempCodeLine.Code(opCode, item.KeepLocation(varName)));
             }
 
@@ -503,65 +529,66 @@ namespace LysitheaVM
             return result;
         }
 
-        public List<TempCodeLine> TransformAssignmentOperator(Token arrayValue)
+        public List<TempCodeLine> TransformAssignmentOperator(Token input)
         {
-            var opCode = arrayValue.TokenList[0].GetValue().ToString();
+            var opCode = this.GetValue(input.TokenList[0]).ToString();
             opCode = opCode.Substring(0, opCode.Length - 1);
 
-            var varName = arrayValue.TokenList[1].GetValue().ToString();
-            var newCode = arrayValue.TokenList.ToList();
-            newCode[0] = arrayValue.TokenList[0].KeepLocation(new VariableValue(opCode));
+            var varName = this.GetValue(input.TokenList[1]).ToString();
+            var newCode = input.TokenList.ToList();
+            newCode[0] = input.TokenList[0].KeepLocation(new VariableValue(opCode));
 
             var wrappedCode = new List<Token>();
-            wrappedCode.Add(arrayValue.KeepLocation(new VariableValue("set")));
-            wrappedCode.Add(arrayValue.TokenList[1].KeepLocation(new VariableValue(varName)));
-            wrappedCode.Add(Token.Expression(arrayValue.Location, newCode));
+            wrappedCode.Add(input.KeepLocation(new VariableValue("set")));
+            wrappedCode.Add(input.TokenList[1].KeepLocation(new VariableValue(varName)));
+            wrappedCode.Add(Token.Expression(input.Location, newCode));
 
-            return this.Parse(Token.Expression(arrayValue.Location, wrappedCode));
+            return this.Parse(Token.Expression(input.Location, wrappedCode));
         }
 
-        public virtual List<TempCodeLine> ParseKeyword(VariableValue firstSymbol, Token arrayValue)
+        public virtual List<TempCodeLine> ParseKeyword(VariableValue firstSymbol, Token input)
         {
             List<TempCodeLine>? result = null;
             this.keywordParsingStack.Add(firstSymbol.Value);
             switch (firstSymbol.Value)
             {
                 // General Operators
-                case FunctionKeyword: result = this.ParseFunctionKeyword(arrayValue); break;
-                case ContinueKeyword: result = this.ParseLoopJump(arrayValue, ContinueKeyword, true); break;
-                case BreakKeyword: result = this.ParseLoopJump(arrayValue, BreakKeyword, false); break;
-                case SetKeyword: result = this.ParseDefineSet(arrayValue, false); break;
-                case DefineKeyword: result = this.ParseDefineSet(arrayValue, true); break;
-                case ConstKeyword: result = this.ParseConst(arrayValue); break;
-                case LoopKeyword: result = this.ParseLoop(arrayValue); break;
-                case IfKeyword: result = this.ParseCond(arrayValue, true); break;
-                case UnlessKeyword: result = this.ParseCond(arrayValue, false); break;
-                case JumpKeyword: result = this.ParseJump(arrayValue); break;
-                case ReturnKeyword: result = this.ParseReturn(arrayValue); break;
+                case FunctionKeyword: result = this.ParseFunctionKeyword(input); break;
+                case ContinueKeyword: result = this.ParseLoopJump(input, ContinueKeyword, true); break;
+                case BreakKeyword: result = this.ParseLoopJump(input, BreakKeyword, false); break;
+                case SetKeyword: result = this.ParseDefineSet(input, false); break;
+                case DefineKeyword: result = this.ParseDefineSet(input, true); break;
+                case ConstKeyword: result = this.ParseConst(input); break;
+                case LoopKeyword: result = this.ParseLoop(input); break;
+                case IfKeyword: result = this.ParseIfUnless(input, true); break;
+                case UnlessKeyword: result = this.ParseIfUnless(input, false); break;
+                case SwitchKeyword: result = this.ParseSwitch(input); break;
+                case JumpKeyword: result = this.ParseJump(input); break;
+                case ReturnKeyword: result = this.ParseReturn(input); break;
 
                 // Math Operators
-                case "+":  result = this.ParseOperator(Operator.Add, arrayValue); break;
-                case "-":  result = this.ParseNegative(arrayValue); break;
-                case "*":  result = this.ParseOperator(Operator.Multiply, arrayValue); break;
-                case "/":  result = this.ParseOperator(Operator.Divide, arrayValue); break;
-                case "++": result = this.ParseOneVariableUpdate(Operator.Inc, arrayValue); break;
-                case "--": result = this.ParseOneVariableUpdate(Operator.Dec, arrayValue); break;
+                case "+":  result = this.ParseOperator(Operator.Add, input); break;
+                case "-":  result = this.ParseNegative(input); break;
+                case "*":  result = this.ParseOperator(Operator.Multiply, input); break;
+                case "/":  result = this.ParseOperator(Operator.Divide, input); break;
+                case "++": result = this.ParseOneVariableUpdate(Operator.Inc, input); break;
+                case "--": result = this.ParseOneVariableUpdate(Operator.Dec, input); break;
 
                 // Comparison Operators
-                case "<":  result = this.ParseOperator(Operator.LessThan, arrayValue); break;
-                case "<=": result = this.ParseOperator(Operator.LessThanEquals, arrayValue); break;
-                case "==": result = this.ParseOperator(Operator.Equals, arrayValue); break;
-                case "!=": result = this.ParseOperator(Operator.NotEquals, arrayValue); break;
-                case ">":  result = this.ParseOperator(Operator.GreaterThan, arrayValue); break;
-                case ">=": result = this.ParseOperator(Operator.GreaterThanEquals, arrayValue); break;
+                case "<":  result = this.ParseOperator(Operator.LessThan, input); break;
+                case "<=": result = this.ParseOperator(Operator.LessThanEquals, input); break;
+                case "==": result = this.ParseOperator(Operator.Equals, input); break;
+                case "!=": result = this.ParseOperator(Operator.NotEquals, input); break;
+                case ">":  result = this.ParseOperator(Operator.GreaterThan, input); break;
+                case ">=": result = this.ParseOperator(Operator.GreaterThanEquals, input); break;
 
                 // Boolean Operators
-                case "&&": result = this.ParseOperator(Operator.And, arrayValue); break;
-                case "||": result = this.ParseOperator(Operator.Or, arrayValue); break;
-                case "!":  result = this.ParseOnePushInput(Operator.Not, arrayValue); break;
+                case "&&": result = this.ParseOperator(Operator.And, input); break;
+                case "||": result = this.ParseOperator(Operator.Or, input); break;
+                case "!":  result = this.ParseOnePushInput(Operator.Not, input); break;
 
                 // Misc Operators
-                case "$":  result = this.ParseStringConcat(arrayValue); break;
+                case "$":  result = this.ParseStringConcat(input); break;
 
                 // Conjoined Operators
                 case "+=":
@@ -571,7 +598,7 @@ namespace LysitheaVM
                 case "&&=":
                 case "||=":
                 case "$=":
-                    result = this.TransformAssignmentOperator(arrayValue); break;
+                    result = this.TransformAssignmentOperator(input); break;
             }
 
             this.keywordParsingStack.PopBack();
@@ -585,15 +612,15 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Call token must be a value");
+                throw this.ThrowException(input, "Call token must be a value");
             }
 
             var numArgsValue = new NumberValue(numArgs);
 
-            var result = this.OptimiseGet(input, input.GetValue().ToString());
+            var result = this.OptimiseGet(input, this.GetValue(input).ToString());
             if (result.Count == 1 && result[0].Operator == Operator.Push)
             {
-                var callValue = new IValue[]{ result[0].Token.GetValue(), numArgsValue };
+                var callValue = new IValue[]{ this.GetValue(result[0].Token), numArgsValue };
                 return new List<TempCodeLine> {
                     TempCodeLine.Code(Operator.CallDirect, input.KeepLocation(new ArrayValue(callValue)))
                 };
@@ -607,11 +634,11 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Get symbol token value cannot be null");
+                throw this.ThrowException(input, "Get symbol token value cannot be null");
             }
 
             var isArgumentUnpack = false;
-            var key = input.GetValue().ToString();
+            var key = this.GetValue(input).ToString();
             if (key.StartsWith("..."))
             {
                 isArgumentUnpack = true;
@@ -632,7 +659,7 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw new AssemblerException(input, "Get symbol token must be a value");
+                throw this.ThrowException(input, "Get symbol token must be a value");
             }
 
             var result = new List<TempCodeLine>();
@@ -672,7 +699,7 @@ namespace LysitheaVM
             else
             {
                 // Could not find the parent right now, so look for the parent at runtime.
-                result.Add(TempCodeLine.Code(Operator.Get, input.KeepLocation(new StringValue(parentKey))));
+                result.Add(TempCodeLine.Code(Operator.Get, input.KeepLocation(parentKey)));
 
                 // If this was also a property check also look up the property at runtime.
                 if (isProperty)
@@ -714,13 +741,32 @@ namespace LysitheaVM
                 else
                 {
                     locations.Add(tempLine.Token.Location);
-                    code.Add(new CodeLine(tempLine.Operator, tempLine.Token.GetValueCanBeEmpty()));
+                    code.Add(new CodeLine(tempLine.Operator, this.GetValueCanBeEmpty(tempLine.Token)));
                 }
             }
 
-            var debugSymbols = new DebugSymbols(this.sourceName, this.fullText, locations);
+            var debugSymbols = new DebugSymbols(this.SourceName, this.FullText, locations);
 
             return new Function(code, parameters, labels, name, debugSymbols);
+        }
+
+        private IValue? GetValueCanBeEmpty(Token input)
+        {
+            if (input.Type == TokenType.Empty)
+            {
+                return null;
+            }
+
+            return this.GetValue(input);
+        }
+        private IValue GetValue(Token input)
+        {
+            if (input.Type == TokenType.Value)
+            {
+                return input.TokenValue;
+            }
+
+            throw this.ThrowException(input, "Unable to get value of non value token");
         }
 
         private static bool IsNoOperator(IReadOnlyList<TempCodeLine> input)
@@ -731,6 +777,18 @@ namespace LysitheaVM
             }
 
             return false;
+        }
+
+        private static void AddHandleNested(List<Token> target, Token input)
+        {
+            if (input.IsNestedExpression())
+            {
+                target.AddRange(input.TokenList);
+            }
+            else
+            {
+                target.Add(input);
+            }
         }
         #endregion
 

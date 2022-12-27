@@ -33,13 +33,18 @@ function runPageSetup()
     });
 
     const vm = new VirtualMachine(16);
-    const script = tryAssemble(assembler, codeContext.text as string);
-    if (script === undefined)
+    const script = tryAssemble(assembler, 'codePageSetup', codeContext.text as string);
+    if (typeof(script) === 'string')
     {
+        codeContext.output.innerHTML = script;
         return;
     }
 
-    tryExecute(script, vm);
+    const result = tryExecute(script, vm);
+    if (result !== true)
+    {
+        codeContext.output.innerHTML = result;
+    }
 }
 
 (globalThis as any).runPageSetup = runPageSetup;

@@ -269,27 +269,26 @@ namespace LysitheaVM
 
         private static string DebugScopeLine(Function function, int line)
         {
-            var text = $"  at [{function.Name}] in {function.DebugSymbols.SourceName}:line ";
+            var text = $"  at [{function.Name}] in {function.DebugSymbols.SourceName}";
             if (line >= function.Code.Count)
             {
-                return $"{text}{line} end of code";
+                return $"{text} end of code";
             }
             if (line < 0)
             {
-                return $"{text}{line} before start of code";
+                return $"{text} before start of code";
             }
 
-            var codeLine = function.Code[line];
             function.DebugSymbols.TryGetLocation(line, out var codeLocation);
-            var codeLineInput = codeLine.Input != null ? codeLine.Input.ToString() : "<empty>";
-            text += $"{codeLocation.StartLineNumber + 1}, column:{codeLocation.StartColumnNumber}\n";
+            text += $":{codeLocation.StartLineNumber + 1}:{codeLocation.StartColumnNumber}\n";
 
             var fromLineIndex = Math.Max(0, codeLocation.StartLineNumber - 1);
             var toLineIndex = Math.Min(function.DebugSymbols.FullText.Count, codeLocation.StartLineNumber + 2);
             for (var i = fromLineIndex; i < toLineIndex; i++)
             {
                 var lineNum = (i + 1).ToString();
-                if (i == codeLocation.StartLineNumber + 1)
+                text += $"{lineNum}: {function.DebugSymbols.FullText[i]}\n";
+                if (i == codeLocation.StartLineNumber)
                 {
                     text += new String(' ', codeLocation.StartColumnNumber + lineNum.Length + 1) + '^';
                     var diff = codeLocation.EndColumnNumber - codeLocation.StartColumnNumber;
@@ -299,7 +298,6 @@ namespace LysitheaVM
                     }
                     text += '\n';
                 }
-                text += $"{lineNum}: {function.DebugSymbols.FullText[i]}\n";
             }
 
             return text;

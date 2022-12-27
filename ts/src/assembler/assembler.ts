@@ -6,7 +6,7 @@ import { Editable } from "../standardLibrary/standardObjectLibrary";
 import { StringValue } from "../values/stringValue";
 import { getProperty } from "../values/valuePropertyAccess";
 import { CodeLine, CodeLocation, EmptyCodeLocation, Operator } from "../virtualMachine";
-import { VMFunction } from "../vmFunction";
+import { DebugSymbols, VMFunction } from "../vmFunction";
 import { Lexer } from "./lexer";
 import { Token } from "./token";
 
@@ -53,10 +53,9 @@ function labelLine(label: string): TempCodeLine
     return { label };
 }
 
-const regexSplit = /(\r\n|\n|\r)/g;
 function splitInput(input: string)
 {
-    return input.split(regexSplit);
+    return input.split(/\r?\n/);
 }
 
 function isNoOperator(input: TempCodeLine[])
@@ -98,10 +97,14 @@ export class Assembler
     private keywordParsingStack: string[] = [];
     private constScope = new Scope();
 
-    public parseFromText(input: string)
+    private sourceName: string = '';
+    private fullText: string[] = [''];
+
+    public parseFromText(sourceName: string, input: string)
     {
-        const split = splitInput(input);
-        const parsed = Lexer.readFromLines(split);
+        this.sourceName = sourceName;
+        this.fullText = splitInput(input);
+        const parsed = Lexer.readFromLines(this.fullText);
 
         const code = this.parseGlobalFunction(parsed);
         const scriptScope = new Scope();
@@ -329,8 +332,8 @@ export class Assembler
         for (let i = 1; i < input.tokenList.length; i++)
         {
             const expression = input.tokenList[i];
-            const thisLabelJump = `$:CondNext${i}_${labelNum}`;
-            const nextLabelJump = `$:CondNext${i + 1}_${labelNum}`;
+            const thisLabelJump = `:CondNext${i}_${labelNum}`;
+            const nextLabelJump = `:CondNext${i + 1}_${labelNum}`;
             if (i > 1)
             {
                 result.push(labelLine(thisLabelJump));
@@ -421,7 +424,9 @@ export class Assembler
             }
         }
 
-        return new VMFunction(code, parameters, labels, name);
+        const debugSymbols = new DebugSymbols(this.sourceName, this.fullText, locations);
+
+        return new VMFunction(code, parameters, labels, name, debugSymbols);
     }
 
     public parseJump(input: Token)

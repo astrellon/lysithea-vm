@@ -36,23 +36,9 @@ namespace LysitheaVM
         #endregion
 
         #region Methods
-        public IValue? GetValueCanBeEmpty()
+        public Token KeepLocation(string input)
         {
-            if (this.Type == TokenType.Empty)
-            {
-                return null;
-            }
-            return this.GetValue();
-        }
-
-        public IValue GetValue()
-        {
-            if (this.Type == TokenType.Value)
-            {
-                return this.TokenValue;
-            }
-
-            throw new AssemblerException(this, $"Cannot get value of {this.Type} token");
+            return this.KeepLocation(new StringValue(input));
         }
 
         public Token KeepLocation(IValue? input)
@@ -75,6 +61,11 @@ namespace LysitheaVM
                 case TokenType.Map: return "<TokenMap>";
                 case TokenType.Expression: return "<TokenExpression>";
             }
+        }
+
+        public bool IsNestedExpression()
+        {
+            return this.TokenList.Any() && this.TokenList.All(i => i.Type == TokenType.Expression);
         }
 
         public Token ToEmpty()
@@ -106,7 +97,6 @@ namespace LysitheaVM
         {
             return new Token(location, TokenType.Expression, list: expression);
         }
-
         #endregion
     }
 }

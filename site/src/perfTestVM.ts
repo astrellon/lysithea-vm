@@ -1,4 +1,4 @@
-import { getTextFor } from './common';
+import { getTextFor, tryAssemble, tryExecute } from './common';
 
 import { VirtualMachine, Assembler, Scope } from 'lysithea-vm';
 
@@ -25,11 +25,21 @@ function runPerfTest()
         codeContext.output.innerHTML += text + '<br/>';
     });
 
-    const script = assembler.parseFromText(codeContext.text as string);
+    const script = tryAssemble(assembler, 'codePerfTest', codeContext.text);
+    if (typeof(script) === 'string')
+    {
+        codeContext.output.innerHTML = script;
+        return;
+    }
+
     const vm = new VirtualMachine(16);
 
     const before = Date.now();
-    vm.execute(script);
+    const result = tryExecute(script, vm);
+    if (result !== true)
+    {
+        codeContext.output.innerHTML = result;
+    }
     const after = Date.now();
     codeContext.output.innerHTML += `Time taken: ${after - before}ms <br/>`;
 }

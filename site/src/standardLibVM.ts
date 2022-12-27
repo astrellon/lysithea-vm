@@ -1,4 +1,4 @@
-import { getTextFor } from "./common";
+import { getTextFor, tryAssemble, tryExecute } from "./common";
 
 import { VirtualMachine, Assembler, LibraryType, addToScope } from 'lysithea-vm';
 
@@ -20,9 +20,19 @@ function runStdLib(codeId: string)
         codeContext.output.innerHTML += text + '<br/>';
     });
 
-    const script = assembler.parseFromText(codeContext.text as string);
+    const script = tryAssemble(assembler, codeId, codeContext.text);
+    if (typeof(script) === 'string')
+    {
+        codeContext.output.innerHTML = script;
+        return;
+    }
+
     const vm = new VirtualMachine(16);
-    vm.execute(script);
+    const result = tryExecute(script, vm);
+    if (result !== true)
+    {
+        codeContext.output.innerHTML = result;
+    }
 }
 
 (globalThis as any).runStdLib = runStdLib;
