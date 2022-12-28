@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace LysitheaVM.Unity
@@ -9,6 +10,8 @@ namespace LysitheaVM.Unity
         public TextAsset CodeText;
 
         private Script script = Script.Empty;
+
+        [NonSerialized]
         private bool assembled = false;
         public Script Script
         {

@@ -11,6 +11,7 @@ namespace LysitheaVM.Unity
         public InputLibrary InputLibrary;
 
         public VMRunner VMRunner;
+        public VirtualMachineConsoleUI ConsoleUI;
 
         private VirtualMachine vm => this.VMRunner.VM;
 
@@ -18,6 +19,17 @@ namespace LysitheaVM.Unity
         {
             Instance = this;
             this.VMRunner.Init(32);
+            this.VMRunner.OnError += (runner, exp) =>
+            {
+                if (this.ConsoleUI != null)
+                {
+                    this.ConsoleUI.Text.text += exp.Message;
+                    if (exp is VirtualMachineException vmExp)
+                    {
+                        this.ConsoleUI.Text.text += "\n- " + string.Join("\n- ", vmExp.VirtualMachineStackTrace);
+                    }
+                }
+            };
 
             this.InputLibrary.VM = this.VMRunner;
             this.assembler = CreateAssembler();
@@ -30,16 +42,33 @@ namespace LysitheaVM.Unity
 
         public void StartDrawing(IEnumerable<IDrawingScript> includeScripts, IDrawingScript mainScript)
         {
+            this.ConsoleUI?.Clear();
             this.InputLibrary.Reset();
             this.vm.Reset();
 
-            foreach (var drawingScript in includeScripts)
+            try
             {
-                // this.vm.GlobalScope.CombineScope(drawingScript.Script.BuiltinScope);
-                this.vm.Execute(drawingScript.Script);
-            }
+                foreach (var drawingScript in includeScripts)
+                {
+                    this.vm.Execute(drawingScript.Script);
+                }
 
-            this.VMRunner.StartScript(mainScript.Script);
+                this.VMRunner.StartScript(mainScript.Script);
+            }
+            catch (AssemblerException exp)
+            {
+                if (this.ConsoleUI != null)
+                {
+                    this.ConsoleUI.Text.text = $"Assembling Error: {exp.Message}";
+                }
+            }
+            catch (VirtualMachineException exp)
+            {
+                if (this.ConsoleUI != null)
+                {
+                    this.ConsoleUI.Text.text = $"VM Error: {exp.Message}\n" + string.Join("\n", exp.VirtualMachineStackTrace);
+                }
+            }
         }
 
         private Assembler CreateAssembler()
@@ -49,6 +78,11 @@ namespace LysitheaVM.Unity
             assembler.BuiltinScope.CombineScope(DrawingLibrary.Scope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
             assembler.BuiltinScope.CombineScope(InputLibrary.GetScope());
+
+            if (this.ConsoleUI != null)
+            {
+                assembler.BuiltinScope.CombineScope(this.ConsoleUI.LoggingScope);
+            }
 
             assembler.BuiltinScope.TrySetConstant("nativeCalcPosition", (vm, args) =>
             {

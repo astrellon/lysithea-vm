@@ -8,8 +8,10 @@ namespace LysitheaVM.Unity
     {
         #region Fields
         public delegate void CompleteHandler(VMRunner runner);
+        public delegate void ErrorHandler(VMRunner runner, Exception exp);
 
         public event CompleteHandler OnComplete;
+        public event ErrorHandler OnError;
 
         public VirtualMachine VM { get; private set; }
         public bool Running;
@@ -63,12 +65,14 @@ namespace LysitheaVM.Unity
                         this.Running = false;
                         var stackTrace = string.Join("\n -", exp.VirtualMachineStackTrace);
                         Debug.LogError("VM Runner Error: " + exp.Message + "\n- " + stackTrace);
+                        this.OnError?.Invoke(this, exp);
                         return;
                     }
                     catch (Exception exp)
                     {
                         this.Running = false;
                         Debug.LogError("Unknown VM Runner Error: " + exp.Message);
+                        this.OnError?.Invoke(this, exp);
                         return;
                     }
                     count++;

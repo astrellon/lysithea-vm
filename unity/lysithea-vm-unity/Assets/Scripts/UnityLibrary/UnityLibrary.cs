@@ -18,14 +18,14 @@ namespace LysitheaVM.Unity
             var result = new Scope();
 
             var colourFunctions = CreateColourFunctions();
-            result.TrySetConstant("color", colourFunctions);
-            result.TrySetConstant("colour", colourFunctions);
+            result.TryDefine("color", colourFunctions);
+            result.TryDefine("colour", colourFunctions);
 
-            result.TrySetConstant("random", CreateRandomFunctions());
-            result.TrySetConstant("vector3", CreateVector3Functions());
+            result.TryDefine("random", CreateRandomFunctions());
+            result.TryDefine("vector3", CreateVector3Functions());
 
             // Override the default print with a Unity specific one.
-            result.TrySetConstant("print", (vm, args) =>
+            result.TryDefine("print", (vm, args) =>
             {
                 Debug.Log(string.Join("", args.Value));
             });

@@ -32,6 +32,7 @@ namespace LysitheaVM.Unity
 
         public DialogueActor CurrentActor { get; private set; }
         public VMRunner VMRunner;
+        public VirtualMachineConsoleUI ConsoleUI;
         public List<ActorPair> Actors;
 
         private Assembler assembler;
@@ -49,6 +50,17 @@ namespace LysitheaVM.Unity
             {
                 this.OnSectionChange?.Invoke(SectionType.DialogueEnded);
             };
+            this.VMRunner.OnError += (runner, exp) =>
+            {
+                if (this.ConsoleUI != null)
+                {
+                    this.ConsoleUI.Text.text += exp.Message;
+                    if (exp is VirtualMachineException vmExp)
+                    {
+                        this.ConsoleUI.Text.text += "\n- " + string.Join("\n- ", vmExp.VirtualMachineStackTrace);
+                    }
+                }
+            };
         }
 
         public Script AssembleScript(string sourceName, string text)
@@ -56,9 +68,11 @@ namespace LysitheaVM.Unity
             return this.assembler.ParseFromText(sourceName, text);
         }
 
-        public void StartDialogue(DialogueScript dialogue, DialogueActor selfActor)
+        public void StartDialogue(IDialogueScript dialogue, DialogueActor selfActor)
         {
+            this.ConsoleUI?.Clear();
             this.vm.GlobalScope.Clear();
+
             foreach (var actorPair in this.Actors)
             {
                 this.vm.GlobalScope.TryDefine(actorPair.ScriptId, new DialogueActorValue(actorPair.Actor));
@@ -111,6 +125,11 @@ namespace LysitheaVM.Unity
             var assembler = new Assembler();
             StandardLibrary.AddToScope(assembler.BuiltinScope);
             assembler.BuiltinScope.CombineScope(UnityLibrary.Scope);
+
+            if (this.ConsoleUI != null)
+            {
+                assembler.BuiltinScope.CombineScope(this.ConsoleUI.LoggingScope);
+            }
 
             assembler.BuiltinScope.TryDefine("actor", this.ActorFunc);
             assembler.BuiltinScope.TryDefine("emotion", this.EmotionFunc);
