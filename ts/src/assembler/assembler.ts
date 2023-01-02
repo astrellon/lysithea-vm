@@ -104,6 +104,7 @@ export class Assembler
     {
         this.sourceName = sourceName;
         this.fullText = splitInput(input);
+        this.constScope = new Scope();
         const parsed = Lexer.readFromLines(this.fullText);
 
         const code = this.parseGlobalFunction(parsed);

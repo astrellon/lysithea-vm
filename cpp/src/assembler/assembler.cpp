@@ -45,6 +45,7 @@ namespace lysithea_vm
     {
         this->source_text = tokeniser::split_stream(input);
         this->source_name = source_name;
+        this->const_scope->clear();
 
         auto parsed = lexer::read_from_text(*source_text);
         return parse_from_value(parsed);

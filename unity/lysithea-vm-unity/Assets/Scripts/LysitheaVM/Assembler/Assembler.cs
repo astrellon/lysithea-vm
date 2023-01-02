@@ -68,6 +68,7 @@ namespace LysitheaVM
         {
             this.FullText = input;
             this.SourceName = sourceName;
+            this.ConstScope = new Scope();
 
             try
             {

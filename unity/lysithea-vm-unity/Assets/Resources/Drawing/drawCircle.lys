@@ -1,4 +1,4 @@
-(define calcPosition (function (index)
+(function calcPosition (index)
     (define angle (* index 5 math.DegToRad))
 
     (define x (* (math.cos angle) 20))
@@ -6,11 +6,11 @@
     (define z (* (math.sin angle) 20))
 
     (return (vector3.new x y z))
-))
+)
 
-(define calcColour (function (index)
+(function calcColour (index)
     (return (colour.hsv (/ index 100) 0.8 0.75))
-))
+)
 
 (draw.clear)
 (makeGround)
@@ -19,7 +19,3 @@
     (draw.element "Box" (calcPosition i) (calcColour i) 1)
     (++ i)
 )
-
-(input.onScreenRaycast (function ()
-    (print "Mouse Pos: " (input.mousePosition))
-))

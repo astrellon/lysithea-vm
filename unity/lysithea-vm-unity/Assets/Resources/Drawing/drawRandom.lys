@@ -1,4 +1,4 @@
-(define drawRandomElement (function ()
+(function drawRandomElement ()
     (define type (random.pick ["Box" "Sphere" "Capsule"]))
     (define position (randomVector
         {"x" -20 "y" 2 "z" -20}
@@ -9,7 +9,7 @@
         {"x" 1.5 "y" 1.5 "z" 1.5}
     ))
     (draw.element type position (randomColour) scale)
-))
+)
 
 (draw.clear)
 (makeGround)
