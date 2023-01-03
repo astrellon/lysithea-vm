@@ -17,6 +17,11 @@ export function createMathScope()
         PI: new NumberValue(Math.PI),
         DegToRad: new NumberValue(degToRad),
 
+        sqrt: new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.pushStackNumber(Math.sqrt(args.getNumber(0)));
+        }, 'math.sqrt'),
+
         sin: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.sin(args.getNumber(0)));
@@ -33,6 +38,10 @@ export function createMathScope()
         {
             vm.pushStackNumber(Math.exp(args.getNumber(0)));
         }, 'math.exp'),
+        pow: new BuiltinFunctionValue((vm, args) =>
+        {
+            vm.pushStackNumber(Math.pow(args.getNumber(0), args.getNumber(1)));
+        }, 'math.pow'),
         ceil: new BuiltinFunctionValue((vm, args) =>
         {
             vm.pushStackNumber(Math.ceil(args.getNumber(0)));

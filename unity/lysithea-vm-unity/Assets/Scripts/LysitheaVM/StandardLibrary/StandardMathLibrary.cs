@@ -23,6 +23,12 @@ namespace LysitheaVM
                 {"PI", new NumberValue(Math.PI)},
                 {"DegToRad", new NumberValue(DegToRad)},
 
+                {"sqrt", new BuiltinFunctionValue((vm, args) =>
+                {
+                    var top = args.GetIndex<NumberValue>(0);
+                    vm.PushStack(Math.Sqrt(top.Value));
+                }, "math.sqrt")},
+
                 {"sin", new BuiltinFunctionValue((vm, args) =>
                 {
                     var top = args.GetIndex<NumberValue>(0);
