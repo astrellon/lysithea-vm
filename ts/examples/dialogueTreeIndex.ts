@@ -16,11 +16,11 @@ let isShopEnabled = false;
 let choiceBuffer: IFunctionValue[] = [];
 
 const dialogueScope = new Scope();
-dialogueScope.trySetConstantFunc('say', (vm, args) =>
+dialogueScope.tryDefineFunc('say', (vm, args) =>
 {
     say(args.getIndex(0));
 });
-dialogueScope.trySetConstantFunc('getPlayerName', (vm, args) =>
+dialogueScope.tryDefineFunc('getPlayerName', (vm, args) =>
 {
     vm.paused = true;
     rl.question('', (name) =>
@@ -29,18 +29,18 @@ dialogueScope.trySetConstantFunc('getPlayerName', (vm, args) =>
         vm.paused = false;
     });
 });
-dialogueScope.trySetConstantFunc('randomSay', (vm, args) =>
+dialogueScope.tryDefineFunc('randomSay', (vm, args) =>
 {
     randomSay(args.getIndexCast(0, isIArrayValue));
 });
-dialogueScope.trySetConstantFunc('choice', (vm, args) =>
+dialogueScope.tryDefineFunc('choice', (vm, args) =>
 {
     const choiceText = args.getIndex(0);
     const choiceFunc = args.getIndexCast(1, isIFunctionValue);
     choiceBuffer.push(choiceFunc);
     sayChoice(choiceText);
 });
-dialogueScope.trySetConstantFunc('waitForChoice', (vm, args) =>
+dialogueScope.tryDefineFunc('waitForChoice', (vm, args) =>
 {
     if (choiceBuffer.length === 0)
     {
@@ -63,19 +63,19 @@ dialogueScope.trySetConstantFunc('waitForChoice', (vm, args) =>
         }
     });
 });
-dialogueScope.trySetConstantFunc('openTheShop', (vm, args) =>
+dialogueScope.tryDefineFunc('openTheShop', (vm, args) =>
 {
     isShopEnabled = true;
 });
-dialogueScope.trySetConstantFunc('openShop', (vm, args) =>
+dialogueScope.tryDefineFunc('openShop', (vm, args) =>
 {
     console.log('Opening the shop to the player and quitting dialogue');
 });
-dialogueScope.trySetConstantFunc('isShopEnabled', (vm, args) =>
+dialogueScope.tryDefineFunc('isShopEnabled', (vm, args) =>
 {
     vm.pushStackBool(isShopEnabled);
 });
-dialogueScope.trySetConstantFunc('moveTo', (vm, args) =>
+dialogueScope.tryDefineFunc('moveTo', (vm, args) =>
 {
     const proc = args.getIndexCast(0, isIFunctionValue);
     const label = args.getIndex(1).toString();

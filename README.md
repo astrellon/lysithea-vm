@@ -2,6 +2,9 @@
 
 This repository contains code for a simple stack based virtual machine called Lysithea. It is expected that it in embedded in another program which will provide the real functionality. This machine is very simple and very general, it contains only the code necessary to push and pop from the main stack, jump to labels, jump with condition, call labels like functions and return from a call. It does come with a standard library which a few of the internal calls make use of, however the standard library does not need to be made available to any given script in order to run.
 
+
+Check out the [live demo](https://profile.alanlawrey.me/lysithea-vm/) and the [YouTube video](https://www.youtube.com/watch?v=xeuKEHhp0jc) about this project.
+
 A list of the builtin types:
 - **Null**: An empty value.
 - **Undefined**: More an internally used value, but usually represents an error.
@@ -1290,4 +1293,4 @@ Current ports are for C++11, .Net 6, Unity and TypeScript. The .Net version coul
 
 Author
 -
-Alan Lawrey 2022
+Alan Lawrey 2023

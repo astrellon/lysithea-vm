@@ -1,6 +1,6 @@
 {
   "name": "lysithea-vm",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "description": "A simple stack based virtual machine call Lysithea.",
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",

@@ -8,13 +8,13 @@ The core code is under `./src` folder with ported examples under the `./examples
 $ npm install
 
 $ npm run perfTest
-$ npm run runCommands
+$ npm run stdLib
 $ npm run diagTree
 ```
 
 ## Build
 
-The VM can be built into a single file using the following:
+The TypeScript can be built for JavaScript.
 ```sh
 $ npm run build
 ```
@@ -39,7 +39,7 @@ function createScope(): Scope
 {
     var result = new Scope();
 
-    result.defineFunc("print", (vm, args) =>
+    result.tryDefineFunc("print", (vm, args) =>
     {
         console.log(args.value.map(c => c.toString()).join(''));
     });
@@ -61,4 +61,4 @@ For more details, see the main [repositories documentation](https://github.com/a
 MIT
 
 ## Author
-Alan Lawrey 2022
+Alan Lawrey 2023
