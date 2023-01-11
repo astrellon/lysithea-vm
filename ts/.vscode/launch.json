@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch via NPM",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "debug"
+            ],
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
             "name": "Current TS File",
             "type": "node",
             "request": "launch",
@@ -52,7 +65,6 @@
             "args": ["${workspaceFolder}/examples/readmeExampleIndex.ts"],
             "runtimeArgs": ["-r", "ts-node/register"],
             "cwd": "${workspaceRoot}",
-            "protocol": "inspector",
             "console": "externalTerminal",
             "internalConsoleOptions": "openOnSessionStart"
         }

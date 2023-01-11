@@ -1,6 +1,6 @@
 import { CodeLocation } from "../virtualMachine";
 import { IValue } from "../values/ivalues";
-import { NullValue, StringValue } from "../index";
+import { Assembler, NullValue, StringValue } from "../index";
 import { AssemblerError } from "../errors/errors";
 
 export type TokenType = 'empty' | 'value' | 'expression' | 'list' | 'map';
@@ -53,19 +53,19 @@ export class Token
         return new Token(location, 'map', undefined, EmptyTokenList, map);
     }
 
-    public getValue(): IValue
+    public getValue(assembler: Assembler): IValue
     {
         if (this.type === 'value')
         {
             return this.value;
         }
 
-        throw new AssemblerError(this, `Cannot get value of ${this.type} token`);
+        throw assembler.makeError(this,  `Cannot get value of ${this.type} token`);
     }
 
-    public getValueCanBeEmpty() : IValue | undefined
+    public getValueCanBeEmpty(assembler: Assembler) : IValue | undefined
     {
-        return this.type === 'empty' ? undefined : this.getValue();
+        return this.type === 'empty' ? undefined : this.getValue(assembler);
     }
 
     public keepLocation(value: string | IValue | undefined)

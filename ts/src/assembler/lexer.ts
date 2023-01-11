@@ -138,7 +138,7 @@ export class Lexer
     private static makeError(sourceName: string, tokeniser: Tokeniser, atToken: string, message: string)
     {
         const location = tokeniser.currentLocation();
-        const fullMessage = `${message}: ${createErrorLogAt(sourceName, location, tokeniser.input)}`
-        throw new ParserError(location, atToken, fullMessage);
+        const trace = createErrorLogAt(sourceName, location, tokeniser.input);
+        throw new ParserError(location, atToken, trace, message);
     }
 }

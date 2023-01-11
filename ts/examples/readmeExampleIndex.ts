@@ -23,21 +23,21 @@ function tryExecute(vm: VirtualMachine, sourceName: string, text: string)
         }
         else if (err instanceof ParserError)
         {
-            console.error(`Parser Error: ${err.message}`);
+            console.error(`Parser Error: ${err.message}\n${err.trace}`);
         }
         else if (err instanceof AssemblerError)
         {
-            console.error(`Assembler Error: ${err.message}`);
+            console.error(`Assembler Error: ${err.message}\n${err.trace}`);
         }
         return false;
     }
 }
 
 const runtimeErrorExample = `
-(define num1 18)
-(define num2 3)
-(print "Div: " (/ num1 num2))
-(print "Mul: " (* num1 num3))`;
+    (define num1 18)
+    (define num2 3)
+    (print "Div: " (/ num1 num2))
+    (print "Mul: " (* num1 num3))`;
 
 if (!tryExecute(vm, 'RuntimeErrorExample', runtimeErrorExample))
 {
@@ -45,10 +45,10 @@ if (!tryExecute(vm, 'RuntimeErrorExample', runtimeErrorExample))
 }
 
 const parserErrorExample = `
-(define num1 18)
-(define num2 3))
-(print "Div: " (/ num1 num2))
-(print "Mul: " (* num1 num3))`;
+    (define num1 18)
+    (define num2 3))
+    (print "Div: " (/ num1 num2))
+    (print "Mul: " (* num1 num3))`;
 
 if (!tryExecute(vm, 'ParserErrorExample', parserErrorExample))
 {
@@ -56,14 +56,13 @@ if (!tryExecute(vm, 'ParserErrorExample', parserErrorExample))
 }
 
 const assemblerErrorExample = `
-(const num1 18)
-(define num1 "Redefined")
-(define num2 3)
-(print "Div: " (/ num1 num2))
-(print "Mul: " (* num1 num3))`;
+    (const num1 18)
+    (define num1 "Redefined")
+    (define num2 3)
+    (print "Div: " (/ num1 num2))
+    (print "Mul: " (* num1 num3))`;
 
 if (!tryExecute(vm, 'AssemblerErrorExample', assemblerErrorExample))
 {
     console.log('Oh no!');
 }
-

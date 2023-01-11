@@ -5,11 +5,13 @@ export class ParserError extends Error
 {
     public readonly location: CodeLocation;
     public readonly token: string;
+    public readonly trace: string;
 
-    constructor (location: CodeLocation, token: string, message: string)
+    constructor (location: CodeLocation, token: string, trace: string, message: string)
     {
         super(`${toStringCodeLocation(location)}: ${token.toString()}: ${message}`);
 
+        this.trace = trace;
         this.location = location;
         this.token = token;
     }
@@ -18,11 +20,13 @@ export class ParserError extends Error
 export class AssemblerError extends Error
 {
     public readonly token: Token;
+    public readonly trace: string;
 
-    constructor (token: Token, message: string)
+    constructor (token: Token, trace: string, message: string)
     {
         super(`${toStringCodeLocation(token.location)}: ${token.toString()}: ${message}`);
 
+        this.trace = trace;
         this.token = token;
 
     }
@@ -41,7 +45,7 @@ export class VirtualMachineError extends Error
 
 export function createErrorLogAt(sourceName: string, location: CodeLocation, fullText: ReadonlyArray<string>)
 {
-    let text = `${sourceName}:${location.startLineNumber + 1}:${location.startColumnNumber}\n`;
+    let text = `${sourceName}:${location.startLineNumber + 1}:${location.startColumnNumber + 1}\n`;
 
     const fromLineIndex = Math.max(0, location.startLineNumber - 1);
     const toLineIndex = Math.min(fullText.length, location.startLineNumber + 2);
@@ -54,7 +58,11 @@ export function createErrorLogAt(sourceName: string, location: CodeLocation, ful
         {
             text += ' '.repeat(location.startColumnNumber + lineNum.length + 1) + '^';
             const diff = location.endColumnNumber - location.startColumnNumber;
-            if (diff > 0)
+            if (location.endLineNumber > location.startLineNumber)
+            {
+                text += '-'.repeat(fullText[i].length - location.startColumnNumber) + '^';
+            }
+            else if (diff > 0)
             {
                 text += '-'.repeat(diff - 1) + '^';
             }

@@ -106,6 +106,22 @@ This example skips worrying about catching any assembler errors or runtime error
 ## Adding Error Handling
 Let's say you do want to do some error handling.
 
+There's 3 types of errors:
+
+**ParserError**: Basically was it able to tokenise the input, generally speaking the only errors here are mismatched brackets or attempting to use an expression as a maps key value.
+
+This will contain a `trace` location as to where in the script this happened.
+
+**AssemblerError**: When parsing the tokens do things make reasonable sense, have you given the right number of arguments to certain keywords (if/unless), have you attempted to redefine a constant, etc.
+
+This will contain a `trace` location as to where in the script this happened.
+
+**VirtualMachineError**: These are run time errors that weren't able to be caught by the assembler.
+
+This will be things like functions not being found, labels not found, etc.
+
+This will contain a `stackTrace` as a list of string locations at to where this occurred in the script based on function calls.
+
 ```ts
 import { VirtualMachine, Assembler, LibraryType, addToScope } from 'lysithea-vm';
 
@@ -114,21 +130,100 @@ addToScope(assembler.builtinScope, LibraryType.all);
 
 const vm = new VirtualMachine(8);
 
-try
+function tryExecute(vm: VirtualMachine, sourceName: string, text: string)
 {
-    const script = assembler.parseFromText('CodeExample', `
-        (define num1 18)
-        (define num2 3)
-        (print "Div: " (/ num1 num2))
-        (print "Mul: " (* num1 num3))
-    `);
-    vm.execute(script);
+    try
+    {
+        const script = assembler.parseFromText(sourceName, text);
+        vm.execute(script);
+
+        return true;
+    }
+    catch (err)
+    {
+        if (err instanceof VirtualMachineError)
+        {
+            const stackTrace = err.stackTrace.join('\n');
+            console.error(`Runtime Error: ${err.message}\n${stackTrace}`);
+        }
+        else if (err instanceof ParserError)
+        {
+            console.error(`Parser Error: ${err.message}\n${err.trace}`);
+        }
+        else if (err instanceof AssemblerError)
+        {
+            console.error(`Assembler Error: ${err.message}\n${err.trace}`);
+        }
+        return false;
+    }
 }
-catch (err)
+
+const runtimeErrorExample = `
+    (define num1 18)
+    (define num2 3)
+    (print "Div: " (/ num1 num2))
+    (print "Mul: " (* num1 num3))`;
+
+if (!tryExecute(vm, 'RuntimeErrorExample', runtimeErrorExample))
 {
-    console.error(err);
+    console.log('Oh no!');
 }
+
+/* Outputs
+Div: 6
+Runtime Error: global:12: Unable to get variable: num3
+RuntimeErrorExample:5:28
+4:     (print "Div: " (/ num1 num2))
+5:     (print "Mul: " (* num1 num3))
+                             ^----^
+
+Oh no!
+*/
+
+const parserErrorExample = `
+    (define num1 18)
+    (define num2 3))
+    (print "Div: " (/ num1 num2))
+    (print "Mul: " (* num1 num3))`;
+
+if (!tryExecute(vm, 'ParserErrorExample', parserErrorExample))
+{
+    console.log('Oh no!');
+}
+
+/* Outputs
+Parser Error: 2:17 -> 3:0}: ): Unexpected ): ParserErrorExample:3:18
+2:     (define num1 18)
+3:     (define num2 3))
+                   ^---^
+4:     (print "Div: " (/ num1 num2))
+
+Oh no!
+*/
+
+const assemblerErrorExample = `
+    (const num1 18)
+    (define num1 "Redefined")
+    (define num2 3)
+    (print "Div: " (/ num1 num2))
+    (print "Mul: " (* num1 num3))`;
+
+if (!tryExecute(vm, 'AssemblerErrorExample', assemblerErrorExample))
+{
+    console.log('Oh no!');
+}
+
+/* Outputs
+Assembler Error: 2:12 -> 2:17}: num1: Attempting to define a constant: num1: AssemblerErrorExample:3:13
+2:     (const num1 18)
+3:     (define num1 "Redefined")
+              ^----^
+4:     (define num2 3)
+
+Oh no!
+*/
 ```
+
 ## More details
 For more details, see the main [repositories documentation](https://github.com/astrellon/lysithea-vm).
 
