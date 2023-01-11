@@ -1,4 +1,4 @@
-import { AssemblerError } from "../errors/errors";
+import { AssemblerError, createErrorLogAt } from "../errors/errors";
 import { IValue, ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap, BoolValue } from "../index";
 import { Scope } from "../scope";
 import { Script } from "../script";
@@ -105,7 +105,7 @@ export class Assembler
         this.sourceName = sourceName;
         this.fullText = splitInput(input);
         this.constScope = new Scope();
-        const parsed = Lexer.readFromLines(this.fullText);
+        const parsed = Lexer.readFromLines(sourceName, this.fullText);
 
         const code = this.parseGlobalFunction(parsed);
         const scriptScope = new Scope();
@@ -113,6 +113,12 @@ export class Assembler
         scriptScope.combineScope(this.constScope);
 
         return new Script(scriptScope, code);
+    }
+
+    private makeError(token: Token, message: string)
+    {
+        const fullMessage = `${message}: ${createErrorLogAt(this.sourceName, token.location, this.fullText)}`;
+        return new AssemblerError(token, fullMessage);
     }
 
     public parse(input: Token): TempCodeLine[]
@@ -158,7 +164,7 @@ export class Assembler
             }
             else
             {
-                throw new AssemblerError(input, 'Expression needs to start with a function variable');
+                throw this.makeError(input, 'Expression needs to start with a function variable');
             }
         }
         else if (input.type === 'list')
@@ -179,7 +185,7 @@ export class Assembler
                 }
                 else
                 {
-                    throw new AssemblerError(parsed[0].value as Token, 'Unexpected token in list literal');
+                    throw this.makeError(parsed[0].value as Token, 'Unexpected token in list literal');
                 }
             }
 
@@ -203,7 +209,7 @@ export class Assembler
                 }
                 else
                 {
-                    throw new AssemblerError(parsed[0].value as Token, 'Unexpected token in map literal');
+                    throw this.makeError(parsed[0].value as Token, 'Unexpected token in map literal');
                 }
             }
 
@@ -233,7 +239,7 @@ export class Assembler
             const key = input.tokenList[i].getValue().toString();
             if (this.constScope.get(key) !== undefined)
             {
-                throw new AssemblerError(input.tokenList[i], `Attempting to ${opCode} a constant: ${key}`);
+                throw this.makeError(input.tokenList[i], `Attempting to ${opCode} a constant: ${key}`);
             }
 
             result.push(codeLine(opCode, input.tokenList[i]));
@@ -243,21 +249,21 @@ export class Assembler
 
     public parseConst(input: Token)
     {
-        if (input.tokenList.length != 2)
+        if (input.tokenList.length != 3)
         {
-            throw new AssemblerError(input, 'Const requires 2 inputs');
+            throw this.makeError(input, 'Const requires 2 inputs');
         }
 
         const result = this.parse(input.tokenList[input.tokenList.length - 1]);
         if (result.length !== 1 || result[0].operator !== 'push' || result[0].value === undefined)
         {
-            throw new AssemblerError(input, 'Const value is not a compile time constant');
+            throw this.makeError(input, 'Const value is not a compile time constant');
         }
 
         const key = input.tokenList[1].getValue().toString();
         if (!this.constScope.trySetConstant(key, result[0].value.getValue()))
         {
-            throw new AssemblerError(input, 'Cannot redefine a constant');
+            throw this.makeError(input, 'Cannot redefine a constant');
         }
 
         return result;
@@ -267,7 +273,7 @@ export class Assembler
     {
         if (input.tokenList.length < 3)
         {
-            throw new AssemblerError(input, 'Loop input has too few arguments');
+            throw this.makeError(input, 'Loop input has too few arguments');
         }
 
         const loopLabelNum = this.labelCount++;
@@ -296,11 +302,11 @@ export class Assembler
     {
         if (input.tokenList.length < 3)
         {
-            throw new AssemblerError(input, 'Condition input has too few inputs');
+            throw this.makeError(input, 'Condition input has too few inputs');
         }
         if (input.tokenList.length > 4)
         {
-            throw new AssemblerError(input, 'Condition input has too many inputs!');
+            throw this.makeError(input, 'Condition input has too many inputs!');
         }
 
         let tempTokens: Token[] = [input.keepLocation(isIfStatement ? IfKeyword : UnlessKeyword)];
@@ -367,7 +373,7 @@ export class Assembler
     {
         if (this.loopStack.length === 0)
         {
-            throw new AssemblerError(token, `Unexpected ${keyword} outside of loop`);
+            throw this.makeError(token, `Unexpected ${keyword} outside of loop`);
         }
 
         const loopLabel = this.loopStack[this.loopStack.length - 1];
@@ -393,7 +399,7 @@ export class Assembler
 
         if (this.constScope.parent === undefined)
         {
-            throw new AssemblerError(input, 'Internal error, const scope parent lost');
+            throw this.makeError(input, 'Internal error, const scope parent lost');
         }
         this.constScope = this.constScope.parent;
 
@@ -491,7 +497,7 @@ export class Assembler
         }
         else
         {
-            throw new AssemblerError(input, 'Negative/Sub operator expects at least 1 input');
+            throw this.makeError(input, 'Negative/Sub operator expects at least 1 input');
         }
     }
 
@@ -499,7 +505,7 @@ export class Assembler
     {
         if (input.tokenList.length < 2)
         {
-            throw new AssemblerError(input, `Expecting at least 1 input for: ${opCode}`);
+            throw this.makeError(input, `Expecting at least 1 input for: ${opCode}`);
         }
 
         let result: TempCodeLine[] = [];
@@ -515,7 +521,7 @@ export class Assembler
     {
         if (input.tokenList.length < 3)
         {
-            throw new AssemblerError(input, `Expecting at least 3 inputs for: ${opCode}`);
+            throw this.makeError(input, `Expecting at least 3 inputs for: ${opCode}`);
         }
 
         let result = this.parse(input.tokenList[1]);
@@ -540,7 +546,7 @@ export class Assembler
     {
         if (input.tokenList.length < 2)
         {
-            throw new AssemblerError(input, `Expecting at least 1 input for: ${opCode}`);
+            throw this.makeError(input, `Expecting at least 1 input for: ${opCode}`);
         }
 
         let result: TempCodeLine[] = [];
@@ -642,7 +648,7 @@ export class Assembler
     {
         if (input.type !== 'value')
         {
-            throw new AssemblerError(input, 'Call token must be a value');
+            throw this.makeError(input, 'Call token must be a value');
         }
 
         const numArgsValue = new NumberValue(numArgs);
@@ -682,7 +688,7 @@ export class Assembler
     {
         if (input.type !== 'value')
         {
-            throw new AssemblerError(input, 'Get symbol token must be a value');
+            throw this.makeError(input, 'Get symbol token must be a value');
         }
 
         const result: TempCodeLine[] = [];

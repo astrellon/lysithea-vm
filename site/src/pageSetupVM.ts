@@ -1,7 +1,7 @@
 import { getTextFor, tryAssemble, tryExecute } from './common';
 import { randomScope } from './randomLibrary';
 
-import { VirtualMachine, Assembler, Scope, addToScope, LibraryType, AssemblerError, ParserError, VirtualMachineError, toStringCodeLocation, stringScope } from 'lysithea-vm';
+import { VirtualMachine, Assembler, Scope, addToScope, LibraryType } from 'lysithea-vm';
 
 const pageSetupScope = new Scope();
 pageSetupScope.trySetConstantFunc("setBackground", (vm, args) =>

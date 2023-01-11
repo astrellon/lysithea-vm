@@ -25,7 +25,7 @@ export class Tokeniser
     public get lineNumber() { return this._lineNumber; }
     public get columnNumber() { return this._columnNumber; }
 
-    private readonly input: string[];
+    public readonly input: string[];
 
     constructor(input: string[])
     {

@@ -1,4 +1,4 @@
-import { ParserError } from "../errors/errors";
+import { createErrorLogAt, ParserError } from "../errors/errors";
 import { Editable } from "../standardLibrary/standardObjectLibrary";
 import { BoolValue } from "../values/boolValue";
 import { IValue } from "../values/ivalues";
@@ -12,42 +12,42 @@ import { Tokeniser } from "./tokeniser";
 
 export class Lexer
 {
-    public static readFromLines(input: string[])
+    public static readFromLines(sourceName: string, input: string[])
     {
         const tokeniser = new Tokeniser(input);
         const result: Token[] = [];
 
         while (tokeniser.moveNext())
         {
-            result.push(Lexer.readFromTokeniser(tokeniser));
+            result.push(Lexer.readFromTokeniser(sourceName, tokeniser));
         }
 
         return Token.list(EmptyCodeLocation, result);
     }
 
-    public static readFromTokeniser(tokeniser: Tokeniser)
+    public static readFromTokeniser(sourceName: string, tokeniser: Tokeniser)
     {
         const token = tokeniser.current;
         switch (token)
         {
             case '(':
             {
-                return Lexer.parseList(tokeniser, true, ')');
+                return Lexer.parseList(sourceName, tokeniser, true, ')');
             }
             case '[':
             {
-                return Lexer.parseList(tokeniser, false, ']');
+                return Lexer.parseList(sourceName, tokeniser, false, ']');
             }
             case '{':
             {
-                return Lexer.parseMap(tokeniser);
+                return Lexer.parseMap(sourceName, tokeniser);
             }
 
             case ')':
             case ']':
             case '}':
             {
-                throw new ParserError(tokeniser.currentLocation(), token, 'Unexpected ' + token);
+                throw this.makeError(sourceName, tokeniser, token, `Unexpected ${token}`);
             }
 
             default:
@@ -57,7 +57,7 @@ export class Lexer
         }
     }
 
-    public static parseList(tokeniser: Tokeniser, isExpression: boolean, endToken: string)
+    public static parseList(sourceName: string, tokeniser: Tokeniser, isExpression: boolean, endToken: string)
     {
         const startLineNumber = tokeniser.lineNumber;
         const startColumnNumber = tokeniser.columnNumber;
@@ -69,7 +69,7 @@ export class Lexer
                 break;
             }
 
-            list.push(Lexer.readFromTokeniser(tokeniser));
+            list.push(Lexer.readFromTokeniser(sourceName, tokeniser));
         }
 
         const location = tokeniser.createLocation(startLineNumber, startColumnNumber);
@@ -77,7 +77,7 @@ export class Lexer
         return new Token(location, tokenType, undefined, list);
     }
 
-    public static parseMap(tokeniser: Tokeniser)
+    public static parseMap(sourceName: string, tokeniser: Tokeniser)
     {
         const startLineNumber = tokeniser.lineNumber;
         const startColumnNumber = tokeniser.columnNumber;
@@ -89,13 +89,13 @@ export class Lexer
                 break;
             }
 
-            const key = Lexer.readFromTokeniser(tokeniser).toString();
+            const key = Lexer.readFromTokeniser(sourceName, tokeniser).toString();
             tokeniser.moveNext();
 
-            const value = Lexer.readFromTokeniser(tokeniser);
+            const value = Lexer.readFromTokeniser(sourceName, tokeniser);
             if (value.type === 'expression')
             {
-                throw new ParserError(value.location, '', 'Expression found in map literal');
+                throw this.makeError(sourceName, tokeniser, '', 'Expression found in map literal');
             }
             map[key] = value;
         }
@@ -133,5 +133,12 @@ export class Lexer
         }
 
         return new VariableValue(input);
+    }
+
+    private static makeError(sourceName: string, tokeniser: Tokeniser, atToken: string, message: string)
+    {
+        const location = tokeniser.currentLocation();
+        const fullMessage = `${message}: ${createErrorLogAt(sourceName, location, tokeniser.input)}`
+        throw new ParserError(location, atToken, fullMessage);
     }
 }

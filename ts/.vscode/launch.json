@@ -44,6 +44,17 @@
             "protocol": "inspector",
             "console": "externalTerminal",
             "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Launch readmeExamples",
+            "type": "node",
+            "request": "launch",
+            "args": ["${workspaceFolder}/examples/readmeExampleIndex.ts"],
+            "runtimeArgs": ["-r", "ts-node/register"],
+            "cwd": "${workspaceRoot}",
+            "protocol": "inspector",
+            "console": "externalTerminal",
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

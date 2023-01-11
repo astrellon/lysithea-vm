@@ -12,6 +12,7 @@
     "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",
     "diagTree": "ts-node --project ./examples/tsconfig.json ./examples/dialogueTreeIndex.ts",
     "stdLib": "ts-node --project ./examples/tsconfig.json ./examples/standardLibraryIndex.ts",
+    "readmeExample": "ts-node --project ./examples/tsconfig.json ./examples/readmeExampleIndex.ts",
     "build": "rm -rf ./dist && mkdir -p ./dist && tsc --project ./tsconfig.build.json"
   },
   "repository": "github:astrellon/lysithea-vm",

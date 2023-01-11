@@ -1,4 +1,4 @@
-import { VirtualMachineError } from "./errors/errors";
+import { createErrorLogAt, VirtualMachineError } from "./errors/errors";
 import { Scope, IReadOnlyScope } from "./scope";
 import { Script } from "./script";
 import { sublist } from "./standardLibrary/standardArrayLibrary";
@@ -693,36 +693,15 @@ export class VirtualMachine
         let text = `  at [${func.name}] in ${func.debugSymbols.sourceName}`;
         if (line >= func.code.length)
         {
-            return `${text} end of code`;
+            return `${text} end of function`;
         }
         if (line < 0)
         {
-            return `${text} before start of code`;
+            return `${text} before start of function`;
         }
 
         const codeLocation = func.debugSymbols.getLocation(line);
-        text += `:${codeLocation.startLineNumber + 1}:${codeLocation.startColumnNumber}\n`;
-
-        const fromLineIndex = Math.max(0, codeLocation.startLineNumber - 1);
-        const toLineIndex = Math.min(func.debugSymbols.fullText.length, codeLocation.startLineNumber + 2);
-        for (let i = fromLineIndex; i < toLineIndex; i++)
-        {
-            const lineNum = (i + 1).toString(10);
-            text += `${lineNum}: ${func.debugSymbols.fullText[i]}\n`;
-
-            if (i === codeLocation.startLineNumber)
-            {
-                text += ' '.repeat(codeLocation.startColumnNumber + lineNum.length) + '^';
-                const diff = codeLocation.endColumnNumber - codeLocation.startColumnNumber;
-                if (diff > 0)
-                {
-                    text += '-'.repeat(diff) + '^';
-                }
-                text += '\n';
-            }
-        }
-
-        return text;
+        return createErrorLogAt(func.debugSymbols.sourceName, codeLocation, func.debugSymbols.fullText);
     }
 
     private getScopeLine()
