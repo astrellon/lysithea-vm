@@ -10,6 +10,9 @@ $ npm install
 $ npm run perfTest
 $ npm run stdLib
 $ npm run diagTree
+$ npm run readmeExampleErrors
+$ npm run readmeExampleScopes
+
 ```
 
 ## Build
@@ -33,7 +36,7 @@ Currently the code is written with a Lisp like syntax. It should not be assumed 
 
 This will push the `5` and `12` to the stack and then run the `+` operators, then push `"print"` to the stack and run the `call` opcode. As for `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console `Result: 17`.
 
-Here is an example of a run command handler for the above program in C#:
+Here is an example of a run command handler for the above program in Typescript:
 ```typescript
 function createScope(): Scope
 {
@@ -235,7 +238,7 @@ The main difference being that when done at the assembler stage it lets it inlin
 
 Additionally this extra functionality can be grouped together into a `scope` which can then be combined with the assembler or virtual machines scope. Or you can define individual values.
 
-Here is a somewhat lengthy example of different ways of adding extra functionality.
+Here is a somewhat lengthy example of different ways of adding extra functionality. Property error handling has been left out for brevity.
 
 ```ts
 import {
