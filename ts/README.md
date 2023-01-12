@@ -224,6 +224,17 @@ Oh no!
 */
 ```
 
+## Adding Extra Functionality
+So by default the VM only supports basic arithmetic (`+`, `-`, `*`, `/`) and comparisons (`<`, `>`, `>=`, `<=`, `==`, `!=`). The standard library gives you some more functionality around manipulating some of the builtin types, like strings, lists and maps but that still doesn't let you do much.
+
+So in general you'll be adding extra functionality to actually do something for your specific program.
+
+There's two main ways of doing this, adding extra functions and values to the assembler and adding extra functions and values to the virtual machine.
+
+The main difference being that when done at the assembler stage it lets it inline calls to those functions increasing performance and it means that even if the virtual machine in unaware of those function it won't need to, unless you want to dynamically find those functions.
+
+Additionally this extra functionality can be grouped together into a `scope` which can then be combined with the assembler or virtual machines scope. Or you can define individual values.
+
 ## More details
 For more details, see the main [repositories documentation](https://github.com/astrellon/lysithea-vm).
 

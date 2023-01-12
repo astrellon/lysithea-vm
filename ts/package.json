@@ -1,6 +1,6 @@
 {
   "name": "lysithea-vm",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "A simple stack based virtual machine call Lysithea.",
   "main": "./dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,8 @@
     "perfTest": "ts-node --project ./examples/tsconfig.json ./examples/perfTestIndex.ts",
     "diagTree": "ts-node --project ./examples/tsconfig.json ./examples/dialogueTreeIndex.ts",
     "stdLib": "ts-node --project ./examples/tsconfig.json ./examples/standardLibraryIndex.ts",
-    "readmeExample": "ts-node --project ./examples/tsconfig.json ./examples/readmeExampleIndex.ts",
+    "readmeExampleErrors": "ts-node --project ./examples/tsconfig.json ./examples/readmeExampleErrorsIndex.ts",
+    "readmeExampleScopes": "ts-node --project ./examples/tsconfig.json ./examples/readmeExampleScopesIndex.ts",
     "build": "rm -rf ./dist && mkdir -p ./dist && tsc --project ./tsconfig.build.json"
   },
   "repository": "github:astrellon/lysithea-vm",
