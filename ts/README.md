@@ -87,13 +87,9 @@ This example skips worrying about catching any assembler errors or runtime error
 ## Adding Error Handling
 Let's say you do want to do some error handling.
 
-There's 3 types of errors:
+There's 2 types of errors:
 
-**ParserError**: These are related to tokenising the input. The errors here are generally mismatched brackets or attempting to use an expression as a maps key value.
-
-This will contain a `trace` location as to where in the script this happened.
-
-**AssemblerError**: When parsing the tokens do things make reasonable sense, have you given the right number of arguments to certain keywords (if/unless), have you attempted to redefine a constant, etc.
+**AssemblerError**: When parsing the tokens do things make reasonable sense, have you given the right number of arguments to certain keywords (if/unless), have you attempted to redefine a constant, is there an unexpected bracket, etc.
 
 This will contain a `trace` location as to where in the script this happened.
 
@@ -104,7 +100,13 @@ This will be things like functions not being found, labels not found, etc.
 This will contain a `stackTrace` as a list of string locations at to where this occurred in the script based on function calls.
 
 ```ts
-import { VirtualMachine, Assembler, LibraryType, addToScope } from 'lysithea-vm';
+import {
+    VirtualMachine,
+    Assembler,
+    addToScope,
+    LibraryType,
+    VirtualMachineError,
+    AssemblerError } from '../src/index';
 
 const assembler = new Assembler();
 addToScope(assembler.builtinScope, LibraryType.all);
@@ -127,13 +129,13 @@ function tryExecute(vm: VirtualMachine, sourceName: string, text: string)
             const stackTrace = err.stackTrace.join('\n');
             console.error(`Runtime Error: ${err.message}\n${stackTrace}`);
         }
-        else if (err instanceof ParserError)
-        {
-            console.error(`Parser Error: ${err.message}\n${err.trace}`);
-        }
         else if (err instanceof AssemblerError)
         {
             console.error(`Assembler Error: ${err.message}\n${err.trace}`);
+        }
+        else
+        {
+            console.error('Unexpected error: ', err);
         }
         return false;
     }
@@ -161,19 +163,20 @@ RuntimeErrorExample:5:28
 Oh no!
 */
 
-const parserErrorExample = `
+const unexpectedBracketExample = `
     (define num1 18)
     (define num2 3))
     (print "Div: " (/ num1 num2))
     (print "Mul: " (* num1 num3))`;
 
-if (!tryExecute(vm, 'ParserErrorExample', parserErrorExample))
+if (!tryExecute(vm, 'UnexpectedBracket', unexpectedBracketExample))
 {
     console.log('Oh no!');
 }
 
 /* Outputs
-Parser Error: 2:17 -> 3:0: ): Unexpected ): ParserErrorExample:3:18
+Assembler Error: 2:17 -> 3:0: ): 2:17 -> 3:0: ): Unexpected )
+UnexpectedBracket:3:18
 2:     (define num1 18)
 3:     (define num2 3))
                    ^---^
@@ -216,6 +219,12 @@ The main difference being that when done at the assembler stage it lets it inlin
 
 Additionally this extra functionality can be grouped together into a `scope` which can then be combined with the assembler or virtual machines scope. Or you can define individual values.
 
+### Example
+
+In this example the `isDefined` function checks if there is a variable with that name found anywhere in the accessible scope; either current scope or parent scope up to global *but* not the builtin scope to the script!
+
+There is also an `isBuiltin` function which checks if there is a builtin constant with that name. This **only** works for global constants, as function level constants are not stored anywhere outside of the inlining.
+
 Here is a somewhat lengthy example of different ways of adding extra functionality. Property error handling has been left out for brevity.
 
 ```ts
@@ -244,7 +253,7 @@ const randomBool: BuiltinFunctionCallback = (vm, args) =>
     vm.pushStackBool(Math.random() > 0.5);
 };
 
-const randomFloat: BuiltinFunctionCallback = (vm, args) =>
+const randomNumber: BuiltinFunctionCallback = (vm, args) =>
 {
     vm.pushStackNumber(Math.random());
 };
@@ -265,7 +274,7 @@ const randomScope = new Scope();
 randomScope.tryDefine('random', randomObj);
 
 // You can also set a function directly onto the scope
-randomScope.tryDefineFunc('randomFloat', randomFloat);
+randomScope.tryDefineFunc('randomNumber', randomNumber);
 
 // You can define a simple value as well.
 randomScope.tryDefine('seed', new NumberValue(1234));
@@ -274,8 +283,10 @@ randomScope.tryDefine('seed', new NumberValue(1234));
 const scriptText = `
     (print 'Int 0-100 ' (random.int 0 100))
     (print 'Bool ' (random.bool))
-    (print 'Random Value ' (randomFloat))
+    (print 'Random Value ' (randomNumber))
     (print 'Seed ' seed)
+    (print 'Seed in dynamic scope? ' (isDefined 'seed'))
+    (print 'Seed in builtin scope? ' (isBuiltin 'seed'))
 `;
 
 // This does not make use of the randomScope object and instead directly adds the
@@ -284,13 +295,13 @@ function noScope()
 {
     const assembler = new Assembler();
     assembler.builtinScope.tryDefine('random', randomObj);
-    assembler.builtinScope.tryDefineFunc('randomFloat', randomFloat);
+    assembler.builtinScope.tryDefineFunc('randomNumber', randomNumber);
     assembler.builtinScope.tryDefine('seed', new NumberValue(1234));
     addToScope(assembler.builtinScope, LibraryType.all);
 
     const vm = new VirtualMachine(8);
 
-    const script = assembler.parseFromText('randomScript', scriptText);
+    const script = assembler.parseFromText('noScopeScript', scriptText);
     vm.execute(script);
 }
 
@@ -298,12 +309,12 @@ function noScope()
 function assemblerScope()
 {
     const assembler = new Assembler();
-    addToScope(assembler.builtinScope, LibraryType.all);
     assembler.builtinScope.combineScope(randomScope);
+    addToScope(assembler.builtinScope, LibraryType.all);
 
     const vm = new VirtualMachine(8);
 
-    const script = assembler.parseFromText('randomScript', scriptText);
+    const script = assembler.parseFromText('assemblerScopeScript', scriptText);
     vm.execute(script);
 }
 
@@ -316,7 +327,7 @@ function vmScope()
     const vm = new VirtualMachine(8);
     vm.globalScope.combineScope(randomScope);
 
-    const script = assembler.parseFromText('randomScript', scriptText);
+    const script = assembler.parseFromText('vmScopeScript', scriptText);
     vm.execute(script);
 }
 
@@ -329,6 +340,8 @@ Int 0-100 50
 Bool false
 Random Value 0.9965207443661974
 Seed 1234
+Seed in dynamic scope? false
+Seed in builtin scope? true
 */
 
 console.log('\nAssembler Scope');
@@ -340,6 +353,8 @@ Int 0-100 81
 Bool false
 Random Value 0.2369186667119021
 Seed 1234
+Seed in dynamic scope? false
+Seed in builtin scope? true
 */
 
 console.log('\nVirtual Machine Scope');
@@ -351,6 +366,8 @@ Int 0-100 41
 Bool false
 Random Value 0.21756404325237733
 Seed 1234
+Seed in dynamic scope? true
+Seed in builtin scope? false
 */
 ```
 
@@ -363,6 +380,7 @@ Both the standard library call to `print` is inlined as well as the calls to the
 
 **Note!** This does mean that anything known at assembler time is baked in and changing those values at run time will not be seen! You cannot change the value of `seed` for example if it is known at assembler time. To do that sort of thing you can simply leave it out of the assembler's `builtinScope`.
 
+Both these tables leave out the operators for calling `isDefined` and `isBuiltin` for brevity and they are the same between both tables.
 
 | Operator | Argument | Current Stack |
 | -------- | -------- | --- |
@@ -375,7 +393,7 @@ Both the standard library call to `print` is inlined as well as the calls to the
 | `callDirect` | [random.bool, 0] | "Bool ", false (some random bool) |
 | `callDirect` | [print, 2] | *empty* |
 | `push` | "Random Value " | "Random Value " |
-| `callDirect` | [randomFloat, 0] | "Random Value ", 0.1234 (some random number) |
+| `callDirect` | [randomNumber, 0] | "Random Value ", 0.1234 (some random number) |
 | `callDirect` | [print, 2] | *empty* |
 | `push` | "Seed " | "Seed " |
 | `push` | 1234 | "Seed ", 1234 |
@@ -400,7 +418,7 @@ Here is what the `vmScope` example code looks like, it contains `get` and `getPr
 | `call` | 0 | "Bool ", true (a random bool) |
 | `callDirect` | [print, 2] | *empty* |
 | `push` | Random Value | "Random Value " |
-| `get` | randomFloat | "Random Value ", {function: randomFloat} |
+| `get` | randomNumber | "Random Value ", {function: randomNumber} |
 | `call` | 0 | "Random Value ", 0.543 (some random number) |
 | `callDirect` | [print, 2] | *empty* |
 | `push` | "Seed " | "Seed " |

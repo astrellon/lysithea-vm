@@ -12,7 +12,7 @@ public static class Program
     (print 'Div: ' (/ num1 num2))
     (print 'Mul: ' (* num1 num3))";
 
-    private const string ParserErrorCode = @"
+    private const string UnexpectedBracketCode = @"
     (define num1 18)
     (define num2 3))
     (print 'Div: ' (/ num1 num2))
@@ -37,7 +37,7 @@ public static class Program
             Console.WriteLine("Oh no!");
         }
 
-        if (!TryExecute(vm, "ParserErrorExample", ParserErrorCode))
+        if (!TryExecute(vm, "UnexpectedBracketExample", UnexpectedBracketCode))
         {
             Console.WriteLine("Oh no!");
         }
@@ -56,10 +56,6 @@ public static class Program
             vm.Execute(script);
             return true;
         }
-        catch (ParserException exp)
-        {
-            Console.WriteLine($"Parser Error: {exp.Message}\n{exp.Trace}");
-        }
         catch (AssemblerException exp)
         {
             Console.WriteLine($"Assembler Error: {exp.Message}\n{exp.Trace}");
@@ -67,6 +63,10 @@ public static class Program
         catch (VirtualMachineException exp)
         {
             Console.WriteLine($"Runtime Error: {exp.Message}\n{string.Join("\n", exp.VirtualMachineStackTrace)}");
+        }
+        catch (Exception exp)
+        {
+            Console.WriteLine($"Unexpected Error: {exp.Message}\n{exp.StackTrace}");
         }
 
         return false;

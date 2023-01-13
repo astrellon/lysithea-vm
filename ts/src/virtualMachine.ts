@@ -72,6 +72,7 @@ export class VirtualMachine
     private _globalScope: Scope;
     public get globalScope() { return this._globalScope; }
     private _currentScope: Scope;
+    public get currentScope() { return this._currentScope; }
 
     private _lineCounter: number = 0;
     public get lineCounter() { return this._lineCounter; }

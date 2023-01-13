@@ -1,4 +1,4 @@
-import { AssemblerError, createErrorLogAt } from "../errors/errors";
+import { AssemblerError, createErrorLogAt, ParserError } from "../errors/errors";
 import { IValue, ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap, BoolValue } from "../index";
 import { Scope } from "../scope";
 import { Script } from "../script";
@@ -105,14 +105,33 @@ export class Assembler
         this.sourceName = sourceName;
         this.fullText = splitInput(input);
         this.constScope = new Scope();
-        const parsed = Lexer.readFromLines(sourceName, this.fullText);
 
-        const code = this.parseGlobalFunction(parsed);
-        const scriptScope = new Scope();
-        scriptScope.combineScope(this.builtinScope);
-        scriptScope.combineScope(this.constScope);
+        try
+        {
+            const parsed = Lexer.readFromLines(sourceName, this.fullText);
 
-        return new Script(scriptScope, code);
+            const code = this.parseGlobalFunction(parsed);
+            const scriptScope = new Scope();
+            scriptScope.combineScope(this.builtinScope);
+            scriptScope.combineScope(this.constScope);
+
+            return new Script(scriptScope, code);
+        }
+        catch (err)
+        {
+            if (err instanceof ParserError)
+            {
+                throw this.makeError(Token.value(err.location, new StringValue(err.token)), err.message);
+            }
+            else if (err instanceof AssemblerError)
+            {
+                throw err;
+            }
+            else
+            {
+                throw this.makeError(Token.empty(EmptyCodeLocation), 'Unexpected error: ' + err);
+            }
+        }
     }
 
     public makeError(token: Token, message: string)

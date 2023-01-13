@@ -23,7 +23,7 @@ const randomBool: BuiltinFunctionCallback = (vm, args) =>
     vm.pushStackBool(Math.random() > 0.5);
 };
 
-const randomFloat: BuiltinFunctionCallback = (vm, args) =>
+const randomNumber: BuiltinFunctionCallback = (vm, args) =>
 {
     vm.pushStackNumber(Math.random());
 };
@@ -44,7 +44,7 @@ const randomScope = new Scope();
 randomScope.tryDefine('random', randomObj);
 
 // You can also set a function directly onto the scope
-randomScope.tryDefineFunc('randomFloat', randomFloat);
+randomScope.tryDefineFunc('randomNumber', randomNumber);
 
 // You can define a simple value as well.
 randomScope.tryDefine('seed', new NumberValue(1234));
@@ -53,8 +53,10 @@ randomScope.tryDefine('seed', new NumberValue(1234));
 const scriptText = `
     (print 'Int 0-100 ' (random.int 0 100))
     (print 'Bool ' (random.bool))
-    (print 'Random Value ' (randomFloat))
+    (print 'Random Value ' (randomNumber))
     (print 'Seed ' seed)
+    (print 'Seed in dynamic scope? ' (isDefined 'seed'))
+    (print 'Seed in builtin scope? ' (isBuiltin 'seed'))
 `;
 
 // This does not make use of the randomScope object and instead directly adds the
@@ -63,13 +65,13 @@ function noScope()
 {
     const assembler = new Assembler();
     assembler.builtinScope.tryDefine('random', randomObj);
-    assembler.builtinScope.tryDefineFunc('randomFloat', randomFloat);
+    assembler.builtinScope.tryDefineFunc('randomNumber', randomNumber);
     assembler.builtinScope.tryDefine('seed', new NumberValue(1234));
     addToScope(assembler.builtinScope, LibraryType.all);
 
     const vm = new VirtualMachine(8);
 
-    const script = assembler.parseFromText('randomScript', scriptText);
+    const script = assembler.parseFromText('noScopeScript', scriptText);
     vm.execute(script);
 }
 
@@ -77,12 +79,12 @@ function noScope()
 function assemblerScope()
 {
     const assembler = new Assembler();
-    addToScope(assembler.builtinScope, LibraryType.all);
     assembler.builtinScope.combineScope(randomScope);
+    addToScope(assembler.builtinScope, LibraryType.all);
 
     const vm = new VirtualMachine(8);
 
-    const script = assembler.parseFromText('randomScript', scriptText);
+    const script = assembler.parseFromText('assemblerScopeScript', scriptText);
     vm.execute(script);
 }
 
@@ -95,7 +97,7 @@ function vmScope()
     const vm = new VirtualMachine(8);
     vm.globalScope.combineScope(randomScope);
 
-    const script = assembler.parseFromText('randomScript', scriptText);
+    const script = assembler.parseFromText('vmScopeScript', scriptText);
     vm.execute(script);
 }
 

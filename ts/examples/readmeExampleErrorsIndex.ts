@@ -1,4 +1,10 @@
-import { VirtualMachine, Assembler, addToScope, LibraryType, VirtualMachineError, ParserError, AssemblerError, Script } from '../src/index';
+import {
+    VirtualMachine,
+    Assembler,
+    addToScope,
+    LibraryType,
+    VirtualMachineError,
+    AssemblerError } from '../src/index';
 
 const assembler = new Assembler();
 addToScope(assembler.builtinScope, LibraryType.all);
@@ -21,13 +27,13 @@ function tryExecute(vm: VirtualMachine, sourceName: string, text: string)
             const stackTrace = err.stackTrace.join('\n');
             console.error(`Runtime Error: ${err.message}\n${stackTrace}`);
         }
-        else if (err instanceof ParserError)
-        {
-            console.error(`Parser Error: ${err.message}\n${err.trace}`);
-        }
         else if (err instanceof AssemblerError)
         {
             console.error(`Assembler Error: ${err.message}\n${err.trace}`);
+        }
+        else
+        {
+            console.error('Unexpected error: ', err);
         }
         return false;
     }
@@ -44,13 +50,13 @@ if (!tryExecute(vm, 'RuntimeErrorExample', runtimeErrorExample))
     console.log('Oh no!');
 }
 
-const parserErrorExample = `
+const unexpectedBracketExample = `
     (define num1 18)
     (define num2 3))
     (print "Div: " (/ num1 num2))
     (print "Mul: " (* num1 num3))`;
 
-if (!tryExecute(vm, 'ParserErrorExample', parserErrorExample))
+if (!tryExecute(vm, 'UnexpectedBracket', unexpectedBracketExample))
 {
     console.log('Oh no!');
 }
