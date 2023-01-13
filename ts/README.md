@@ -173,7 +173,7 @@ if (!tryExecute(vm, 'ParserErrorExample', parserErrorExample))
 }
 
 /* Outputs
-Parser Error: 2:17 -> 3:0}: ): Unexpected ): ParserErrorExample:3:18
+Parser Error: 2:17 -> 3:0: ): Unexpected ): ParserErrorExample:3:18
 2:     (define num1 18)
 3:     (define num2 3))
                    ^---^
@@ -195,7 +195,7 @@ if (!tryExecute(vm, 'AssemblerErrorExample', assemblerErrorExample))
 }
 
 /* Outputs
-Assembler Error: 2:12 -> 2:17}: num1: Attempting to define a constant: num1: AssemblerErrorExample:3:13
+Assembler Error: 2:12 -> 2:17: num1: Attempting to define a constant: num1: AssemblerErrorExample:3:13
 2:     (const num1 18)
 3:     (define num1 "Redefined")
               ^----^

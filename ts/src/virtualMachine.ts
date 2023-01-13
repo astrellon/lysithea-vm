@@ -62,7 +62,7 @@ export const EmptyCodeLocation: CodeLocation = {
 }
 export function toStringCodeLocation(input: CodeLocation)
 {
-    return `${input.startLineNumber}:${input.startColumnNumber} -> ${input.endLineNumber}:${input.endColumnNumber}}`;
+    return `${input.startLineNumber}:${input.startColumnNumber} -> ${input.endLineNumber}:${input.endColumnNumber}`;
 }
 
 export class VirtualMachine
