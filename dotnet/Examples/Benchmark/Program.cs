@@ -10,7 +10,7 @@ namespace LysitheaVM
     {
         public static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<BenchmarkPerfTest>();
+            var summary = BenchmarkRunner.Run<BenchmarkAssemble>();
         }
     }
 }

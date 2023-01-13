@@ -8,14 +8,14 @@ namespace LysitheaVM
     {
         #region Fields
         private static readonly Random Rand = new Random();
-        private NLua.Lua state;
+        public readonly NLua.Lua State;
         #endregion
 
         #region Constructor
         public PerfNLua()
         {
-            this.state = new Lua();
-            state["rand"] = (object)DoGetRand;
+            this.State = new Lua();
+            State["rand"] = (object)DoGetRand;
         }
         #endregion
 
@@ -27,12 +27,12 @@ namespace LysitheaVM
 
         public void Dispose()
         {
-            this.state.Dispose();
+            this.State.Dispose();
         }
 
         public LuaFunction Compile(string codeText)
         {
-            return state.LoadString(codeText, "chunk");
+            return State.LoadString(codeText, "chunk");
         }
 
         public void Execute(LuaFunction input)
@@ -42,7 +42,7 @@ namespace LysitheaVM
 
         public void Execute(string codeText)
         {
-            state.DoString(codeText);
+            State.DoString(codeText);
         }
         #endregion
     }
