@@ -12,7 +12,6 @@ $ npm run stdLib
 $ npm run diagTree
 $ npm run readmeExampleErrors
 $ npm run readmeExampleScopes
-
 ```
 
 ## Build
@@ -35,27 +34,6 @@ Currently the code is written with a Lisp like syntax. It should not be assumed 
 ```
 
 This will push the `5` and `12` to the stack and then run the `+` operators, then push `"print"` to the stack and run the `call` opcode. As for `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console `Result: 17`.
-
-Here is an example of a run command handler for the above program in Typescript:
-```typescript
-function createScope(): Scope
-{
-    var result = new Scope();
-
-    result.tryDefineFunc("print", (vm, args) =>
-    {
-        console.log(args.value.map(c => c.toString()).join(''));
-    });
-
-    return result;
-}
-```
-
-The program will output
-
-```
-Result: 17
-```
 
 ## Simple Program
 To make use of Lysithea in a TS project you can either copy of the contents of the `src` folder into your project and make changes to it as you see fit. Or get a copy of it from [npm](https://www.npmjs.com/package/lysithea-vm).

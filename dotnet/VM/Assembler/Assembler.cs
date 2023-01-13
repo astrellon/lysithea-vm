@@ -49,8 +49,8 @@ namespace LysitheaVM
         #region Methods
         private AssemblerException ThrowException(Token token, string message)
         {
-            var fullMessage = $"{this.SourceName}:line {token.Location.StartLineNumber} column: {token.Location.StartColumnNumber}: {message}";
-            return new AssemblerException(this, token, fullMessage);
+            var trace = ExceptionsCommon.CreateErrorLogAt(this.SourceName, token.Location, this.FullText);
+            return new AssemblerException(this, token, trace, message);
         }
 
         #region Parse From Input
@@ -72,7 +72,7 @@ namespace LysitheaVM
 
             try
             {
-                var parsed = Lexer.ReadFromLines(input);
+                var parsed = Lexer.ReadFromLines(sourceName, input);
 
                 var code = this.ParseGlobalFunction(parsed);
                 var scriptScope = new Scope();

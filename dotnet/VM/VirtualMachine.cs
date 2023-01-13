@@ -263,7 +263,7 @@ namespace LysitheaVM
             for (var i = 0; i < this.stack.StackSize; i++)
             {
                 var item = this.stack.Data[i];
-                yield return ($"- {item.ToString()}");
+                yield return ($"- {item?.ToString()}");
             }
         }
 
@@ -280,26 +280,8 @@ namespace LysitheaVM
             }
 
             function.DebugSymbols.TryGetLocation(line, out var codeLocation);
-            text += $":{codeLocation.StartLineNumber + 1}:{codeLocation.StartColumnNumber}\n";
 
-            var fromLineIndex = Math.Max(0, codeLocation.StartLineNumber - 1);
-            var toLineIndex = Math.Min(function.DebugSymbols.FullText.Count, codeLocation.StartLineNumber + 2);
-            for (var i = fromLineIndex; i < toLineIndex; i++)
-            {
-                var lineNum = (i + 1).ToString();
-                text += $"{lineNum}: {function.DebugSymbols.FullText[i]}\n";
-                if (i == codeLocation.StartLineNumber)
-                {
-                    text += new String(' ', codeLocation.StartColumnNumber + lineNum.Length + 1) + '^';
-                    var diff = codeLocation.EndColumnNumber - codeLocation.StartColumnNumber;
-                    if (diff > 0)
-                    {
-                        text += new String('-', diff - 1) + '^';
-                    }
-                    text += '\n';
-                }
-            }
-
+            text += ExceptionsCommon.CreateErrorLogAt(function.DebugSymbols.SourceName, codeLocation, function.DebugSymbols.FullText);
             return text;
         }
         #endregion

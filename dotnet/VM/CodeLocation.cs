@@ -29,7 +29,7 @@ namespace LysitheaVM
         #endregion
 
         #region Methods
-        public new string ToString()
+        public override string ToString()
         {
             return $"{this.StartLineNumber}:{this.StartColumnNumber} -> {this.EndLineNumber}:{this.EndColumnNumber}";
         }

@@ -48,7 +48,7 @@ Currently the code is written with a Lisp like syntax. It should not be assumed 
 
 This will push the `5` and `12` to the stack and then run the `+` operators, then push `"print"` to the stack and run the `call` opcode. As for `"print"` will do it up to environment that the virtual machine is running in. Ideally however the final result would print to a console `Result: 17`.
 
-Here is an example of a run command handler for the above program in C#:
+Here is an example of defining a new function for the above program in C#:
 ```csharp
 private static Scope CreateScope()
 {
