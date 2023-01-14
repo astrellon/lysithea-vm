@@ -14,11 +14,12 @@ namespace lysithea_vm
             // Fields
             code_location location;
             std::string token;
+            std::string trace;
             std::string message;
 
             // Constructor
-            parser_error(code_location location, std::string token, std::string message):
-                location(location), token(token), message(message), std::runtime_error(message.c_str()) { }
+            parser_error(const code_location &location, const std::string &token, const std::string &trace, const std::string &message):
+                location(location), token(token), trace(trace), message(message), std::runtime_error(message.c_str()) { }
 
             // Methods
     };

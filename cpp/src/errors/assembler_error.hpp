@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../assembler/token.hpp"
+#include "./error_common.hpp"
 
 namespace lysithea_vm
 {
@@ -13,16 +14,11 @@ namespace lysithea_vm
         public:
             // Fields
             token at_token;
+            std::string trace;
             std::string message;
 
             // Constructor
-            assembler_error(const token &at_token, std::string message):
-                at_token(at_token), message(message), std::runtime_error(message.c_str()) { }
-
-            // Methods
-            static assembler_error create(const token &at_token, const std::string &message)
-            {
-                return assembler_error(at_token, at_token.location.to_string() + ": " + message);
-            }
+            assembler_error(const token &at_token, const std::string &trace, const std::string &message):
+                at_token(at_token), trace(trace), message(message), std::runtime_error(message.c_str()) { }
     };
 } // lysithea_vm

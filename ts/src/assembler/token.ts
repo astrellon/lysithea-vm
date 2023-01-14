@@ -53,21 +53,6 @@ export class Token
         return new Token(location, 'map', undefined, EmptyTokenList, map);
     }
 
-    public getValue(assembler: Assembler): IValue
-    {
-        if (this.type === 'value')
-        {
-            return this.value;
-        }
-
-        throw assembler.makeError(this,  `Cannot get value of ${this.type} token`);
-    }
-
-    public getValueCanBeEmpty(assembler: Assembler) : IValue | undefined
-    {
-        return this.type === 'empty' ? undefined : this.getValue(assembler);
-    }
-
     public keepLocation(value: string | IValue | undefined)
     {
         if (typeof (value) === 'string')

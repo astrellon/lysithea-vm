@@ -7,52 +7,60 @@
 #include "../values/string_value.hpp"
 #include "../values/variable_value.hpp"
 #include "../errors/parser_error.hpp"
+#include "../errors/error_common.hpp"
 #include "./tokeniser.hpp"
 
 namespace lysithea_vm
 {
-    token lexer::read_from_text(const std::vector<std::string> &input_lines)
+    token lexer::read_from_text(const std::string &source_name, const std::vector<std::string> &input_lines)
     {
         tokeniser input_parser(input_lines);
 
         std::vector<token_ptr> result;
         while (input_parser.move_next())
         {
-            result.emplace_back(std::make_shared<token>(read_from_parser(input_parser)));
+            result.emplace_back(std::make_shared<token>(read_from_parser(source_name, input_parser)));
         }
 
         return token(code_location(), token_type::expression, result);
     }
 
-    token lexer::read_from_parser(tokeniser &input)
+    token lexer::read_from_parser(const std::string &source_name, tokeniser &input)
     {
         const auto &input_token = input.current;
         if (input_token.size() == 0)
         {
-            throw std::runtime_error("Unexpected end of tokens");
+            throw make_error(source_name, input, "", "Unexpected end of tokens");
         }
         if (input_token == "(")
         {
-            return parse_list(input, true, ")");
+            return parse_list(source_name, input, true, ")");
         }
         if (input_token == "[")
         {
-            return parse_list(input, false, "]");
+            return parse_list(source_name, input, false, "]");
         }
         if (input_token == "{")
         {
-            return parse_map(input);
+            return parse_map(source_name, input);
         }
 
         if (input_token == ")" || input_token == "}" || input_token == "]")
         {
-            throw parser_error(input.current_location(), input_token, "Unexpected " + input_token);
+            throw make_error(source_name, input, input_token, "Unexpected " + input_token);
         }
 
         return token(input.current_location(), parse_constant(input_token));
     }
 
-    token lexer::parse_list(tokeniser &input, bool is_expression, const std::string &end_token)
+    parser_error lexer::make_error(const std::string &source_name, const tokeniser &tokeniser, const std::string &at_token, const std::string &message)
+    {
+        auto location = tokeniser.current_location();
+        auto trace = create_error_log_at(source_name, location, tokeniser.input_data());
+        return parser_error(location, at_token, trace, "Unexpected " + at_token);
+    }
+
+    token lexer::parse_list(const std::string &source_name, tokeniser &input, bool is_expression, const std::string &end_token)
     {
         auto line_number = input.end_line_number();
         auto column_number = input.end_column_number();
@@ -65,7 +73,7 @@ namespace lysithea_vm
                 break;
             }
 
-            list.emplace_back(std::make_shared<token>(read_from_parser(input)));
+            list.emplace_back(std::make_shared<token>(read_from_parser(source_name, input)));
         }
 
         auto type = is_expression ? token_type::expression : token_type::list;
@@ -73,7 +81,7 @@ namespace lysithea_vm
         return token(location, type, list);
     }
 
-    token lexer::parse_map(tokeniser &input)
+    token lexer::parse_map(const std::string &source_name, tokeniser &input)
     {
         auto line_number = input.end_line_number();
         auto column_number = input.end_column_number();
@@ -86,10 +94,16 @@ namespace lysithea_vm
                 break;
             }
 
-            auto key = read_from_parser(input);
+            auto key = read_from_parser(source_name, input);
             input.move_next();
 
-            map.emplace(key.get_value().to_string(), std::make_shared<token>(read_from_parser(input)));
+            auto value = std::make_shared<token>(read_from_parser(source_name, input));
+            if (value->type == token_type::expression)
+            {
+                throw make_error(source_name, input, value->to_string(0), "Expression found in map literal");
+            }
+
+            map.emplace(key.to_string(0), value);
         }
 
         code_location location(line_number, column_number, input.end_line_number(), input.end_column_number());

@@ -200,7 +200,7 @@ export class Assembler
 
                 if (parsed.length === 1 && parsed[0].operator === 'push' && parsed[0].value !== undefined)
                 {
-                    result.push(parsed[0].value.getValue(this));
+                    result.push(this.getValue(parsed[0].value));
                 }
                 else
                 {
@@ -224,7 +224,7 @@ export class Assembler
 
                 if (parsed.length === 1 && parsed[0].operator === 'push' && parsed[0].value !== undefined)
                 {
-                    result[key] = parsed[0].value.getValue(this);
+                    result[key] = this.getValue(parsed[0].value);
                 }
                 else
                 {
@@ -255,7 +255,7 @@ export class Assembler
         // Multiple variables can be set when a function returns multiple results.
         for (let i = input.tokenList.length - 2; i >= 1; i--)
         {
-            const key = input.tokenList[i].getValue(this).toString();
+            const key = this.getValue(input.tokenList[i]).toString();
             if (this.constScope.get(key) !== undefined)
             {
                 throw this.makeError(input.tokenList[i], `Attempting to ${opCode} a constant: ${key}`);
@@ -279,8 +279,8 @@ export class Assembler
             throw this.makeError(input, 'Const value is not a compile time constant');
         }
 
-        const key = input.tokenList[1].getValue(this).toString();
-        if (!this.constScope.trySetConstant(key, result[0].value.getValue(this)))
+        const key = this.getValue(input.tokenList[1]).toString();
+        if (!this.constScope.trySetConstant(key, this.getValue(result[0].value)))
         {
             throw this.makeError(input, 'Cannot redefine a constant');
         }
@@ -411,7 +411,7 @@ export class Assembler
             offset = 1;
         }
 
-        const parameters = input.tokenList[1 + offset].tokenList.map(e => e.getValue(this).toString());
+        const parameters = input.tokenList[1 + offset].tokenList.map(e => this.getValue(e).toString());
         const tempCodeLines = input.tokenList.slice(2 + offset).map(v => this.parse(v)).flat(1);
 
         const result = this.processTempFunction(parameters, tempCodeLines, name);
@@ -446,7 +446,7 @@ export class Assembler
             else if (tempLine.operator !== undefined && tempLine.value !== undefined)
             {
                 locations.push(tempLine.value.location);
-                code.push({ operator: tempLine.operator, value: tempLine.value.getValueCanBeEmpty(this) });
+                code.push({ operator: tempLine.operator, value: this.getValueCanBeEmpty(tempLine.value) });
             }
         }
 
@@ -571,7 +571,7 @@ export class Assembler
         let result: TempCodeLine[] = [];
         for (let i = 1; i < input.tokenList.length; i++)
         {
-            const varName = new StringValue(input.tokenList[i].getValue(this).toString());
+            const varName = new StringValue(this.getValue(input.tokenList[i]).toString());
             result.push(codeLine(opCode, input.tokenList[i].keepLocation(varName)));
         }
         return result;
@@ -586,10 +586,10 @@ export class Assembler
 
     public transformAssignmentOperator(arrayValue: Token): TempCodeLine[]
     {
-        let opCode = arrayValue.tokenList[0].getValue(this).toString();
+        let opCode = this.getValue(arrayValue.tokenList[0]).toString();
         opCode = opCode.substring(0, opCode.length - 1);
 
-        const varName = arrayValue.tokenList[1].getValue(this).toString();
+        const varName = this.getValue(arrayValue.tokenList[1]).toString();
         const newCode = [...arrayValue.tokenList];
         newCode[0] = arrayValue.tokenList[0].keepLocation(new VariableValue(opCode));
 
@@ -672,10 +672,10 @@ export class Assembler
 
         const numArgsValue = new NumberValue(numArgs);
 
-        const result = this.optimiseGet(input, input.getValue(this).toString());
+        const result = this.optimiseGet(input, this.getValue(input).toString());
         if (result.length === 1 && result[0].operator === 'push' && result[0].value !== undefined)
         {
-            const callValue = new ArrayValue([result[0].value.getValue(this), numArgsValue]);
+            const callValue = new ArrayValue([this.getValue(result[0].value), numArgsValue]);
             return [codeLine('callDirect', input.keepLocation(callValue))];
         }
 
@@ -686,7 +686,7 @@ export class Assembler
     private optimiseGetSymbolValue(input: Token): TempCodeLine[]
     {
         let isArgumentUnpack = false;
-        let key = input.getValue(this).toString();
+        let key = this.getValue(input).toString();
         if (key.startsWith('...'))
         {
             isArgumentUnpack = true;
@@ -759,6 +759,26 @@ export class Assembler
         }
 
         return result;
+    }
+
+    private getValue(input: Token)
+    {
+        if (input.type === 'value')
+        {
+            return input.value;
+        }
+
+        throw this.makeError(input, 'Unable to get value of non value token');
+    }
+
+    private getValueCanBeEmpty(input: Token)
+    {
+        if (input.type === 'empty')
+        {
+            return undefined;
+        }
+
+        return this.getValue(input);
     }
 
     private static isGetPropertyRequest(input: string): PropertyRequestInfo

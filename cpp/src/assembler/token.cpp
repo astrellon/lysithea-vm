@@ -64,26 +64,6 @@ namespace lysithea_vm
         return ss.str();
     }
 
-    value token::get_value() const
-    {
-        if (type == token_type::value)
-        {
-            return token_value;
-        }
-
-        throw assembler_error::create(*this, "Cannot get value of token");
-    }
-
-    value token::get_value_can_be_empty() const
-    {
-        if (type == token_type::empty)
-        {
-            return value();
-        }
-
-        return get_value();
-    }
-
     token token::keep_location(value new_token_value) const
     {
         return token(location, new_token_value);

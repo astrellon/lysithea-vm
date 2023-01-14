@@ -11,13 +11,10 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -m64 -DRELEASE")
 project(lysithea-vm)
 
 file(GLOB FILE_SRC
-    "src/*.hpp"
     "src/*.cpp"
-    "src/values/*.hpp"
+    "src/errors/*.cpp"
     "src/values/*.cpp"
-    "src/assembler/*.hpp"
     "src/assembler/*.cpp"
-    "src/standard_library/*.hpp"
     "src/standard_library/*.cpp"
 )
 

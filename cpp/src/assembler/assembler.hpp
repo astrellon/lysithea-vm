@@ -16,6 +16,7 @@
 #include "../scope.hpp"
 #include "../operator.hpp"
 #include "../function.hpp"
+#include "../errors/assembler_error.hpp"
 
 namespace lysithea_vm
 {
@@ -104,6 +105,11 @@ namespace lysithea_vm
             std::string make_cond_label(int index, int label_num);
 
             static void add_handle_nested(std::vector<token_ptr> &target, token_ptr input);
+
+            assembler_error make_error(const token &token, const std::string &message) const;
+
+            value get_value(const token &input) const;
+            value get_value_can_be_empty(const token &input) const;
 
     };
 } // lysithea_vm
