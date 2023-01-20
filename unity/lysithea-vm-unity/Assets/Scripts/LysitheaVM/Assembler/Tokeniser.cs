@@ -18,7 +18,7 @@ namespace LysitheaVM
         private bool escaped = false;
         private bool inComment = false;
         private readonly StringBuilder accumulator = new StringBuilder();
-        private readonly IReadOnlyList<string> input;
+        public readonly IReadOnlyList<string> Input;
 
         public CodeLocation CurrentLocation => new CodeLocation(this.startLineNumber, this.startColumnNumber, this.LineNumber, this.ColumnNumber);
         #endregion
@@ -26,7 +26,7 @@ namespace LysitheaVM
         #region Constructor
         public Tokeniser(IReadOnlyList<string> input)
         {
-            this.input = input;
+            this.Input = input;
         }
         #endregion
 
@@ -45,9 +45,9 @@ namespace LysitheaVM
                 return true;
             }
 
-            while (this.LineNumber < this.input.Count)
+            while (this.LineNumber < this.Input.Count)
             {
-                var line = this.input[this.LineNumber];
+                var line = this.Input[this.LineNumber];
                 if (line.Length == 0)
                 {
                     this.LineNumber++;
@@ -181,7 +181,7 @@ namespace LysitheaVM
                 }
             }
 
-            this.Current = null;
+            this.Current = "";
             return false;
         }
 

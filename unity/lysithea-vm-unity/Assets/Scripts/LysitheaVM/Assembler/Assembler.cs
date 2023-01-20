@@ -47,10 +47,10 @@ namespace LysitheaVM
         #endregion
 
         #region Methods
-        private AssemblerException ThrowException(Token token, string message)
+        private AssemblerException MakeException(Token token, string message)
         {
-            var fullMessage = $"{this.SourceName}:line {token.Location.StartLineNumber} column: {token.Location.StartColumnNumber}: {message}";
-            return new AssemblerException(this, token, fullMessage);
+            var trace = ExceptionsCommon.CreateErrorLogAt(this.SourceName, token.Location, this.FullText);
+            return new AssemblerException(this, token, trace, message);
         }
 
         #region Parse From Input
@@ -72,7 +72,7 @@ namespace LysitheaVM
 
             try
             {
-                var parsed = Lexer.ReadFromLines(input);
+                var parsed = Lexer.ReadFromLines(sourceName, input);
 
                 var code = this.ParseGlobalFunction(parsed);
                 var scriptScope = new Scope();
@@ -83,7 +83,7 @@ namespace LysitheaVM
             }
             catch (ParserException exp)
             {
-                throw this.ThrowException(Token.Value(exp.Location, new StringValue(exp.Token)), exp.Message);
+                throw this.MakeException(Token.Value(exp.Location, new StringValue(exp.Token)), exp.Message);
             }
         }
 
@@ -139,7 +139,7 @@ namespace LysitheaVM
                 }
                 else
                 {
-                    throw this.ThrowException(input, $"Expression needs to start with a function variable");
+                    throw this.MakeException(input, $"Expression needs to start with a function variable");
                 }
             }
             else if (input.Type == TokenType.List)
@@ -160,7 +160,7 @@ namespace LysitheaVM
                     }
                     else
                     {
-                        throw this.ThrowException(parsed[0].Token, "Unexpected token in list literal");
+                        throw this.MakeException(parsed[0].Token, "Unexpected token in list literal");
                     }
                 }
 
@@ -184,7 +184,7 @@ namespace LysitheaVM
                     }
                     else
                     {
-                        throw this.ThrowException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
+                        throw this.MakeException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
                     }
                 }
 
@@ -213,7 +213,7 @@ namespace LysitheaVM
             {
                 if (!this.ConstScope.TrySetConstant(function.Name, functionValue))
                 {
-                    throw this.ThrowException(input, "Unable to define function, constant already exists");
+                    throw this.MakeException(input, "Unable to define function, constant already exists");
                 }
                 // Special return case
                 return new List<TempCodeLine> { TempCodeLine.Code(Operator.Unknown, Token.Empty(CodeLocation.Empty)) };
@@ -241,7 +241,7 @@ namespace LysitheaVM
                 var key = this.GetValue(input.TokenList[i]).ToString();
                 if (this.ConstScope.TryGetKey(key, out var temp))
                 {
-                    throw this.ThrowException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
+                    throw this.MakeException(input.TokenList[i], $"Attempting to {opCode} a constant: {key}");
                 }
 
                 result.Add(TempCodeLine.Code(opCode, input.TokenList[i]));
@@ -253,19 +253,19 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count != 3)
             {
-                throw this.ThrowException(input, "Const requires 2 inputs");
+                throw this.MakeException(input, "Const requires 2 inputs");
             }
 
             var result = this.Parse(input.TokenList.Last());
             if (result.Count != 1 || result[0].Operator != Operator.Push)
             {
-                throw this.ThrowException(input, "Const value is not a compile time constant");
+                throw this.MakeException(input, "Const value is not a compile time constant");
             }
 
             var key = this.GetValue(input.TokenList[1]).ToString();
             if (!this.ConstScope.TrySetConstant(key, this.GetValue(result[0].Token)))
             {
-                throw this.ThrowException(input, "Cannot redefine a constant");
+                throw this.MakeException(input, "Cannot redefine a constant");
             }
 
             return result;
@@ -275,7 +275,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw this.ThrowException(input, "Loop input has too few inputs");
+                throw this.MakeException(input, "Loop input has too few inputs");
             }
 
             var loopLabelNum = this.labelCount++;
@@ -343,11 +343,11 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw this.ThrowException(input, "Condition input has too few inputs");
+                throw this.MakeException(input, "Condition input has too few inputs");
             }
             if (input.TokenList.Count > 4)
             {
-                throw this.ThrowException(input, "Condition input has too many inputs!");
+                throw this.MakeException(input, "Condition input has too many inputs!");
             }
 
             // Turn the an if/unless statement into a switch statement.
@@ -381,7 +381,7 @@ namespace LysitheaVM
         {
             if (!this.loopStack.Any())
             {
-                throw this.ThrowException(token, $"Unexpected {keyword} outside of loop");
+                throw this.MakeException(token, $"Unexpected {keyword} outside of loop");
             }
 
             var loopLabel = this.loopStack.Last();
@@ -407,7 +407,7 @@ namespace LysitheaVM
 
             if (this.ConstScope.Parent == null)
             {
-                throw this.ThrowException(input, "Internal exception, const scope parent lost");
+                throw this.MakeException(input, "Internal exception, const scope parent lost");
             }
             this.ConstScope = this.ConstScope.Parent;
 
@@ -457,7 +457,7 @@ namespace LysitheaVM
             }
             else
             {
-                throw this.ThrowException(input, $"Negative/Sub operator expects at least 1 input");
+                throw this.MakeException(input, $"Negative/Sub operator expects at least 1 input");
             }
         }
 
@@ -465,7 +465,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 2)
             {
-                throw this.ThrowException(input, $"Expecting at least 1 input for: {opCode}");
+                throw this.MakeException(input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<TempCodeLine>();
@@ -482,7 +482,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 3)
             {
-                throw this.ThrowException(input, $"Expecting at least 3 inputs for: {opCode}");
+                throw this.MakeException(input, $"Expecting at least 3 inputs for: {opCode}");
             }
 
             var result = this.Parse(input.TokenList[1]);
@@ -506,7 +506,7 @@ namespace LysitheaVM
         {
             if (input.TokenList.Count < 2)
             {
-                throw this.ThrowException(input, $"Expecting at least 1 input for: {opCode}");
+                throw this.MakeException(input, $"Expecting at least 1 input for: {opCode}");
             }
 
             var result = new List<TempCodeLine>();
@@ -613,7 +613,7 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw this.ThrowException(input, "Call token must be a value");
+                throw this.MakeException(input, "Call token must be a value");
             }
 
             var numArgsValue = new NumberValue(numArgs);
@@ -635,7 +635,7 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw this.ThrowException(input, "Get symbol token value cannot be null");
+                throw this.MakeException(input, "Get symbol token value cannot be null");
             }
 
             var isArgumentUnpack = false;
@@ -660,7 +660,7 @@ namespace LysitheaVM
         {
             if (input.Type != TokenType.Value)
             {
-                throw this.ThrowException(input, "Get symbol token must be a value");
+                throw this.MakeException(input, "Get symbol token must be a value");
             }
 
             var result = new List<TempCodeLine>();
@@ -767,7 +767,7 @@ namespace LysitheaVM
                 return input.TokenValue;
             }
 
-            throw this.ThrowException(input, "Unable to get value of non value token");
+            throw this.MakeException(input, "Unable to get value of non value token");
         }
 
         private static bool IsNoOperator(IReadOnlyList<TempCodeLine> input)

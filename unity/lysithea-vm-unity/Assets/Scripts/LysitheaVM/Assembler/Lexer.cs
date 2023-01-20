@@ -7,47 +7,59 @@ namespace LysitheaVM
     public static class Lexer
     {
         #region Methods
-        public static Token ReadFromLines(IReadOnlyList<string> input)
+        public static Token ReadFromLines(string sourceName, IReadOnlyList<string> input)
         {
             var parser = new Tokeniser(input);
             var result = new List<Token>();
 
             while (parser.MoveNext())
             {
-                result.Add(ReadFromTokeniser(parser));
+                result.Add(ReadFromTokeniser(sourceName, parser));
             }
 
             return Token.Expression(CodeLocation.Empty, result);
         }
 
-        public static Token ReadFromTokeniser(Tokeniser tokeniser)
+        private static ParserException MakeError(string sourceName, CodeLocation location, Tokeniser tokeniser, string atToken, string message)
+        {
+            var trace = ExceptionsCommon.CreateErrorLogAt(sourceName, location, tokeniser.Input);
+            return new ParserException(location, atToken, trace, message);
+        }
+
+        private static ParserException MakeError(string sourceName, Tokeniser tokeniser, string atToken, string message)
+        {
+            var location = tokeniser.CurrentLocation;
+            return MakeError(sourceName, location, tokeniser, atToken, message);
+        }
+
+        public static Token ReadFromTokeniser(string sourceName, Tokeniser tokeniser)
         {
             var token = tokeniser.Current;
             switch (token)
             {
                 case null:
                 {
-                    throw new ParserException(tokeniser.CurrentLocation, token, "Unexpected end of tokens");
+                    throw MakeError(sourceName, tokeniser, token, "Unexpected end of tokens");
                 }
 
                 case "(":
                 {
-                    return ParseList(tokeniser, true, ")");
+                    return ParseList(sourceName, tokeniser, true, ")");
                 }
                 case "[":
                 {
-                    return ParseList(tokeniser, false, "]");
+                    return ParseList(sourceName, tokeniser, false, "]");
                 }
                 case "{":
                 {
-                    return ParseMap(tokeniser);
+                    return ParseMap(sourceName, tokeniser);
                 }
 
                 case ")":
                 case "]":
                 case "}":
                 {
-                    throw new ParserException(tokeniser.CurrentLocation, token, $"Unexpected {token}");
+                    throw MakeError(sourceName, tokeniser, token, $"Unexpected {token}");
                 }
                 default:
                 {
@@ -56,7 +68,7 @@ namespace LysitheaVM
             }
         }
 
-        public static Token ParseList(Tokeniser tokeniser, bool isExpression, string endToken)
+        public static Token ParseList(string sourceName, Tokeniser tokeniser, bool isExpression, string endToken)
         {
             var startLineNumber = tokeniser.LineNumber;
             var startColumnNumber = tokeniser.ColumnNumber;
@@ -67,14 +79,14 @@ namespace LysitheaVM
                 {
                     break;
                 }
-                list.Add(ReadFromTokeniser(tokeniser));
+                list.Add(ReadFromTokeniser(sourceName, tokeniser));
             }
 
             var tokenType = isExpression ? TokenType.Expression : TokenType.List;
             return new Token(tokeniser.CreateLocation(startLineNumber, startColumnNumber), tokenType, list: list);
         }
 
-        public static Token ParseMap(Tokeniser tokeniser)
+        public static Token ParseMap(string sourceName, Tokeniser tokeniser)
         {
             var startLineNumber = tokeniser.LineNumber;
             var startColumnNumber = tokeniser.ColumnNumber;
@@ -86,13 +98,13 @@ namespace LysitheaVM
                     break;
                 }
 
-                var key = ReadFromTokeniser(tokeniser).ToString();
+                var key = ReadFromTokeniser(sourceName, tokeniser).ToString();
                 tokeniser.MoveNext();
 
-                var value = ReadFromTokeniser(tokeniser);
+                var value = ReadFromTokeniser(sourceName, tokeniser);
                 if (value.Type == TokenType.Expression)
                 {
-                    throw new ParserException(value.Location, "", "Expression found in map literal");
+                    throw MakeError(sourceName, value.Location, tokeniser, value.ToString(), "Expression found in map literal");
                 }
 
                 map[key] = value;

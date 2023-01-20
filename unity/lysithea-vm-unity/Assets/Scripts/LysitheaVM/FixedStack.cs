@@ -2,24 +2,26 @@ using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+#nullable enable
+
 namespace LysitheaVM
 {
     public interface IReadOnlyFixedStack<T>
     {
         int Index { get; }
-        IReadOnlyList<T> Data { get; }
+        IReadOnlyList<T?> Data { get; }
         bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T result);
     }
 
     public class FixedStack<T> : IReadOnlyFixedStack<T>
     {
         #region Fields
-        private readonly T[] data;
+        private readonly T?[] data;
         private int index = -1;
 
         public int Index => this.index;
         public int StackSize => this.index + 1;
-        public IReadOnlyList<T> Data => this.data;
+        public IReadOnlyList<T?> Data => this.data;
         #endregion
 
         #region Constructor

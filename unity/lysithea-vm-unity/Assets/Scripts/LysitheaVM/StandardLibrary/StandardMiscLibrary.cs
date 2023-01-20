@@ -32,6 +32,13 @@ namespace LysitheaVM
                 vm.PushStack(isDefined);
             });
 
+            result.TryDefine("isBuiltin", (vm, args) =>
+            {
+                var top = args.GetIndex(0).ToString();
+                var isBuiltin = vm.BuiltinScope != null ? vm.BuiltinScope.TryGetKey(top, out var temp) : false;
+                vm.PushStack(isBuiltin);
+            });
+
             result.TryDefine("compareTo", (vm, args) =>
             {
                 var left = args.GetIndex(0);
