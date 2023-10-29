@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+using System.Text;
 
 #nullable enable
 
@@ -93,6 +93,11 @@ namespace LysitheaVM
 
     public static class IArrayValueExtensions
     {
+        public static int Count(this IArrayValue self)
+        {
+            return self.ArrayValues.Count;
+        }
+
         public static bool TryGetIndex<T>(this IArrayValue self, int index, [NotNullWhen(true)] out T? result) where T : IValue
         {
             if (self.TryGetIndex(index, out var foundValue))
@@ -142,6 +147,16 @@ namespace LysitheaVM
             throw new System.IndexOutOfRangeException();
         }
 
+        public static string GetIndexString(this IArrayValue self, int index)
+        {
+            return self.GetIndex<StringValue>(index).Value;
+        }
+
+        public static bool GetIndexBoolean(this IArrayValue self, int index)
+        {
+            return self.GetIndex<BoolValue>(index).Value;
+        }
+
         public static int GetIndexInt(this IArrayValue self, int index)
         {
             return self.GetIndex<NumberValue>(index).IntValue;
@@ -156,5 +171,209 @@ namespace LysitheaVM
         {
             return self.GetIndex<NumberValue>(index).Value;
         }
+    }
+
+    public static class IObjectValueExtensions
+    {
+        #region Methods
+        public static IValue Get(this IObjectValue self, string key)
+        {
+            if (self.TryGetKey(key, out var result))
+            {
+                return result;
+            }
+            return NullValue.Value;
+        }
+
+        public static bool TryGetKey<T>(this IObjectValue self, string key, [NotNullWhen(true)] out T? value) where T : IValue
+        {
+            if (self.TryGetKey(key, out var result))
+            {
+                if (result is T castedValue)
+                {
+                    value = castedValue;
+                    return true;
+                }
+            }
+
+            value = default(T);
+            return false;
+        }
+
+        public static bool GetBoolean(this IObjectValue self, string key, bool defaultValue)
+        {
+            if (self.TryGetValue(key, out bool result))
+            {
+                return result;
+            }
+
+            return defaultValue;
+        }
+
+        public static int GetInt(this IObjectValue self, string key, int defaultValue)
+        {
+            if (self.TryGetValue(key, out int result))
+            {
+                return result;
+            }
+
+            return defaultValue;
+        }
+
+        public static float GetFloat(this IObjectValue self, string key, float defaultValue)
+        {
+            if (self.TryGetValue(key, out float result))
+            {
+                return result;
+            }
+
+            return defaultValue;
+        }
+
+        public static double GetDouble(this IObjectValue self, string key, double defaultValue)
+        {
+            if (self.TryGetValue(key, out double result))
+            {
+                return result;
+            }
+
+            return defaultValue;
+        }
+
+        public static string GetString(this IObjectValue self, string key, string defaultValue)
+        {
+            if (self.TryGetValue(key, out string result))
+            {
+                return result;
+            }
+
+            return defaultValue;
+        }
+
+        public static bool? GetBoolean(this IObjectValue self, string key)
+        {
+            if (self.TryGetValue(key, out bool result))
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+        public static int? GetInt(this IObjectValue self, string key)
+        {
+            if (self.TryGetValue(key, out int result))
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+        public static float? GetFloat(this IObjectValue self, string key)
+        {
+            if (self.TryGetValue(key, out float result))
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+        public static double? GetDouble(this IObjectValue self, string key)
+        {
+            if (self.TryGetValue(key, out double result))
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+        public static string? GetString(this IObjectValue self, string key)
+        {
+            if (self.TryGetValue(key, out string result))
+            {
+                return result;
+            }
+
+            return null;
+        }
+
+        public static bool TryGetValue(this IObjectValue self, string key, out float result)
+        {
+            if (self.TryGetKey<NumberValue>(key, out var numValue))
+            {
+                result = numValue.FloatValue;
+                return true;
+            }
+
+            result = 0.0f;
+            return false;
+        }
+
+        public static bool TryGetValue(this IObjectValue self, string key, out double result)
+        {
+            if (self.TryGetKey<NumberValue>(key, out var numValue))
+            {
+                result = numValue.Value;
+                return true;
+            }
+
+            result = 0.0;
+            return false;
+        }
+
+        public static bool TryGetValue(this IObjectValue self, string key, out int result)
+        {
+            if (self.TryGetKey<NumberValue>(key, out var numValue))
+            {
+                result = numValue.IntValue;
+                return true;
+            }
+
+            result = 0;
+            return false;
+        }
+
+        public static bool TryGetValue(this IObjectValue self, string key, out bool result)
+        {
+            if (self.TryGetKey<BoolValue>(key, out var boolValue))
+            {
+                result = boolValue.Value;
+                return true;
+            }
+
+            result = false;
+            return false;
+        }
+
+        public static bool TryGetValue(this IObjectValue self, string key, out string result)
+        {
+            if (self.TryGetKey<StringValue>(key, out var strValue))
+            {
+                result = strValue.Value;
+                return true;
+            }
+
+            result = "";
+            return false;
+        }
+        #endregion
+    }
+
+    public static class StringExtensions
+    {
+        #region Methods
+        public static string Repeat(this string self, int count)
+        {
+            var builder = new StringBuilder(count * self.Length);
+            for (var i = 0; i < count; i++)
+            {
+                builder.Append(self);
+            }
+            return builder.ToString();
+        }
+        #endregion
     }
 }

@@ -68,7 +68,9 @@ namespace LysitheaVM
             return false;
         }
 
-        public override string ToString() => StandardArrayLibrary.GeneralToString(this);
+        public override string ToString() => StandardArrayLibrary.GeneralToString(this, -1, 0);
+        public string ToStringFormatted(int indent, int depth) => StandardArrayLibrary.GeneralToString(this, indent, depth);
+
         public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
 
         public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)

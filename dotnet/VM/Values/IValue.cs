@@ -11,6 +11,7 @@ namespace LysitheaVM
         string TypeName { get; }
 
         string ToString();
+        string ToStringFormatted(int indent, int depth);
     }
 
     public interface IObjectValue : IValue

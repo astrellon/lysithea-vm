@@ -33,6 +33,7 @@ namespace LysitheaVM
         }
 
         public override string ToString() => this.Value.ToString();
+        public string ToStringFormatted(int indent, int depth) => this.ToString();
         #endregion
     }
 }

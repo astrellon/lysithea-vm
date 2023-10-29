@@ -35,6 +35,7 @@ namespace LysitheaVM
         }
 
         public override string ToString() => $"builtin-function:{this.Name}";
+        public string ToStringFormatted(int indent, int depth) => this.ToString();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace)
