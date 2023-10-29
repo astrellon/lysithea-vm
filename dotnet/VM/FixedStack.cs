@@ -12,6 +12,9 @@ namespace LysitheaVM
         int Index { get; }
         IReadOnlyList<T?> Data { get; }
         bool TryPeek([MaybeNullWhen(false)] [NotNullWhen(true)] out T result);
+
+        List<T> Copy();
+        List<T2> Copy<T2>(System.Func<T, int, T2> copyCallback);
     }
 
     public class FixedStack<T> : IReadOnlyFixedStack<T>

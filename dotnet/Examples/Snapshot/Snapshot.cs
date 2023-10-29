@@ -118,6 +118,50 @@ namespace LysitheaVM
             return new ObjectValue(result);
         }
 
+        public void ApplyTo(VirtualMachine vm, Script script)
+        {
+            var currentCode = script.Code;
+            var globalScope = Scope.Copy(this.GlobalScope);
+            var stackTrace = this.StackTrace.Select(s =>
+            {
+                if (script.TryFindFunction(s.FunctionLookupName, out var func))
+                {
+                    var scope = s.Scope == null ? globalScope : LysitheaVM.Scope.Copy(s.Scope);
+                    return new ScopeFrame(func, scope, s.LineCounter);
+                }
+                throw new Exception("Error parsing snapshot scope frame");
+            }).ToList();
+
+            var parentScope = globalScope;
+            for (var i = 1; i < stackTrace.Count; i++)
+            {
+                var data = stackTrace[i];
+                data.Scope.Parent = parentScope;
+                parentScope = data.Scope;
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.CurrentCodeLookup))
+            {
+                if (script.TryFindFunction(this.CurrentCodeLookup, out var code))
+                {
+                    currentCode = code;
+                }
+            }
+
+            vm.SetExecutionContext(script, globalScope, currentCode, this.LineCounter, this.Stack, stackTrace);
+            vm.Running = this.Running;
+            vm.Paused = this.Paused;
+        }
+
+        public static Snapshot FromVirtualMachine(VirtualMachine vm)
+        {
+            var stack = vm.Stack.Copy();
+            var stackTrace = vm.StackTrace.Copy(SnapshotScopeFrame.FromFrame);
+            var globalScope = LysitheaVM.Scope.Copy(vm.GlobalScope);
+
+            return new Snapshot(stack, stackTrace, globalScope, vm.CurrentCode.LookupName, vm.LineCounter, vm.Running, vm.Paused);
+        }
+
         public static Snapshot FromObject(IObjectValue input)
         {
             IReadOnlyList<IValue> stack = new IValue[0];

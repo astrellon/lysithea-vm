@@ -41,7 +41,7 @@ namespace LysitheaVM.Example
             {
                 var sw = Stopwatch.StartNew();
                 var snapshot = Snapshot.FromObject(CreatedSnapshot);
-                vm.FromSnapshot(script, snapshot);
+                snapshot.ApplyTo(vm, script);
                 if (vm.Running && !vm.Paused)
                 {
                     vm.Execute();
@@ -64,7 +64,7 @@ namespace LysitheaVM.Example
 
             result.TrySetConstant("make-snapshot", (vm, args) =>
             {
-                var snapshot = vm.CreateSnapshot();
+                var snapshot = Snapshot.FromVirtualMachine(vm);
                 CreatedSnapshot = snapshot.ToObject();
                 Console.WriteLine("Made snapshot: " + CreatedSnapshot.ToStringFormatted(2, 0));
                 vm.Running = false;

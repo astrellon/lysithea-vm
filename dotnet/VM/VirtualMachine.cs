@@ -64,52 +64,18 @@ namespace LysitheaVM
             this.CurrentCode = script.Code;
         }
 
-        public void FromSnapshot(Script script, Snapshot snapshot)
+        public void SetExecutionContext(Script script, Scope globalScope, Function code, int lineCounter, IReadOnlyList<IValue> stack, IReadOnlyList<ScopeFrame> stackTrace)
         {
             this.BuiltinScope = script.BuiltinScope;
-            this.CurrentCode = script.Code;
+            this.CurrentCode = code;
             this.CurrentScript = script;
 
-            this.GlobalScope = Scope.Copy(snapshot.GlobalScope);
-            this.lineCounter = snapshot.LineCounter;
-            this.stack.From(snapshot.Stack);
-            this.stackTrace.From(snapshot.StackTrace, ((s, index) =>
-            {
-                if (script.TryFindFunction(s.FunctionLookupName, out var func))
-                {
-                    var scope = s.Scope == null ? this.GlobalScope : LysitheaVM.Scope.Copy(s.Scope);
-                    return new ScopeFrame(func, scope, s.LineCounter);
-                }
-                throw new Exception("Error parsing snapshot scope frame");
-            }));
-            this.Running = snapshot.Running;
-            this.Paused = snapshot.Paused;
+            this.GlobalScope = globalScope;
+            this.CurrentScope = stackTrace.Any() ? stackTrace.Last().Scope : globalScope;
 
-            var parentScope = this.GlobalScope;
-            for (var i = 1; i <= this.stackTrace.Index; i++)
-            {
-                var data = this.stackTrace.Data[i];
-                data.Scope.Parent = parentScope;
-                parentScope = data.Scope;
-            }
-            this.CurrentScope = parentScope;
-
-            if (!string.IsNullOrWhiteSpace(snapshot.CurrentCodeLookup))
-            {
-                if (script.TryFindFunction(snapshot.CurrentCodeLookup, out var currentCode))
-                {
-                    this.CurrentCode = currentCode;
-                }
-            }
-        }
-
-        public Snapshot CreateSnapshot()
-        {
-            var stack = this.stack.Copy();
-            var stackTrace = this.stackTrace.Copy(SnapshotScopeFrame.FromFrame);
-            var globalScope = LysitheaVM.Scope.Copy(this.GlobalScope);
-
-            return new Snapshot(stack, stackTrace, globalScope, this.CurrentCode.LookupName, this.lineCounter, this.Running, this.Paused);
+            this.lineCounter = lineCounter;
+            this.stack.From(stack);
+            this.stackTrace.From(stackTrace);
         }
 
         public void Execute(Script script)
