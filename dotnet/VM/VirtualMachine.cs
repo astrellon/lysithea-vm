@@ -18,6 +18,7 @@ namespace LysitheaVM
         public IReadOnlyScope? BuiltinScope = null;
         public Scope GlobalScope { get; private set; }
         public Scope CurrentScope { get; private set; }
+        public Script? CurrentScript { get; private set; }
         private int lineCounter = 0;
 
         public bool Running;
@@ -44,6 +45,7 @@ namespace LysitheaVM
         {
             this.GlobalScope = new Scope();
             this.CurrentScope = this.GlobalScope;
+            this.CurrentScript = null;
             this.lineCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
@@ -56,9 +58,58 @@ namespace LysitheaVM
             this.lineCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
+            this.CurrentScript = script;
 
             this.BuiltinScope = script.BuiltinScope;
             this.CurrentCode = script.Code;
+        }
+
+        public void FromSnapshot(Script script, Snapshot snapshot)
+        {
+            this.BuiltinScope = script.BuiltinScope;
+            this.CurrentCode = script.Code;
+            this.CurrentScript = script;
+
+            this.GlobalScope = Scope.Copy(snapshot.GlobalScope);
+            this.lineCounter = snapshot.LineCounter;
+            this.stack.From(snapshot.Stack);
+            this.stackTrace.From(snapshot.StackTrace, ((s, index) =>
+            {
+                if (script.TryFindFunction(s.FunctionLookupName, out var func))
+                {
+                    var scope = s.Scope == null ? this.GlobalScope : LysitheaVM.Scope.Copy(s.Scope);
+                    return new ScopeFrame(func, scope, s.LineCounter);
+                }
+                throw new Exception("Error parsing snapshot scope frame");
+            }));
+            this.Running = snapshot.Running;
+            this.Paused = snapshot.Paused;
+
+            var parentScope = this.GlobalScope;
+            for (var i = 1; i <= this.stackTrace.Index; i++)
+            {
+                var data = this.stackTrace.Data[i];
+                data.Scope.Parent = parentScope;
+                parentScope = data.Scope;
+            }
+            this.CurrentScope = parentScope;
+
+            if (!string.IsNullOrWhiteSpace(snapshot.CurrentCodeLookup))
+            {
+                if (script.TryFindFunction(snapshot.CurrentCodeLookup, out var currentCode))
+                {
+                    this.CurrentCode = currentCode;
+                }
+            }
+        }
+
+        public Snapshot CreateSnapshot()
+        {
+            var stack = this.stack.Copy();
+            var stackTrace = this.stackTrace.Copy(SnapshotScopeFrame.From);
+            var globalScope = LysitheaVM.Scope.Copy(this.GlobalScope);
+
+            return new Snapshot(stack, stackTrace, globalScope, this.CurrentCode.LookupName, this.lineCounter, this.Running, this.Paused);
         }
 
         public void Execute(Script script)

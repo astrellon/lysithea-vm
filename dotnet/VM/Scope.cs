@@ -180,6 +180,20 @@ namespace LysitheaVM
             }
             return this.constants.Contains(key);
         }
+
+        public static Scope Copy(IReadOnlyScope input)
+        {
+            var result = new Scope();
+            foreach (var kvp in input.Values)
+            {
+                result.TryDefine(kvp.Key, kvp.Value);
+            }
+            foreach (var constant in input.Constants)
+            {
+                result.SetConstant(constant);
+            }
+            return result;
+        }
         #endregion
     }
 }

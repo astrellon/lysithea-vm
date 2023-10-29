@@ -41,6 +41,8 @@ namespace LysitheaVM
         public string SourceName { get; private set; } = "";
 
         private int labelCount = 0;
+        private Dictionary<string, int> funcCounts = new Dictionary<string, int>();
+
         private List<string> keywordParsingStack = new List<string>();
         private Scope ConstScope = new Scope();
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
@@ -91,6 +93,7 @@ namespace LysitheaVM
         {
             var tempCodeLines = input.TokenList.SelectMany(Parse).ToList();
             var result = this.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
+            this.BuiltinScope.TrySetConstant(result.LookupName, new FunctionValue(result));
             return result;
         }
 
@@ -208,6 +211,8 @@ namespace LysitheaVM
             var function = ParseFunction(input);
             var functionValue = new FunctionValue(function);
             var functionToken = input.KeepLocation(functionValue);
+
+            this.BuiltinScope.TrySetConstant(function.LookupName, functionValue);
 
             if (this.keywordParsingStack.Count == 1 && function.HasName)
             {
@@ -747,8 +752,9 @@ namespace LysitheaVM
             }
 
             var debugSymbols = new DebugSymbols(this.SourceName, this.FullText, locations);
+            var lookupName = GetFunctionLookupName(name);
 
-            return new Function(code, parameters, labels, name, debugSymbols);
+            return new Function(code, parameters, labels, name, debugSymbols, lookupName);
         }
 
         private IValue? GetValueCanBeEmpty(Token input)
@@ -768,6 +774,18 @@ namespace LysitheaVM
             }
 
             throw this.MakeException(input, "Unable to get value of non value token");
+        }
+
+        private string GetFunctionLookupName(string funcName)
+        {
+            if (this.funcCounts.TryGetValue(funcName, out var count))
+            {
+                this.funcCounts[funcName] = count + 1;
+                return $"__func_{funcName}_{count + 1}";
+            }
+
+            this.funcCounts[funcName] = 1;
+            return $"__func_{funcName}";
         }
 
         private static bool IsNoOperator(IReadOnlyList<TempCodeLine> input)

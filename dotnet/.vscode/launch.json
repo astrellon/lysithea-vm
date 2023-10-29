@@ -49,6 +49,17 @@
             "stopAtEntry": false
         },
         {
+            "name": "Run Snapshot Program",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-snapshot-program",
+            "program": "${workspaceFolder}/Examples/Snapshot/bin/Debug/net6.0/snapshot.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Examples/Snapshot",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
             "name": "Run Standalone",
             "type": "coreclr",
             "request": "launch",
