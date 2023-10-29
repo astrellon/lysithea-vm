@@ -8,7 +8,7 @@ namespace LysitheaVM.Example
     public static class SnapshotProgram
     {
         private static readonly Scope CustomScope = CreateScope();
-        private static Snapshot CreatedSnapshot;
+        private static ObjectValue CreatedSnapshot;
         #region Methods
 
         public static void Main(string[] args)
@@ -40,7 +40,8 @@ namespace LysitheaVM.Example
             try
             {
                 var sw = Stopwatch.StartNew();
-                vm.FromSnapshot(script, CreatedSnapshot);
+                var snapshot = Snapshot.FromObject(CreatedSnapshot);
+                vm.FromSnapshot(script, snapshot);
                 if (vm.Running && !vm.Paused)
                 {
                     vm.Execute();
@@ -63,8 +64,9 @@ namespace LysitheaVM.Example
 
             result.TrySetConstant("make-snapshot", (vm, args) =>
             {
-                CreatedSnapshot = vm.CreateSnapshot();
-                Console.WriteLine("Made snapshot");
+                var snapshot = vm.CreateSnapshot();
+                CreatedSnapshot = snapshot.ToObject();
+                Console.WriteLine("Made snapshot: " + CreatedSnapshot.ToStringFormatted(2, 0));
                 vm.Running = false;
             });
 

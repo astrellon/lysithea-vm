@@ -106,7 +106,7 @@ namespace LysitheaVM
         public Snapshot CreateSnapshot()
         {
             var stack = this.stack.Copy();
-            var stackTrace = this.stackTrace.Copy(SnapshotScopeFrame.From);
+            var stackTrace = this.stackTrace.Copy(SnapshotScopeFrame.FromFrame);
             var globalScope = LysitheaVM.Scope.Copy(this.GlobalScope);
 
             return new Snapshot(stack, stackTrace, globalScope, this.CurrentCode.LookupName, this.lineCounter, this.Running, this.Paused);

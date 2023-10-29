@@ -42,65 +42,65 @@ namespace LysitheaVM
             }
         }
 
-        public FixedStack<T> Copy()
+        public List<T> Copy()
         {
-            var result = new FixedStack<T>(this.data.Length);
+            var result = new List<T>(this.data.Length);
             for (var i = 0; i <= this.index; i++)
             {
                 var item = this.data[i];
                 if (item != null)
                 {
-                    result.TryPush(item);
+                    result.Add(item);
                 }
             }
             return result;
         }
 
-        public FixedStack<T2> Copy<T2>(System.Func<T, int, T2> copyCallback)
+        public List<T2> Copy<T2>(System.Func<T, int, T2> copyCallback)
         {
-            var result = new FixedStack<T2>(this.data.Length);
+            var result = new List<T2>(this.data.Length);
             for (var i = 0; i <= this.index; i++)
             {
                 var item = this.data[i];
                 if (item != null)
                 {
                     var copied = copyCallback.Invoke(item, i);
-                    result.TryPush(copied);
+                    result.Add(copied);
                 }
             }
             return result;
         }
 
-        public void From(IReadOnlyFixedStack<T> input)
+        public void From(IReadOnlyList<T> input)
         {
-            if (this.data.Length < input.Index)
+            if (this.data.Length < input.Count)
             {
                 throw new InvalidOperationException("Given stack has more data than this stack can fit");
             }
 
-            for (var i = 0; i <= input.Index; i++)
+            for (var i = 0; i < input.Count; i++)
             {
-                this.data[i] = input.Data[i];
+                this.data[i] = input[i];
             }
-            this.index = input.Index;
+            this.index = input.Count - 1;
         }
 
-        public void From<T2>(IReadOnlyFixedStack<T2> input, System.Func<T2, int, T> copyCallback)
+        public void From<T2>(IReadOnlyList<T2> input, System.Func<T2, int, T> copyCallback)
         {
-            if (this.data.Length < input.Index)
+            if (this.data.Length < input.Count)
             {
                 throw new InvalidOperationException("Given stack has more data than this stack can fit");
             }
 
-            for (var i = 0; i <= input.Index; i++)
+            for (var i = 0; i < input.Count; i++)
             {
-                var item = input.Data[i];
+                var item = input[i];
                 if (item != null)
                 {
                     this.data[i] = copyCallback.Invoke(item, i);
                 }
             }
-            this.index = input.Index;
+            this.index = input.Count - 1;
         }
 
 

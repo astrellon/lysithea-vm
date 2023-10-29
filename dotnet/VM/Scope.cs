@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -192,6 +193,48 @@ namespace LysitheaVM
             {
                 result.SetConstant(constant);
             }
+            return result;
+        }
+
+        public static ObjectValue ToObject(IReadOnlyScope input)
+        {
+            var result = new Dictionary<string, IValue>();
+
+            if (input.Values.Any())
+            {
+                result["values"] = new ObjectValue(input.Values.ToDictionary(k => k.Key, k => k.Value));
+            }
+            if (input.Constants.Any())
+            {
+                result["consts"] = new ArrayValue(input.Constants.Select(c => new StringValue(c) as IValue).ToList());
+            }
+
+            return new ObjectValue(result);
+        }
+
+        public static Scope FromObject(IObjectValue input)
+        {
+            var result = new Scope();
+
+            if (input.TryGetKey<ObjectValue>("values", out var valuesValue))
+            {
+                foreach (var kvp in valuesValue.Value)
+                {
+                    result.TryDefine(kvp.Key, kvp.Value);
+                }
+            }
+
+            if (input.TryGetKey<ArrayValue>("consts", out var constValue))
+            {
+                foreach (var value in constValue.Value)
+                {
+                    if (value is StringValue strValue)
+                    {
+                        result.SetConstant(strValue.Value);
+                    }
+                }
+            }
+
             return result;
         }
         #endregion

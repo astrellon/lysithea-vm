@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 
 #nullable enable
 
@@ -22,10 +24,43 @@ namespace LysitheaVM
         #endregion
 
         #region Methods
-        public static SnapshotScopeFrame From(ScopeFrame frame, int index)
+        public ObjectValue ToObject()
+        {
+            var result = new Dictionary<string, IValue>();
+            result["line"] = new NumberValue(this.LineCounter);
+            result["func"] = new StringValue(this.FunctionLookupName);
+            if (this.Scope != null)
+            {
+                result["scope"] = LysitheaVM.Scope.ToObject(this.Scope);
+            }
+
+            return new ObjectValue(result);
+        }
+
+        public static SnapshotScopeFrame FromFrame(ScopeFrame frame, int index)
         {
             var scope = index > 0 ? LysitheaVM.Scope.Copy(frame.Scope) : null;
             return new SnapshotScopeFrame(frame.LineCounter, frame.Function.LookupName, scope);
+        }
+
+        public static SnapshotScopeFrame FromObject(IObjectValue input)
+        {
+            if (!input.TryGetKey<NumberValue>("line", out var lineValue))
+            {
+                throw new InvalidOperationException("Snapshot scope frame object: Missing line number");
+            }
+            if (!input.TryGetKey<StringValue>("func", out var funcValue))
+            {
+                throw new InvalidOperationException("Snapshot scope frame object: Missing function lookup name");
+            }
+
+            IReadOnlyScope? scope = null;
+            if (input.TryGetKey<IObjectValue>("scope", out var scopeValue))
+            {
+                scope = LysitheaVM.Scope.FromObject(scopeValue);
+            }
+
+            return new SnapshotScopeFrame(lineValue.IntValue, funcValue.Value, scope);
         }
         #endregion
     }
@@ -33,8 +68,8 @@ namespace LysitheaVM
     public class Snapshot
     {
         #region Fields
-        public readonly IReadOnlyFixedStack<IValue> Stack;
-        public readonly IReadOnlyFixedStack<SnapshotScopeFrame> StackTrace;
+        public readonly IReadOnlyList<IValue> Stack;
+        public readonly IReadOnlyList<SnapshotScopeFrame> StackTrace;
         public readonly IReadOnlyScope GlobalScope;
         public readonly string CurrentCodeLookup;
         public readonly int LineCounter;
@@ -43,7 +78,7 @@ namespace LysitheaVM
         #endregion
 
         #region Constructor
-        public Snapshot(IReadOnlyFixedStack<IValue> stack, IReadOnlyFixedStack<SnapshotScopeFrame> stackTrace,
+        public Snapshot(IReadOnlyList<IValue> stack, IReadOnlyList<SnapshotScopeFrame> stackTrace,
             IReadOnlyScope globalScope, string currentCodeLookup, int lineCounter, bool running, bool paused)
         {
             this.Stack = stack;
@@ -53,6 +88,67 @@ namespace LysitheaVM
             this.CurrentCodeLookup = currentCodeLookup;
             this.Running = running;
             this.Paused = paused;
+        }
+        #endregion
+
+        #region Methods
+        public ObjectValue ToObject()
+        {
+            var stack = ArrayValue.Empty;
+            if (this.Stack.Count >= 0)
+            {
+                stack = new ArrayValue(this.Stack);
+            }
+            var stackTrace = ArrayValue.Empty;
+            if (this.StackTrace.Count >= 0)
+            {
+                stackTrace = new ArrayValue(this.StackTrace.Select(s => s.ToObject() as IValue).ToList());
+            }
+            var globalScope = LysitheaVM.Scope.ToObject(this.GlobalScope);
+
+            var result = new Dictionary<string, IValue>();
+            result["stack"] = stack;
+            result["stackTrace"] = stackTrace;
+            result["globalScope"] = globalScope;
+            result["line"] = new NumberValue(this.LineCounter);
+            result["func"] = new StringValue(this.CurrentCodeLookup);
+            result["running"] = new BoolValue(this.Running);
+            result["paused"] = new BoolValue(this.Paused);
+
+            return new ObjectValue(result);
+        }
+
+        public static Snapshot FromObject(IObjectValue input)
+        {
+            IReadOnlyList<IValue> stack = new IValue[0];
+            if (input.TryGetKey<ArrayValue>("stack", out var stackValue) && stackValue.ArrayValues.Count > 0)
+            {
+                stack = stackValue.ArrayValues;
+            }
+
+            IReadOnlyList<SnapshotScopeFrame> stackTrace = new SnapshotScopeFrame[0];
+            if (input.TryGetKey<ArrayValue>("stackTrace", out var stackTraceValue) && stackTraceValue.ArrayValues.Count > 0)
+            {
+                stackTrace = stackTraceValue.ArrayValues.Select(s => SnapshotScopeFrame.FromObject(s as IObjectValue)).ToList();
+            }
+
+            var globalScope = Scope.Empty;
+            if (input.TryGetKey<ObjectValue>("globalScope", out var globalScopeValue))
+            {
+                globalScope = LysitheaVM.Scope.FromObject(globalScopeValue);
+            }
+
+            var line = input.GetInt("line");
+            var func = input.GetString("func");
+            var running = input.GetBoolean("running");
+            var paused = input.GetBoolean("paused");
+
+            if (line == null || func == null || running == null || paused == null)
+            {
+                throw new InvalidOperationException("Missing data");
+            }
+
+            return new Snapshot(stack, stackTrace, globalScope, func, line.Value, running.Value, paused.Value);
         }
         #endregion
     }
