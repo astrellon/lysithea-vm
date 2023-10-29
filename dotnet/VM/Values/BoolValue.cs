@@ -22,7 +22,6 @@ namespace LysitheaVM
 
         #region Methods
         public override string ToString() => this.Value ? "true" : "false";
-        public string ToStringFormatted(int indent, int depth) => this.ToString();
 
         public int CompareTo(IValue? other)
         {

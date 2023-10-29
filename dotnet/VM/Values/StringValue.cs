@@ -47,7 +47,6 @@ namespace LysitheaVM
         }
 
         public override string ToString() => this.Value;
-        public string ToStringFormatted(int indent, int depth) => '"' + this.ToString().Replace("\"", "\\\"") + '"';
 
         public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {

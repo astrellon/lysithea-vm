@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -152,6 +153,38 @@ namespace LysitheaVM
         {
             var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
+        }
+
+        public static string GeneralToString(IObjectValue input)
+        {
+            var result = new StringBuilder();
+            result.Append('{');
+            var first = true;
+            foreach (var key in input.ObjectKeys)
+            {
+                if (!first)
+                {
+                    result.Append(' ');
+                }
+                first = false;
+
+                if (key.HasWhiteSpace())
+                {
+                    result.Append('"');
+                    result.Append(StandardStringLibrary.EscapedString(key));
+                    result.Append('"');
+                }
+                else
+                {
+                    result.Append(StandardStringLibrary.EscapedString(key));
+                }
+
+                result.Append(' ');
+                var value = input.Get(key);
+                result.Append(value.ToString());
+            }
+            result.Append('}');
+            return result.ToString();
         }
 
         public static int GeneralCompareTo(IObjectValue left, IValue? rightInput)

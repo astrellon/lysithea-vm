@@ -113,6 +113,11 @@ namespace LysitheaVM
         {
             return new StringValue(self.Value.Replace(values, ""));
         }
+
+        public static string EscapedString(string input)
+        {
+            return input.Replace("\"", "\\\"");
+        }
         #endregion
     }
 }

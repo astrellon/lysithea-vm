@@ -34,7 +34,7 @@ namespace LysitheaVM
         private const string ConstKeyword = "const";
         private const string JumpKeyword = "jump";
         private const string ReturnKeyword = "return";
-        private static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
+        public static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
 
         public readonly Scope BuiltinScope = new Scope();
         public IReadOnlyList<string> FullText { get; private set; } = new string[1]{""};

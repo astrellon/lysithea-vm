@@ -238,22 +238,7 @@ namespace LysitheaVM
             return 0;
         }
 
-        private static bool IsAllPrimitive(IArrayValue input)
-        {
-            foreach (var item in input.ArrayValues)
-            {
-                if (!(item is BoolValue ||
-                    item is NumberValue ||
-                    item is StringValue))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        public static string GeneralToStringSingleLine(IArrayValue input, int indent, int depth)
+        public static string GeneralToString(IArrayValue input)
         {
             var result = new StringBuilder();
             result.Append('[');
@@ -264,57 +249,13 @@ namespace LysitheaVM
                 {
                     result.Append(' ');
                 }
-                result.Append(value.ToStringFormatted(0, 0));
-                first = false;
-            }
-            result.Append(']');
-            return result.ToString();
-        }
-
-        public static string GeneralToString(IArrayValue input, int indent, int depth)
-        {
-            if (input.Count() < 32 && IsAllPrimitive(input))
-            {
-                return GeneralToStringSingleLine(input, indent, depth + 1);
-            }
-
-            var result = new StringBuilder();
-
-            var indent1 = "";
-            var indent2 = "";
-
-            if (indent >= 0)
-            {
-                indent1 = " ".Repeat(indent * depth);
-                indent2 = indent1 + " ".Repeat(indent);
-            }
-
-            result.Append('[');
-            var first = true;
-            foreach (var value in input.ArrayValues)
-            {
-                if (indent >= 0)
-                {
-                    result.Append('\n');
-                    result.Append(indent2);
-                }
-                else if (!first)
-                {
-                    result.Append(' ');
-                }
                 first = false;
 
-                result.Append(value.ToStringFormatted(indent, depth + 1));
+                result.Append(value.ToString());
             }
 
-            if (!first && indent >= 0)
-            {
-                result.Append('\n');
-                result.Append(indent1);
-            }
             result.Append(']');
             return result.ToString();
-
         }
         #endregion
     }

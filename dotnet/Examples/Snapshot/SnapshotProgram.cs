@@ -66,7 +66,8 @@ namespace LysitheaVM.Example
             {
                 var snapshot = Snapshot.FromVirtualMachine(vm);
                 CreatedSnapshot = snapshot.ToObject();
-                Console.WriteLine("Made snapshot: " + CreatedSnapshot.ToStringFormatted(2, 0));
+                var str = ToStringFormatted.Indented(CreatedSnapshot, 2);
+                Console.WriteLine("Made snapshot: " + str);
                 vm.Running = false;
             });
 

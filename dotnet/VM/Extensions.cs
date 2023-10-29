@@ -374,6 +374,11 @@ namespace LysitheaVM
             }
             return builder.ToString();
         }
+
+        public static bool HasWhiteSpace(this string self)
+        {
+            return self.Any(char.IsWhiteSpace);
+        }
         #endregion
     }
 }
