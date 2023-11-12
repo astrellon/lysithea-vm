@@ -27,16 +27,7 @@ namespace LysitheaVM
             {
                 case TokenType.Value:
                 {
-                    if (token.TokenValue is StringValue strValue)
-                    {
-                        builder.Append('"');
-                        builder.Append(StandardStringLibrary.EscapedString(strValue.Value));
-                        builder.Append('"');
-                    }
-                    else
-                    {
-                        builder.Append(token.TokenValue.ToString());
-                    }
+                    builder.Append(token.TokenValue.ToString());
                     break;
                 }
                 case TokenType.List:

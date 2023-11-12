@@ -46,7 +46,10 @@ namespace LysitheaVM
             return index;
         }
 
-        public override string ToString() => this.Value;
+        public override string ToString()
+        {
+            return '"' + StandardStringLibrary.EscapedString(this.Value) + '"';
+        }
 
         public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)
         {
