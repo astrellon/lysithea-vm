@@ -68,7 +68,8 @@ namespace LysitheaVM
             return false;
         }
 
-        public override string ToString() => StandardArrayLibrary.GeneralToString(this);
+        public override string ToString() => StandardArrayLibrary.GeneralToString(this, serialise: false);
+        public string ToStringSerialise() => StandardArrayLibrary.GeneralToString(this, serialise: true);
 
         public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
 

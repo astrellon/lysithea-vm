@@ -11,6 +11,7 @@ namespace LysitheaVM
         string TypeName { get; }
 
         string ToString();
+        string ToStringSerialise();
     }
 
     public interface IObjectValue : IValue

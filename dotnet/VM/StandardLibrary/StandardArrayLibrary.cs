@@ -238,7 +238,7 @@ namespace LysitheaVM
             return 0;
         }
 
-        public static string GeneralToString(IArrayValue input)
+        public static string GeneralToString(IArrayValue input, bool serialise)
         {
             var result = new StringBuilder();
             result.Append('[');
@@ -251,7 +251,7 @@ namespace LysitheaVM
                 }
                 first = false;
 
-                result.Append(value.ToString());
+                result.Append(serialise ? value.ToStringSerialise() : value.ToString());
             }
 
             result.Append(']');

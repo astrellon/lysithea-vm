@@ -30,7 +30,9 @@ namespace LysitheaVM
             return this.Value.TryGetValue(key, out value);
         }
 
-        public override string ToString() => StandardObjectLibrary.GeneralToString(this);
+        public override string ToString() => StandardObjectLibrary.GeneralToString(this, serialise: false);
+        public string ToStringSerialise() => StandardObjectLibrary.GeneralToString(this, serialise: true);
+
         public int CompareTo(IValue? other) => StandardObjectLibrary.GeneralCompareTo(this, other);
         #endregion
     }

@@ -12,6 +12,7 @@ namespace LysitheaVM
         #region Methods
         public int CompareTo(IValue? other) => (other == null || other is NullValue) ? 0 : 1;
         public override string ToString() => this.TypeName;
+        public string ToStringSerialise() => this.ToString();
         #endregion
     }
 }

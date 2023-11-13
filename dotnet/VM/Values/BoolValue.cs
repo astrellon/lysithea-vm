@@ -22,6 +22,7 @@ namespace LysitheaVM
 
         #region Methods
         public override string ToString() => this.Value ? "true" : "false";
+        public string ToStringSerialise() => this.ToString();
 
         public int CompareTo(IValue? other)
         {

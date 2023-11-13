@@ -10,7 +10,7 @@ namespace LysitheaVM
         #region Methods
         public static string Indented(IValue value, int indentSize)
         {
-            var rawStr = value.ToString();
+            var rawStr = value.ToStringSerialise();
             var split = rawStr.Split(Assembler.NewlineSeparators, StringSplitOptions.None);
             var token = Lexer.ReadFromLines("tostring", split);
 
@@ -27,11 +27,17 @@ namespace LysitheaVM
             {
                 case TokenType.Value:
                 {
-                    builder.Append(token.TokenValue.ToString());
+                    builder.Append(token.TokenValue.ToStringSerialise());
                     break;
                 }
                 case TokenType.List:
                 {
+                    if (token.TokenList.Count == 0)
+                    {
+                        builder.Append("[]");
+                        break;
+                    }
+
                     if (token.TokenList.Count < 32 && IsAllPrimitive(token.TokenList))
                     {
                         builder.Append(SingleLineArray(token.TokenList));
@@ -58,6 +64,12 @@ namespace LysitheaVM
                 }
                 case TokenType.Map:
                 {
+                    if (!token.TokenMap.Any())
+                    {
+                        builder.Append("{}");
+                        break;
+                    }
+
                     builder.Append("{\n");
                     depth++;
                     indent = " ".Repeat(depth * indentSize);
@@ -65,18 +77,7 @@ namespace LysitheaVM
                     foreach (var kvp in token.TokenMap)
                     {
                         builder.Append(indent);
-
-                        if (kvp.Key.HasWhiteSpace())
-                        {
-                            builder.Append('"');
-                            builder.Append(StandardStringLibrary.EscapedString(kvp.Key));
-                            builder.Append('"');
-                        }
-                        else
-                        {
-                            builder.Append(kvp.Key);
-                        }
-
+                        builder.Append(StandardStringLibrary.EscapedStringIfNeeded(kvp.Key));
                         builder.Append(' ');
 
                         Indented(kvp.Value, builder, indent, depth, indentSize);
@@ -119,7 +120,7 @@ namespace LysitheaVM
                 {
                     result.Append(' ');
                 }
-                result.Append(value.ToString());
+                result.Append(value.ToStringSerialise());
                 first = false;
             }
             result.Append(']');

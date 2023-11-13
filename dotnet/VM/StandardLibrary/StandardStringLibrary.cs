@@ -114,6 +114,15 @@ namespace LysitheaVM
             return new StringValue(self.Value.Replace(values, ""));
         }
 
+        public static string EscapedStringIfNeeded(string input)
+        {
+            if (input.Contains('\'') || input.Contains('\"') || input.HasWhiteSpace())
+            {
+                return EscapedString(input);
+            }
+            return input;
+        }
+
         public static string EscapedString(string input)
         {
             return input.Replace("\"", "\\\"");

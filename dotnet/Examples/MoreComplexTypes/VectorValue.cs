@@ -34,6 +34,7 @@ namespace LysitheaVM.Example
         {
             return $"{this.X}, {this.Y}, {this.Z}";
         }
+        public string ToStringSerialise() => this.ToString();
 
         public int CompareTo(IValue? other)
         {

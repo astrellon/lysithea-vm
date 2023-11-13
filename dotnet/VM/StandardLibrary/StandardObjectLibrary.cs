@@ -155,7 +155,7 @@ namespace LysitheaVM
             return new ObjectValue(result);
         }
 
-        public static string GeneralToString(IObjectValue input)
+        public static string GeneralToString(IObjectValue input, bool serialise)
         {
             var result = new StringBuilder();
             result.Append('{');
@@ -168,20 +168,10 @@ namespace LysitheaVM
                 }
                 first = false;
 
-                if (key.HasWhiteSpace())
-                {
-                    result.Append('"');
-                    result.Append(StandardStringLibrary.EscapedString(key));
-                    result.Append('"');
-                }
-                else
-                {
-                    result.Append(StandardStringLibrary.EscapedString(key));
-                }
-
+                result.Append(StandardStringLibrary.EscapedStringIfNeeded(key));
                 result.Append(' ');
                 var value = input.Get(key);
-                result.Append(value.ToString());
+                result.Append(serialise ? value.ToStringSerialise() : value.ToString());
             }
             result.Append('}');
             return result.ToString();

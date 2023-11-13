@@ -33,6 +33,7 @@ namespace LysitheaVM.Example
         {
             return $"Person: {this.Name} {this.Age} [{string.Join(", ", this.Address)}]";
         }
+        public string ToStringSerialise() => this.ToString();
 
         public int CompareTo(IValue? other)
         {
