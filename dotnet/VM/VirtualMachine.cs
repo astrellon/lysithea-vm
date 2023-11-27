@@ -20,6 +20,7 @@ namespace LysitheaVM
         public Scope CurrentScope { get; private set; }
         public Script? CurrentScript { get; private set; }
         private int lineCounter = 0;
+        private int returnStackSizeTo = -1;
 
         public bool Running;
         public bool Paused;
@@ -145,7 +146,7 @@ namespace LysitheaVM
         {
             if (pushToStackTrace)
             {
-                this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
+                this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.stack.Index, this.CurrentScope, this.lineCounter));
             }
 
             this.CurrentCode = function;
@@ -199,6 +200,7 @@ namespace LysitheaVM
             this.CurrentCode = scopeFrame.Function;
             this.CurrentScope = scopeFrame.Scope;
             this.lineCounter = scopeFrame.LineCounter;
+            this.returnStackSizeTo = scopeFrame.StackSize;
             return true;
         }
 

@@ -69,5 +69,6 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp"
-    }
+    },
+    "omnisharp.useModernNet": true
 }

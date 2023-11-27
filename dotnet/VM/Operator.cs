@@ -6,7 +6,7 @@ namespace LysitheaVM
 
         // General
         Push, ToArgument,
-        Call, CallDirect, Return,
+        Call, CallDirect, Return, ResetStackSize,
         GetProperty, Get, Set, Define,
         Jump, JumpTrue, JumpFalse,
 

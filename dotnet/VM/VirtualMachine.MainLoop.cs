@@ -108,6 +108,18 @@ namespace LysitheaVM
                         }
                         break;
                     }
+                case Operator.ResetStackSize:
+                    {
+                        if (this.returnStackSizeTo >= 0)
+                        {
+                            while (this.stack.Index > this.returnStackSizeTo)
+                            {
+                                this.stack.TryPop(out var temp);
+                            }
+                            this.returnStackSizeTo = -1;
+                        }
+                        break;
+                    }
                 case Operator.JumpFalse:
                     {
                         var label = codeLine.Input ?? this.PopStack();

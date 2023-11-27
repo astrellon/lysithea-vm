@@ -1,0 +1,11 @@
+(function makeData(x y)
+    (return (+ x y))
+)
+
+(function main()
+    (print "Main")
+    (makeData 0 1)
+    (return (makeData 5 12))
+)
+
+(print "Add " (main))

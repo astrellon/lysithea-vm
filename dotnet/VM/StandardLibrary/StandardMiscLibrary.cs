@@ -49,7 +49,7 @@ namespace LysitheaVM
             result.TryDefine("print", (vm, args) =>
             {
                 Console.WriteLine(string.Join("", args.Value));
-            });
+            }, hasReturn: false);
 
             return result;
         }

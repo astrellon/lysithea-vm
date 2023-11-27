@@ -11,15 +11,17 @@ namespace LysitheaVM
 
         public readonly BuiltinFunctionDelegate Value;
         public readonly string Name;
+        public readonly bool HasReturn;
 
         public string TypeName => "builtin-function";
         #endregion
 
         #region Constructor
-        public BuiltinFunctionValue(BuiltinFunctionDelegate value, string name)
+        public BuiltinFunctionValue(BuiltinFunctionDelegate value, string name, bool hasReturn = true)
         {
             this.Name = name;
             this.Value = value;
+            this.HasReturn = hasReturn;
         }
         #endregion
 

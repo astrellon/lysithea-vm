@@ -65,7 +65,7 @@
             "request": "launch",
             "preLaunchTask": "build-standalone",
             "program": "${workspaceFolder}/Examples/Standalone/bin/Debug/net6.0/standalone.dll",
-            "args": ["./test.lys"],
+            "args": ["./testReturn.lys"],
             "cwd": "${workspaceFolder}/Examples/Standalone",
             "console": "internalConsole",
             "stopAtEntry": false

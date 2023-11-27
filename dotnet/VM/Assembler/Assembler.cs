@@ -732,11 +732,18 @@ namespace LysitheaVM
             return false;
         }
 
+        private static bool IsFunctionWithReturnCall(IValue? input)
+        {
+            return (input is FunctionValue funcValue && funcValue.Value.HasReturn) ||
+                (input is BuiltinFunctionValue builtinFuncValue && builtinFuncValue.HasReturn);
+        }
+
         private Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<TempCodeLine> tempCodeLines, string name)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
             var locations = new List<CodeLocation>();
+            var prevWasFuncCall = false;
 
             foreach (var tempLine in tempCodeLines)
             {
@@ -746,8 +753,29 @@ namespace LysitheaVM
                 }
                 else
                 {
+                    if (prevWasFuncCall)
+                    {
+                        if (tempLine.Operator == Operator.Push)
+                        {
+                            code.Add(new CodeLine(Operator.ResetStackSize, null));
+                        }
+                        prevWasFuncCall = false;
+                    }
+
                     locations.Add(tempLine.Token.Location);
                     code.Add(new CodeLine(tempLine.Operator, this.GetValueCanBeEmpty(tempLine.Token)));
+
+                    if (tempLine.Operator == Operator.Call || tempLine.Operator == Operator.CallDirect)
+                    {
+                        if (tempLine.Token.TokenValue is IArrayValue arrayInput)
+                        {
+                            var first = arrayInput.ArrayValues.First();
+                            if (IsFunctionWithReturnCall(first))
+                            {
+                                prevWasFuncCall = true;
+                            }
+                        }
+                    }
                 }
             }
 

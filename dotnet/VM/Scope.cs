@@ -82,9 +82,9 @@ namespace LysitheaVM
             return true;
         }
 
-        public bool TrySetConstant(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
+        public bool TrySetConstant(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "", bool hasReturn = true)
         {
-            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
+            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name, hasReturn);
             return this.TrySetConstant(key, value);
         }
 
@@ -104,9 +104,9 @@ namespace LysitheaVM
             return true;
         }
 
-        public bool TryDefine(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "")
+        public bool TryDefine(string key, BuiltinFunctionValue.BuiltinFunctionDelegate builtinFunction, string name = "", bool hasReturn = true)
         {
-            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name);
+            var value = new BuiltinFunctionValue(builtinFunction, string.IsNullOrWhiteSpace(name) ? key : name, hasReturn);
             return this.TryDefine(key, value);
         }
 

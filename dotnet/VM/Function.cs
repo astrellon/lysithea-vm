@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 
 #nullable enable
@@ -21,6 +22,8 @@ namespace LysitheaVM
         public readonly string LookupName;
 
         public bool IsEmpty => this.Code.Count == 0;
+
+        public bool HasReturn => this.Code.Any(c => c.Operator == Operator.Return);
         #endregion
 
         #region Constructor
