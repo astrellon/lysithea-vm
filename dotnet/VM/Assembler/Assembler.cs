@@ -142,7 +142,7 @@ namespace LysitheaVM
                 }
                 else
                 {
-                    throw this.MakeException(input, $"Expression needs to start with a function variable");
+                    throw this.MakeException(input, $"Expression needs to start with a function variable: " + first.ToString());
                 }
             }
             else if (input.Type == TokenType.List)

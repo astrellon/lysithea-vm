@@ -71,6 +71,17 @@
             "stopAtEntry": false
         },
         {
+            "name": "Run Tests",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-tests-program",
+            "program": "${workspaceFolder}/Examples/Tests/bin/Debug/net6.0/tests.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Examples/Tests",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
