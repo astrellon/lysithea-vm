@@ -1,43 +1,55 @@
 (function personObjects ()
-    (print "Testing person objects")
-    (const name "Alan")
-    (const age 33)
+  (print "Testing person objects")
+  (const name "Alan")
+  (const age 33)
 
-    (define personObj {
-        name name
-        age age
-        address ["location 1" "location 2"]
-    })
-    (print "PersonObj: " (toString personObj))
+  (define personObj {
+    name name
+    age age
+    address ["location 1" "location 2"]
+  })
+  (print "PersonObj: " (toString personObj))
 
-    (define person1 (newPerson "Alan" 33 ["location 1" "location 2"]))
+  (define person1 (newPerson "Alan" 33 ["location 1" "location 2"]))
 
-    (print person1.name " Hello " (+ 5 person1.age) " at " person1.address.1)
+  (print person1.name " Hello " (+ 5 person1.age) " at " person1.address.1)
 
-    (define person2 (newPerson "Pri" 30 ["location 3" "location 4"]))
+  (define person2 (newPerson "Pri" 30 ["location 3" "location 4"]))
 
-    (print person2.name " Hello " (+ 5 person2.age) " at " person2.address.0)
+  (print person2.name " Hello " (+ 5 person2.age) " at " person2.address.0)
 
-    (define person3 (combinePerson person1 person2))
+  (define person3 (combinePerson person1 person2))
 
-    (print person3.name " HelloComb " (+ 5 person3.age) " at " person3.address.2)
-    (print (toString person3))
+  (print person3.name " HelloComb " (+ 5 person3.age) " at " person3.address.2)
+  (print (toString person3))
 )
 
 (function vectorObjects ()
-    (print "Testing vector objects")
-    (define pos (newVector 1 2 3))
-    (define offset (newVector 5 10 15))
+  (print "Testing vector objects")
+  (define pos (newVector 1 2 3))
+  (define offset (newVector 5 10 15))
 
-    (define result (pos.add offset))
-    (define result2 (result.add offset))
+  (define result (pos.add offset))
+  (define result2 (result.add offset))
 
-    (print "Add Name: " (toString pos.add))
-    (print "Pos: " pos)
-    (print "Offset: " offset)
-    (print "Result: " result)
-    (print "Result2: " result2)
+  (print "Add Name: " (toString pos.add))
+  (print "Pos: " pos)
+  (print "Offset: " offset)
+  (print "Result: " result)
+  (print "Result2: " result2)
+)
+
+(function runtimeObjects ()
+  (define age (+ 10 20))
+  (define name ($ "Alan " "Lawrey"))
+
+  (define obj { "name" name "age" age })
+  (print "Object Value " obj)
+
+  (define arr [ name age ])
+  (print "Array Value " arr)
 )
 
 (personObjects)
 (vectorObjects)
+(runtimeObjects)

@@ -23,6 +23,9 @@ namespace LysitheaVM
 
         // Math
         Add, Sub, Multiply, Divide,
-        Inc, Dec, UnaryNegative
+        Inc, Dec, UnaryNegative,
+
+        // Value create
+        MakeArray, MakeObject
     }
 }

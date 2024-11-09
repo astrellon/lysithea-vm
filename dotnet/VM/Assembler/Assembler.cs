@@ -148,7 +148,8 @@ namespace LysitheaVM
             else if (input.Type == TokenType.List)
             {
                 // Handle parsing of each element and check if they're all compile time values
-                var result = new List<IValue>();
+                var result = new List<TempCodeLine>();
+                var makeArray = false;
                 foreach (var item in input.TokenList)
                 {
                     var parsed = this.Parse(item);
@@ -157,9 +158,13 @@ namespace LysitheaVM
                         continue;
                     }
 
-                    if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
+                    if (parsed.Count == 1)
                     {
-                        result.Add(this.GetValue(parsed[0].Token));
+                        result.Add(parsed[0]);
+                        if (parsed[0].Operator != Operator.Push)
+                        {
+                            makeArray = true;
+                        }
                     }
                     else
                     {
@@ -167,12 +172,22 @@ namespace LysitheaVM
                     }
                 }
 
-                return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ArrayValue(result))) };
+                if (makeArray)
+                {
+                    result.Add(TempCodeLine.Code(Operator.MakeArray, input.KeepLocation(new NumberValue(result.Count))));
+                    return result;
+                }
+                else
+                {
+                    var codeResult = result.Select(line => this.GetValue(line.Token)).ToList();
+                    return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ArrayValue(codeResult))) };
+                }
             }
             else if (input.Type == TokenType.Map)
             {
                 // Handle parsing of each element and check if they're all compile time values
-                var result = new Dictionary<string, IValue>();
+                var result = new Dictionary<string, TempCodeLine>();
+                var makeObject = false;
                 foreach (var kvp in input.TokenMap)
                 {
                     var parsed = this.Parse(kvp.Value);
@@ -181,17 +196,36 @@ namespace LysitheaVM
                         continue;
                     }
 
-                    if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
+                    if (parsed.Count == 1)
                     {
-                        result[kvp.Key] = this.GetValue(parsed[0].Token);
+                        result[kvp.Key] = parsed[0];
+                        if (parsed[0].Operator != Operator.Push)
+                        {
+                            makeObject = true;
+                        }
                     }
                     else
                     {
-                        throw this.MakeException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
+                        throw this.MakeException(parsed[0].Token, $"Unexpected multiple token in map literal for key; {kvp.Key}");
                     }
                 }
 
-                return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ObjectValue(result))) };
+                if (makeObject)
+                {
+                    var codeResult = new List<TempCodeLine>(result.Count + 1);
+                    foreach (var kvp in result)
+                    {
+                        codeResult.Add(TempCodeLine.Code(Operator.Push, kvp.Value.Token.KeepLocation(new StringValue(kvp.Key))));
+                        codeResult.Add(kvp.Value);
+                    }
+                    codeResult.Add(TempCodeLine.Code(Operator.MakeObject, input.KeepLocation(new NumberValue(result.Count * 2))));
+                    return codeResult;
+                }
+                else
+                {
+                    var codeResult = result.ToDictionary(kvp => kvp.Key, kvp => this.GetValue(kvp.Value.Token));
+                    return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ObjectValue(codeResult))) };
+                }
             }
             else if (input.TokenValue is VariableValue varValue)
             {

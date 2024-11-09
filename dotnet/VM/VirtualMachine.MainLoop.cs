@@ -316,6 +316,22 @@ namespace LysitheaVM
                         this.PushStack(!this.PopStackBool());
                         break;
                     }
+
+                    // Value create
+                case Operator.MakeObject:
+                    {
+                        var numArgs = (int)this.GetNumArg(codeLine);
+                        var args = this.GetArgs(numArgs);
+                        this.PushStack(StandardObjectLibrary.Join(args));
+                        break;
+                    }
+                case Operator.MakeArray:
+                    {
+                        var numArgs = (int)this.GetNumArg(codeLine);
+                        var args = this.GetArgs(numArgs);
+                        this.PushStack(new ArrayValue(args.Value));
+                        break;
+                    }
             }
         }
         #endregion
