@@ -34,6 +34,40 @@ namespace LysitheaVM
         public string ToStringSerialise() => StandardObjectLibrary.GeneralToString(this, serialise: true);
 
         public int CompareTo(IValue? other) => StandardObjectLibrary.GeneralCompareTo(this, other);
+
+        public static ObjectValue Join(IReadOnlyCollection<IValue> argValues)
+        {
+            var map = new Dictionary<string, IValue>(argValues.Count / 2);
+            for (var i = 0; i < argValues.Count; i++)
+            {
+                var arg = argValues[i];
+                if (arg is StringValue argStr)
+                {
+                    var key = argStr.Value;
+                    var value = argValues[++i];
+                    map[key] = value;
+                }
+                else if (arg is IObjectValue argObj)
+                {
+                    foreach (var key in argObj.ObjectKeys)
+                    {
+                        if (argObj.TryGetKey(key, out var value))
+                        {
+                            map[key] = value;
+                        }
+                    }
+                }
+                else
+                {
+                    var key = arg.ToString();
+                    var value = argValues[++i];
+                    map[key] = value;
+                }
+            }
+
+            return new ObjectValue(map);
+        }
+
         #endregion
     }
 }

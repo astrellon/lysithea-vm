@@ -118,7 +118,7 @@ Internally the assembler sees only the last argument as the code line argument e
 
 # Architecture
 
-The internals of the virtual machine is fairly simple and broken into general purpose operators, math operators, comparison operators, boolean operators and one bonus string concatenation operators.
+The internals of the virtual machine is fairly simple and broken into general purpose operators, math operators, comparison operators, boolean operators, a string concatenation operators, a create map and a create array operators.
 
 ## Types
 The number of builtin types is fairly limited and extended the number of supported types is done through the host platform and not from within the script itself.
@@ -190,8 +190,21 @@ They can contain any constant value.
 (print list) ; Output [Person Alan function:callback]
 ```
 
+Lists are treated like any other value type, which generally means they prefer assembly time values in them. However lists can be created at runtime if an expression or variable is detected in them. These will be constructed every time that line is processed just the same as if a function call to create one was being called.
+
+```lisp
+(define personAge (+ 10 20))
+(define personName ($ "Alan " "Lawrey"))
+
+(define list [personName personAge])
+
+(print list)
+; Outputs [Alan Lawrey 30]
+```
+
+
 ### Maps
-A map is a string key to any type value pair dictionary. They are created using pairs of keys and values within a pair of curly brackets.
+A map is a string key to any type value pair dictionary. They are considered to be a literal and as such are immutable. They are created using pairs of keys and values within a pair of curly brackets.
 
 ```lisp
 (define map {
@@ -217,6 +230,21 @@ The value can be any constant value.
 
 (print map)
 ; Outputs {"name" Alan "age" 33 "callback" function:debugPrint}
+```
+
+Maps are treated like any other value type, which generally means they prefer assembly time values in them. However maps can be created at runtime if an expression or variable is detected in them. These will be constructed every time that line is processed just the same as if a function call to create one was being called.
+
+```lisp
+(define personAge (+ 10 20))
+(define personName ($ "Alan " "Lawrey"))
+
+(define map {
+    name personName
+    age personAge
+})
+
+(print map)
+; Outputs {"name" Alan Lawrey "age" 30}
 ```
 
 ## Internal Operators
