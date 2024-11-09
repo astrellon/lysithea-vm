@@ -1,5 +1,8 @@
-import { CompareResult, IObjectValue, IValue } from "./ivalues";
+import { Editable } from "../standardLibrary/standardObjectLibrary";
+import { ArrayValue } from "./arrayValue";
+import { CompareResult, IObjectValue, isIObjectValue, IValue } from "./ivalues";
 import { numberCompareTo } from "./numberValue";
+import { isStringValue } from "./stringValue";
 
 export interface ObjectValueMap
 {
@@ -77,6 +80,42 @@ export class ObjectValue implements IObjectValue
     public objectKeys()
     {
         return this.keys;
+    }
+
+    public static join(args: ArrayValue)
+    {
+        const map: Editable<ObjectValueMap> = {};
+        const argValues = args.arrayValues();
+
+        for (let i = 0; i < argValues.length; i++)
+        {
+            const arg = argValues[i];
+            if (isStringValue(arg))
+            {
+                const key = arg.value;
+                const value = argValues[++i];
+                map[key] = value;
+            }
+            else if (isIObjectValue(arg))
+            {
+                for (const key of arg.objectKeys())
+                {
+                    const value = arg.tryGetKey(key);
+                    if (value !== undefined)
+                    {
+                        map[key] = value;
+                    }
+                }
+            }
+            else
+            {
+                const key = arg.toString();
+                const value = argValues[++i];
+                map[key] = value;
+            }
+        }
+
+        return new ObjectValue(map);
     }
 }
 

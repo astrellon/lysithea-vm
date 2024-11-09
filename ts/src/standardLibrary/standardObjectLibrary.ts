@@ -1,10 +1,10 @@
 import { Scope, IReadOnlyScope } from "../scope";
 import { ArrayValue } from "../values/arrayValue";
 import { BuiltinFunctionValue } from "../values/builtinFunctionValue";
-import { IArrayValue, isIObjectValue, IValue } from "../values/ivalues";
+import { IValue } from "../values/ivalues";
 import { NullValue } from "../values/nullValue";
 import { ObjectValue, isObjectValue, ObjectValueMap } from "../values/objectValue";
-import { isStringValue, StringValue } from "../values/stringValue";
+import { StringValue } from "../values/stringValue";
 
 export const objectScope: IReadOnlyScope = createObjectScope();
 
@@ -21,7 +21,7 @@ export function createObjectScope()
     {
         join: new BuiltinFunctionValue((vm, args) =>
         {
-            vm.pushStack(join(args));
+            vm.pushStack(ObjectValue.join(args));
         }, 'object.join'),
 
         set: new BuiltinFunctionValue((vm, args) =>
@@ -83,42 +83,6 @@ export function createObjectScope()
     result.tryDefine('object', new ObjectValue(objectFunctions));
 
     return result;
-}
-
-export function join(args: ArrayValue)
-{
-    const map: Editable<ObjectValueMap> = {};
-    const argValues = args.arrayValues();
-
-    for (let i = 0; i < argValues.length; i++)
-    {
-        const arg = argValues[i];
-        if (isStringValue(arg))
-        {
-            const key = arg.value;
-            const value = argValues[++i];
-            map[key] = value;
-        }
-        else if (isIObjectValue(arg))
-        {
-            for (const key of arg.objectKeys())
-            {
-                const value = arg.tryGetKey(key);
-                if (value !== undefined)
-                {
-                    map[key] = value;
-                }
-            }
-        }
-        else
-        {
-            const key = arg.toString();
-            const value = argValues[++i];
-            map[key] = value;
-        }
-    }
-
-    return new ObjectValue(map);
 }
 
 export function set(target: ObjectValue, key: string, value: IValue)

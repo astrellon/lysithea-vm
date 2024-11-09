@@ -188,7 +188,8 @@ export class Assembler
         }
         else if (input.type === 'list')
         {
-            const result: IValue[] = [];
+            const result: TempCodeLine[] = [];
+            let makeArray = false;
 
             for (const item of input.tokenList)
             {
@@ -198,21 +199,35 @@ export class Assembler
                     continue;
                 }
 
-                if (parsed.length === 1 && parsed[0].operator === 'push' && parsed[0].value !== undefined)
+                if (parsed.length === 1 && parsed[0].value !== undefined)
                 {
-                    result.push(this.getValue(parsed[0].value));
+                    result.push(parsed[0]);
+                    if (parsed[0].operator !== 'push')
+                    {
+                        makeArray = true;
+                    }
                 }
                 else
                 {
-                    throw this.makeError(parsed[0].value as Token, 'Unexpected token in list literal');
+                    throw this.makeError(parsed[0].value as Token, 'Unexpected multiple tokens in list literal');
                 }
             }
 
-            return [codeLine('push', input.keepLocation(new ArrayValue(result, false)))];
+            if (makeArray)
+            {
+                result.push(codeLine('makeArray', input.keepLocation(new NumberValue(result.length))));
+                return result;
+            }
+            else
+            {
+                const codeResult = result.map(r => this.getValue(r.value as Token));
+                return [codeLine('push', input.keepLocation(new ArrayValue(codeResult, false)))];
+            }
         }
         else if (input.type === 'map')
         {
-            const result: Editable<ObjectValueMap> = {};
+            const result: {[key: string]: TempCodeLine} = {};
+            let makeObject = false;
             for (const key in input.tokenMap)
             {
                 const item = input.tokenMap[key];
@@ -222,17 +237,40 @@ export class Assembler
                     continue;
                 }
 
-                if (parsed.length === 1 && parsed[0].operator === 'push' && parsed[0].value !== undefined)
+                if (parsed.length === 1 && parsed[0].value !== undefined)
                 {
-                    result[key] = this.getValue(parsed[0].value);
+                    result[key] = parsed[0];
+                    if (parsed[0].operator === 'push')
+                    {
+                        makeObject = true;
+                    }
                 }
                 else
                 {
-                    throw this.makeError(parsed[0].value as Token, 'Unexpected token in map literal');
+                    throw this.makeError(parsed[0].value as Token, 'Unexpected multiple token in map literal for key: ' + key);
                 }
             }
 
-            return [codeLine('push', input.keepLocation(new ObjectValue(result)))];
+            if (makeObject)
+            {
+                const codeResult: TempCodeLine[] = [];
+                for (const key in result)
+                {
+                    const token = result[key].value as Token;
+                    codeResult.push(codeLine('push', token.keepLocation(new StringValue(key)))) ;
+                    codeResult.push(result[key]);
+                }
+                return codeResult;
+            }
+            else
+            {
+                const codeResult: Editable<ObjectValueMap> = {};
+                for (const key in result)
+                {
+                    codeResult[key] = this.getValue(result[key].value as Token);
+                }
+                return [codeLine('push', input.keepLocation(new ObjectValue(codeResult)))];
+            }
         }
         else if (input.value instanceof VariableValue)
         {

@@ -35,7 +35,7 @@ namespace LysitheaVM
 
         public int CompareTo(IValue? other) => StandardObjectLibrary.GeneralCompareTo(this, other);
 
-        public static ObjectValue Join(IReadOnlyCollection<IValue> argValues)
+        public static ObjectValue Join(IReadOnlyList<IValue> argValues)
         {
             var map = new Dictionary<string, IValue>(argValues.Count / 2);
             for (var i = 0; i < argValues.Count; i++)

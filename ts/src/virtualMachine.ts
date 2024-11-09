@@ -6,6 +6,7 @@ import { ArrayValue } from "./values/arrayValue";
 import { BoolValue, isBoolValue } from "./values/boolValue";
 import { IFunctionValue, isIArrayValue, isIFunctionValue, IValue } from "./values/ivalues";
 import { NumberValue, isNumberValue } from "./values/numberValue";
+import { ObjectValue } from "./values/objectValue";
 import { StringValue } from "./values/stringValue";
 import { getProperty } from "./values/valuePropertyAccess";
 import { VMFunction } from "./vmFunction";
@@ -31,8 +32,10 @@ export type Operator = 'unknown' |
 
     // Math
     '+' | '-' | '*' | '/' |
-    '++' | '--' | 'unaryNegative'
-    ;
+    '++' | '--' | 'unaryNegative' |
+
+    // Value create
+    'makeObject' | 'makeArray';
 
 export interface CodeLine
 {
@@ -434,6 +437,30 @@ export class VirtualMachine
             case '!':
                 {
                     this.pushStackBool(!this.popStackBool());
+                    break;
+                }
+
+            // Value Create
+            case 'makeObject':
+                {
+                    if (!isNumberValue(codeLine.value))
+                    {
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: StringConcat operator needs the number of args to concat`);
+                    }
+
+                    const args = this.getArgs(codeLine.value.value);
+                    this.pushStack(ObjectValue.join(args));
+                    break;
+                }
+            case 'makeArray':
+                {
+                    if (!isNumberValue(codeLine.value))
+                    {
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: StringConcat operator needs the number of args to concat`);
+                    }
+
+                    const args = this.getArgs(codeLine.value.value);
+                    this.pushStack(args);
                     break;
                 }
         }

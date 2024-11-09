@@ -168,7 +168,7 @@ namespace LysitheaVM
                     }
                     else
                     {
-                        throw this.MakeException(parsed[0].Token, "Unexpected token in list literal");
+                        throw this.MakeException(parsed[0].Token, "Unexpected multiple tokens in list literal");
                     }
                 }
 
@@ -206,7 +206,7 @@ namespace LysitheaVM
                     }
                     else
                     {
-                        throw this.MakeException(parsed[0].Token, $"Unexpected multiple token in map literal for key; {kvp.Key}");
+                        throw this.MakeException(parsed[0].Token, $"Unexpected multiple token in map literal for key: {kvp.Key}");
                     }
                 }
 

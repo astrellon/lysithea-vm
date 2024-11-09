@@ -320,15 +320,21 @@ namespace LysitheaVM
                     // Value create
                 case Operator.MakeObject:
                     {
-                        var numArgs = (int)this.GetNumArg(codeLine);
-                        var args = this.GetArgs(numArgs);
-                        this.PushStack(StandardObjectLibrary.Join(args));
+                        if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
+                        {
+                            throw new VirtualMachineException(this, this.CreateStackTrace(), $"MakeObject operator needs the number of args to pop");
+                        }
+                        var args = this.GetArgs(numArgs.IntValue);
+                        this.PushStack(ObjectValue.Join(args.ArrayValues));
                         break;
                     }
                 case Operator.MakeArray:
                     {
-                        var numArgs = (int)this.GetNumArg(codeLine);
-                        var args = this.GetArgs(numArgs);
+                        if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
+                        {
+                            throw new VirtualMachineException(this, this.CreateStackTrace(), $"MakeArray operator needs the number of args to pop");
+                        }
+                        var args = this.GetArgs(numArgs.IntValue);
                         this.PushStack(new ArrayValue(args.Value));
                         break;
                     }
