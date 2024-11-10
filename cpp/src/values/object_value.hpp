@@ -57,5 +57,7 @@ namespace lysithea_vm
             {
                 return lysithea_vm::value(std::make_shared<object_value>(input));
             }
+
+            static value join(const array_value &args);
     };
 } // lysithea_vm

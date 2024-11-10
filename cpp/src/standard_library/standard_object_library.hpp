@@ -19,7 +19,6 @@ namespace lysithea_vm
             // Methods
             static std::shared_ptr<scope> create_scope();
 
-            static value join(const array_value &args);
             static value set(const object_map &target, const std::string &key, const value &input);
             static value get(const object_map &target, const std::string &key);
             static value keys(const object_map &target);

@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "../utils.hpp"
+#include "../values/array_value.hpp"
 
 namespace lysithea_vm
 {
@@ -62,5 +63,40 @@ namespace lysithea_vm
         }
         ss << '}';
         return ss.str();
+    }
+
+    value object_value::join(const array_value &args)
+    {
+        object_map obj;
+
+        for (auto iter = args.data.cbegin(); iter != args.data.cend(); ++iter)
+        {
+            if (iter->is_string())
+            {
+                auto key = iter->to_string();
+                ++iter;
+                obj[key] = *iter;
+            }
+            else if (iter->is_object())
+            {
+                auto complex = iter->get_complex();
+                for (auto key : complex->object_keys())
+                {
+                    value obj_value;
+                    if (complex->try_get(key, obj_value))
+                    {
+                        obj[key] = obj_value;
+                    }
+                }
+            }
+            else
+            {
+                auto key = iter->to_string();
+                ++iter;
+                obj[key] = *iter;
+            }
+        }
+
+        return object_value::make_value(obj);
     }
 } // lysithea_vm

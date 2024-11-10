@@ -103,7 +103,7 @@ namespace lysithea_vm
                 throw make_error(source_name, input, value->to_string(0), "Expression found in map literal");
             }
 
-            map.emplace(key.to_string(0), value);
+            map.emplace(key.token_value.to_string(), value);
         }
 
         code_location location(line_number, column_number, input.end_line_number(), input.end_column_number());

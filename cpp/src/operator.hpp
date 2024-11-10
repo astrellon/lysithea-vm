@@ -25,6 +25,9 @@ namespace lysithea_vm
 
         // Math
         add, sub, multiply, divide,
-        inc, dec, unary_negative
+        inc, dec, unary_negative,
+
+        // Value create
+        make_array, make_object
     };
 } // namespace lysithea_vm

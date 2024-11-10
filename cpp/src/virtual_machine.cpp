@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "./values/value_property_access.hpp"
+#include "./values/object_value.hpp"
 #include "./standard_library/standard_array_library.hpp"
 #include "./utils.hpp"
 #include "./errors/virtual_machine_error.hpp"
@@ -376,6 +377,30 @@ namespace lysithea_vm
                 push_stack(!pop_stack_bool());
                 break;
             }
+
+            // Value Create
+            case vm_operator::make_array:
+            {
+                if (!code_line.value.is_number())
+                {
+                    throw virtual_machine_error(create_stack_trace(), "MakeArray operator needs the number of args to pop");
+                }
+
+                auto args = get_args(code_line.value.get_int());
+                push_stack(array_value::make_value(args->data));
+                break;
+            }
+            case vm_operator::make_object:
+            {
+                if (!code_line.value.is_number())
+                {
+                    throw virtual_machine_error(create_stack_trace(), "MakeObject operator needs the number of args to pop");
+                }
+
+                auto args = get_args(code_line.value.get_int());
+                push_stack(object_value::join(*args));
+                break;
+            }
         }
     }
 
@@ -516,6 +541,15 @@ namespace lysithea_vm
         for (const auto &iter : data)
         {
             std::cout << "- " << iter.to_string() << "\n";
+        }
+    }
+
+    void virtual_machine::print_stack_trace_debug()
+    {
+        const auto &data = create_stack_trace();
+        for (const auto &iter : data)
+        {
+            std::cout << iter << std::endl;
         }
     }
 

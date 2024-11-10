@@ -25,6 +25,8 @@ namespace lysithea_vm
             {
                 vm.running = false;
                 std::cout << "Assert expected true\n";
+                vm.print_stack_trace_debug();
+
             }
         });
 
@@ -35,6 +37,7 @@ namespace lysithea_vm
             {
                 vm.running = false;
                 std::cout << "Assert expected false\n";
+                vm.print_stack_trace_debug();
             }
         });
 
@@ -49,6 +52,7 @@ namespace lysithea_vm
                     << "\nExpected: " << expected.to_string()
                     << "\nActual: " << actual.to_string()
                     << "\n";
+                vm.print_stack_trace_debug();
             }
         });
 
@@ -63,6 +67,8 @@ namespace lysithea_vm
                     << "\nExpected: " << expected.to_string()
                     << "\nActual: " << actual.to_string()
                     << "\n";
+                vm.print_stack_trace_debug();
+
             }
         });
 

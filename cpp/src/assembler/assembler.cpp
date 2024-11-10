@@ -130,7 +130,10 @@ namespace lysithea_vm
         }
         else if (input.type == token_type::list)
         {
-            array_vector list_result;
+            code_line_list list_result;
+            list_result.reserve(input.list_data.size());
+
+            auto make_array = false;
             for (const auto &item : input.list_data)
             {
                 auto parsed = parse(*item);
@@ -139,22 +142,40 @@ namespace lysithea_vm
                     continue;
                 }
 
-                if (parsed.size() == 1 && parsed[0].op == vm_operator::push)
+                if (parsed.size() == 1)
                 {
-                    list_result.push_back(get_value(parsed[0].argument));
+                    list_result.emplace_back(parsed[0]);
+                    if (parsed[0].op != vm_operator::push)
+                    {
+                        make_array = true;
+                    }
                 }
                 else
                 {
-                    throw make_error(parsed[0].argument, "Unexpected token in list literal");
+                    throw make_error(parsed[0].argument, "Unexpected multiple tokens in list literal");
                 }
             }
 
-            result.emplace_back(vm_operator::push, input.keep_location(array_value::make_value(list_result, false)));
+            if (make_array)
+            {
+                result.emplace_back(vm_operator::make_array, input.keep_location(result.size()));
+            }
+            else
+            {
+                array_vector code_result;
+                code_result.reserve(list_result.size());
+                for (const auto &line : list_result)
+                {
+                    code_result.emplace_back(get_value(line.argument));
+                }
+                result.emplace_back(vm_operator::push, input.keep_location(array_value::make_value(code_result, false)));
+            }
             return result;
         }
         else if (input.type == token_type::map)
         {
-            object_map map_result;
+            std::map<std::string, temp_code_line> result_map;
+            auto make_object = false;
             for (const auto &pair : input.map_data)
             {
                 auto parsed = parse(*pair.second);
@@ -163,17 +184,40 @@ namespace lysithea_vm
                     continue;
                 }
 
-                if (parsed.size() == 1 && parsed[0].op == vm_operator::push)
+                if (parsed.size() == 1)
                 {
-                    map_result.emplace(pair.first, get_value(parsed[0].argument));
+                    result_map.emplace(pair.first, parsed[0]);
+                    if (parsed[0].op != vm_operator::push)
+                    {
+                        make_object = true;
+                    }
                 }
                 else
                 {
-                    throw make_error(parsed[0].argument, "Unexpected token in map literal");
+                    throw make_error(parsed[0].argument, "Unexpected multiple tokens in map literal");
                 }
             }
 
-            result.emplace_back(vm_operator::push, input.keep_location(object_value::make_value(map_result)));
+            if (make_object)
+            {
+                result.reserve(result_map.size() + 1);
+                for (const auto &iter : result_map)
+                {
+                    result.emplace_back(vm_operator::push, iter.second.argument.keep_location(iter.first));
+                    result.emplace_back(iter.second);
+                }
+                result.emplace_back(vm_operator::make_object, input.keep_location(result.size()));
+            }
+            else
+            {
+                object_map code_result;
+                for (const auto &iter : result_map)
+                {
+                    code_result[iter.first] = get_value(iter.second.argument);
+                }
+                result.emplace_back(vm_operator::push, input.keep_location(object_value::make_value(code_result)));
+            }
+
             return result;
         }
         else

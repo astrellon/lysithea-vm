@@ -5,6 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "C++ Debug StandardLibraryTest",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/cpp/Debug/standardLibraryTest",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/cpp/Debug",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        },
+        {
             "name": "TS-Node",
             "type": "node",
             "request": "launch",

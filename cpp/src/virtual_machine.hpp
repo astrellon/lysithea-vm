@@ -179,6 +179,7 @@ namespace lysithea_vm
             }
 
             void print_stack_debug();
+            void print_stack_trace_debug();
 
         private:
             // Fields
