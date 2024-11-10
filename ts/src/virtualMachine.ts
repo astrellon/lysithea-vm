@@ -292,14 +292,23 @@ export class VirtualMachine
             case 'callDirect':
                 {
                     const funcCall = codeLine.value;
-                    if (funcCall == null || !isIArrayValue(funcCall) ||
-                        !isIFunctionValue(funcCall.tryGetIndex(0)) ||
-                        !(funcCall.tryGetIndex(1) instanceof NumberValue))
+                    if (funcCall == null || !isIArrayValue(funcCall))
                     {
                         throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Call direct needs an array of the function and num args code line input`);
                     }
 
-                    this.callFunction(funcCall.tryGetIndex(0) as IFunctionValue, (funcCall.tryGetIndex(1) as NumberValue).value, true);
+                    const func = funcCall.tryGetIndex(0);
+                    const numArgs = funcCall.tryGetIndex(1);
+                    if (!isIFunctionValue(func))
+                    {
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Call direct does not have a function to call`);
+                    }
+                    if (!isNumberValue(numArgs))
+                    {
+                        throw new VirtualMachineError(this.createStackTrace(), `${this.getScopeLine()}: Call direct does not have num args`);
+                    }
+
+                    this.callFunction(func, numArgs.value, true);
                     break;
                 }
 

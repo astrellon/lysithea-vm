@@ -120,15 +120,18 @@ export class Scope implements IReadOnlyScope
 
     public get(key: string): IValue | undefined
     {
-        const result = this._values[key];
-        if (result != null)
+        if (this._values.hasOwnProperty(key))
         {
-            return result;
-        }
+            const result = this._values[key];
+            if (result != null)
+            {
+                return result;
+            }
 
-        if (this._parent !== undefined)
-        {
-            return this._parent.get(key);
+            if (this._parent !== undefined)
+            {
+                return this._parent.get(key);
+            }
         }
 
         return undefined;

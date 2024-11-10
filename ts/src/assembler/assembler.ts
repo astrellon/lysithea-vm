@@ -1,5 +1,5 @@
 import { AssemblerError, createErrorLogAt, ParserError } from "../errors/errors";
-import { IValue, ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap, BoolValue } from "../index";
+import { ArrayValue, NumberValue, isNumberValue, FunctionValue, VariableValue, ObjectValue, ObjectValueMap, BoolValue } from "../index";
 import { Scope } from "../scope";
 import { Script } from "../script";
 import { Editable } from "../standardLibrary/standardObjectLibrary";

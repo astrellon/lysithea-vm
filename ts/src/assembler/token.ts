@@ -1,7 +1,6 @@
 import { CodeLocation } from "../virtualMachine";
 import { IValue } from "../values/ivalues";
-import { Assembler, NullValue, StringValue } from "../index";
-import { AssemblerError } from "../errors/errors";
+import { NullValue, StringValue } from "../index";
 
 export type TokenType = 'empty' | 'value' | 'expression' | 'list' | 'map';
 
