@@ -4,7 +4,7 @@ import { assertScope } from "../src/standardLibrary/standardAssertLibrary";
 import { VirtualMachine } from "../src/virtualMachine";
 import { Assembler } from "../src/assembler/assembler";
 
-const filename = '../examples/testStandardLibrary.lys';
+const filename = '../examples/testObject.lys';
 const file = fs.readFileSync(filename, {encoding: 'utf-8'});
 
 const assembler = new Assembler();

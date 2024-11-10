@@ -15,6 +15,6 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
-    "lysithea-vm": "^0.4.0"
+    "lysithea-vm": "^0.5.2"
   }
 }

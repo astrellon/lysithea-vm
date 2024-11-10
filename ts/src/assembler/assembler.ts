@@ -260,6 +260,7 @@ export class Assembler
                     codeResult.push(codeLine('push', token.keepLocation(new StringValue(key)))) ;
                     codeResult.push(result[key]);
                 }
+                codeResult.push(codeLine('makeObject', input.keepLocation(new NumberValue(codeResult.length))));
                 return codeResult;
             }
             else

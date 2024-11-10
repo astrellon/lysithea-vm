@@ -50,6 +50,6 @@
   (print "Array Value " arr)
 )
 
-(personObjects)
-(vectorObjects)
+; (personObjects)
+; (vectorObjects)
 (runtimeObjects)
