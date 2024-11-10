@@ -240,7 +240,7 @@ export class Assembler
                 if (parsed.length === 1 && parsed[0].value !== undefined)
                 {
                     result[key] = parsed[0];
-                    if (parsed[0].operator === 'push')
+                    if (parsed[0].operator !== 'push')
                     {
                         makeObject = true;
                     }

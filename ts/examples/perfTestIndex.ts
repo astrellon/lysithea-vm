@@ -10,6 +10,10 @@ function createScope()
     {
         vm.pushStackNumber(Math.random());
     });
+    result.tryDefineFunc('print', (vm, args) =>
+    {
+        console.log(args.value.map(c => c.toString()).join(''));
+    })
 
     return result;
 }
