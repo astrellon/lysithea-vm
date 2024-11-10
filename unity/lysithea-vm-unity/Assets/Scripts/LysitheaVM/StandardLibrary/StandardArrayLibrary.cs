@@ -110,7 +110,69 @@ namespace LysitheaVM
                     var index = args.GetIndex<NumberValue>(1);
                     var length = args.GetIndex<NumberValue>(2);
                     vm.PushStack(SubList(top, index.IntValue, length.IntValue));
-                }, "array.sublist")}
+                }, "array.sublist")},
+
+                {"add", new BuiltinFunctionValue((vm, args) =>
+                {
+                    var top = args.GetIndex<IArrayValue>(0);
+                    var arg2 = args.GetIndex(1);
+                    if (arg2 is NumberValue numArg2)
+                    {
+                        var result = top.ArrayValues.Select(i => {
+                            if (i is NumberValue n)
+                            {
+                                return new NumberValue(n.Value + numArg2.Value);
+                            }
+                            return i;
+                        });
+                        vm.PushStack(new ArrayValue(result));
+                    }
+                    else if (arg2 is IArrayValue arrArg2)
+                    {
+                        var max = Math.Max(arrArg2.Count(), top.Count());
+                        var result = new List<IValue>(max);
+                        for (var i = 0; i < max; i++)
+                        {
+                            var a = 0.0;
+                            var b = 0.0;
+                            if (i < arrArg2.Count())
+                            {
+                                a = arrArg2.GetIndexDouble(i);
+                            }
+                            if (i < top.Count())
+                            {
+                                b = top.GetIndexDouble(i);
+                            }
+                            result.Add(new NumberValue(a + b));
+                        }
+                        vm.PushStack(new ArrayValue(result));
+                    }
+                    else
+                    {
+                        throw new Exception("Unexpected value type");
+                    }
+                }, "array.add")},
+
+                {"mul", new BuiltinFunctionValue((vm, args) =>
+                {
+                    var top = args.GetIndex<IArrayValue>(0);
+                    var arg2 = args.GetIndex(1);
+                    if (arg2 is NumberValue numArg2)
+                    {
+                        var result = top.ArrayValues.Select(i => {
+                            if (i is NumberValue n)
+                            {
+                                return new NumberValue(n.Value * numArg2.Value);
+                            }
+                            return i;
+                        });
+                        vm.PushStack(new ArrayValue(result));
+                    }
+                    else
+                    {
+                        throw new Exception("Unexpected value type");
+                    }
+                }, "array.mul")}
             };
 
             result.TryDefine("array", new ObjectValue(arrayFunctions));
@@ -238,7 +300,7 @@ namespace LysitheaVM
             return 0;
         }
 
-        public static string GeneralToString(IArrayValue input)
+        public static string GeneralToString(IArrayValue input, bool serialise)
         {
             var result = new StringBuilder();
             result.Append('[');
@@ -251,12 +313,11 @@ namespace LysitheaVM
                 }
                 first = false;
 
-                result.Append(value.ToString());
+                result.Append(serialise ? value.ToStringSerialise() : value.ToString());
             }
 
             result.Append(']');
             return result.ToString();
-
         }
         #endregion
     }

@@ -63,6 +63,15 @@ namespace LysitheaVM
             }
         }
 
+        public string ToStringSerialise()
+        {
+            switch (this.Type)
+            {
+                default: return this.ToString();
+                case TokenType.Value: return this.TokenValue.ToStringSerialise();
+            }
+        }
+
         public bool IsNestedExpression()
         {
             return this.TokenList.Any() && this.TokenList.All(i => i.Type == TokenType.Expression);

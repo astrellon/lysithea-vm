@@ -47,6 +47,11 @@ namespace LysitheaVM.Unity
             return $"Actor: {this.Value.Name}";
         }
 
+        public string ToStringSerialise()
+        {
+            return this.ToString();
+        }
+
         public bool TryGetKey(string key, [NotNullWhen(true)] out IValue value)
         {
             if (key == "name")

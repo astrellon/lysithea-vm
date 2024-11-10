@@ -218,7 +218,7 @@ namespace LysitheaVM
                         codeResult.Add(TempCodeLine.Code(Operator.Push, kvp.Value.Token.KeepLocation(new StringValue(kvp.Key))));
                         codeResult.Add(kvp.Value);
                     }
-                    codeResult.Add(TempCodeLine.Code(Operator.MakeObject, input.KeepLocation(new NumberValue(codeResult.size()))));
+                    codeResult.Add(TempCodeLine.Code(Operator.MakeObject, input.KeepLocation(new NumberValue(codeResult.Count))));
                     return codeResult;
                 }
                 else

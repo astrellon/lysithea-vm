@@ -11,15 +11,17 @@ namespace LysitheaVM
 
         public readonly BuiltinFunctionDelegate Value;
         public readonly string Name;
+        public readonly bool HasReturn;
 
         public string TypeName => "builtin-function";
         #endregion
 
         #region Constructor
-        public BuiltinFunctionValue(BuiltinFunctionDelegate value, string name)
+        public BuiltinFunctionValue(BuiltinFunctionDelegate value, string name, bool hasReturn = true)
         {
             this.Name = name;
             this.Value = value;
+            this.HasReturn = hasReturn;
         }
         #endregion
 
@@ -35,11 +37,19 @@ namespace LysitheaVM
         }
 
         public override string ToString() => $"builtin-function:{this.Name}";
+        public string ToStringSerialise() => this.ToString();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Invoke(VirtualMachine vm, ArgumentsValue args, bool pushToStackTrace)
         {
-            this.Value.Invoke(vm, args);
+            try
+            {
+                this.Value.Invoke(vm, args);
+            }
+            catch (System.Exception exp)
+            {
+                throw new VirtualMachineException(vm, vm.CreateStackTrace(), exp.Message);
+            }
         }
         #endregion
     }

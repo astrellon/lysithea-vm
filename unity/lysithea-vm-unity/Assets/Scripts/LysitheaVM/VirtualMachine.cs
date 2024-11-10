@@ -18,7 +18,9 @@ namespace LysitheaVM
         public IReadOnlyScope? BuiltinScope = null;
         public Scope GlobalScope { get; private set; }
         public Scope CurrentScope { get; private set; }
+        public Script? CurrentScript { get; private set; }
         private int lineCounter = 0;
+        private int returnStackSizeTo = -1;
 
         public bool Running;
         public bool Paused;
@@ -44,6 +46,7 @@ namespace LysitheaVM
         {
             this.GlobalScope = new Scope();
             this.CurrentScope = this.GlobalScope;
+            this.CurrentScript = null;
             this.lineCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
@@ -56,9 +59,24 @@ namespace LysitheaVM
             this.lineCounter = 0;
             this.stack.Clear();
             this.stackTrace.Clear();
+            this.CurrentScript = script;
 
             this.BuiltinScope = script.BuiltinScope;
             this.CurrentCode = script.Code;
+        }
+
+        public void SetExecutionContext(Script script, Scope globalScope, Function code, int lineCounter, IReadOnlyList<IValue> stack, IReadOnlyList<ScopeFrame> stackTrace)
+        {
+            this.BuiltinScope = script.BuiltinScope;
+            this.CurrentCode = code;
+            this.CurrentScript = script;
+
+            this.GlobalScope = globalScope;
+            this.CurrentScope = stackTrace.Any() ? stackTrace.Last().Scope : globalScope;
+
+            this.lineCounter = lineCounter;
+            this.stack.From(stack);
+            this.stackTrace.From(stackTrace);
         }
 
         public void Execute(Script script)
@@ -128,7 +146,7 @@ namespace LysitheaVM
         {
             if (pushToStackTrace)
             {
-                this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.CurrentScope, this.lineCounter));
+                this.PushToStackTrace(new ScopeFrame(this.CurrentCode, this.stack.Index, this.CurrentScope, this.lineCounter));
             }
 
             this.CurrentCode = function;
@@ -182,6 +200,7 @@ namespace LysitheaVM
             this.CurrentCode = scopeFrame.Function;
             this.CurrentScope = scopeFrame.Scope;
             this.lineCounter = scopeFrame.LineCounter;
+            this.returnStackSizeTo = scopeFrame.StackSize;
             return true;
         }
 

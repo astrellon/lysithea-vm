@@ -25,12 +25,12 @@ namespace LysitheaVM.Unity
                     var scale = args.GetIndex(3, Vector3Value.Cast);
 
                     DrawingContext.Instance.DrawElement(elementName.Value, position.Value, colour.Value, scale.Value);
-                }, "draw.element")},
+                }, "draw.element", hasReturn: false)},
 
                 {"clear", new BuiltinFunctionValue((vm, numArgs) =>
                 {
                     DrawingContext.Instance.ClearScene();
-                }, "draw.clear")},
+                }, "draw.clear", hasReturn: false)},
 
                 {"nativeExample", new BuiltinFunctionValue((vm, args) =>
                 {
@@ -39,7 +39,7 @@ namespace LysitheaVM.Unity
                     {
                         DrawingContext.Instance.DrawElement("Box", NativeDrawCircle.CalcPosition(i), NativeDrawCircle.CalcColour(i), Vector3.one);
                     }
-                }, "draw.nativeExample")},
+                }, "draw.nativeExample", hasReturn: false)},
             };
 
             result.TrySetConstant("draw", new ObjectValue(drawingFunctions));

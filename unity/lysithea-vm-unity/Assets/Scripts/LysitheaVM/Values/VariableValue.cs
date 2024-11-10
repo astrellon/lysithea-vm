@@ -32,6 +32,7 @@ namespace LysitheaVM
         }
 
         public override string ToString() => this.Value;
+        public string ToStringSerialise() => this.ToString();
         #endregion
     }
 }

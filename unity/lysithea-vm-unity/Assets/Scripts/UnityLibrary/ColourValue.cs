@@ -21,6 +21,11 @@ namespace LysitheaVM
         #region Methods
         public override string ToString() => this.Value.ToString();
 
+        public string ToStringSerialise()
+        {
+            return this.ToString();
+        }
+
         public int CompareTo(IValue? other)
         {
             if (other == null || !(other is ColourValue otherColour))

@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics.CodeAnalysis;
 
 #nullable enable
@@ -31,46 +30,44 @@ namespace LysitheaVM
             return this.Value.TryGetValue(key, out value);
         }
 
-        public bool TryGetKey<T>(string key, [NotNullWhen(true)] out T? value) where T : IValue
-        {
-            if (this.TryGetKey(key, out var result))
-            {
-                if (result is T castedValue)
-                {
-                    value = castedValue;
-                    return true;
-                }
-            }
-
-            value = default(T);
-            return false;
-        }
-
-        public override string ToString()
-        {
-            var result = new StringBuilder();
-            result.Append('{');
-            var first = true;
-            foreach (var kvp in this.Value)
-            {
-                if (!first)
-                {
-                    result.Append(' ');
-                }
-                first = false;
-
-                result.Append('"');
-                result.Append(kvp.Key);
-                result.Append('"');
-
-                result.Append(' ');
-                result.Append(kvp.Value.ToString());
-            }
-            result.Append('}');
-            return result.ToString();
-        }
+        public override string ToString() => StandardObjectLibrary.GeneralToString(this, serialise: false);
+        public string ToStringSerialise() => StandardObjectLibrary.GeneralToString(this, serialise: true);
 
         public int CompareTo(IValue? other) => StandardObjectLibrary.GeneralCompareTo(this, other);
+
+        public static ObjectValue Join(IReadOnlyList<IValue> argValues)
+        {
+            var map = new Dictionary<string, IValue>(argValues.Count / 2);
+            for (var i = 0; i < argValues.Count; i++)
+            {
+                var arg = argValues[i];
+                if (arg is StringValue argStr)
+                {
+                    var key = argStr.Value;
+                    var value = argValues[++i];
+                    map[key] = value;
+                }
+                else if (arg is IObjectValue argObj)
+                {
+                    foreach (var key in argObj.ObjectKeys)
+                    {
+                        if (argObj.TryGetKey(key, out var value))
+                        {
+                            map[key] = value;
+                        }
+                    }
+                }
+                else
+                {
+                    var key = arg.ToString();
+                    var value = argValues[++i];
+                    map[key] = value;
+                }
+            }
+
+            return new ObjectValue(map);
+        }
+
         #endregion
     }
 }

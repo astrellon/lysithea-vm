@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -21,7 +22,7 @@ namespace LysitheaVM
             {
                 {"join", new BuiltinFunctionValue((vm, args) =>
                 {
-                    vm.PushStack(Join(args));
+                    vm.PushStack(ObjectValue.Join(args.ArrayValues));
                 }, "object.join")},
 
                 {"set", new BuiltinFunctionValue((vm, args) =>
@@ -84,41 +85,6 @@ namespace LysitheaVM
             return result;
         }
 
-        public static ObjectValue Join(ArgumentsValue args)
-        {
-            var map = new Dictionary<string, IValue>();
-            var argValues = args.ArrayValues;
-
-            for (var i = 0; i < argValues.Count; i++)
-            {
-                var arg = argValues[i];
-                if (arg is StringValue argStr)
-                {
-                    var key = argStr.Value;
-                    var value = argValues[++i];
-                    map[key] = value;
-                }
-                else if (arg is IObjectValue argObj)
-                {
-                    foreach (var key in argObj.ObjectKeys)
-                    {
-                        if (argObj.TryGetKey(key, out var value))
-                        {
-                            map[key] = value;
-                        }
-                    }
-                }
-                else
-                {
-                    var key = arg.ToString();
-                    var value = argValues[++i];
-                    map[key] = value;
-                }
-            }
-
-            return new ObjectValue(map);
-        }
-
         public static ArrayValue Keys(ObjectValue self)
         {
             var keys = self.Value.Keys.Select(k => new StringValue(k) as IValue).ToList();
@@ -152,6 +118,28 @@ namespace LysitheaVM
         {
             var result = new Dictionary<string, IValue>(self.Value.Where(kvp => kvp.Value.CompareTo(values) != 0));
             return new ObjectValue(result);
+        }
+
+        public static string GeneralToString(IObjectValue input, bool serialise)
+        {
+            var result = new StringBuilder();
+            result.Append('{');
+            var first = true;
+            foreach (var key in input.ObjectKeys)
+            {
+                if (!first)
+                {
+                    result.Append(' ');
+                }
+                first = false;
+
+                result.Append(StandardStringLibrary.EscapedStringIfNeeded(key));
+                result.Append(' ');
+                var value = input.Get(key);
+                result.Append(serialise ? value.ToStringSerialise() : value.ToString());
+            }
+            result.Append('}');
+            return result.ToString();
         }
 
         public static int GeneralCompareTo(IObjectValue left, IValue? rightInput)

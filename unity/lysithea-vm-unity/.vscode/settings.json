@@ -60,5 +60,6 @@
     },
     "[jsonc]": {
         "editor.tabSize": 2
-    }
+    },
+    "dotnet.preferCSharpExtension": true
 }

@@ -61,7 +61,9 @@ namespace LysitheaVM
             return new ArrayValue(this.Value.Skip(index).ToList());
         }
 
-        public override string ToString() => StandardArrayLibrary.GeneralToString(this);
+        public override string ToString() => StandardArrayLibrary.GeneralToString(this, serialise: false);
+        public string ToStringSerialise() => StandardArrayLibrary.GeneralToString(this, serialise: true);
+
         public int CompareTo(IValue? other) => StandardArrayLibrary.GeneralCompareTo(this, other);
 
         public bool TryGetKey(string key, [NotNullWhen(true)] out IValue? value)

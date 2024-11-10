@@ -108,6 +108,18 @@ namespace LysitheaVM
                         }
                         break;
                     }
+                case Operator.ResetStackSize:
+                    {
+                        if (this.returnStackSizeTo >= 0)
+                        {
+                            while (this.stack.Index > this.returnStackSizeTo)
+                            {
+                                this.stack.TryPop(out var temp);
+                            }
+                            this.returnStackSizeTo = -1;
+                        }
+                        break;
+                    }
                 case Operator.JumpFalse:
                     {
                         var label = codeLine.Input ?? this.PopStack();
@@ -302,6 +314,28 @@ namespace LysitheaVM
                 case Operator.Not:
                     {
                         this.PushStack(!this.PopStackBool());
+                        break;
+                    }
+
+                    // Value create
+                case Operator.MakeObject:
+                    {
+                        if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
+                        {
+                            throw new VirtualMachineException(this, this.CreateStackTrace(), $"MakeObject operator needs the number of args to pop");
+                        }
+                        var args = this.GetArgs(numArgs.IntValue);
+                        this.PushStack(ObjectValue.Join(args.ArrayValues));
+                        break;
+                    }
+                case Operator.MakeArray:
+                    {
+                        if (codeLine.Input == null || !(codeLine.Input is NumberValue numArgs))
+                        {
+                            throw new VirtualMachineException(this, this.CreateStackTrace(), $"MakeArray operator needs the number of args to pop");
+                        }
+                        var args = this.GetArgs(numArgs.IntValue);
+                        this.PushStack(new ArrayValue(args.Value));
                         break;
                     }
             }

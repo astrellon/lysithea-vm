@@ -34,13 +34,15 @@ namespace LysitheaVM
         private const string ConstKeyword = "const";
         private const string JumpKeyword = "jump";
         private const string ReturnKeyword = "return";
-        private static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
+        public static readonly string[] NewlineSeparators = new[] { "\r\n", "\n", "\r" };
 
         public readonly Scope BuiltinScope = new Scope();
         public IReadOnlyList<string> FullText { get; private set; } = new string[1]{""};
         public string SourceName { get; private set; } = "";
 
         private int labelCount = 0;
+        private Dictionary<string, int> funcCounts = new Dictionary<string, int>();
+
         private List<string> keywordParsingStack = new List<string>();
         private Scope ConstScope = new Scope();
         private readonly Stack<LoopLabels> loopStack = new Stack<LoopLabels>();
@@ -91,6 +93,7 @@ namespace LysitheaVM
         {
             var tempCodeLines = input.TokenList.SelectMany(Parse).ToList();
             var result = this.ProcessTempFunction(Function.EmptyParameters, tempCodeLines, "global");
+            this.BuiltinScope.TrySetConstant(result.LookupName, new FunctionValue(result));
             return result;
         }
 
@@ -139,13 +142,14 @@ namespace LysitheaVM
                 }
                 else
                 {
-                    throw this.MakeException(input, $"Expression needs to start with a function variable");
+                    throw this.MakeException(input, $"Expression needs to start with a function variable: " + first.ToString());
                 }
             }
             else if (input.Type == TokenType.List)
             {
                 // Handle parsing of each element and check if they're all compile time values
-                var result = new List<IValue>();
+                var result = new List<TempCodeLine>(input.TokenList.Count);
+                var makeArray = false;
                 foreach (var item in input.TokenList)
                 {
                     var parsed = this.Parse(item);
@@ -154,22 +158,36 @@ namespace LysitheaVM
                         continue;
                     }
 
-                    if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
+                    if (parsed.Count == 1)
                     {
-                        result.Add(this.GetValue(parsed[0].Token));
+                        result.Add(parsed[0]);
+                        if (parsed[0].Operator != Operator.Push)
+                        {
+                            makeArray = true;
+                        }
                     }
                     else
                     {
-                        throw this.MakeException(parsed[0].Token, "Unexpected token in list literal");
+                        throw this.MakeException(parsed[0].Token, "Unexpected multiple tokens in list literal");
                     }
                 }
 
-                return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ArrayValue(result))) };
+                if (makeArray)
+                {
+                    result.Add(TempCodeLine.Code(Operator.MakeArray, input.KeepLocation(new NumberValue(result.Count))));
+                    return result;
+                }
+                else
+                {
+                    var codeResult = result.Select(line => this.GetValue(line.Token)).ToList();
+                    return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ArrayValue(codeResult))) };
+                }
             }
             else if (input.Type == TokenType.Map)
             {
                 // Handle parsing of each element and check if they're all compile time values
-                var result = new Dictionary<string, IValue>();
+                var result = new Dictionary<string, TempCodeLine>(input.TokenMap.Count);
+                var makeObject = false;
                 foreach (var kvp in input.TokenMap)
                 {
                     var parsed = this.Parse(kvp.Value);
@@ -178,17 +196,36 @@ namespace LysitheaVM
                         continue;
                     }
 
-                    if (parsed.Count == 1 && parsed[0].Operator == Operator.Push)
+                    if (parsed.Count == 1)
                     {
-                        result[kvp.Key] = this.GetValue(parsed[0].Token);
+                        result[kvp.Key] = parsed[0];
+                        if (parsed[0].Operator != Operator.Push)
+                        {
+                            makeObject = true;
+                        }
                     }
                     else
                     {
-                        throw this.MakeException(parsed[0].Token, $"Unexpected token in map literal for key; {kvp.Key}");
+                        throw this.MakeException(parsed[0].Token, $"Unexpected multiple token in map literal for key: {kvp.Key}");
                     }
                 }
 
-                return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ObjectValue(result))) };
+                if (makeObject)
+                {
+                    var codeResult = new List<TempCodeLine>(result.Count + 1);
+                    foreach (var kvp in result)
+                    {
+                        codeResult.Add(TempCodeLine.Code(Operator.Push, kvp.Value.Token.KeepLocation(new StringValue(kvp.Key))));
+                        codeResult.Add(kvp.Value);
+                    }
+                    codeResult.Add(TempCodeLine.Code(Operator.MakeObject, input.KeepLocation(new NumberValue(codeResult.Count))));
+                    return codeResult;
+                }
+                else
+                {
+                    var codeResult = result.ToDictionary(kvp => kvp.Key, kvp => this.GetValue(kvp.Value.Token));
+                    return new List<TempCodeLine> { TempCodeLine.Code(Operator.Push, input.KeepLocation(new ObjectValue(codeResult))) };
+                }
             }
             else if (input.TokenValue is VariableValue varValue)
             {
@@ -208,6 +245,8 @@ namespace LysitheaVM
             var function = ParseFunction(input);
             var functionValue = new FunctionValue(function);
             var functionToken = input.KeepLocation(functionValue);
+
+            this.BuiltinScope.TrySetConstant(function.LookupName, functionValue);
 
             if (this.keywordParsingStack.Count == 1 && function.HasName)
             {
@@ -727,11 +766,18 @@ namespace LysitheaVM
             return false;
         }
 
+        private static bool IsFunctionWithReturnCall(IValue? input)
+        {
+            return (input is FunctionValue funcValue && funcValue.Value.HasReturn) ||
+                (input is BuiltinFunctionValue builtinFuncValue && builtinFuncValue.HasReturn);
+        }
+
         private Function ProcessTempFunction(IReadOnlyList<string> parameters, IReadOnlyList<TempCodeLine> tempCodeLines, string name)
         {
             var labels = new Dictionary<string, int>();
             var code = new List<CodeLine>();
             var locations = new List<CodeLocation>();
+            var prevWasFuncCall = false;
 
             foreach (var tempLine in tempCodeLines)
             {
@@ -741,14 +787,36 @@ namespace LysitheaVM
                 }
                 else
                 {
+                    if (prevWasFuncCall)
+                    {
+                        if (tempLine.Operator == Operator.Push)
+                        {
+                            code.Add(new CodeLine(Operator.ResetStackSize, null));
+                        }
+                        prevWasFuncCall = false;
+                    }
+
                     locations.Add(tempLine.Token.Location);
                     code.Add(new CodeLine(tempLine.Operator, this.GetValueCanBeEmpty(tempLine.Token)));
+
+                    if (tempLine.Operator == Operator.Call || tempLine.Operator == Operator.CallDirect)
+                    {
+                        if (tempLine.Token.TokenValue is IArrayValue arrayInput)
+                        {
+                            var first = arrayInput.ArrayValues.First();
+                            if (IsFunctionWithReturnCall(first))
+                            {
+                                prevWasFuncCall = true;
+                            }
+                        }
+                    }
                 }
             }
 
             var debugSymbols = new DebugSymbols(this.SourceName, this.FullText, locations);
+            var lookupName = GetFunctionLookupName(name);
 
-            return new Function(code, parameters, labels, name, debugSymbols);
+            return new Function(code, parameters, labels, name, debugSymbols, lookupName);
         }
 
         private IValue? GetValueCanBeEmpty(Token input)
@@ -768,6 +836,18 @@ namespace LysitheaVM
             }
 
             throw this.MakeException(input, "Unable to get value of non value token");
+        }
+
+        private string GetFunctionLookupName(string funcName)
+        {
+            if (this.funcCounts.TryGetValue(funcName, out var count))
+            {
+                this.funcCounts[funcName] = count + 1;
+                return $"__func_{funcName}_{count + 1}";
+            }
+
+            this.funcCounts[funcName] = 1;
+            return $"__func_{funcName}";
         }
 
         private static bool IsNoOperator(IReadOnlyList<TempCodeLine> input)

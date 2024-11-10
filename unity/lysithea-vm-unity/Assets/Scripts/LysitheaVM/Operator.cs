@@ -6,7 +6,7 @@ namespace LysitheaVM
 
         // General
         Push, ToArgument,
-        Call, CallDirect, Return,
+        Call, CallDirect, Return, ResetStackSize,
         GetProperty, Get, Set, Define,
         Jump, JumpTrue, JumpFalse,
 
@@ -23,6 +23,9 @@ namespace LysitheaVM
 
         // Math
         Add, Sub, Multiply, Divide,
-        Inc, Dec, UnaryNegative
+        Inc, Dec, UnaryNegative,
+
+        // Value create
+        MakeArray, MakeObject
     }
 }
