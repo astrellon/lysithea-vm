@@ -148,7 +148,7 @@ namespace LysitheaVM
             else if (input.Type == TokenType.List)
             {
                 // Handle parsing of each element and check if they're all compile time values
-                var result = new List<TempCodeLine>();
+                var result = new List<TempCodeLine>(input.TokenList.Count);
                 var makeArray = false;
                 foreach (var item in input.TokenList)
                 {
@@ -186,7 +186,7 @@ namespace LysitheaVM
             else if (input.Type == TokenType.Map)
             {
                 // Handle parsing of each element and check if they're all compile time values
-                var result = new Dictionary<string, TempCodeLine>();
+                var result = new Dictionary<string, TempCodeLine>(input.TokenMap.Count);
                 var makeObject = false;
                 foreach (var kvp in input.TokenMap)
                 {
@@ -218,7 +218,7 @@ namespace LysitheaVM
                         codeResult.Add(TempCodeLine.Code(Operator.Push, kvp.Value.Token.KeepLocation(new StringValue(kvp.Key))));
                         codeResult.Add(kvp.Value);
                     }
-                    codeResult.Add(TempCodeLine.Code(Operator.MakeObject, input.KeepLocation(new NumberValue(result.Count * 2))));
+                    codeResult.Add(TempCodeLine.Code(Operator.MakeObject, input.KeepLocation(new NumberValue(codeResult.size()))));
                     return codeResult;
                 }
                 else
